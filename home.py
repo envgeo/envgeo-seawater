@@ -40,8 +40,7 @@ def main():
     st.subheader("Around Japan & Global Oceans / 2D-3D-4D visualizer")
     st.write(':blue[seawater isotopes (d18O, dD), temperature, salinity, seasonality, and annual variations around JAPAN]')
     
-    st.write('Current Version: Version 1.0 _(v220-20260316)_')
-    st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
+    st.write('Version 1.0.0 (2026-03-16)')
 
 
 
