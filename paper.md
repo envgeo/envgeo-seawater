@@ -19,39 +19,47 @@ bibliography: paper.bib
 
 # Summary
 
-EnvGeo-Seawater is a web-based interactive visualization platform for exploring marine geochemical and hydrographic datasets, including stable water isotopes ($\delta^{18}$O and $\delta$D), salinity, temperature, and depth. The platform integrates nearly 50,000 seawater isotope records from global datasets, including the NASA GISS database and the CoralHydro2k seawater isotope database, together with regionally curated datasets around Japan.
+EnvGeo-Seawater is a web-based interactive visualization platform for exploring marine geochemical and hydrographic datasets, including stable water isotopes ($\delta^{18}$O and $\delta$D), salinity, temperature, and depth.
 
-Users can investigate spatial distributions, cross-variable relationships, and vertical structures through an intuitive interface. By combining multiple visualization modes—such as mapping, depth profiles, temperature–salinity diagrams, regression analysis, and multi-dimensional (3D/4D) plots—the platform enables rapid exploratory analysis and comparison of seawater datasets across regions and time periods.
+The platform integrates approximately 50,000 seawater isotope records from major global datasets, including the NASA GISS database [@schmidt1999] and the CoralHydro2k seawater isotope database [@atwood2026], together with internally consistent regional datasets (e.g., around Japan) [@kodama2024] analyzed under unified analytical protocols.
+
+EnvGeo-Seawater enables simultaneous exploration of spatial distributions, cross-variable relationships, and vertical structures through an integrated interface. By combining multiple visualization modes—such as mapping, depth profiles, temperature–salinity diagrams, regression analysis, and multi-dimensional (3D/4D) plots—the platform supports rapid exploratory analysis and reproducible comparison of heterogeneous seawater datasets.
+
+EnvGeo-Seawater provides, to our knowledge, the first integrated interactive platform for combined exploration of seawater isotope and hydrographic data.
 
 # Statement of Need
 
-Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. Although several public repositories provide access to such datasets, interactive exploration and consistent cross-dataset comparison remain challenging.
+Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. However, despite the availability of large public datasets, integrated and interactive analysis across multiple variables and datasets remains limited.
 
-Existing platforms such as NOAA Paleoclimatology and PANGAEA primarily focus on data access and archiving, offering limited support for integrated visualization and exploratory analysis. As a result, researchers often rely on custom scripts and local workflows to analyze relationships among isotopic and hydrographic variables.
+Existing platforms such as NOAA Paleoclimatology and PANGAEA primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
 
-EnvGeo-Seawater addresses this gap by providing a unified, web-based environment for interactive exploration of seawater isotope and hydrographic data. The platform integrates approximately 50,000 observations from global databases with internally consistent regional datasets (e.g., around Japan) analyzed under unified criteria. This enables more rigorous cross-comparison across regions and time periods than is typically possible with heterogeneous datasets.
+EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
+
+A key contribution of this platform is the integration of author-curated regional datasets, which provide consistent analytical quality and enhance the reliability of comparative analyses across spatial scales.
 
 # Capabilities
 
 The platform provides the following capabilities:
 
-- Interactive spatial mapping of seawater isotope observations with adaptive zoom  
+- Interactive spatial mapping with adaptive zoom  
 - Depth profile visualization with gap-aware plotting for discrete sampling data  
 - Temperature–salinity (T–S) diagrams with density contours ($\sigma_\theta$)  
-- Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships and regression)  
-- Multi-dimensional visualization (3D and 4D exploration of spatial–temporal structures)  
-- Integration of large-scale global datasets (~50,000 records) and curated regional datasets  
-- User-upload functionality for direct comparison with reference datasets  
-- Export of high-resolution figures for publication use  
+- Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
+- Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
+- Integration of global datasets (~50,000 records) and internally consistent regional datasets  
+- User data upload for direct comparison with reference datasets  
+- Export of publication-quality figures  
 
 # Implementation
 
-The software is implemented in Python using Streamlit for the web interface, Plotly for interactive visualization, and Matplotlib for high-quality figure generation.
+The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
+
+The application is designed for reproducibility and lightweight deployment, with all required datasets included in the repository (<30 MB) and minimal setup required for local execution.
 
 # Example Use Case
 
-EnvGeo-Seawater can be used for rapid exploratory analysis of seawater isotope datasets across multiple spatial and temporal scales. Users can visualize global distributions of $\delta^{18}$O, examine relationships between salinity and isotopic composition, and analyze vertical structures using depth profiles.
+EnvGeo-Seawater supports exploratory analysis across spatial and temporal scales, including visualization of global $\delta^{18}$O distributions, salinity–isotope relationships, and vertical structures.
 
-The platform also enables comparison of user-provided datasets with curated reference datasets, allowing researchers to assess consistency and identify anomalies within a unified analytical framework.
+The platform also enables direct comparison between user-provided datasets and curated reference datasets within a unified analytical framework.
 
 # References

@@ -16,6 +16,12 @@ import streamlit as st
 import numpy as np
 import math
 
+import warnings # for M1/M2 Mac
+# Shapely の内部計算（intersects, intersection, buffer等）から出る
+# すべての RuntimeWarning を一括で非表示にする
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely")
+warnings.filterwarnings("ignore", message="invalid value encountered in") # メッセージ指定でも念押し
+
 
 """
 ##############################################################################

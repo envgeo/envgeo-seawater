@@ -11,7 +11,7 @@ Created on Sun May 21 16:00:21 2023
 
 import streamlit as st
 import os
-
+import re
 
 
 # page info
@@ -22,7 +22,7 @@ st.set_page_config(
     initial_sidebar_state="auto", 
     menu_items={
          'Get Help': 'https://envgeo.h.kyoto-u.ac.jp/sw_jpn/',
-         'Report a bug': "https://www.h.kyoto-u.ac.jp/academic_f/faculty_f/ishimura_toyoho_4dea/#mailform",
+         'Report a bug': "https://www.h.kyoto-u.ac.jp/en_f/faculty_f/ishimura_toyoho_4dea/#mailform",
          'About': """
          Interactive 3D-4D Seawater Isotope & Geochemical Database
          – Japan Marginal Seas & Global Ocean –
@@ -31,16 +31,41 @@ st.set_page_config(
      })
 
 
+# to show README.md 
+def render_readme_streamlit(md_text: str) -> None:
+    image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
+
+    buffer = []
+
+    for line in md_text.splitlines():
+        match = image_pattern.fullmatch(line.strip())
+
+        if match:
+            # それまでのMarkdownを先に表示
+            if buffer:
+                st.markdown("\n".join(buffer), unsafe_allow_html=True)
+                buffer = []
+
+            caption, image_path = match.groups()
+            st.image(image_path, caption=caption if caption else None)
+        else:
+            buffer.append(line)
+
+    # 残りを表示
+    if buffer:
+        st.markdown("\n".join(buffer), unsafe_allow_html=True)
+
 
 
 def main():
 
+    st.title('EnvGeo Seawater')
+    st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
     st.write('Interactive 3D-4D Seawater Isotope & Geochemical Database – Japan Marginal Seas & Global Ocean –')
-    st.title('SEAWATER GEOCHEM. DATABASE')
-    st.subheader("Around Japan & Global Oceans / 2D-3D-4D visualizer")
     st.write(':blue[seawater isotopes (d18O, dD), temperature, salinity, seasonality, and annual variations around JAPAN]')
-    
-    st.write('Version 1.0.0 (2026-03-16)')
+    st.write('Current Version: v1.0.0')
+    # st.write('Current Version: Version 1.0 _(v220-20260316)_')
+    # st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
 
 
 
@@ -118,24 +143,18 @@ def main():
         st.header('Read me')
         ###############
         
-        ###############
-        readme_file = 'README.md'   # ← ファイル名も統一推奨
 
+        ###############
+
+        readme_file = "README.md"
+        
         if os.path.exists(readme_file):
-            try:
-                with open(readme_file, 'r', encoding='utf-8') as f:
-                    readme_content = f.read()
-                with st.expander("Show README"):
-                    st.markdown(readme_content)
-
-            except Exception as e:
-                st.error(f"Error loading {readme_file}: {e}")
-        else:
-            st.info(f"Error: {readme_file} not found.")
+            with open(readme_file, "r", encoding="utf-8") as f:
+                readme_content = f.read()
+        
+            with st.expander("Show README"):
+                render_readme_streamlit(readme_content)
         ###############
-
-    
-
 
 
         st.write('_____')

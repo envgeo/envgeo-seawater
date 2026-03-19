@@ -11,14 +11,12 @@ import os
 
 def main():
     #タブページ
-    #https://welovepython.net/streamlit-layout-container/
-    #st.title('SEAWATER DATA AROUND JAPAN')
+    st.title('EnvGeo Seawater')
+    st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
     st.write('Interactive 3D-4D Seawater Isotope & Geochemical Database – Japan Marginal Seas & Global Ocean –')
-    st.title('SEAWATER GEOCHEM. DATABASE')
-    st.subheader("Around Japan & Global Oceans / 2D-3D-4D visualizer")
     st.write(':blue[seawater isotopes (d18O, dD), temperature, salinity, seasonality, and annual variations around JAPAN]')
     st.write('Current Version: v1.0.0')
-    st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
+    # st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
     # st.write('<span style="color:red;background:white">NEW!!</span> NEW',unsafe_allow_html=True)
     # st.write("This is :blue[test]")
     # st.warning('This site is not able to support multiple simultaneous accesses, so if the display does not work, please reload the page or try again after awhile.')
