@@ -63,7 +63,7 @@ def main():
     st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
     st.write('Interactive 3D-4D Seawater Isotope & Geochemical Database – Japan Marginal Seas & Global Ocean –')
     st.write(':blue[seawater isotopes (d18O, dD), temperature, salinity, seasonality, and annual variations around JAPAN]')
-    st.write('Current Version: v1.0.0')
+    st.write('Version 1.0.0 (2026-03-16)')
     # st.write('Current Version: Version 1.0 _(v220-20260316)_')
     # st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
 
