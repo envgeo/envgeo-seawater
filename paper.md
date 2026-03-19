@@ -31,7 +31,7 @@ EnvGeo-Seawater provides, to our knowledge, the first integrated interactive pla
 
 Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. However, despite the availability of large public datasets, integrated and interactive analysis across multiple variables and datasets remains limited.
 
-Existing platforms such as NOAA Paleoclimatology and PANGAEA primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
+Existing platforms primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
 
 EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
 
