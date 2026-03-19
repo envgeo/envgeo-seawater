@@ -8,7 +8,7 @@ tags:
   - Streamlit
 authors:
   - name: Toyoho Ishimura
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0001-9708-3743
     affiliation: 1
 affiliations:
   - name: Kyoto University, Japan
@@ -31,7 +31,7 @@ EnvGeo-Seawater provides, to our knowledge, the first integrated interactive pla
 
 Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. However, despite the availability of large public datasets, integrated and interactive analysis across multiple variables and datasets remains limited.
 
-Existing platforms primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
+Existing platforms such as NOAA Paleoclimatology and PANGAEA primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
 
 EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
 
@@ -61,5 +61,10 @@ The application is designed for reproducibility and lightweight deployment, with
 EnvGeo-Seawater supports exploratory analysis across spatial and temporal scales, including visualization of global $\delta^{18}$O distributions, salinity–isotope relationships, and vertical structures.
 
 The platform also enables direct comparison between user-provided datasets and curated reference datasets within a unified analytical framework.
+
+## AI Usage Disclosure
+
+Portions of code structuring, documentation refinement, and language editing were assisted by AI tools (ChatGPT, OpenAI).  
+All scientific design, data interpretation, and validation were performed by the author.
 
 # References
