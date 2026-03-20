@@ -25,7 +25,7 @@ The platform integrates approximately 50,000 seawater isotope records from major
 
 EnvGeo-Seawater enables simultaneous exploration of spatial distributions, cross-variable relationships, and vertical structures through an integrated interface. By combining multiple visualization modes—such as mapping, depth profiles, temperature–salinity diagrams, regression analysis, and multi-dimensional (3D/4D) plots—the platform supports rapid exploratory analysis and reproducible comparison of heterogeneous seawater datasets.
 
-EnvGeo-Seawater provides, to our knowledge, one of the first integrated interactive platforms for combined exploration of seawater isotope and hydrographic data.
+EnvGeo-Seawater provides an integrated interactive platform for combined exploration of seawater isotope and hydrographic data.
 
 # Statement of Need
 
@@ -35,7 +35,7 @@ Existing platforms primarily focus on data archiving and access, providing limit
 
 EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
 
-A key contribution of this platform is the integration of author-curated regional datasets for around Japan, which provide consistent analytical quality and enhance the reliability of comparative analyses across spatial scales.
+A key contribution of this platform is the integration of regionally curated datasets for around Japan, which provide consistent analytical quality and enhance the reliability of comparative analyses across spatial scales.
 
 # Capabilities
 
