@@ -11,9 +11,9 @@ authors:
     orcid: 0000-0001-9708-3743
     affiliation: 1
 affiliations:
-  - name: Kyoto University, Japan
+  - name: Graduate School of Human and Environmental Studies, Kyoto University, Japan
     index: 1
-date: 19 March 2026
+date: 21 March 2026
 bibliography: paper.bib
 ---
 
