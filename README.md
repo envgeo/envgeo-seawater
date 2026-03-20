@@ -1,5 +1,14 @@
 # EnvGeo-Seawater 🌊
 
+EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hydrographic data.
+
+This software has been actively developed since April 2023.
+
+In the previous submission, a newly organized repository was used, which did not reflect the full development history. We now provide the original repository with complete development history, demonstrating continuous and iterative development.
+
+We have also improved repository structure, documentation, and open-source practices accordingly.
+
+
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -11,6 +20,8 @@ This repository accompanies the JOSS submission.
 ---
 
 ## Overview
+
+EnvGeo-Seawater is actively used for exploratory analysis of seawater isotope datasets in marine geochemistry research.
 
 EnvGeo-Seawater is a web-based interactive visualization platform for marine geochemical and hydrographic datasets, including stable water isotopes (δ¹⁸O, δD), salinity, temperature, and depth.
 
@@ -109,11 +120,12 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-git clone https://github.com/envgeo/envgeo-seawater
-cd envgeo-seawater
+git clone https://github.com/envgeo/seawater_map.git
+cd seawater_map
 pip install -r requirements.txt
 streamlit run home.py
 ```
+Then open the local URL shown in the terminal (typically http://localhost:8501).
 
 ---
 
@@ -171,6 +183,13 @@ The platform integrates major seawater isotope datasets:
 - NASA GISS Global Seawater Oxygen-18 Database (Schmidt et al., 1999)  
 - Kodama et al. (2024), *Geochemical Journal*  
 - Additional regional datasets  
+
+---
+
+## Live Demo
+
+https://envgeo-seawater-map.streamlit.app  
+(Stable version for JOSS submission)
 
 ---
 
