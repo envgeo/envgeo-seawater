@@ -1,6 +1,6 @@
 #Python 3.10 to 3.12
 
-streamlit==1.42.0 
+streamlit==1.46.0 
 plotly==5.24.1
 gsw==3.6.20
 pandas==2.3.3
