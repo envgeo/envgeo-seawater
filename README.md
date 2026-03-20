@@ -188,8 +188,11 @@ The platform integrates major seawater isotope datasets:
 
 ## Live Demo
 
-https://envgeo-seawater-map.streamlit.app  
-(Stable version for JOSS submission)
+Primary demo:
+https://envgeo-seawater-map.streamlit.app
+
+JOSS-stable demo:
+https://envgeo-seawater-pre.streamlit.app
 
 ---
 
