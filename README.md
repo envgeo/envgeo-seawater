@@ -8,8 +8,6 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
-This repository accompanies the JOSS submission.
-
 ---
 
 ## Overview
