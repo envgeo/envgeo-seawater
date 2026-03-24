@@ -147,36 +147,36 @@ def load_isotope_data(ref_data, sheet_num=0):
 
     """ public """
 
-    if ref_data == data_source_JAPAN_SEA:  
-        df =  pd.concat([df1], ignore_index=True)
+    # if ref_data == data_source_JAPAN_SEA:  
+    #     df =  pd.concat([df1], ignore_index=True)
         
-    elif ref_data == data_source_AROUND_JAPAN:  
-        df = pd.concat([df1, df2], ignore_index=True)
+    # elif ref_data == data_source_AROUND_JAPAN:  
+    #     df = pd.concat([df1, df2], ignore_index=True)
         
         
-    elif ref_data == data_source_GLOBAL:  
-        df = pd.concat([df1, df2,df3,df4, df5], ignore_index=True)
+    # elif ref_data == data_source_GLOBAL:  
+    #     df = pd.concat([df1, df2,df3,df4, df5], ignore_index=True)
         
-    else:
-        return pd.DataFrame() # Return empty DF as fallback
+    # else:
+    #     return pd.DataFrame() # Return empty DF as fallback
   
 
 
     
     """  including user dataset """
     
-    # if ref_data == data_source_JAPAN_SEA:  
-    #     df =  pd.concat([df1,df_unpub_91], ignore_index=True)
+    if ref_data == data_source_JAPAN_SEA:  
+        df =  pd.concat([df1,df_unpub_91], ignore_index=True)
         
-    # elif ref_data == data_source_AROUND_JAPAN:  
-    #     df = pd.concat([df1, df2, df_unpub_91], ignore_index=True)
+    elif ref_data == data_source_AROUND_JAPAN:  
+        df = pd.concat([df1, df2, df_unpub_91], ignore_index=True)
 
         
-    # elif ref_data == data_source_GLOBAL: 
-    #     df = pd.concat([df1, df2,df3,df4, df5, df_unpub_91], ignore_index=True)
+    elif ref_data == data_source_GLOBAL: 
+        df = pd.concat([df1, df2,df3,df4, df5, df_unpub_91], ignore_index=True)
         
-    # else:
-    #     return pd.DataFrame()  # Return empty DF as fallback
+    else:
+        return pd.DataFrame()  # Return empty DF as fallback
 
 
 
