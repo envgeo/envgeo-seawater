@@ -2,13 +2,6 @@
 
 EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hydrographic data.
 
-This software has been actively developed since April 2023.
-
-In the previous submission, a newly organized repository was used, which did not reflect the full development history. We now provide the original repository with complete development history, demonstrating continuous and iterative development.
-
-We have also improved repository structure, documentation, and open-source practices accordingly.
-
-
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -21,7 +14,7 @@ This repository accompanies the JOSS submission.
 
 ## Overview
 
-EnvGeo-Seawater is actively used for exploratory analysis of seawater isotope datasets in marine geochemistry research.
+EnvGeo-Seawater has been used for exploratory analysis of seawater isotope datasets in marine geochemistry research.
 
 EnvGeo-Seawater is a web-based interactive visualization platform for marine geochemical and hydrographic datasets, including stable water isotopes (δ¹⁸O, δD), salinity, temperature, and depth.
 
@@ -129,6 +122,35 @@ Then open the local URL shown in the terminal (typically http://localhost:8501).
 
 ---
 
+## API Usage
+
+Core functionality can be accessed programmatically:
+
+```python
+import envgeo_utils
+
+df = envgeo_utils.load_isotope_data("with [Global data sets]")
+
+df_filtered = envgeo_utils.sidebar_filter_and_display(
+    df,
+    ref_data="with [Global data sets]",
+    data_source_JAPAN_SEA="Kodama et al. (2024) [ECS - Japan Sea]",
+    data_source_AROUND_JAPAN="with [Around Japan]"
+)
+```
+
+---
+
+## Testing
+
+Basic functionality can be verified using pytest:
+
+```bash
+pytest
+```
+
+---
+
 ## Directory Structure
 
 - home.py             : Main application entry point
@@ -140,6 +162,7 @@ Then open the local URL shown in the terminal (typically http://localhost:8501).
 - images/             : Figures and example outputs
 - coastline/          : Coastline data (mapping utilities)
 
+Core functionality is implemented as reusable Python functions in `envgeo_utils.py`, allowing programmatic access outside the Streamlit interface.
 
 ---
 

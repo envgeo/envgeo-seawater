@@ -25,8 +25,6 @@ The platform integrates approximately 50,000 seawater isotope records from major
 
 EnvGeo-Seawater enables simultaneous exploration of spatial distributions, cross-variable relationships, and vertical structures through an integrated interface. By combining multiple visualization modes—such as mapping, depth profiles, temperature–salinity diagrams, regression analysis, and multi-dimensional (3D/4D) plots—the platform supports rapid exploratory analysis and reproducible comparison of heterogeneous seawater datasets.
 
-EnvGeo-Seawater provides an integrated interactive platform for combined exploration of seawater isotope and hydrographic data.
-
 # Statement of Need
 
 Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. However, despite the availability of large public datasets, integrated and interactive analysis across multiple variables and datasets remains limited.
@@ -36,6 +34,40 @@ Existing platforms primarily focus on data archiving and access, providing limit
 EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
 
 A key contribution of this platform is the integration of regionally curated datasets for around Japan, which provide consistent analytical quality and enhance the reliability of comparative analyses across spatial scales.
+
+## State of the field
+
+Oceanographic and geochemical datasets, particularly those including seawater stable isotopes (e.g., $\delta^{18}$O, $\delta$D), are increasingly available through global and regional databases such as the NASA GISS seawater isotope database and CoralHydro2k. However, these datasets are often distributed across heterogeneous formats and lack integrated tools for interactive exploration.
+
+Existing oceanographic visualization tools, such as Ocean Data View (ODV)  [@schlitzer2018], provide powerful capabilities for analyzing hydrographic data but are not specifically designed to handle isotope datasets or to integrate multiple sources in a unified, web-accessible environment. Furthermore, many existing tools require local installation and are not optimized for rapid exploratory analysis or comparison with user-supplied datasets.
+
+As a result, there is a gap in the availability of lightweight, accessible tools that enable integrated visualization and analysis of seawater isotope and hydrographic data across multiple datasets.
+
+In contrast, EnvGeo-Seawater is specifically designed to integrate isotope datasets with hydrographic variables in a unified, interactive framework.
+
+## Software design
+
+EnvGeo-Seawater is designed as a modular Python-based application that separates data processing, visualization, and user interface components.
+
+The modular structure allows individual components to be reused independently of the web interface.
+
+The design emphasizes reusability and extensibility, enabling integration with additional datasets and facilitating future development.
+
+The core functionality is implemented as reusable Python modules that handle data loading, filtering, and visualization. These modules are exposed through a simple API, allowing users to access key functions programmatically for custom analyses.
+
+In addition, command-line execution can be used to support reproducible workflows without relying on the graphical interface.
+
+The interactive web interface is implemented using Streamlit, which provides an accessible platform for exploratory analysis. The application supports multiple visualization types, including map-based exploration, temperature–salinity diagrams, depth profiles, and regression analyses.
+
+## Research impact
+
+EnvGeo-Seawater provides a unified platform for exploring seawater isotope and hydrographic datasets, enabling researchers to more efficiently investigate relationships between physical and geochemical parameters.
+
+By integrating multiple datasets into a single interface, the software reduces barriers to data access and comparison, supporting both regional and global analyses. The ability to upload and compare user datasets further enhances its utility for research and education.
+
+This tool is particularly relevant for studies of ocean circulation, water mass mixing, and paleoclimate reconstruction, where isotope data play a critical role. By improving accessibility and usability of these datasets, EnvGeo-Seawater has the potential to accelerate data-driven research in oceanography and geochemistry.
+
+The software has been used in the author's research workflows and has supported analyses presented at multiple scientific conferences in Japan (three presentations to date). It has also been adopted by collaborators for their own research and has been used in their presentations.
 
 # Capabilities
 
@@ -65,6 +97,10 @@ The platform also enables direct comparison between user-provided datasets and c
 ## AI Usage Disclosure
 
 Portions of code structuring, documentation refinement, and language editing were assisted by AI tools (ChatGPT, OpenAI).  
-All scientific design, data interpretation, and validation were performed by the author.
+All scientific design, data interpretation, and validation were performed solely by the author.
+
+## Conflict of Interest
+
+The author declares no conflicts of interest.
 
 # References
