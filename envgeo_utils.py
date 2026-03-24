@@ -649,7 +649,6 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         # 3. マルチセレクトの作成
         with st.expander("Select sub-dataset", expanded=False):
             # st.sidebar.subheader('航海区の範囲')dfから要素抽出
-            # 例：列名が "RockType" の場合
             Transect_list = df1["Dataset"].dropna().unique().tolist()
             # print(Transect_list,"<<< Dataset list")
             
@@ -869,14 +868,24 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         max_depth = int(math.ceil(df1['Depth_m'].max()))
         
         # 2. スライダーの設定
+        if min_depth == max_depth:
+            slider_max = max_depth + 1
+        else:
+            slider_max = max_depth
+        
+        if min_depth > 0:
+            default_value = (min_depth, max_depth)
+        else:
+            default_value = (0, max_depth)
+        
         sld_depth_min, sld_depth_max = st.slider(
             label='Water Depth (m)',
             min_value=min_depth,
-            max_value=max_depth,
-            value=(0, max_depth),
-            step=10,  # 範囲が数千mに及ぶ場合は、1より10刻みの方が操作しやすいです
+            max_value=slider_max,
+            value=default_value,
+            step=10,
         )
-        
+                
         df1 = df1[
             ((df1['Depth_m'] >= sld_depth_min) & (df1['Depth_m'] <= sld_depth_max))
             | df1['Depth_m'].isna()
@@ -902,16 +911,24 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
 
         
         # 2. スライダーの設定
+        if min_df_sal == max_df_sal:
+            slider_max_sal = max_df_sal + 1
+        else:
+            slider_max_sal = max_df_sal
+        
+        if min_df_sal > 0:
+            default_sal = (min_df_sal, max_df_sal)
+        else:
+            default_sal = (0, max_df_sal)
+        
         sld_sal_min, sld_sal_max = st.slider(
             label='Salinity',
             min_value=min_df_sal,
-            max_value=max_df_sal,
-            value=(0, max_df_sal),
+            max_value=slider_max_sal,
+            value=default_sal,
             # step=0.1,
             # format="%0.1f"  # SyntaxErrorを避けるため %0.1f と書くか、不安ならformatを消す
         )
-        
-        
         
         df1 = df1[
             ((df1['Salinity'] >= sld_sal_min) & (df1['Salinity'] <= sld_sal_max))
@@ -1011,7 +1028,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
             label='Temperature (C)',
             min_value=min_df_temp,
             max_value=max_df_temp,
-            value=(min_df_temp, 40.0),
+            value=(min_df_temp, max_df_temp),
             format="%.1f",
             step=0.1
         )
