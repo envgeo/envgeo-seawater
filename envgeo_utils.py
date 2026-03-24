@@ -7,7 +7,7 @@ Created on Sat Apr 22 17:15:03 2023
 """
 
 # --- App version / バージョン情報 ---
-version = "220a_stable_20260318" #2026/03/18
+version = "1.0.0a_stable_20260324" #2026/03/24
 
 
 
