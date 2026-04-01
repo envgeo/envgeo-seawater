@@ -7,7 +7,7 @@ Created on Sat Apr 22 17:15:03 2023
 """
 
 # --- バージョン管理の設定 ---
-version = "2.12" #2026/02/23
+version = "0.2.12" #2026/02/23
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 
