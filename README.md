@@ -1,3 +1,5 @@
+This repository is a mirror site, where the trial public version is updated regularly. For the stable release, please visit the official site: https://envgeo-seawater-map.streamlit.app
+
 # EnvGeo-Seawater 🌊
 
 EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hydrographic data.
