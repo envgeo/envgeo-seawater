@@ -1,1 +1,18 @@
-st.header(':red[Main data set]')st.subheader('#01 Kodama et al., 2024.')st.write('Kodama, T., Kitajima, S., Takahashi, M., and Ishimura T. (2024). Spatiotemporal variations of seawater δ18O and δD in the Western North Pacific marginal seas near Japan. Geochemical Journal.')st.write(':green[DOI:] https://doi.org/10.2343/geochemj.GJ24009')st.write(':green[analytical method:] Picarro L2130i-I (at Ibaraki-KOSEN and Kyoto Univ.)')st.write(':green[analytical precision:] ±0.03 and ±0.2‰ for δ18O and δD')st.write(':green[analytical PI:] Toyoho Ishimura')st.header("")#gifアニメを読み込むst.subheader('🚢 Cruise Area (2015-2021)')st.image("data/sites_20230515.gif")        #gifアニメを読み込むst.subheader('🚢 Sampling sites by Year')st.image("data/year_20230517.gif")
+## :red[Main data set]
+
+### #01 Kodama et al., 2024
+
+Kodama, T., Kitajima, S., Takahashi, M., and Ishimura, T. (2024). Spatiotemporal variations of seawater d18O and dD in the Western North Pacific marginal seas near Japan. *Geochemical Journal*.
+
+- :green[DOI:] https://doi.org/10.2343/geochemj.GJ24009
+- :green[Analytical method:] Picarro L2130i-I (at Ibaraki-KOSEN and Kyoto Univ.)
+- :green[Analytical precision:] +/-0.03 and +/-0.2 permil for d18O and dD
+- :green[Analytical PI:] Toyoho Ishimura
+
+### Cruise Area (2015-2021)
+
+![Cruise Area (2015-2021)](data/sites_20230515.gif)
+
+### Sampling sites by Year
+
+![Sampling sites by Year](data/year_20230517.gif)

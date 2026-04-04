@@ -6,12 +6,15 @@ Created on Sun May 21 16:00:21 2023
 
 @author: Toyoho Ishimura @Kyoto-U
 
-2026/03/18 update
+2026/04/03 update
 """
 
 import streamlit as st
-import os
 import re
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # page info
@@ -31,8 +34,8 @@ st.set_page_config(
      })
 
 
-# to show README.md 
-def render_readme_streamlit(md_text: str) -> None:
+# to show markdown files with local images
+def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> None:
     image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
 
     buffer = []
@@ -47,6 +50,8 @@ def render_readme_streamlit(md_text: str) -> None:
                 buffer = []
 
             caption, image_path = match.groups()
+            if base_dir and not image_path.startswith(("http://", "https://", "data:")):
+                image_path = str((base_dir / image_path).resolve())
             st.image(image_path, caption=caption if caption else None)
         else:
             buffer.append(line)
@@ -54,6 +59,32 @@ def render_readme_streamlit(md_text: str) -> None:
     # 残りを表示
     if buffer:
         st.markdown("\n".join(buffer), unsafe_allow_html=True)
+
+
+def resolve_path(*parts: str) -> Path:
+    return BASE_DIR.joinpath(*parts)
+
+
+def read_text_file(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def render_markdown_file(file_path: Path, not_found_message: str | None = None) -> None:
+    if not file_path.exists():
+        st.info(not_found_message or f"Error: {file_path.name} not found.")
+        return
+
+    try:
+        render_markdown_streamlit(read_text_file(file_path), base_dir=BASE_DIR)
+    except Exception as e:
+        st.error(f"Error loading {file_path.name}: {e}")
+
+
+def render_external_link(label: str, url: str) -> None:
+    if hasattr(st, "link_button"):
+        st.link_button(label, url)
+    else:
+        st.markdown(f"[{label}]({url})")
 
 
 
@@ -77,15 +108,16 @@ def main():
     with tab1:
         def display_autoplay_video(video_path_or_url):
             import base64
-            import os
             
             # 動画ファイルが存在するか、URLであるかを確認
             if not video_path_or_url.startswith(('http://', 'https://')):
-                if not os.path.exists(video_path_or_url):
+                video_path = resolve_path(video_path_or_url)
+
+                if not video_path.exists():
                     st.error(f"動画ファイルが見つかりません: {video_path_or_url}")
                     return
                 
-                with open(video_path_or_url, "rb") as f:
+                with open(video_path, "rb") as f:
                     data = f.read()
                     bin_str = base64.b64encode(data).decode()
                     video_url = f"data:video/mp4;base64,{bin_str}"
@@ -121,21 +153,8 @@ def main():
         
         ###############
         # 外部ファイル (about.md) の読み込みと実行 
-        about_file = 'data_text/about.md'
-
-        if os.path.exists(about_file):
-            try:
-                # ファイルを UTF-8 で読み込み
-                with open(about_file, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {about_file}: {e}")
-        else:
-            st.info(f"Error: {about_file} not found.")
+        about_file = resolve_path('data_text', 'about.md')
+        render_markdown_file(about_file)
         ###############
             
         ###############
@@ -146,19 +165,18 @@ def main():
 
         ###############
 
-        readme_file = "README.md"
+        readme_file = resolve_path("README.md")
         
-        if os.path.exists(readme_file):
-            with open(readme_file, "r", encoding="utf-8") as f:
-                readme_content = f.read()
+        if readme_file.exists():
+            readme_content = read_text_file(readme_file)
         
             with st.expander("Show README"):
-                render_readme_streamlit(readme_content)
+                render_markdown_streamlit(readme_content, base_dir=BASE_DIR)
         ###############
 
 
         st.write('_____')
-        st.link_button("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
     
 
@@ -173,41 +191,15 @@ def main():
         
         ###############
         # --- メイン引用文献　外部ファイル (main_references.md) の読み込みと実行 ---
-        ref_file_main = 'data_text/main_references.md'
-
-        if os.path.exists(ref_file_main):
-            try:
-                # ファイルを UTF-8 で読み込み
-                with open(ref_file_main, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {ref_file_main}: {e}")
-        else:
-           st.info(f"Error: {about_file} not found.")
+        ref_file_main = resolve_path('data_text', 'main_references.md')
+        render_markdown_file(ref_file_main)
         ###############
 
         
         ###############
         # --- その他の引用文献　外部ファイル (other_references.md) の読み込みと実行 ---
-        ref_file_others = 'data_text/other_references.md'
-
-        if os.path.exists(ref_file_others):
-            try:
-                # ファイルを UTF-8 で読み込みます
-                with open(ref_file_others, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示します
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {ref_file_others}: {e}")
-        else:
-           st.info(f"Error: {about_file} not found.")
+        ref_file_others = resolve_path('data_text', 'other_references.md')
+        render_markdown_file(ref_file_others)
            
            
         ###############
@@ -220,12 +212,10 @@ def main():
         st.subheader('CoralHydro2 Seawater Oxygen Isotope Database')
         
         # --- CoralHydro2データベースの引用文献　外部ファイル(テキスト/Markdown)からの読み込み ---
-        try:
-            with open('data_text/CoralHydro2_references.md', 'r', encoding='utf-8') as f:
-                nasa_refs = f.read()
-            st.markdown(nasa_refs, unsafe_allow_html=True)
-        except FileNotFoundError:
-            st.error("The reference list file cannot be found. Please visit https://doi.org/10.25921/ap7d-2k16")
+        render_markdown_file(
+            resolve_path('data_text', 'CoralHydro2_references.md'),
+            "The reference list file cannot be found. Please visit https://doi.org/10.25921/ap7d-2k16",
+        )
 
 
         ###############
@@ -236,12 +226,10 @@ def main():
         st.subheader('NASA GISS Global Seawater Oxygen Isotope Database')
         
         # --- NASAデータベースの引用文献　外部ファイル(テキスト/Markdown)からの読み込み ---
-        try:
-            with open('data_text/NASA_references.md', 'r', encoding='utf-8') as f:
-                nasa_refs = f.read()
-            st.markdown(nasa_refs, unsafe_allow_html=True)
-        except FileNotFoundError:
-            st.error("The reference list file cannot be found. Please visit https://data.giss.nasa.gov/o18data/ref.html")
+        render_markdown_file(
+            resolve_path('data_text', 'NASA_references.md'),
+            "The reference list file cannot be found. Please visit https://data.giss.nasa.gov/o18data/ref.html",
+        )
         ###############
         
         
@@ -251,7 +239,7 @@ def main():
 
 
         st.write('_____')
-        st.link_button("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
     
         
@@ -262,26 +250,18 @@ def main():
         
         ###############
         # --- その他の引用文献　外部ファイル (other_references.md) の読み込みと実行 ---
-        manual_file = 'data_text/manual.md'
-
-        if os.path.exists(manual_file):
-            try:
-                # ファイルを UTF-8 で読み込みます
-                with open(manual_file, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示します
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {manual_file}: {e}")
-        else:
-            # ファイルがない場合の予備表示（必要なければ消して構いません）
-            # st.info(f"情報: {ref_file} が見つかりません。")
-            st.info(f"情報: {manual_file} が見つかりません。")
+        manual_file = resolve_path('data_text', 'manual.md')
+        render_markdown_file(manual_file, f"情報: {manual_file.name} が見つかりません。")
+        st.video(
+            'https://envgeo.h.kyoto-u.ac.jp/wp-content/uploads/2024/10/envgeo20241016-HD-720p.mp4',
+            format="video/mp4",
+            start_time=0,
+            end_time=None,
+            loop=True,
+        )
         ###############
         st.write('_____')
-        st.link_button("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
         
@@ -292,26 +272,11 @@ def main():
         
         ###############
         # --- アップデートログ　外部ファイル (update_log.md) の読み込みと実行 ---
-        update_log_file = 'data_text/update_log.md'
-
-        if os.path.exists(update_log_file):
-            try:
-                # ファイルを UTF-8 で読み込みます
-                with open(update_log_file, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示します
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {update_log_file}: {e}")
-        else:
-            # ファイルがない場合の予備表示（必要なければ消して構いません）
-            # st.info(f"情報: {ref_file} が見つかりません。")
-            st.info(f"情報: {update_log_file} が見つかりません。")
+        update_log_file = resolve_path('data_text', 'update_log.md')
+        render_markdown_file(update_log_file, f"情報: {update_log_file.name} が見つかりません。")
         ###############
         st.write('_____')
-        st.link_button("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
     
@@ -326,26 +291,11 @@ def main():
         
         ###############
         # --- 日本語簡易説明　外部ファイル (japanese.md) の読み込みと実行 ---
-        japanese_file = 'data_text/japanese.md'
-
-        if os.path.exists(japanese_file):
-            try:
-                # ファイルを UTF-8 で読み込みます
-                with open(japanese_file, 'r', encoding='utf-8') as f:
-                    ref_content = f.read()
-                
-                # 読み込んだテキスト（st.writeなど）を Python コードとして実行して表示します
-                exec(ref_content)
-                
-            except Exception as e:
-                st.error(f"Error loading {japanese_file}: {e}")
-        else:
-            # ファイルがない場合の予備表示（必要なければ消して構いません）
-            # st.info(f"情報: {ref_file} が見つかりません。")
-            st.info(f"情報: {japanese_file} が見つかりません。")
+        japanese_file = resolve_path('data_text', 'japanese.md')
+        render_markdown_file(japanese_file, f"情報: {japanese_file.name} が見つかりません。")
         ###############
         st.write('_____')
-        st.link_button("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
 
@@ -356,4 +306,3 @@ if __name__ == '__main__':
     main()
     
     
-
