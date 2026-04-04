@@ -1,5 +1,10 @@
 import streamlit as st
 import os
+import runpy
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # タイトル
 st.title("Beta Version Apps")
@@ -46,6 +51,6 @@ if pages:
     # 選択されたページを実行
     page_path = pages[selected_page]
     try:
-        exec(open(page_path).read())
+        runpy.run_path(str(BASE_DIR / page_path), run_name="__main__")
     except Exception as e:
         st.error(f"An error occurred while loading page '{selected_page}': {e}")
