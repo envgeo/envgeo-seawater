@@ -709,7 +709,48 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
             st.image("data/sites_20230515.gif")
 
 
+          
+        
+                
+        ##########################
+        # Station filtering
+        ##########################
+        # st.sidebar.subheader('航海区の範囲')dfから要素抽出
+        
+        # 1. Station列の空欄（欠損値）を "no_name" に置き換える
+        df1["Station"] = df1["Station"].fillna("no_name")
+        
+        # ※もし前の処理で 'nan' や 'None' という「文字列」になっている場合の念押し安全対策
+        df1["Station"] = df1["Station"].replace({'nan': 'no_name', 'None': 'no_name', '': 'no_name'})
+
+        # 2. 【変更】 .dropna() をしない、"no_name" もリストに含めるようにする
+        Station_list = df1["Station"].unique().tolist()
+        # print(Station_list, "AAA")
+        
+        
+        # 3. マルチセレクトの作成
+        with st.expander("Station", expanded=False):
+            # st.sidebar.subheader('Stationの範囲')dfから要素抽出
+            Transect_list = df1["Station"].dropna().unique().tolist()
+            # print(Station_list,"<<< Station list")
             
+            selected_Station = st.multiselect('Station', Station_list,default=Station_list)
+        
+
+        # --- 地点（Station）の範囲 ---　2026/04/05 追加
+        # #streamlitのマルチ選択用
+        df1 = df1[(df1['Station'].isin(selected_Station))
+                   | df1['Station'].isna()]  # ← 【修正】Stationが空欄（または空白行）なら残す
+    
+        if df1.empty:
+            st.warning("⚠️ no data found.")
+            st.stop()
+            
+
+
+          
+          
+          
 
         ##########################
         # Year filtering
