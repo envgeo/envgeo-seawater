@@ -1360,6 +1360,35 @@ def main():
         config={"scrollZoom": True},
     )
 
+    with st.expander("selected dataset (CSV)", expanded=False):
+        # 断面描画に実際に使ったデータだけを、見やすい列順で表示する
+        # Show only the dataset actually used for plotting, with a readable column order.
+        preferred_cols = [
+            "reference",
+            "Cruise",
+            "Station",
+            "Date",
+            "Year",
+            "Month",
+            "Longitude_degE",
+            "Latitude_degN",
+            "Depth_m",
+            "SectionDistance_km",
+            "CrossTrack_km",
+            "Temperature_degC",
+            "Salinity",
+            "d18O",
+            "dD",
+        ]
+        selected_cols = [col for col in preferred_cols if col in df_section.columns]
+        if not selected_cols:
+            selected_cols = df_section.columns.tolist()
+
+        df_section_table = df_section[selected_cols].copy()
+        df_section_table = df_section_table.dropna(how="all")
+        df_section_table = df_section_table.astype(str)
+        st.dataframe(df_section_table)
+
 
 if __name__ == "__main__":
     main()
