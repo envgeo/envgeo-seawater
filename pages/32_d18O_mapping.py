@@ -364,20 +364,17 @@ def main():
     # 補間（周期拡張オプション付き）
     #############################################################
     
-    cyclic_label = (
-        "For Contour Map: enable cyclic interpolation across the map edge (Pacific-centered dateline wrap)"
-        if lon_center == 180
-        else "For Contour Map: enable cyclic interpolation across the map edge"
+    edge_wrap_relevant = (
+        lon_center == 180
+        and (map_lon_min <= lon_slider_min + 1.0 or map_lon_max >= lon_slider_max - 1.0)
     )
-    use_cyclic = st.checkbox(
-        cyclic_label,
-        value=False
-    )
-    
     lon_original = df1["Longitude_degE"].values
     # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
     # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
     lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
+    # Build the interpolation grid in the same longitude domain as the slider and set_extent.
+    # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
+    grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
     lat_vals     = df1["Latitude_degN"].values
     val          = df1["d18O"].values
     
@@ -385,21 +382,11 @@ def main():
     #  データ拡張（必要なときだけ）
     #############################################################
     
-    if use_cyclic and lon_center == 180:
-        lon_ext = np.concatenate([lon_for_interp,
-                                  lon_for_interp - 360,
-                                  lon_for_interp + 360])
-        lat_ext = np.concatenate([lat_vals, lat_vals, lat_vals])
-        val_ext = np.concatenate([val, val, val])
-    else:
-        lon_ext = lon_for_interp
-        lat_ext = lat_vals
-        val_ext = val
+    lon_ext = lon_for_interp
+    lat_ext = lat_vals
+    val_ext = val
     
     # ---- グリッド ----
-    # Build the interpolation grid in the same longitude domain as the slider and set_extent.
-    # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
-    grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
     grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
     
     X, Y = np.meshgrid(grid_lon, grid_lat)
@@ -414,16 +401,8 @@ def main():
     
     Z = np.ma.masked_invalid(Z)
     
-    #############################################################
-    # cyclic point（これも必要なときだけ）
-    #############################################################
-    
-    if use_cyclic and lon_center == 180:
-        from cartopy.util import add_cyclic_point
-        Z_plot, lon_plot = add_cyclic_point(Z, coord=grid_lon)
-    else:
-        Z_plot = Z
-        lon_plot = grid_lon
+    Z_plot = Z
+    lon_plot = grid_lon
         
     #############################################################
     # Contour Map Figure 作成
