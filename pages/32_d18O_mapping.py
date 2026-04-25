@@ -10,7 +10,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.0.0" #v220_20260317
+version = "1.0.2" #v220f_20260425
 
 # ToDo
 # このバージョンは補完計算の調整が必要
@@ -113,31 +113,57 @@ def main():
 
 
     ##############################################################################
-    # 図のスケール変更
+    # 図の中心とスケール変更
     ##############################################################################
 
     # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
-        st.subheader(':blue[--- for fig scale only ---]')
+        st.subheader(':blue[--- Map Display Settings ---]')
+        
+        center_option = st.radio(
+            ":blue[Map Center:]",
+            ("Atlantic (0°)", "Pacific (180°)"),
+            horizontal=True
+        )
+        
+        lon_center = 0 if "Atlantic" in center_option else 180
+
+        # Re-map longitudes into the visible 360-degree window of the selected map center.
+        # 選択した地図中心で見えている 360 度の範囲に経度を並べ替える。
+        def normalize_lon_to_center(lon, center):
+            return ((np.asarray(lon) - (center - 180)) % 360) + (center - 180)
+
+        # Pacific-centered maps use 0-360 so regional windows such as 120-240E remain selectable.
+        # 太平洋中心では 0-360 を使い、120-240E のような範囲をそのまま選べるようにする。
+        lon_slider_min = -180 if lon_center == 0 else 0
+        lon_slider_max = 180 if lon_center == 0 else 360
         
         # --- 図のスケール設定 (表示は整数、内部計算は微小オフセットあり) ---
         if ref_data == data_source_JAPAN_SEA:
             # 地図の描画範囲（日本海）
-            map_lon_raw = st.slider('Map Longitude ', 120, 145, (120, 145), step=1)
+            map_lon_default = (120, 145)
             map_lat_raw = st.slider('Map Latitude ', 20, 45, (20, 45), step=1)
             cbar_val = (-1.5, 1.0) # カラーバー初期値
     
         elif ref_data == data_source_AROUND_JAPAN:
             # 地図の描画範囲（日本周辺）
-            map_lon_raw = st.slider('Map Longitude ', -180, 180, (120, 180), step=1)
+            map_lon_default = (120, 180) if lon_center == 0 else (120, 240)
             map_lat_raw = st.slider('Map Latitude ', -70, 55, (0, 55), step=1)
             cbar_val = (-1.5, 1.0)
     
         else:
             # 地図の描画範囲（全体）
-            map_lon_raw = st.slider('Map Longitude', -180, 180, (-180, 180), step=1)
+            map_lon_default = (-180, 180) if lon_center == 0 else (0, 360)
             map_lat_raw = st.slider('Map Latitude', -90, 90, (-90, 90), step=1)
             cbar_val = (-5.0, 2.0)
+
+        map_lon_raw = st.slider(
+            'Map Longitude ',
+            lon_slider_min,
+            lon_slider_max,
+            map_lon_default,
+            step=1
+        )
     
         # 内部計算用に0.001のオフセットを適用
         map_lon_min, map_lon_max = map_lon_raw[0] - 0.001, map_lon_raw[1] + 0.001
@@ -167,7 +193,7 @@ def main():
     ###############################################################################################
     ###############################################################################################
 
-    st.markdown("##### :red[--- The map area can be adjusted using the [fig scale] setting in the sidebar ---]")
+    st.markdown("##### :red[--- Adjust the map view in [Map Display Settings]. ---]")
     st.caption("Even samples lacking salinity/temperature values are included in the plot.")
 
 
@@ -261,20 +287,6 @@ def main():
     ###############################################################################################
 
 
-    #############################################################
-    # Map Center Selection
-    #############################################################
-    center_option = st.radio(
-        ":blue[Map Center:]",
-        ("Atlantic (0°)", "Pacific (180°)"),
-        horizontal=True
-    )
-    
-    lon_center = 0 if "Atlantic" in center_option else 180
-    
-    def wrap_lon(lon, center):
-        return (lon - center + 180) % 360 - 180 + center
-    
     plt.rcParams["font.size"] = 15
 
     #############################################################
@@ -287,8 +299,10 @@ def main():
         projection=ccrs.PlateCarree(central_longitude=lon_center)
     )
     
-    map_lon_min = max(-180, map_lon_min)
-    map_lon_max = min( 180, map_lon_max)
+    # Keep the requested extent inside the longitude domain used by the current center option.
+    # 指定された表示範囲が、現在の地図中心で使う経度範囲から外れないようにする。
+    map_lon_min = max(lon_slider_min, map_lon_min)
+    map_lon_max = min(lon_slider_max, map_lon_max)
     map_lat_min = max( -90, map_lat_min)
     map_lat_max = min(  90, map_lat_max)
     
@@ -306,7 +320,9 @@ def main():
     
     ax.gridlines(draw_labels=True, zorder=4)
     
-    lon_wrapped = wrap_lon(df1["Longitude_degE"].values, lon_center)
+    # Plot sample points in the same longitude frame as the selected map extent.
+    # 観測点も、選択した表示範囲と同じ経度系に変換してから描画する。
+    lon_wrapped = normalize_lon_to_center(df1["Longitude_degE"].values, lon_center)
     
     ax_scatter = ax.scatter(
         lon_wrapped,
@@ -348,12 +364,20 @@ def main():
     # 補間（周期拡張オプション付き）
     #############################################################
     
+    cyclic_label = (
+        "For Contour Map: enable cyclic interpolation across the map edge (Pacific-centered dateline wrap)"
+        if lon_center == 180
+        else "For Contour Map: enable cyclic interpolation across the map edge"
+    )
     use_cyclic = st.checkbox(
-        "Enable cyclic interpolation (dateline connection)",
+        cyclic_label,
         value=False
     )
     
     lon_original = df1["Longitude_degE"].values
+    # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
+    # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
+    lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
     lat_vals     = df1["Latitude_degN"].values
     val          = df1["d18O"].values
     
@@ -362,18 +386,20 @@ def main():
     #############################################################
     
     if use_cyclic and lon_center == 180:
-        lon_ext = np.concatenate([lon_original,
-                                  lon_original - 360,
-                                  lon_original + 360])
+        lon_ext = np.concatenate([lon_for_interp,
+                                  lon_for_interp - 360,
+                                  lon_for_interp + 360])
         lat_ext = np.concatenate([lat_vals, lat_vals, lat_vals])
         val_ext = np.concatenate([val, val, val])
     else:
-        lon_ext = lon_original
+        lon_ext = lon_for_interp
         lat_ext = lat_vals
         val_ext = val
     
     # ---- グリッド ----
-    grid_lon = np.linspace(-180, 180, 360)
+    # Build the interpolation grid in the same longitude domain as the slider and set_extent.
+    # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
+    grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
     grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
     
     X, Y = np.meshgrid(grid_lon, grid_lat)
@@ -443,7 +469,7 @@ def main():
     ax2.gridlines(draw_labels=True, zorder=4)
     
     # ---- 観測点（表示用はwrap）----
-    lon_wrapped = wrap_lon(lon_original, lon_center)
+    lon_wrapped = normalize_lon_to_center(lon_original, lon_center)
     
     ax2.scatter(
         lon_wrapped,
