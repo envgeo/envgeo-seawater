@@ -145,14 +145,14 @@ def main():
             # 地図の描画範囲（日本海）
             map_lon_default = (120, 145)
             map_lat_default = (20, 45)
-            lat_slider_min, lat_slider_max = 20, 45
+            lat_slider_min, lat_slider_max = 0, 70
             cbar_val = (-1.5, 1.0) # カラーバー初期値
     
         elif ref_data == data_source_AROUND_JAPAN:
             # 地図の描画範囲（日本周辺）
             map_lon_default = (120, 180) if lon_center == 0 else (120, 240)
             map_lat_default = (0, 55)
-            lat_slider_min, lat_slider_max = -70, 55
+            lat_slider_min, lat_slider_max = -70, 70
             cbar_val = (-1.5, 1.0)
     
         else:
