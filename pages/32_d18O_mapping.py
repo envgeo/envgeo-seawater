@@ -137,47 +137,82 @@ def main():
         # 太平洋中心では 0-360 を使い、120-240E のような範囲をそのまま選べるようにする。
         lon_slider_min = -180 if lon_center == 0 else 0
         lon_slider_max = 180 if lon_center == 0 else 360
+
+        map_state_key = f"map_display_settings::{ref_data}::{lon_center}"
         
         # --- 図のスケール設定 (表示は整数、内部計算は微小オフセットあり) ---
         if ref_data == data_source_JAPAN_SEA:
             # 地図の描画範囲（日本海）
             map_lon_default = (120, 145)
-            map_lat_raw = st.slider('Map Latitude ', 20, 45, (20, 45), step=1)
+            map_lat_default = (20, 45)
+            lat_slider_min, lat_slider_max = 20, 45
             cbar_val = (-1.5, 1.0) # カラーバー初期値
     
         elif ref_data == data_source_AROUND_JAPAN:
             # 地図の描画範囲（日本周辺）
             map_lon_default = (120, 180) if lon_center == 0 else (120, 240)
-            map_lat_raw = st.slider('Map Latitude ', -70, 55, (0, 55), step=1)
+            map_lat_default = (0, 55)
+            lat_slider_min, lat_slider_max = -70, 55
             cbar_val = (-1.5, 1.0)
     
         else:
             # 地図の描画範囲（全体）
             map_lon_default = (-180, 180) if lon_center == 0 else (0, 360)
-            map_lat_raw = st.slider('Map Latitude', -90, 90, (-90, 90), step=1)
+            map_lat_default = (-90, 90)
+            lat_slider_min, lat_slider_max = -90, 90
             cbar_val = (-5.0, 2.0)
 
-        map_lon_raw = st.slider(
-            'Map Longitude ',
-            lon_slider_min,
-            lon_slider_max,
-            map_lon_default,
-            step=1
-        )
-    
+        if map_state_key not in st.session_state:
+            st.session_state[map_state_key] = {
+                "map_lon_raw": map_lon_default,
+                "map_lat_raw": map_lat_default,
+                "fig_d18O_raw": (int(cbar_val[0]), int(cbar_val[1]))
+            }
+
+        map_settings = st.session_state[map_state_key]
+
+        with st.form(key=f"map_display_form::{ref_data}::{lon_center}"):
+            map_lon_raw_form = st.slider(
+                'Map Longitude ',
+                lon_slider_min,
+                lon_slider_max,
+                map_settings["map_lon_raw"],
+                step=1
+            )
+            map_lat_raw_form = st.slider(
+                'Map Latitude ',
+                lat_slider_min,
+                lat_slider_max,
+                map_settings["map_lat_raw"],
+                step=1
+            )
+        
+            # --- カラーバー用d18O範囲 ---
+            # ここも step=1 にすることで整数表示になる（小数が必要な場合は step=0.1 に変更）
+            fig_d18O_raw_form = st.slider(
+                label='d18O range for colorbar',
+                min_value=-20,
+                max_value=5,
+                value=map_settings["fig_d18O_raw"],
+                step=1
+            )
+            apply_map_settings = st.form_submit_button("Apply Map Display Settings")
+
+        if apply_map_settings:
+            map_settings = {
+                "map_lon_raw": map_lon_raw_form,
+                "map_lat_raw": map_lat_raw_form,
+                "fig_d18O_raw": fig_d18O_raw_form
+            }
+            st.session_state[map_state_key] = map_settings
+
+        map_lon_raw = map_settings["map_lon_raw"]
+        map_lat_raw = map_settings["map_lat_raw"]
+        fig_d18O_min, fig_d18O_max = map_settings["fig_d18O_raw"]
+
         # 内部計算用に0.001のオフセットを適用
         map_lon_min, map_lon_max = map_lon_raw[0] - 0.001, map_lon_raw[1] + 0.001
         map_lat_min, map_lat_max = map_lat_raw[0] - 0.001, map_lat_raw[1] + 0.001
-    
-        # --- カラーバー用d18O範囲 ---
-        # ここも step=1 にすることで整数表示になる（小数が必要な場合は step=0.1 に変更）
-        fig_d18O_min, fig_d18O_max = st.slider(
-            label='d18O range for colorbar',
-            min_value=-20,
-            max_value=5,
-            value=(int(cbar_val[0]), int(cbar_val[1])),
-            step=1
-        )
 
    
 
@@ -290,213 +325,6 @@ def main():
     plt.rcParams["font.size"] = 15
 
     #############################################################
-    # Scatter Map
-    #############################################################
-    fig = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
-    
-    ax = fig.add_subplot(
-        1, 1, 1,
-        projection=ccrs.PlateCarree(central_longitude=lon_center)
-    )
-    
-    # Keep the requested extent inside the longitude domain used by the current center option.
-    # 指定された表示範囲が、現在の地図中心で使う経度範囲から外れないようにする。
-    map_lon_min = max(lon_slider_min, map_lon_min)
-    map_lon_max = min(lon_slider_max, map_lon_max)
-    map_lat_min = max( -90, map_lat_min)
-    map_lat_max = min(  90, map_lat_max)
-    
-    ax.set_extent(
-        [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
-        crs=ccrs.PlateCarree()
-    )
-    
-    ax.coastlines(resolution="50m", zorder=3)
-    ax.add_feature(cfeature.LAND,
-                   facecolor="white",
-                   edgecolor="black",
-                   linewidth=0.5,
-                   zorder=2)
-    
-    ax.gridlines(draw_labels=True, zorder=4)
-    
-    # Plot sample points in the same longitude frame as the selected map extent.
-    # 観測点も、選択した表示範囲と同じ経度系に変換してから描画する。
-    lon_wrapped = normalize_lon_to_center(df1["Longitude_degE"].values, lon_center)
-    
-    ax_scatter = ax.scatter(
-        lon_wrapped,
-        df1["Latitude_degN"],
-        c=df1["d18O"],
-        cmap="jet",
-        s=10,
-        alpha=0.7,
-        vmin=fig_d18O_min,
-        vmax=fig_d18O_max,
-        transform=ccrs.PlateCarree(),
-        zorder=1
-    )
-    
-    
-    # ---- Scatter Map用のカラーバーを追加 ----
-    cbar_scatter = fig.colorbar(
-        ax_scatter,
-        ax=ax,
-        orientation="horizontal", # 横向き
-        pad=0.08,                  # 地図との隙間
-        fraction=0.04,             # カラーバーの大きさ
-        aspect=25,                 # カラーバーの細長さ
-        extend="neither"           # 【重要】ここを "neither" にすると両端が□になります
-    )
-    cbar_scatter.set_label(r"$\delta^{18}$O (VSMOW)", fontsize=12)
-    
-    
-    ax.set_title(title_head2,fontsize=15)
-    
-    # PNG保存（Scatter）
-    img_scatter = io.BytesIO()
-    fig.savefig(img_scatter, format="png", dpi=300, bbox_inches="tight")
-    img_scatter.seek(0)
-    
-    
-
-    #############################################################
-    # 補間（周期拡張オプション付き）
-    #############################################################
-    
-    edge_wrap_relevant = (
-        lon_center == 180
-        and (map_lon_min <= lon_slider_min + 1.0 or map_lon_max >= lon_slider_max - 1.0)
-    )
-    lon_original = df1["Longitude_degE"].values
-    # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
-    # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
-    lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
-    # Build the interpolation grid in the same longitude domain as the slider and set_extent.
-    # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
-    grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
-    lat_vals     = df1["Latitude_degN"].values
-    val          = df1["d18O"].values
-    
-    #############################################################
-    #  データ拡張（必要なときだけ）
-    #############################################################
-    
-    lon_ext = lon_for_interp
-    lat_ext = lat_vals
-    val_ext = val
-    
-    # ---- グリッド ----
-    grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
-    
-    X, Y = np.meshgrid(grid_lon, grid_lat)
-    
-    # ---- 補間 ----
-    Z = griddata(
-        (lon_ext, lat_ext),
-        val_ext,
-        (X, Y),
-        method="linear"
-    )
-    
-    Z = np.ma.masked_invalid(Z)
-    
-    Z_plot = Z
-    lon_plot = grid_lon
-        
-    #############################################################
-    # Contour Map Figure 作成
-    #############################################################
-    fig_contour = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
-    
-    ax2 = fig_contour.add_subplot(
-        1, 1, 1,
-        projection=ccrs.PlateCarree(central_longitude=lon_center)
-    )
-    
-    # extent
-    ax2.set_extent(
-        [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
-        crs=ccrs.PlateCarree()
-        )   
-    #############################################################
-    # 描画
-    #############################################################
-    
-    levels = np.linspace(fig_d18O_min, fig_d18O_max, 51)
-    
-    ax_cntr = ax2.contourf(
-        lon_plot,
-        grid_lat,
-        Z_plot,
-        levels=levels,
-        cmap="jet",
-        transform=ccrs.PlateCarree(),
-        alpha=0.85,
-        zorder=1
-    )
-    
-    ax2.add_feature(
-        cfeature.LAND,
-        facecolor="white",
-        edgecolor="black",
-        linewidth=0.5,
-        zorder=2
-    )
-    
-    ax2.coastlines(resolution="50m", zorder=3)
-    ax2.gridlines(draw_labels=True, zorder=4)
-    
-    # ---- 観測点（表示用はwrap）----
-    lon_wrapped = normalize_lon_to_center(lon_original, lon_center)
-    
-    ax2.scatter(
-        lon_wrapped,
-        lat_vals,
-        c="black",
-        s=2,
-        alpha=0.3,
-        transform=ccrs.PlateCarree(),
-        zorder=5
-    )
-    ax2.set_title(title_head2,fontsize=15)
-    
-    
-    # ---- カラーバーの目盛り固定設定 ----
-    num_ticks = 6  # ★ここに出したい目盛りの数を指定（例：6個なら5等分）
-    # 1. スライダーの範囲を単純に分割
-    raw_ticks = np.linspace(fig_d18O_min, fig_d18O_max, num_ticks)
-
-    # 2. 分割した値を「キリの良い数字」に丸める（小数点第1位など）
-    # ※丸めないと 0.1000000000004 のような表示になる
-    fixed_ticks = [round(t, 1) for t in raw_ticks]
-
-    
-    # ---- カラーバーの描画 ----
-    cbar = fig_contour.colorbar(
-        ax_cntr,
-        ax=ax2,
-        orientation="horizontal",
-        pad=0.08,
-        fraction=0.05,
-        ticks=fixed_ticks,   # 固定された目盛り位置
-        extend="neither"     # 両端は□
-    )
-
-    
-    # ---- ラベルの書式を小数点第1位に統一 ----
-    cbar.ax.set_xticklabels([f"{t:.1f}" for t in fixed_ticks])
-    
-    cbar.set_label(r"$\delta^{18}$O (VSMOW)")
-    
-
-    
-    # ---- PNG保存 ----
-    img_contour = io.BytesIO()
-    fig_contour.savefig(img_contour, format="png", dpi=300, bbox_inches="tight")
-    img_contour.seek(0)
-        
-    #############################################################
     # 表示切替
     #############################################################
     map_type = st.radio(
@@ -504,8 +332,75 @@ def main():
         ("Scatter Map", "Contour Map"),
         horizontal=True
     )
+
+    # Keep the requested extent inside the longitude domain used by the current center option.
+    # 指定された表示範囲が、現在の地図中心で使う経度範囲から外れないようにする。
+    map_lon_min = max(lon_slider_min, map_lon_min)
+    map_lon_max = min(lon_slider_max, map_lon_max)
+    map_lat_min = max( -90, map_lat_min)
+    map_lat_max = min(  90, map_lat_max)
     
     if map_type == "Scatter Map":
+        #############################################################
+        # Scatter Map
+        #############################################################
+        fig = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
+        
+        ax = fig.add_subplot(
+            1, 1, 1,
+            projection=ccrs.PlateCarree(central_longitude=lon_center)
+        )
+        
+        ax.set_extent(
+            [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
+            crs=ccrs.PlateCarree()
+        )
+        
+        ax.coastlines(resolution="50m", zorder=3)
+        ax.add_feature(cfeature.LAND,
+                       facecolor="white",
+                       edgecolor="black",
+                       linewidth=0.5,
+                       zorder=2)
+        
+        ax.gridlines(draw_labels=True, zorder=4)
+        
+        # Plot sample points in the same longitude frame as the selected map extent.
+        # 観測点も、選択した表示範囲と同じ経度系に変換してから描画する。
+        lon_wrapped = normalize_lon_to_center(df1["Longitude_degE"].values, lon_center)
+        
+        ax_scatter = ax.scatter(
+            lon_wrapped,
+            df1["Latitude_degN"],
+            c=df1["d18O"],
+            cmap="jet",
+            s=10,
+            alpha=0.7,
+            vmin=fig_d18O_min,
+            vmax=fig_d18O_max,
+            transform=ccrs.PlateCarree(),
+            zorder=1
+        )
+        
+        # ---- Scatter Map用のカラーバーを追加 ----
+        cbar_scatter = fig.colorbar(
+            ax_scatter,
+            ax=ax,
+            orientation="horizontal", # 横向き
+            pad=0.08,                  # 地図との隙間
+            fraction=0.04,             # カラーバーの大きさ
+            aspect=25,                 # カラーバーの細長さ
+            extend="neither"           # 【重要】ここを "neither" にすると両端が□になります
+        )
+        cbar_scatter.set_label(r"$\delta^{18}$O (VSMOW)", fontsize=12)
+        
+        ax.set_title(title_head2,fontsize=15)
+        
+        # PNG保存（Scatter）
+        img_scatter = io.BytesIO()
+        fig.savefig(img_scatter, format="png", dpi=300, bbox_inches="tight")
+        img_scatter.seek(0)
+        
         st.download_button(
             "Download Scatter Map",
             img_scatter,
@@ -515,6 +410,98 @@ def main():
         st.pyplot(fig)
     
     else:
+        #############################################################
+        # Contour Map
+        #############################################################
+        lon_original = df1["Longitude_degE"].values
+        # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
+        # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
+        lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
+        # Build the interpolation grid in the same longitude domain as the slider and set_extent.
+        # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
+        grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
+        lat_vals     = df1["Latitude_degN"].values
+        val          = df1["d18O"].values
+        
+        # ---- グリッド ----
+        grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
+        X, Y = np.meshgrid(grid_lon, grid_lat)
+        
+        # ---- 補間 ----
+        Z = griddata(
+            (lon_for_interp, lat_vals),
+            val,
+            (X, Y),
+            method="linear"
+        )
+        Z_plot = np.ma.masked_invalid(Z)
+        lon_plot = grid_lon
+        
+        fig_contour = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
+        ax2 = fig_contour.add_subplot(
+            1, 1, 1,
+            projection=ccrs.PlateCarree(central_longitude=lon_center)
+        )
+        
+        ax2.set_extent(
+            [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
+            crs=ccrs.PlateCarree()
+        )
+        
+        levels = np.linspace(fig_d18O_min, fig_d18O_max, 51)
+        ax_cntr = ax2.contourf(
+            lon_plot,
+            grid_lat,
+            Z_plot,
+            levels=levels,
+            cmap="jet",
+            transform=ccrs.PlateCarree(),
+            alpha=0.85,
+            zorder=1
+        )
+        
+        ax2.add_feature(
+            cfeature.LAND,
+            facecolor="white",
+            edgecolor="black",
+            linewidth=0.5,
+            zorder=2
+        )
+        ax2.coastlines(resolution="50m", zorder=3)
+        ax2.gridlines(draw_labels=True, zorder=4)
+        
+        lon_wrapped = normalize_lon_to_center(lon_original, lon_center)
+        ax2.scatter(
+            lon_wrapped,
+            lat_vals,
+            c="black",
+            s=2,
+            alpha=0.3,
+            transform=ccrs.PlateCarree(),
+            zorder=5
+        )
+        ax2.set_title(title_head2,fontsize=15)
+        
+        num_ticks = 6
+        raw_ticks = np.linspace(fig_d18O_min, fig_d18O_max, num_ticks)
+        fixed_ticks = [round(t, 1) for t in raw_ticks]
+        
+        cbar = fig_contour.colorbar(
+            ax_cntr,
+            ax=ax2,
+            orientation="horizontal",
+            pad=0.08,
+            fraction=0.05,
+            ticks=fixed_ticks,
+            extend="neither"
+        )
+        cbar.ax.set_xticklabels([f"{t:.1f}" for t in fixed_ticks])
+        cbar.set_label(r"$\delta^{18}$O (VSMOW)")
+        
+        img_contour = io.BytesIO()
+        fig_contour.savefig(img_contour, format="png", dpi=300, bbox_inches="tight")
+        img_contour.seek(0)
+        
         st.download_button(
             "Download Contour Map",
             img_contour,
