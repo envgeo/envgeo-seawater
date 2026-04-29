@@ -6,11 +6,11 @@ Created on Sun May 21 16:00:21 2023
 
 @author: Toyoho Ishimura @Kyoto-U
 
-2026/02/10 update 
+2026/04/29 update 
 """
 
 # --- Version info ---
-version = "1.0.0" #v220_20260317
+version = "1.0.2" #v220_20260429　mapセンター調整済
 
 # ToDo
 # 最後のマップのカラーバーの初期値を調整必要
@@ -19,6 +19,7 @@ version = "1.0.0" #v220_20260317
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import envgeo_utils    
@@ -105,6 +106,41 @@ def main():
     df1['lon'] = df1['Longitude_degE']
     # df1['Depth_m'] = df1['Depth_m']*(-1)
 
+    # Re-map longitudes into the visible 360-degree window of the selected map center.
+    # 選択した地図中心で見えている 360 度の範囲に経度を並べ替える。
+    def normalize_lon_to_center(lon, center):
+        return ((np.asarray(lon) - (center - 180)) % 360) + (center - 180)
+
+    # Insert line breaks at large longitude jumps so coastlines do not draw false horizontal connectors.
+    # 海岸線の大きな経度ジャンプで線を切り、不要な横線が描かれないようにする。
+    def wrap_coastline_with_breaks(lon, lat, center, jump_threshold=180):
+        lon_wrapped = normalize_lon_to_center(lon, center)
+        lat_arr = np.asarray(lat, dtype=float)
+        lon_segments = [lon_wrapped[0]]
+        lat_segments = [lat_arr[0]]
+        for i in range(1, len(lon_wrapped)):
+            prev_lon, curr_lon = lon_wrapped[i - 1], lon_wrapped[i]
+            prev_lat, curr_lat = lat_arr[i - 1], lat_arr[i]
+            if (
+                np.isnan(prev_lon) or np.isnan(curr_lon)
+                or np.isnan(prev_lat) or np.isnan(curr_lat)
+                or abs(curr_lon - prev_lon) > jump_threshold
+            ):
+                lon_segments.append(np.nan)
+                lat_segments.append(np.nan)
+            lon_segments.append(curr_lon)
+            lat_segments.append(curr_lat)
+        return lon_segments, lat_segments
+
+    # Keep the longitude-latitude aspect close to the selected geographic window.
+    # 選択した緯度経度の範囲に合わせて、地図の縦横比が崩れないようにする。
+    def get_geo_aspectratio(x_range, y_range, z_ratio=1.0):
+        lon_span = max(float(x_range[1] - x_range[0]), 0.1)
+        lat_span = max(float(y_range[1] - y_range[0]), 0.1)
+        mean_lat = (float(y_range[0]) + float(y_range[1])) / 2.0
+        x_ratio = max((lon_span * np.cos(np.deg2rad(mean_lat))) / lat_span, 0.2)
+        return dict(x=x_ratio, y=1.0, z=z_ratio)
+
 
     ##############################################################################
     # 図のスケール変更
@@ -113,19 +149,115 @@ def main():
 
    # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
-        st.subheader(':blue[--- for fig scale only ---]')
+        st.subheader(':blue[--- Map Display Settings ---]')
 
-        fig_depth_min, fig_depth_max = st.slider(
-            label='Depth scale',
-            min_value=0,
-            max_value=int(sld_depth_max + 100), # 整数化して小数点を防止
-            value=(0, int(sld_depth_max)),
-            step=50
+        # Match the map-center selector used in the 2D mapping page.
+        # 2D マップページと同じ地図中心の切り替え UI を使う。
+        center_option_3d = st.radio(
+            ":blue[Map Center: (Fig.3-Fig.6)]",
+            ("Atlantic (0°)", "Pacific (180°)"),
+            horizontal=True
         )
-        
+        lon_center_3d = 0 if "Atlantic" in center_option_3d else 180
 
-        # サイドバーにサイズ調整を追加
-        marker_size = st.slider("Marker Size", 1, 10, 3)
+        # Offer a few generic colormaps so the map-style figures can share one palette.
+        # 地図系の図で共通に使えるよう、汎用カラーマップをいくつか選べるようにする。
+        colormap_options = {
+            "d18O (EnvGeo)": envgeo_utils.get_custom_colorscale("d18O"),
+            "Jet": "jet",
+            "Turbo": "Turbo",
+            "Viridis": "Viridis",
+            "Plasma": "Plasma",
+            "Cividis": "Cividis",
+            "RdYlBu": "RdYlBu_r"
+        }
+        selected_colormap_label = st.selectbox(
+            "Colormap for map figures",
+            list(colormap_options.keys()),
+            index=0
+        )
+        map_colorscale = colormap_options[selected_colormap_label]
+
+        st.subheader(':blue[--- Figure Scale Settings ---]')
+
+        # Allow Fig3-Fig6 map views to use explicit lon/lat windows from the sidebar.
+        # Fig3-Fig6 の地図表示範囲を、サイドバーから緯度経度で直接調整できるようにする。
+        if ref_data == data_source_JAPAN_SEA:
+            map_lon_default = (120, 145)
+            map_lat_default = (20, 45)
+            lon_slider_min, lon_slider_max = (0, 360) if lon_center_3d == 180 else (-180, 180)
+            lat_slider_min, lat_slider_max = 0, 70
+        elif ref_data == data_source_AROUND_JAPAN:
+            map_lon_default = (120, 160)
+            map_lat_default = (20, 60)
+            lon_slider_min, lon_slider_max = (0, 360) if lon_center_3d == 180 else (-180, 180)
+            lat_slider_min, lat_slider_max = -70, 70
+        else:
+            map_lon_default = (0, 360) if lon_center_3d == 180 else (-180, 180)
+            map_lat_default = (-90, 90)
+            lon_slider_min, lon_slider_max = (0, 360) if lon_center_3d == 180 else (-180, 180)
+            lat_slider_min, lat_slider_max = -90, 90
+
+        figure_scale_state_key = f"figure_scale_settings::{ref_data}::{lon_center_3d}"
+        if figure_scale_state_key not in st.session_state:
+            st.session_state[figure_scale_state_key] = {
+                "map_lon_raw": map_lon_default,
+                "map_lat_raw": map_lat_default,
+                "fig_depth_raw": (0, int(sld_depth_max)),
+                "marker_size": 3
+            }
+
+        figure_scale_settings = st.session_state[figure_scale_state_key]
+
+        with st.form(key=f"figure_scale_form::{ref_data}::{lon_center_3d}"):
+            map_lon_raw_form = st.slider(
+                'Map Longitude (Fig.3-Fig.6)',
+                lon_slider_min,
+                lon_slider_max,
+                figure_scale_settings["map_lon_raw"],
+                step=1
+            )
+            map_lat_raw_form = st.slider(
+                'Map Latitude (Fig.3-Fig.6)',
+                lat_slider_min,
+                lat_slider_max,
+                figure_scale_settings["map_lat_raw"],
+                step=1
+            )
+
+            fig_depth_raw_form = st.slider(
+                label='Depth scale',
+                min_value=0,
+                max_value=int(sld_depth_max + 100), # 整数化して小数点を防止
+                value=figure_scale_settings["fig_depth_raw"],
+                step=50
+            )
+            
+            # サイドバーにサイズ調整を追加
+            marker_size_form = st.slider("Marker Size", 1, 10, figure_scale_settings["marker_size"])
+            apply_figure_scale_settings = st.form_submit_button("Apply Figure Scale Settings")
+
+        if apply_figure_scale_settings:
+            figure_scale_settings = {
+                "map_lon_raw": map_lon_raw_form,
+                "map_lat_raw": map_lat_raw_form,
+                "fig_depth_raw": fig_depth_raw_form,
+                "marker_size": marker_size_form
+            }
+            st.session_state[figure_scale_state_key] = figure_scale_settings
+
+        map_lon_raw = figure_scale_settings["map_lon_raw"]
+        map_lat_raw = figure_scale_settings["map_lat_raw"]
+        fig_depth_min, fig_depth_max = figure_scale_settings["fig_depth_raw"]
+        marker_size = figure_scale_settings["marker_size"]
+
+        map_x_range = [map_lon_raw[0], map_lon_raw[1]]
+        map_y_range = [map_lat_raw[0], map_lat_raw[1]]
+        map_aspectratio = get_geo_aspectratio(
+            map_x_range,
+            map_y_range,
+            z_ratio=0.5 if ref_data == data_source_GLOBAL else 1.0
+        )
 
 
 
@@ -181,15 +313,12 @@ def main():
     z = df_fig1['Depth_m']
     c = df_fig1['Temperature_degC']
 
-
-    color_continuous_scale= ('darkblue', 'blue', 'lightgray', 'gray', 'lightgreen', 'lightgreen', 'green',  'yellow', 'orange', 'red','darkred','darkred')
-   
     fig1=px.scatter_3d(df_fig1, x='Salinity', y='d18O', z='Depth_m',
                     color='Temperature_degC', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     hover_data={
                         "lat": True,  
                         "lon": True,  
@@ -287,19 +416,13 @@ def main():
     z = df_fig2['Depth_m']
     c = df_fig2['d18O']
     
-    
-    
-    # 2. カラースケールの定義
-    color_continuous_scale= ('darkblue', 'darkblue', 'darkblue','darkblue', 'darkblue',  'blue', 'blue', 'blue','lightgray', 'lightgray', 'gray', 'lightgreen', 'lightgreen', 'green',  'yellow', 'orange', 'red','darkred')
-   
-    
    # 3. プロット作成
     fig2=px.scatter_3d(df_fig2, x='Salinity', y='Temperature_degC', z='Depth_m',
                     color='d18O', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     hover_data={
                         "lat": True,  
                         "lon": True,  
@@ -378,7 +501,10 @@ def main():
     # 1. 計算する
     original_len_df1 = len(df1)
     # 2. 【追加】計算できなかった行（null）をその場で除外する
-    df_fig3 = df1.dropna(subset=['d18O', 'Depth_m'])
+    df_fig3 = df1.dropna(subset=['d18O', 'Depth_m']).copy()
+    # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
+    # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
+    df_fig3['lon_plot'] = normalize_lon_to_center(df_fig3['lon'], lon_center_3d)
 
     # 消えた数を出力
     removed_num_fig3 = original_len_df1 - len(df_fig3)
@@ -389,7 +515,7 @@ def main():
 
     # XYZC
     y = df_fig3['lat']
-    x = df_fig3['lon']
+    x = df_fig3['lon_plot']
     z = df_fig3['Depth_m']
     c = df_fig3['d18O']
     
@@ -397,20 +523,19 @@ def main():
 
     # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
+    # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
+    # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
+    coastline_x_plot, coastline_y_plot = wrap_coastline_with_breaks(coastline_x, coastline_y, lon_center_3d)
     
-    color_continuous_scale= ('darkblue', 'darkblue', 'darkblue','darkblue', 'darkblue',  'blue', 'blue', 'blue','lightgray', 'lightgray', 'gray', 'lightgreen', 'lightgreen', 'green',  'yellow', 'orange', 'red','darkred')
-
-    
-
-    fig3=px.scatter_3d(df_fig3, x='lon', y='lat', z='Depth_m',
+    fig3=px.scatter_3d(df_fig3, x='lon_plot', y='lat', z='Depth_m',
                     color='d18O', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     hover_data={
                         "lat": True,  
-                        "lon": True,  
+                        "Longitude_degE": True,  
                         "d18O": True, 
                         "dD": True, 
                         "Salinity": True, 
@@ -452,12 +577,8 @@ def main():
     
     # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
      # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
-    if ref_data == data_source_GLOBAL:
-        x_range = None
-        y_range = None
-    else:
-        x_range = [120, 160] # デフォルトの日本近海範囲
-        y_range = [20, 60]
+    x_range = map_x_range
+    y_range = map_y_range
     
     # 2. その後で共通レイアウトを呼び出す
     fig3 = envgeo_utils.apply_common_layout(
@@ -468,17 +589,20 @@ def main():
         x_range=x_range, 
         y_range=y_range
     )
+    fig3.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
     # 海岸線を底面に追加する
     # データの最上部の場合
-    fig3.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[fig_depth_min] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    fig3.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
         ))
     #スケールの底面の場合
-    fig3.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[max(z)] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
+    # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
+    fig3.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
@@ -506,7 +630,10 @@ def main():
     # 1. 計算する
     original_len_df1 = len(df1)
     # # 2. 【追加】計算できなかった行（null）をその場で除外する
-    df_fig4 = df1.dropna(subset=['Temperature_degC', 'Depth_m'])
+    df_fig4 = df1.dropna(subset=['Temperature_degC', 'Depth_m']).copy()
+    # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
+    # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
+    df_fig4['lon_plot'] = normalize_lon_to_center(df_fig4['lon'], lon_center_3d)
     
     # 消えた数を出力
     removed_num_fig4 = original_len_df1 - len(df_fig4)
@@ -518,27 +645,26 @@ def main():
 
     # XYZC
     y = df_fig4['lat']
-    x = df_fig4['lon']
+    x = df_fig4['lon_plot']
     z = df_fig4['Depth_m']
     c = df_fig4['Temperature_degC']
 
 
     # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
+    # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
+    # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
+    coastline_x_plot, coastline_y_plot = wrap_coastline_with_breaks(coastline_x, coastline_y, lon_center_3d)
 
-    color_continuous_scale= ('darkblue', 'darkblue', 'darkblue','darkblue', 'darkblue',  'blue', 'blue', 'blue','lightgray', 'lightgray', 'gray', 'lightgreen', 'lightgreen', 'green',  'yellow', 'orange', 'red','darkred')
-
-
-    
-    fig4=px.scatter_3d(df_fig4, x='lon', y='lat', z='Depth_m',
+    fig4=px.scatter_3d(df_fig4, x='lon_plot', y='lat', z='Depth_m',
                     color='Temperature_degC', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     hover_data={
                         "lat": True,  
-                        "lon": True,  
+                        "Longitude_degE": True,  
                         "d18O": True, 
                         "dD": True, 
                         "Salinity": True, 
@@ -582,12 +708,8 @@ def main():
 
     # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
      # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
-    if ref_data == data_source_GLOBAL:
-        x_range = None
-        y_range = None
-    else:
-        x_range = [120, 160] # デフォルトの日本近海範囲
-        y_range = [20, 60]
+    x_range = map_x_range
+    y_range = map_y_range
     
     # 2. その後で共通レイアウトを呼び出す
     fig4 = envgeo_utils.apply_common_layout(
@@ -598,19 +720,22 @@ def main():
         x_range=x_range, 
         y_range=y_range
     )
+    fig4.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
     
     # 海岸線を底面に追加する
     # データの最上部の場合
-    fig4.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[fig_depth_min] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    fig4.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
         ))
     
     #スケールの底面の場合
-    fig4.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[max(z)] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
+    # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
+    fig4.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
@@ -641,7 +766,10 @@ def main():
     # 1. 計算する
     original_len_df1 = len(df1)
     # 2. 【追加】計算できなかった行（null）をその場で除外する
-    df_fig5 = df1.dropna(subset=['Salinity', 'Depth_m'])
+    df_fig5 = df1.dropna(subset=['Salinity', 'Depth_m']).copy()
+    # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
+    # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
+    df_fig5['lon_plot'] = normalize_lon_to_center(df_fig5['lon'], lon_center_3d)
 
     # 消えた数を出力
     removed_num_fig5 = original_len_df1 - len(df_fig5)
@@ -653,7 +781,7 @@ def main():
     
     # XYZC
     y = df_fig5['lat']
-    x = df_fig5['lon']
+    x = df_fig5['lon_plot']
     z = df_fig5['Depth_m']
     c = df_fig5['Salinity']
 
@@ -661,21 +789,21 @@ def main():
     
     # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
+    # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
+    # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
+    coastline_x_plot, coastline_y_plot = wrap_coastline_with_breaks(coastline_x, coastline_y, lon_center_3d)
     
-    color_continuous_scale= ('darkblue', 'darkblue', 'darkblue', 'blue', 'blue', 'blue','lightgray', 'lightgray', 'gray',  'gray', 'lightgreen', 'lightgreen', 'green',  'green', 'yellow', 'orange', 'red','darkred')
-
-    
-    fig5=px.scatter_3d(df_fig5, x='lon', y='lat', z='Depth_m',
+    fig5=px.scatter_3d(df_fig5, x='lon_plot', y='lat', z='Depth_m',
                     color='Salinity', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     
                     #############################ポップアップ情報ここから##########################
                     hover_data={
                         "lat": True,  # 名前を表示
-                        "lon": True,  # 値を表示
+                        "Longitude_degE": True,  # 値を表示
                         "d18O": True, 
                         "dD": True, 
                         "Salinity": True, 
@@ -721,12 +849,8 @@ def main():
     
     # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
      # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
-    if ref_data == data_source_GLOBAL:
-        x_range = None
-        y_range = None
-    else:
-        x_range = [120, 160] # デフォルトの日本近海範囲
-        y_range = [20, 60]
+    x_range = map_x_range
+    y_range = map_y_range
     
     # 2. その後で共通レイアウトを呼び出す
     fig5 = envgeo_utils.apply_common_layout(
@@ -737,19 +861,22 @@ def main():
         x_range=x_range, 
         y_range=y_range
     )
+    fig5.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
     
     # 海岸線を底面に追加する
     # データの最上部の場合
-    fig5.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[fig_depth_min] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    fig5.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
         ))
     
     #スケールの底面の場合
-    fig5.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[max(z)] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
+    # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
+    fig5.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
@@ -784,7 +911,10 @@ def main():
     # df_dexcess['d-excess'] = df_dexcess['dD'] - 8 * df_dexcess['d18O']
     
     # 2. 【追加】計算できなかった行（null）をその場で除外する
-    df_fig6 = df1.dropna(subset=['d-excess','Depth_m'])
+    df_fig6 = df1.dropna(subset=['d-excess','Depth_m']).copy()
+    # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
+    # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
+    df_fig6['lon_plot'] = normalize_lon_to_center(df_fig6['lon'], lon_center_3d)
 
     # 消えた数を出力
     removed_num_fig6 = original_len_df1 - len(df_fig6)
@@ -796,7 +926,7 @@ def main():
     
     # XYZC
     y = df_fig6['lat']
-    x = df_fig6['lon']
+    x = df_fig6['lon_plot']
     z = df_fig6['Depth_m']
     c = df_fig6['d-excess']
     
@@ -804,21 +934,20 @@ def main():
     
     # --- 海岸線の座標データをenvgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
+    # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
+    # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
+    coastline_x_plot, coastline_y_plot = wrap_coastline_with_breaks(coastline_x, coastline_y, lon_center_3d)
 
 
-    # --- カラーバー色指定 ---
-    color_continuous_scale= ('darkblue', 'blue','lightgray', 'gray', 'lightgreen', 'lightgreen', 'green',  'yellow', 'orange', 'red','red','red','red')
-
-    
-    fig6=px.scatter_3d(df_fig6, x='lon', y='lat', z='Depth_m',
+    fig6=px.scatter_3d(df_fig6, x='lon_plot', y='lat', z='Depth_m',
                     color='d-excess', 
                     #symbol='species'
                     width=700,
                     height=600,
-                    color_continuous_scale=color_continuous_scale,
+                    color_continuous_scale=map_colorscale,
                     hover_data={
                         "lat": True,  
-                        "lon": True,  
+                        "Longitude_degE": True,  
                         "d18O": True, 
                         "dD": True, 
                         "Salinity": True, 
@@ -865,12 +994,8 @@ def main():
     
     # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
      # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
-    if ref_data == data_source_GLOBAL:
-        x_range = None
-        y_range = None
-    else:
-        x_range = [120, 160] # デフォルトの日本近海範囲
-        y_range = [20, 60]
+    x_range = map_x_range
+    y_range = map_y_range
     
     # 2. その後で共通レイアウトを呼び出す
     fig6 = envgeo_utils.apply_common_layout(
@@ -881,17 +1006,20 @@ def main():
         x_range=x_range, 
         y_range=y_range
     )
+    fig6.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
     # 海岸線を底面に追加する
     # データの最上部の場合
-    fig6.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[fig_depth_min] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    fig6.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
         ))
     #スケールの底面の場合
-    fig6.add_traces(go.Scatter3d(x=coastline_x, y=coastline_y, z=[max(z)] * len(coastline_x), mode='lines',     marker = dict(size = 3),
+    # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
+    # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
+    fig6.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
         # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
         hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
@@ -938,12 +1066,12 @@ def main():
     # --- 2. 選択肢の定義 ---
     # リストにしておくことで、if文での判定ミス（一文字違いなど）を物理的に防ぐ
     options = [
-        "4D salinity-δ18O-depth-temperature", 
-        "4D salinity-temperature-depth-d18O", 
-        "4D map-depth-d18O", 
-        "4D map-depth-temperature", 
-        "4D map-depth-salinity", 
-        "4D map-depth-d-excess"
+        "4D salinity-δ18O-depth-temperature (Fig.1)", 
+        "4D salinity-temperature-depth-d18O (Fig.2)", 
+        "4D map-depth-d18O (Fig.3)", 
+        "4D map-depth-temperature (Fig.4)", 
+        "4D map-depth-salinity (Fig.5)", 
+        "4D map-depth-d-excess (Fig.6)"
     ]
 
     # --- 3. ラジオボタンの設置 ---
@@ -1174,7 +1302,9 @@ def main():
     
     # 地図作成 (color="d18O" 固定を解除)
     # 地図の作成
-    c_scale_map = envgeo_utils.get_custom_colorscale(m_target)
+    # Reuse the sidebar colormap choice for the final 2D location map as well.
+    # 最後の 2D 地図でも、サイドバーで選んだカラーマップを共通利用する。
+    c_scale_map = map_colorscale
     fig_map = px.scatter_mapbox(
         df_map, lat="Latitude_degN", lon="Longitude_degE",
         color=m_target,                   # 選択項目で色付け
@@ -1278,9 +1408,3 @@ def main():
 if __name__ == '__main__':
     main()
     
-
-
-
-
-
-
