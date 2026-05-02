@@ -172,10 +172,10 @@ def set_region_japan():
     """
     if st.session_state.eq_region_japan:
         st.session_state.eq_region_global = False
-        st.session_state.eq_region_choice = "Japan and surrounding seas"
+        st.session_state.eq_region_choice = "Japan and surrounding area"
     elif not st.session_state.eq_region_global:
         st.session_state.eq_region_japan = True
-        st.session_state.eq_region_choice = "Japan and surrounding seas"
+        st.session_state.eq_region_choice = "Japan and surrounding area"
 
 
 def set_region_global():
@@ -195,7 +195,7 @@ def main_region_selector():
     Select Japan-area or global API bounds from the main page.
     """
     if "eq_region_choice" not in st.session_state:
-        st.session_state.eq_region_choice = "Japan and surrounding seas"
+        st.session_state.eq_region_choice = "Japan and surrounding area"
     if "eq_region_japan" not in st.session_state:
         st.session_state.eq_region_japan = True
     if "eq_region_global" not in st.session_state:
@@ -205,7 +205,7 @@ def main_region_selector():
     col_japan, col_global = st.columns(2)
     with col_japan:
         st.checkbox(
-            "Japan and surrounding seas",
+            "Japan and surrounding area",
             key="eq_region_japan",
             on_change=set_region_japan,
         )
@@ -218,7 +218,7 @@ def main_region_selector():
 
     if st.session_state.eq_region_global:
         return "Global"
-    return "Japan and surrounding seas"
+    return "Japan and surrounding area"
 
 
 def sidebar_controls(region_preset):
@@ -230,7 +230,7 @@ def sidebar_controls(region_preset):
     default_start_date = default_end_date - timedelta(days=30)
 
     region_defaults = {
-        "Japan and surrounding seas": (120.0, 155.0, 20.0, 50.0),
+        "Japan and surrounding area": (120.0, 155.0, 20.0, 50.0),
         "Global": (-180.0, 180.0, -90.0, 90.0),
     }
 
@@ -687,6 +687,7 @@ def main():
     )
 
 
+
     region_preset = main_region_selector()
     query = sidebar_controls(region_preset)
     df_eq = fetch_earthquake_dataframe(query)
@@ -714,8 +715,6 @@ def main():
     if st.sidebar.button("Reload / clear API cache"):
         envgeo_utils.clear_app_cache()
         st.rerun()
-
-
 
 if __name__ == "__main__":
     main()
