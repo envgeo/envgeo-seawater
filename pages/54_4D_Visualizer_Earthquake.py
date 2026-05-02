@@ -52,7 +52,7 @@ def earthquake_color_scale(color_column):
             [1.0, "darkblue"],
         ]
 
-    return ["lightgray", "yellow", "orange", "red", "darkred"]
+    return ["green", "yellow", "orange", "red", "darkred"]
 
 
 def build_datetime_range(date_range, start_clock, end_clock):
@@ -262,7 +262,7 @@ def sidebar_controls(region_preset):
 
         mag_min, mag_max = st.slider(
             "Magnitude",
-            min_value=-1.0,
+            min_value=0.0,
             max_value=10.0,
             value=(4.5, 10.0),
             step=0.1,
@@ -271,7 +271,7 @@ def sidebar_controls(region_preset):
 
         depth_min, depth_max = st.slider(
             "Hypocenter depth (km)",
-            min_value=-100.0,
+            min_value=0.0,
             max_value=1000.0,
             value=(0.0, 700.0),
             step=10.0,
@@ -307,10 +307,10 @@ def sidebar_controls(region_preset):
                 "- **time-asc**: Oldest first / 古い順\n"
                 "- **magnitude**: Largest first / マグニチュードが大きい順\n"
                 "- **magnitude-asc**: Smallest first / マグニチュードが小さい順\n\n"
-                "**Usage Tip / 使い方:**\n"
+                "**Usage Tip / 使い方:**\n\n"
                 "If you want to quickly see recent events, keep it set to **'time'**. "
                 "However, if you want to ensure large historical earthquakes in a specific area are displayed without being missed due to the API limit, switching to **'magnitude'** is more effective.\n\n"
-                "最近の地震を見たい場合は **'time'** のままでOKですが、特定のエリアの巨大地震を逃さず表示したい場合は、**'magnitude'** に。"
+                "最近の地震を見たい場合は **'time'** のままでOKですが、特定のエリアの巨大地震を逃さず表示したい場合は、**'magnitude'** で。"
             )
         )
 
@@ -415,7 +415,7 @@ def visualization_controls(df_plot, query):
 
         marker_size_scale = st.slider(
             "Marker size scale",
-            min_value=0.3,
+            min_value=0.2,
             max_value=3.0,
             value=1.0,
             step=0.1,
@@ -443,7 +443,7 @@ def visualization_controls(df_plot, query):
 
     color_range = st.slider(
         f"Colorbar scale adjustment: {color_label}",
-        min_value=c_slider_min,
+        min_value=0.0,
         max_value=c_slider_max,
         value=(c_slider_min, c_slider_max),
         step=c_step,
