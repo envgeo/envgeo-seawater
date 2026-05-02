@@ -686,9 +686,6 @@ def main():
         "and renders earthquake hypocenters filtered by focal depth, magnitude, geographical coordinates, and timestamps."
     )
 
-    if st.sidebar.button("Reload / clear API cache"):
-        envgeo_utils.clear_app_cache()
-        st.rerun()
 
     region_preset = main_region_selector()
     query = sidebar_controls(region_preset)
@@ -713,6 +710,11 @@ def main():
     render_4d_hypocenter_map(df_plot, query, viz)
     render_2d_distribution_map(df_plot, viz)
     display_earthquake_table(df_eq)
+
+    if st.sidebar.button("Reload / clear API cache"):
+        envgeo_utils.clear_app_cache()
+        st.rerun()
+
 
 
 if __name__ == "__main__":
