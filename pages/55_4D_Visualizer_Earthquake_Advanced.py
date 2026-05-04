@@ -29,6 +29,9 @@ GLOBAL_REGION_LABEL = "Global"
 USGS_PLATE_BOUNDARY_SERVICE = (
     "https://earthquake.usgs.gov/arcgis/rest/services/eq/map_plateboundaries/MapServer"
 )
+USGS_EVENT_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/"
+USGS_COMCAT_FDSN_URL = "https://www.fdsn.org/datacenters/detail/USGS/"
+USGS_CREDIT_URL = "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
 PLATE_LAYER_IDS = {
     1: "Plates",
     0: "Microplates",
@@ -41,17 +44,17 @@ PLATE_BOUNDARY_COLORS = {
     "Approximate": "#7f7f7f",
 }
 JMA_BULLETIN_URL = "https://www.data.jma.go.jp/eqev/data/bulletin/index_e.html"
-JMA_EARTHQUAKE_INFO_URL = "https://www.data.jma.go.jp/svd/eqev/data/en/guide/earthinfo.html"
+JMA_EARTHQUAKE_INFO_URL = "https://www.data.jma.go.jp/eqev/data/en/guide/earthinfo.html"
 NIED_HINET_DATA_URL = "https://www.hinet.bosai.go.jp/about_data/?LANG=en"
 PLATE_BOUNDARY_NOTE_EN = (
     "Plate boundaries are from the USGS Tectonic Plate Boundaries service. "
-    "Sources cited by USGS include Bird (2003) and DeMets et al. (2010). "
+    "Sources cited in the USGS service metadata include Bird (2003) and DeMets et al. (2010). "
     "Boundary locations are approximate and are intended for educational/research visualization, "
     "not for official hazard assessment or disaster-response decisions."
 )
 PLATE_BOUNDARY_NOTE_JA = (
     "プレート境界は USGS Tectonic Plate Boundaries service を使用しています。"
-    "USGSの記載に基づき、主な出典には Bird (2003) および DeMets et al. (2010) が含まれます。"
+    "USGSサービスのメタデータに基づき、主な出典には Bird (2003) および DeMets et al. (2010) が含まれます。"
     "境界位置は概略であり、教育・研究用の可視化を目的としたもので、"
     "公式なハザード評価や防災判断には使用しないでください。"
 )
@@ -176,7 +179,7 @@ def fetch_usgs_plate_boundary_features(include_microplates):
             query_url = f"{USGS_PLATE_BOUNDARY_SERVICE}/{layer_id}/query?{urlencode(params)}"
             request = Request(
                 query_url,
-                headers={"User-Agent": "EnvGeoSeawater earthquake visualizer"},
+                headers={"User-Agent": "EnvGeo-Earthquake visualizer"},
             )
             try:
                 with urlopen(request, timeout=30) as response:
@@ -332,6 +335,8 @@ def render_plate_boundary_note():
     st.write(PLATE_BOUNDARY_FALLBACK_NOTE_EN)
     st.write(PLATE_BOUNDARY_FALLBACK_NOTE_JA)
     st.markdown(f"[USGS Tectonic Plate Boundaries service]({USGS_PLATE_BOUNDARY_SERVICE})")
+    st.markdown("- Bird (2003): https://doi.org/10.1029/2001GC000252")
+    st.markdown("- DeMets et al. (2010): https://doi.org/10.1111/j.1365-246X.2009.04491.x")
 
 
 def build_datetime_range(date_range, start_clock, end_clock):
@@ -1767,8 +1772,7 @@ def main():
     st.header(f"4D Visualizer Earthquake Advanced ({version})")
     st.caption("Source: USGS Earthquake Catalog. Data may be preliminary and updated.")
     st.caption("震源データ: USGS Earthquake Catalog。速報値を含み、更新される場合があります。")
-    st.info("3D display is recommended for PC. On smartphones and tablets, the 2D map is recommended.")
-    st.info("3D表示はPC推奨です。スマホ・タブレットでは2Dマップの利用を推奨します。")
+
 
     with st.expander("Data use note / データ利用上の注意", expanded=False):
         st.write(
@@ -1783,6 +1787,24 @@ def main():
         st.write(
             "Earthquake data are accessed from the USGS Earthquake Catalog. "
             "USGS data may be revised after publication."
+        )
+        st.write(
+            "Recommended catalog citation: U.S. Geological Survey (2017), "
+            "Advanced National Seismic System (ANSS) Comprehensive Catalog, "
+            "U.S. Geological Survey, https://doi.org/10.5066/F7MS3QZH."
+        )
+        st.write(
+            "USGS-authored or USGS-produced information is generally public domain, "
+            "but USGS requests credit. Because catalogs can include contributions "
+            "from multiple networks or agencies, publication or redistribution "
+            "should also follow any contributor-specific guidance."
+        )
+        st.markdown(f"- [USGS FDSN Event Web Service]({USGS_EVENT_API_URL})")
+        st.markdown(f"- [ANSS / USGS FDSN data-center record]({USGS_COMCAT_FDSN_URL})")
+        st.markdown(f"- [USGS Copyrights and Credits]({USGS_CREDIT_URL})")
+        st.caption(
+            "Local coastline Excel files used in 3D reference overlays do not contain "
+            "source/license metadata in this repository; treat them as visual guides only."
         )
         render_plate_boundary_note()
 
@@ -1866,6 +1888,9 @@ def main():
     if st.sidebar.button("Reload / clear API cache"):
         envgeo_utils.clear_app_cache()
         st.rerun()
+
+    st.caption("3D display is recommended for PC. On smartphones and tablets, the 2D map is recommended.")
+    st.caption("3D表示はPC推奨です。スマホ・タブレットでは2Dマップの利用を推奨します。")
 
 if __name__ == "__main__":
     main()
