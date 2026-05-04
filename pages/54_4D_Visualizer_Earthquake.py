@@ -310,7 +310,7 @@ def sidebar_controls(region_preset):
                 "**Usage Tip / 使い方:**\n\n"
                 "If you want to quickly see recent events, keep it set to **'time'**. "
                 "However, if you want to ensure large historical earthquakes in a specific area are displayed without being missed due to the API limit, switching to **'magnitude'** is more effective.\n\n"
-                "最近の地震を見たい場合は **'time'** のままでOKですが、特定のエリアの巨大地震を逃さず表示したい場合は、**'magnitude'** で。"
+                "最近の地震を見たい場合は **'time'** 、巨大地震を優先して表示したい場合は、**'magnitude'** で。"
             )
         )
 
@@ -676,17 +676,23 @@ def display_earthquake_table(df_eq):
 def main():
     st.header(f"EnvGeo-Earthquake")
     st.header(f"4D Visualizer Earthquake ({version})")
-    st.write(envgeo_utils.refs_USGS_EARTHQUAKE)
-    st.caption(
-        "USGS Earthquake Catalog APIから震源データを取得し、"
-        "震源深さ・マグニチュード・緯度経度・日時でフィルタリングして描画します。"
-    )
-    st.caption(
-        "This tool fetches seismic records from the USGS API "
-        "and renders earthquake hypocenters filtered by focal depth, magnitude, geographical coordinates, and timestamps."
-    )
+    st.caption("Source: USGS Earthquake Catalog. Data may be preliminary and updated.")
+    st.caption("震源データ: USGS Earthquake Catalog。速報値を含み、更新される場合があります。")
 
-
+    with st.expander("Data use note / データ利用上の注意", expanded=False):
+        st.write(
+            "This visualization is for research and educational use only. "
+            "For emergency response or official earthquake information, refer to official agencies."
+        )
+        st.write(
+            "本ページは研究・教育・可視化を目的としたものです。"
+            "防災判断や緊急対応には、必ず気象庁などの公式情報を確認してください。"
+        )
+        st.write("Data source: USGS Earthquake Catalog API (GeoJSON, eventtype=earthquake).")
+        st.write(
+            "Earthquake data are accessed from the USGS Earthquake Catalog. "
+            "USGS data may be revised after publication."
+        )
 
     region_preset = main_region_selector()
     query = sidebar_controls(region_preset)
