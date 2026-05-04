@@ -271,7 +271,7 @@ def sidebar_controls(region_preset):
 
         depth_min, depth_max = st.slider(
             "Hypocenter depth (km)",
-            min_value=0.0,
+            min_value=-100.0,
             max_value=1000.0,
             value=(0.0, 700.0),
             step=10.0,
