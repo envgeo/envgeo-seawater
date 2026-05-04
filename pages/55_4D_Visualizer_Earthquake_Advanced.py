@@ -4,6 +4,7 @@
 USGS earthquake hypocenter 4D visualizer for EnvGeo.
 Created on Sun May 1 2026
 Created from 04_4D_Visualizer.py and simplified as an earthquake-only page.
+@author: Toyoho Ishimura @Kyoto-U
 """
 
 import math
@@ -21,7 +22,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "0.2.0"
+version = "0.2.1"
 
 
 JAPAN_REGION_LABEL = "Japan and surrounding area"
@@ -452,13 +453,11 @@ def selected_area_km_ranges(query, center_lon, center_lat, z_min, z_max):
 
 def default_cross_section_points(query):
     """
-    Provide reasonable default section endpoints for Japan/global views.
-    """
-    if query["region_preset"] == JAPAN_REGION_LABEL:
-        return 130.0, 32.0, 146.0, 41.5
+    Provide default section endpoints.
 
-    center_lat = (query["lat_min"] + query["lat_max"]) / 2
-    return query["lon_min"], center_lat, query["lon_max"], center_lat
+    Default: Start = 130E, 41N; End = 150E, 37N.
+    """
+    return 130.0, 41.0, 150.0, 37.0
 
 
 def add_cross_section_coordinates(df_plot, start_lon, start_lat, end_lon, end_lat):
@@ -831,13 +830,31 @@ def visualization_controls(df_plot, query):
             key="eq_fig_depth_scale",
         )
 
-        marker_size_scale = st.slider(
-            "Marker size scale",
+        marker_size_scale_3d = st.slider(
+            "3D marker size scale",
             min_value=0.2,
             max_value=3.0,
-            value=1.0,
+            value=0.7,
             step=0.1,
-            key="eq_marker_size_scale",
+            key="eq_marker_size_scale_3d",
+        )
+
+        marker_size_scale_2d = st.slider(
+            "2D map marker size scale",
+            min_value=0.2,
+            max_value=3.0,
+            value=0.6,
+            step=0.1,
+            key="eq_marker_size_scale_2d",
+        )
+
+        marker_size_scale_section = st.slider(
+            "Cross-section marker size scale",
+            min_value=0.2,
+            max_value=3.0,
+            value=0.6,
+            step=0.1,
+            key="eq_marker_size_scale_section",
         )
 
         color_option = st.radio(
@@ -884,7 +901,9 @@ def visualization_controls(df_plot, query):
     return {
         "fig_depth_min": fig_depth_min,
         "fig_depth_max": fig_depth_max,
-        "marker_size_scale": marker_size_scale,
+        "marker_size_scale_3d": marker_size_scale_3d,
+        "marker_size_scale_2d": marker_size_scale_2d,
+        "marker_size_scale_section": marker_size_scale_section,
         "color_column": color_column,
         "color_label": color_label,
         "color_range": color_range,
@@ -929,7 +948,14 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
     Render the EnvGeo-style 4D hypocenter map.
     """
     df_plot, center_lon, center_lat = add_local_km_coordinates(df_plot, query)
-    df_plot["MarkerSize"] = df_plot["MarkerSize"] * viz["marker_size_scale"]
+
+    # Plotly 3D/WebGL marker sizes can appear much larger than 2D markers,
+    # and the apparent size can differ by browser.  Use a separate, conservative
+    # 3D marker-size column instead of Plotly Express size normalization.
+    magnitude_3d = pd.to_numeric(df_plot["Magnitude"], errors="coerce").fillna(0).clip(lower=0)
+    df_plot["MarkerSize3D"] = (1.8 + magnitude_3d * 0.8) * viz["marker_size_scale_3d"]
+    df_plot["MarkerSize3D"] = df_plot["MarkerSize3D"].clip(lower=1.5, upper=16.0)
+
     df_plot = df_plot.sort_values(by=["Depth_km", "Magnitude"], ascending=[False, True])
 
     x_range, y_range, z_range, aspectratio = selected_area_km_ranges(
@@ -946,8 +972,6 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
         y="North_km",
         z="Depth_km",
         color=viz["color_column"],
-        size="MarkerSize",
-        size_max=18,
         width=700,
         height=620,
         color_continuous_scale=earthquake_color_scale(viz["color_column"]),
@@ -963,12 +987,17 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
             "East_km": False,
             "North_km": False,
             "MarkerSize": False,
+            "MarkerSize3D": False,
         },
     )
 
     fig_eq.update_traces(
         mode="markers",
-        marker=dict(opacity=0.78, line=dict(color="white", width=0.5)),
+        marker=dict(
+            size=df_plot["MarkerSize3D"].tolist(),
+            opacity=0.72,
+            line=dict(color="rgba(255,255,255,0.0)", width=0.0),
+        ),
         name="USGS earthquakes",
     )
 
@@ -1092,7 +1121,7 @@ def render_2d_distribution_map(df_plot, viz, plate_boundary_df=None):
 
     center_lat, center_lon, auto_zoom = auto_map_view(df_plot)
     df_map = df_plot.copy()
-    df_map["MagnitudeMarkerSize"] = df_map["MagnitudeMarkerSize"] * viz["marker_size_scale"]
+    df_map["MagnitudeMarkerSize"] = df_map["MagnitudeMarkerSize"] * viz["marker_size_scale_2d"]
 
     fig_map = px.scatter_mapbox(
         df_map,
@@ -1253,7 +1282,7 @@ def render_cross_section_location_map(
                 mode="markers",
                 name="events in section",
                 marker=dict(
-                    size=(selected_size * viz["marker_size_scale"]).tolist(),
+                    size=(selected_size * viz["marker_size_scale_section"]).tolist(),
                     color=pd.to_numeric(df_section[viz["color_column"]], errors="coerce"),
                     colorscale=earthquake_color_scale(viz["color_column"]),
                     cmin=viz["color_range"][0],
@@ -1380,8 +1409,15 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
         end_lon,
         end_lat,
     )
-    if "MarkerSize" in df_section.columns:
-        df_section["MarkerSize"] = df_section["MarkerSize"] * viz["marker_size_scale"]
+    # Build a cross-section-specific marker size that responds clearly to the
+    # sidebar scale.  We avoid Plotly Express size normalization and use a
+    # direct pixel size instead so that increasing the slider always makes the
+    # section markers larger and decreasing it always makes them smaller.
+    magnitude_section = pd.to_numeric(df_section["Magnitude"], errors="coerce").fillna(0).clip(lower=0)
+    section_scale = float(viz["marker_size_scale_section"]) ** 1.35
+    df_section["SectionMarkerSize"] = (1.4 + magnitude_section * 1.6) * section_scale
+    df_section["SectionMarkerSize"] = df_section["SectionMarkerSize"].clip(lower=0.8, upper=22.0)
+
     if section_length_km <= 0:
         st.warning("Please select two different cross-section endpoints.")
     else:
@@ -1399,8 +1435,6 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
                 x="SectionDistance_km",
                 y="Depth_km",
                 color=viz["color_column"],
-                size="MarkerSize",
-                size_max=16,
                 color_continuous_scale=earthquake_color_scale(viz["color_column"]),
                 range_color=viz["color_range"],
                 hover_data={
@@ -1412,8 +1446,16 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
                     "Latitude_degN": True,
                     "SectionOffset_km": ":.1f",
                     "MarkerSize": False,
+                    "SectionMarkerSize": False,
                 },
                 height=480,
+            )
+            fig_section.update_traces(
+                marker=dict(
+                    size=df_section["SectionMarkerSize"].tolist(),
+                    opacity=0.78,
+                    line=dict(color="rgba(255,255,255,0.0)", width=0.0),
+                )
             )
             fig_section.update_layout(
                 xaxis_title="Distance along section (km)",

@@ -4,6 +4,7 @@
 USGS earthquake hypocenter 4D visualizer for EnvGeo.
 Created on Sun May 1 2026
 Created from 04_4D_Visualizer.py and simplified as an earthquake-only page.
+@author: Toyoho Ishimura @Kyoto-U
 """
 
 import math
@@ -17,7 +18,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "0.1.4"
+version = "0.2.1"
 
 
 def expanded_float_bounds(series, default_min, default_max, pad=1.0):
@@ -413,13 +414,22 @@ def visualization_controls(df_plot, query):
             key="eq_fig_depth_scale",
         )
 
-        marker_size_scale = st.slider(
-            "Marker size scale",
+        marker_size_scale_3d = st.slider(
+            "3D marker size scale",
             min_value=0.2,
             max_value=3.0,
-            value=1.0,
+            value=0.7,
             step=0.1,
-            key="eq_marker_size_scale",
+            key="eq_marker_size_scale_3d",
+        )
+
+        marker_size_scale_2d = st.slider(
+            "2D map marker size scale",
+            min_value=0.2,
+            max_value=3.0,
+            value=0.6,
+            step=0.1,
+            key="eq_marker_size_scale_2d",
         )
 
         color_option = st.radio(
@@ -453,7 +463,8 @@ def visualization_controls(df_plot, query):
     return {
         "fig_depth_min": fig_depth_min,
         "fig_depth_max": fig_depth_max,
-        "marker_size_scale": marker_size_scale,
+        "marker_size_scale_3d": marker_size_scale_3d,
+        "marker_size_scale_2d": marker_size_scale_2d,
         "color_column": color_column,
         "color_label": color_label,
         "color_range": color_range,
@@ -465,7 +476,14 @@ def render_4d_hypocenter_map(df_plot, query, viz):
     Render the EnvGeo-style 4D hypocenter map.
     """
     df_plot, center_lon, center_lat = add_local_km_coordinates(df_plot, query)
-    df_plot["MarkerSize"] = df_plot["MarkerSize"] * viz["marker_size_scale"]
+
+    # Plotly 3D/WebGL marker sizes can appear much larger than 2D markers,
+    # and the apparent size can differ by browser.  Use a separate, conservative
+    # 3D marker-size column instead of Plotly Express size normalization.
+    magnitude_3d = pd.to_numeric(df_plot["Magnitude"], errors="coerce").fillna(0).clip(lower=0)
+    df_plot["MarkerSize3D"] = (1.8 + magnitude_3d * 0.8) * viz["marker_size_scale_3d"]
+    df_plot["MarkerSize3D"] = df_plot["MarkerSize3D"].clip(lower=1.5, upper=16.0)
+
     df_plot = df_plot.sort_values(by=["Depth_km", "Magnitude"], ascending=[False, True])
 
     x_range, y_range, z_range, aspectratio = selected_area_km_ranges(
@@ -482,8 +500,6 @@ def render_4d_hypocenter_map(df_plot, query, viz):
         y="North_km",
         z="Depth_km",
         color=viz["color_column"],
-        size="MarkerSize",
-        size_max=18,
         width=700,
         height=620,
         color_continuous_scale=earthquake_color_scale(viz["color_column"]),
@@ -499,12 +515,17 @@ def render_4d_hypocenter_map(df_plot, query, viz):
             "East_km": False,
             "North_km": False,
             "MarkerSize": False,
+            "MarkerSize3D": False,
         },
     )
 
     fig_eq.update_traces(
         mode="markers",
-        marker=dict(opacity=0.78, line=dict(color="white", width=0.5)),
+        marker=dict(
+            size=df_plot["MarkerSize3D"].tolist(),
+            opacity=0.72,
+            line=dict(color="rgba(255,255,255,0.0)", width=0.0),
+        ),
         name="USGS earthquakes",
     )
 
@@ -596,7 +617,7 @@ def render_2d_distribution_map(df_plot, viz):
 
     center_lat, center_lon, auto_zoom = auto_map_view(df_plot)
     df_map = df_plot.copy()
-    df_map["MagnitudeMarkerSize"] = df_map["MagnitudeMarkerSize"] * viz["marker_size_scale"]
+    df_map["MagnitudeMarkerSize"] = df_map["MagnitudeMarkerSize"] * viz["marker_size_scale_2d"]
 
     fig_map = px.scatter_mapbox(
         df_map,
