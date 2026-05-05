@@ -22,7 +22,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "0.2.1"
+version = "0.2.2" #2026/05/05
 
 
 JAPAN_REGION_LABEL = "Japan and surrounding area"
@@ -64,7 +64,7 @@ PLATE_BOUNDARY_FALLBACK_NOTE_EN = (
     "rough schematic guides only."
 )
 PLATE_BOUNDARY_FALLBACK_NOTE_JA = (
-    "USGSのプレート境界サービスに接続できない場合に表示される日本周辺のフォールバック線は、"
+    "USGSのプレート境界データにアクセスできない場合に表示される日本周辺の境界線は、"
     "概略的な模式線です。"
 )
 
@@ -376,12 +376,51 @@ def auto_map_view(df):
     return center_lat, center_lon, auto_zoom
 
 
-def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat):
+def wrap_longitudes_to_central_meridian(longitudes, central_meridian):
+    """
+    Wrap longitudes to [central_meridian-180, central_meridian+180).
+    """
+    lon_values = pd.to_numeric(pd.Series(longitudes), errors="coerce")
+    return ((lon_values - central_meridian + 180.0) % 360.0) - 180.0 + central_meridian
+
+
+def wrap_line_with_breaks(longitudes, latitudes, central_meridian, jump_threshold=180.0):
+    """
+    Wrap a line to the selected central meridian and insert NaN breaks at big jumps.
+    """
+    lon_wrapped = wrap_longitudes_to_central_meridian(longitudes, central_meridian).tolist()
+    lat_values = pd.to_numeric(pd.Series(latitudes), errors="coerce").tolist()
+    if not lon_wrapped:
+        return [], []
+
+    line_lon = [lon_wrapped[0]]
+    line_lat = [lat_values[0]]
+    for i in range(1, len(lon_wrapped)):
+        prev_lon, curr_lon = lon_wrapped[i - 1], lon_wrapped[i]
+        prev_lat, curr_lat = lat_values[i - 1], lat_values[i]
+        if (
+            pd.isna(prev_lon)
+            or pd.isna(curr_lon)
+            or pd.isna(prev_lat)
+            or pd.isna(curr_lat)
+            or abs(curr_lon - prev_lon) > jump_threshold
+        ):
+            line_lon.append(float("nan"))
+            line_lat.append(float("nan"))
+        line_lon.append(curr_lon)
+        line_lat.append(curr_lat)
+
+    return line_lon, line_lat
+
+
+def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat, central_meridian=None):
     """
     Convert lon/lat coordinates to local equirectangular kilometers.
     """
     lon_values = pd.to_numeric(pd.Series(longitudes), errors="coerce")
     lat_values = pd.to_numeric(pd.Series(latitudes), errors="coerce")
+    if central_meridian is not None:
+        lon_values = wrap_longitudes_to_central_meridian(lon_values, central_meridian)
 
     km_per_lat_degree = 110.574
     km_per_lon_degree = 111.320 * math.cos(math.radians(center_lat))
@@ -393,44 +432,66 @@ def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat):
     return east_km, north_km
 
 
-def add_local_km_coordinates(df, query):
+def add_local_km_coordinates(df, query, pacific_centered=False):
     """
     Add local kilometer coordinates for 3D plots with correct horizontal scale.
     """
     df_km = df.copy()
-    center_lon = (query["lon_min"] + query["lon_max"]) / 2
+    use_pacific_center = pacific_centered and query.get("region_preset") == GLOBAL_REGION_LABEL
+    center_lon = 180.0 if use_pacific_center else (query["lon_min"] + query["lon_max"]) / 2
     center_lat = (query["lat_min"] + query["lat_max"]) / 2
+    central_meridian = center_lon if use_pacific_center else None
 
     east_km, north_km = lonlat_to_local_km(
         df_km["Longitude_degE"],
         df_km["Latitude_degN"],
         center_lon,
         center_lat,
+        central_meridian=central_meridian,
     )
     df_km["East_km"] = east_km
     df_km["North_km"] = north_km
-    return df_km, center_lon, center_lat
+    return df_km, center_lon, center_lat, use_pacific_center
 
 
-def selected_area_km_ranges(query, center_lon, center_lat, z_min, z_max):
+def selected_area_km_ranges(
+    query,
+    center_lon,
+    center_lat,
+    z_min,
+    z_max,
+    pacific_centered=False,
+    z_aspect_scale=0.5,
+):
     """
     Convert the selected lon/lat/depth box into km ranges and aspect ratios.
     """
-    x_bounds, _ = lonlat_to_local_km(
-        [query["lon_min"], query["lon_max"]],
-        [center_lat, center_lat],
-        center_lon,
-        center_lat,
-    )
-    _, y_bounds = lonlat_to_local_km(
-        [center_lon, center_lon],
-        [query["lat_min"], query["lat_max"]],
-        center_lon,
-        center_lat,
-    )
+    is_global = query.get("region_preset") == GLOBAL_REGION_LABEL
+    if pacific_centered and is_global:
+        km_per_lat_degree = 110.574
+        km_per_lon_degree = 111.320 * math.cos(math.radians(center_lat))
+        km_per_lon_degree = max(abs(km_per_lon_degree), 0.001)
+        x_half_span = 180.0 * km_per_lon_degree
+        y_min = (query["lat_min"] - center_lat) * km_per_lat_degree
+        y_max = (query["lat_max"] - center_lat) * km_per_lat_degree
+        x_range = [-x_half_span, x_half_span]
+        y_range = [min(float(y_min), float(y_max)), max(float(y_min), float(y_max))]
+    else:
+        x_bounds, _ = lonlat_to_local_km(
+            [query["lon_min"], query["lon_max"]],
+            [center_lat, center_lat],
+            center_lon,
+            center_lat,
+        )
+        _, y_bounds = lonlat_to_local_km(
+            [center_lon, center_lon],
+            [query["lat_min"], query["lat_max"]],
+            center_lon,
+            center_lat,
+        )
+        x_range = sorted([float(x_bounds.iloc[0]), float(x_bounds.iloc[1])])
+        y_range = sorted([float(y_bounds.iloc[0]), float(y_bounds.iloc[1])])
 
-    x_range = [float(x_bounds.iloc[0]), float(x_bounds.iloc[1])]
-    y_range = [float(y_bounds.iloc[0]), float(y_bounds.iloc[1])]
     z_range = [float(z_max), float(z_min)]
 
     x_span = max(abs(x_range[1] - x_range[0]), 1.0)
@@ -446,7 +507,7 @@ def selected_area_km_ranges(query, center_lon, center_lat, z_min, z_max):
         dict(
             x=x_span / max_span,
             y=y_span / max_span,
-            z=horizontal_aspect * 0.5,
+            z=horizontal_aspect * max(float(z_aspect_scale), 0.05),
         ),
     )
 
@@ -857,6 +918,23 @@ def visualization_controls(df_plot, query):
             key="eq_marker_size_scale_section",
         )
 
+        z_aspect_scale_3d = st.slider(
+            "3D Z-axis display scale",
+            min_value=0.1,
+            max_value=2.0,
+            value=0.5,
+            step=0.1,
+            key="eq_z_aspect_scale_3d",
+            help="Lower values flatten depth; higher values emphasize depth.",
+        )
+
+        pacific_center_3d = st.checkbox(
+            "3D Pacific-centered view (180°)",
+            value=(query.get("region_preset") == GLOBAL_REGION_LABEL),
+            disabled=(query.get("region_preset") != GLOBAL_REGION_LABEL),
+            key="eq_pacific_center_3d",
+        )
+
         color_option = st.radio(
             "Colorbar variable",
             ["Magnitude", "Hypocenter depth"],
@@ -883,20 +961,22 @@ def visualization_controls(df_plot, query):
         df_plot[color_column], 0.0, 1.0, pad=1.0
     )
     c_step = 10.0 if color_column == "Depth_km" else 0.1
+    c_slider_upper_limit = 1000.0 if color_column == "Depth_km" else 10.0
     c_slider_min = float(math.floor(c_min_actual / c_step) * c_step)
-    c_slider_max = float(math.ceil(c_max_actual / c_step) * c_step)
-    if c_slider_min == c_slider_max:
-        c_slider_max += c_step
+    c_slider_min = min(c_slider_min, c_slider_upper_limit)
+    if c_slider_min >= c_slider_upper_limit:
+        c_slider_min = max(0.0, c_slider_upper_limit - c_step)
+
+    c_default_max = float(math.ceil(c_max_actual / c_step) * c_step)
+    c_default_max = min(c_default_max, c_slider_upper_limit)
+    if c_default_max < c_slider_min:
+        c_default_max = c_slider_upper_limit
+    if c_default_max == c_slider_min:
+        c_default_max = min(c_slider_upper_limit, c_slider_min + c_step)
+
+    c_slider_max = c_slider_upper_limit
 
     c_slider_floor = min(0.0, c_slider_min)
-    color_range = st.slider(
-        f"Colorbar scale adjustment: {color_label}",
-        min_value=c_slider_floor,
-        max_value=c_slider_max,
-        value=(c_slider_min, c_slider_max),
-        step=c_step,
-        key=f"eq_colorbar_{color_column}",
-    )
 
     return {
         "fig_depth_min": fig_depth_min,
@@ -904,15 +984,66 @@ def visualization_controls(df_plot, query):
         "marker_size_scale_3d": marker_size_scale_3d,
         "marker_size_scale_2d": marker_size_scale_2d,
         "marker_size_scale_section": marker_size_scale_section,
+        "z_aspect_scale_3d": z_aspect_scale_3d,
+        "pacific_center_3d": pacific_center_3d and query.get("region_preset") == GLOBAL_REGION_LABEL,
         "color_column": color_column,
         "color_label": color_label,
-        "color_range": color_range,
+        "color_range_min": c_slider_floor,
+        "color_range_max": c_slider_max,
+        "color_range_step": c_step,
+        "color_range_default": (c_slider_min, c_default_max),
         "show_plate_boundaries": show_plate_boundaries,
         "include_microplates": include_microplates and show_plate_boundaries,
     }
 
 
-def add_plate_boundaries_to_3d(fig_eq, plate_boundary_df, center_lon, center_lat, z_level):
+def _colorbar_scale_key(viz, view_name):
+    return f"eq_colorbar_{view_name}_{viz['color_column']}"
+
+
+def _resolve_color_range(viz, view_name):
+    key = _colorbar_scale_key(viz, view_name)
+    default_range = tuple(viz["color_range_default"])
+    min_value = float(viz["color_range_min"])
+    max_value = float(viz["color_range_max"])
+
+    raw_value = st.session_state.get(key, default_range)
+    try:
+        low_value = float(raw_value[0])
+        high_value = float(raw_value[1])
+    except Exception:
+        low_value, high_value = default_range
+
+    low_value = min(max(low_value, min_value), max_value)
+    high_value = min(max(high_value, min_value), max_value)
+    if low_value > high_value:
+        low_value, high_value = default_range
+
+    resolved_range = (low_value, high_value)
+    st.session_state[key] = resolved_range
+    return resolved_range, key
+
+
+def render_colorbar_scale_adjustment(viz, view_name):
+    color_range, key = _resolve_color_range(viz, view_name)
+    return st.slider(
+        f"Colorbar scale adjustment: {viz['color_label']}",
+        min_value=float(viz["color_range_min"]),
+        max_value=float(viz["color_range_max"]),
+        value=color_range,
+        step=float(viz["color_range_step"]),
+        key=key,
+    )
+
+
+def add_plate_boundaries_to_3d(
+    fig_eq,
+    plate_boundary_df,
+    center_lon,
+    center_lat,
+    z_level,
+    central_meridian=None,
+):
     """
     Add plate boundary lines to a 3D hypocenter figure.
     """
@@ -921,22 +1052,33 @@ def add_plate_boundaries_to_3d(fig_eq, plate_boundary_df, center_lon, center_lat
 
     for label, df_label in plate_boundary_df.groupby("Label", dropna=False):
         color, width = plate_boundary_trace_style(label)
+        if central_meridian is not None:
+            boundary_lon_plot, boundary_lat_plot = wrap_line_with_breaks(
+                df_label["Longitude_degE"],
+                df_label["Latitude_degN"],
+                central_meridian,
+            )
+        else:
+            boundary_lon_plot = df_label["Longitude_degE"]
+            boundary_lat_plot = df_label["Latitude_degN"]
+
         boundary_east, boundary_north = lonlat_to_local_km(
-            df_label["Longitude_degE"],
-            df_label["Latitude_degN"],
+            boundary_lon_plot,
+            boundary_lat_plot,
             center_lon,
             center_lat,
         )
+        text_values = df_label["Name"] if len(boundary_east) == len(df_label) else None
         fig_eq.add_trace(
             go.Scatter3d(
                 x=boundary_east,
                 y=boundary_north,
-                z=[z_level] * len(df_label),
+                z=[z_level] * len(boundary_east),
                 mode="lines",
                 name=f"plate boundary: {label}",
                 line=dict(color=color, width=width),
-                text=df_label["Name"],
-                hovertemplate="%{text}<extra></extra>",
+                text=text_values,
+                hovertemplate="%{text}<extra></extra>" if text_values is not None else None,
             )
         )
 
@@ -947,7 +1089,12 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
     """
     Render the EnvGeo-style 4D hypocenter map.
     """
-    df_plot, center_lon, center_lat = add_local_km_coordinates(df_plot, query)
+    color_range, _ = _resolve_color_range(viz, "3d")
+    df_plot, center_lon, center_lat, using_pacific_center = add_local_km_coordinates(
+        df_plot,
+        query,
+        pacific_centered=viz.get("pacific_center_3d", False),
+    )
 
     # Plotly 3D/WebGL marker sizes can appear much larger than 2D markers,
     # and the apparent size can differ by browser.  Use a separate, conservative
@@ -964,6 +1111,8 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
         center_lat,
         viz["fig_depth_min"],
         viz["fig_depth_max"],
+        pacific_centered=using_pacific_center,
+        z_aspect_scale=viz["z_aspect_scale_3d"],
     )
 
     fig_eq = px.scatter_3d(
@@ -1028,18 +1177,38 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
             xanchor="center",
             thickness=15,
         ),
+        legend=dict(
+            x=0.01,
+            y=0.99,
+            xanchor="left",
+            yanchor="top",
+            orientation="v",
+            bgcolor="rgba(255,255,255,0.55)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            tracegroupgap=2,
+        ),
         margin=dict(r=20, l=10, b=110, t=10),
     )
     fig_eq.update_coloraxes(
-        cmin=viz["color_range"][0],
-        cmax=viz["color_range"][1],
+        cmin=color_range[0],
+        cmax=color_range[1],
     )
 
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(envgeo_utils.data_source_GLOBAL)
     if coastline_x and coastline_y:
+        if using_pacific_center:
+            coastline_lon_plot, coastline_lat_plot = wrap_line_with_breaks(
+                coastline_x,
+                coastline_y,
+                center_lon,
+            )
+        else:
+            coastline_lon_plot, coastline_lat_plot = coastline_x, coastline_y
+
         coastline_east, coastline_north = lonlat_to_local_km(
-            coastline_x,
-            coastline_y,
+            coastline_lon_plot,
+            coastline_lat_plot,
             center_lon,
             center_lat,
         )
@@ -1047,7 +1216,7 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
             go.Scatter3d(
                 x=coastline_east,
                 y=coastline_north,
-                z=[viz["fig_depth_min"]] * len(coastline_x),
+                z=[viz["fig_depth_min"]] * len(coastline_east),
                 mode="lines",
                 name="coastline (top)",
                 line=dict(color="blue", width=0.8),
@@ -1058,7 +1227,7 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
             go.Scatter3d(
                 x=coastline_east,
                 y=coastline_north,
-                z=[viz["fig_depth_max"]] * len(coastline_x),
+                z=[viz["fig_depth_max"]] * len(coastline_east),
                 mode="lines",
                 name="coastline (bottom)",
                 line=dict(color="gray", width=0.5),
@@ -1072,6 +1241,7 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
         center_lon,
         center_lat,
         viz["fig_depth_min"],
+        central_meridian=(center_lon if using_pacific_center else None),
     )
 
     st.plotly_chart(
@@ -1080,6 +1250,7 @@ def render_4d_hypocenter_map(df_plot, query, viz, plate_boundary_df=None):
         config={"scrollZoom": True, "displayModeBar": True},
         use_container_width=True,
     )
+    render_colorbar_scale_adjustment(viz, "3d")
 
 
 def add_plate_boundaries_to_2d(fig_map, plate_boundary_df):
@@ -1110,6 +1281,7 @@ def render_2d_distribution_map(df_plot, viz, plate_boundary_df=None):
     """
     Render the selected hypocenters on an interactive map.
     """
+    color_range, _ = _resolve_color_range(viz, "2d")
     st.subheader("Geographical Distribution Map (Auto-Zoom)")
 
     map_mode = st.radio(
@@ -1157,11 +1329,23 @@ def render_2d_distribution_map(df_plot, viz, plate_boundary_df=None):
         ),
         mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=auto_zoom),
         margin=dict(l=0, r=0, t=0, b=100),
+        legend=dict(
+            x=0.01,
+            y=0.99,
+            xanchor="left",
+            yanchor="top",
+            orientation="v",
+            bgcolor="rgba(255,255,255,0.58)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            font=dict(size=11),
+            tracegroupgap=2,
+        ),
         autosize=True,
     )
     fig_map.update_coloraxes(
-        cmin=viz["color_range"][0],
-        cmax=viz["color_range"][1],
+        cmin=color_range[0],
+        cmax=color_range[1],
     )
     fig_map = add_plate_boundaries_to_2d(fig_map, plate_boundary_df)
 
@@ -1171,6 +1355,7 @@ def render_2d_distribution_map(df_plot, viz, plate_boundary_df=None):
         config={"scrollZoom": True, "displayModeBar": True},
         use_container_width=True,
     )
+    render_colorbar_scale_adjustment(viz, "2d")
 
 
 def render_time_histogram(df_plot):
@@ -1217,6 +1402,7 @@ def render_cross_section_location_map(
     end_lon,
     end_lat,
     half_width_km,
+    color_range,
     plate_boundary_df=None,
 ):
     """
@@ -1285,10 +1471,16 @@ def render_cross_section_location_map(
                     size=(selected_size * viz["marker_size_scale_section"]).tolist(),
                     color=pd.to_numeric(df_section[viz["color_column"]], errors="coerce"),
                     colorscale=earthquake_color_scale(viz["color_column"]),
-                    cmin=viz["color_range"][0],
-                    cmax=viz["color_range"][1],
+                    cmin=color_range[0],
+                    cmax=color_range[1],
                     opacity=0.78,
-                    colorbar=dict(title=viz["color_label"]),
+                    colorbar=dict(
+                        title=viz["color_label"],
+                        lenmode="fraction",
+                        len=0.9,
+                        yanchor="middle",
+                        y=0.45,
+                    ),
                 ),
                 text=df_section["Place"],
                 customdata=df_section[["DateTime_UTC", "Magnitude", "Depth_km", "SectionOffset_km"]],
@@ -1332,7 +1524,17 @@ def render_cross_section_location_map(
         height=420,
         mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=auto_zoom),
         margin=dict(l=0, r=0, t=0, b=0),
-        legend=dict(orientation="h", yanchor="bottom", y=0.01, xanchor="left", x=0.01),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=0.01,
+            xanchor="left",
+            x=0.01,
+            bgcolor="rgba(255,255,255,0.58)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            font=dict(size=11),
+        ),
     )
     st.plotly_chart(
         fig_location,
@@ -1346,6 +1548,7 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
     """
     Render an arbitrary cross-section and a depth-frequency profile.
     """
+    color_range, _ = _resolve_color_range(viz, "section")
     st.subheader("Arbitrary Cross-section")
     default_start_lon, default_start_lat, default_end_lon, default_end_lat = default_cross_section_points(query)
 
@@ -1436,7 +1639,7 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
                 y="Depth_km",
                 color=viz["color_column"],
                 color_continuous_scale=earthquake_color_scale(viz["color_column"]),
-                range_color=viz["color_range"],
+                range_color=color_range,
                 hover_data={
                     "DateTime_UTC": True,
                     "Place": True,
@@ -1479,6 +1682,7 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
             end_lon,
             end_lat,
             half_width_km,
+            color_range,
             plate_boundary_df,
         )
 
@@ -1524,6 +1728,7 @@ def render_cross_section_and_depth_profile(df_plot, query, viz, plate_boundary_d
         margin=dict(l=10, r=10, t=20, b=20),
     )
     st.plotly_chart(fig_depth, key="earthquake_depth_profile", use_container_width=True)
+    render_colorbar_scale_adjustment(viz, "section")
 
 
 def normalize_column_name(name):
@@ -1756,9 +1961,26 @@ def render_jma_nied_comparison_page(df_plot, query, plate_boundary_df=None):
     fig_compare.update_layout(
         mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=auto_zoom),
         margin=dict(l=0, r=0, t=0, b=0),
+        legend=dict(
+            x=0.01,
+            y=0.99,
+            xanchor="left",
+            yanchor="top",
+            orientation="v",
+            bgcolor="rgba(255,255,255,0.58)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            font=dict(size=11),
+            tracegroupgap=2,
+        ),
     )
     fig_compare = add_plate_boundaries_to_2d(fig_compare, plate_boundary_df)
-    st.plotly_chart(fig_compare, key="earthquake_jma_nied_compare_map", use_container_width=True)
+    st.plotly_chart(
+        fig_compare,
+        key="earthquake_jma_nied_compare_map",
+        config={"scrollZoom": True, "displayModeBar": True},
+        use_container_width=True,
+    )
 
     fig_depth_compare = px.histogram(
         df_compare,
@@ -1774,6 +1996,17 @@ def render_jma_nied_comparison_page(df_plot, query, plate_boundary_df=None):
         yaxis_title="Hypocenter depth (km)",
         yaxis=dict(autorange="reversed"),
         margin=dict(l=10, r=10, t=20, b=20),
+        legend=dict(
+            x=0.99,
+            y=0.01,
+            xanchor="right",
+            yanchor="bottom",
+            orientation="v",
+            bgcolor="rgba(255,255,255,0.58)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            font=dict(size=11),
+        ),
     )
     st.plotly_chart(
         fig_depth_compare,
@@ -1879,6 +2112,7 @@ def main():
     plate_boundary_df = pd.DataFrame()
     plate_source = ""
     plate_errors = []
+    plate_boundary_note = ""
     if viz["show_plate_boundaries"]:
         with st.spinner("Loading plate boundaries..."):
             plate_boundary_df, plate_source, plate_errors = load_plate_boundary_dataframe(
@@ -1890,20 +2124,57 @@ def main():
         elif plate_errors:
             st.warning("USGS plate boundary service could not be reached; fallback Japan lines are shown.")
         if not plate_boundary_df.empty:
-            st.caption(
+            plate_boundary_note = (
                 f"Plate boundaries: {plate_source}. Boundary locations are approximate; "
-                "for educational/research visualization only."
+                "for educational/research visualization only. / プレート境界位置は概略です。教育・研究用の可視化として利用してください。"
             )
-            st.caption("プレート境界位置は概略です。教育・研究用の可視化として利用してください。")
+
+
+    st.markdown(
+        """
+        <style>
+        div[data-baseweb="tab-list"] {
+            gap: 0.25rem;
+            flex-wrap: wrap;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"] {
+            background: rgba(248, 249, 250, 0.95);
+            border: 1px solid rgba(49, 51, 63, 0.22);
+            border-radius: 6px 6px 0 0;
+            padding: 0.35rem 0.65rem;
+            min-height: 2.1rem;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"] p {
+            margin: 0;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
+            background: linear-gradient(180deg, #e8f2ff 0%, #ddeaff 100%);
+            border-color: #4a90e2;
+            color: #0b3e75;
+            box-shadow: inset 0 0 0 1px rgba(74, 144, 226, 0.35);
+        }
+        @media (max-width: 900px) {
+            div[data-baseweb="tab-list"] button[role="tab"] {
+                font-size: 0.86rem;
+                padding: 0.30rem 0.52rem;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption("Select a tab to switch visualization views.")
 
     tab_3d, tab_2d, tab_profiles, tab_time, tab_compare, tab_data = st.tabs(
         [
-            "4D / 3D map",
-            "2D map",
-            "Cross-section / depth",
-            "Time histogram",
-            "JMA/NIED comparison",
-            "Data",
+            "🧭 4D/3D Map",
+            "🗺️ 2D Map",
+            "✂️ Cross-section",
+            "📈 Time Histogram",
+            "🧪 Comparison",
+            "🗂️ Data(CSV)",
         ]
     )
 
@@ -1931,8 +2202,10 @@ def main():
         envgeo_utils.clear_app_cache()
         st.rerun()
 
-    st.caption("3D display is recommended for PC. On smartphones and tablets, the 2D map is recommended.")
-    st.caption("3D表示はPC推奨です。スマホ・タブレットでは2Dマップの利用を推奨します。")
+    st.caption("3D display is recommended for PC. On smartphones and tablets, the 2D map is recommended. / 3D表示はPC推奨です。スマホ・タブレットでは2Dマップの利用を推奨します。")
+    
+    if plate_boundary_note:
+        st.caption(plate_boundary_note)
 
 if __name__ == "__main__":
     main()

@@ -18,7 +18,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "0.2.1"
+version = "0.2.2" #2026/05/05
 
 
 def expanded_float_bounds(series, default_min, default_max, pad=1.0):
@@ -92,12 +92,51 @@ def auto_map_view(df):
     return center_lat, center_lon, auto_zoom
 
 
-def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat):
+def wrap_longitudes_to_central_meridian(longitudes, central_meridian):
+    """
+    Wrap longitudes to [central_meridian-180, central_meridian+180).
+    """
+    lon_values = pd.to_numeric(pd.Series(longitudes), errors="coerce")
+    return ((lon_values - central_meridian + 180.0) % 360.0) - 180.0 + central_meridian
+
+
+def wrap_line_with_breaks(longitudes, latitudes, central_meridian, jump_threshold=180.0):
+    """
+    Wrap a line to the selected central meridian and insert NaN breaks at big jumps.
+    """
+    lon_wrapped = wrap_longitudes_to_central_meridian(longitudes, central_meridian).tolist()
+    lat_values = pd.to_numeric(pd.Series(latitudes), errors="coerce").tolist()
+    if not lon_wrapped:
+        return [], []
+
+    line_lon = [lon_wrapped[0]]
+    line_lat = [lat_values[0]]
+    for i in range(1, len(lon_wrapped)):
+        prev_lon, curr_lon = lon_wrapped[i - 1], lon_wrapped[i]
+        prev_lat, curr_lat = lat_values[i - 1], lat_values[i]
+        if (
+            pd.isna(prev_lon)
+            or pd.isna(curr_lon)
+            or pd.isna(prev_lat)
+            or pd.isna(curr_lat)
+            or abs(curr_lon - prev_lon) > jump_threshold
+        ):
+            line_lon.append(float("nan"))
+            line_lat.append(float("nan"))
+        line_lon.append(curr_lon)
+        line_lat.append(curr_lat)
+
+    return line_lon, line_lat
+
+
+def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat, central_meridian=None):
     """
     Convert lon/lat coordinates to local equirectangular kilometers.
     """
     lon_values = pd.to_numeric(pd.Series(longitudes), errors="coerce")
     lat_values = pd.to_numeric(pd.Series(latitudes), errors="coerce")
+    if central_meridian is not None:
+        lon_values = wrap_longitudes_to_central_meridian(lon_values, central_meridian)
 
     km_per_lat_degree = 110.574
     km_per_lon_degree = 111.320 * math.cos(math.radians(center_lat))
@@ -109,44 +148,66 @@ def lonlat_to_local_km(longitudes, latitudes, center_lon, center_lat):
     return east_km, north_km
 
 
-def add_local_km_coordinates(df, query):
+def add_local_km_coordinates(df, query, pacific_centered=False):
     """
     Add local kilometer coordinates for 3D plots with correct horizontal scale.
     """
     df_km = df.copy()
-    center_lon = (query["lon_min"] + query["lon_max"]) / 2
+    use_pacific_center = pacific_centered and query.get("region_preset") == "Global"
+    center_lon = 180.0 if use_pacific_center else (query["lon_min"] + query["lon_max"]) / 2
     center_lat = (query["lat_min"] + query["lat_max"]) / 2
+    central_meridian = center_lon if use_pacific_center else None
 
     east_km, north_km = lonlat_to_local_km(
         df_km["Longitude_degE"],
         df_km["Latitude_degN"],
         center_lon,
         center_lat,
+        central_meridian=central_meridian,
     )
     df_km["East_km"] = east_km
     df_km["North_km"] = north_km
-    return df_km, center_lon, center_lat
+    return df_km, center_lon, center_lat, use_pacific_center
 
 
-def selected_area_km_ranges(query, center_lon, center_lat, z_min, z_max):
+def selected_area_km_ranges(
+    query,
+    center_lon,
+    center_lat,
+    z_min,
+    z_max,
+    pacific_centered=False,
+    z_aspect_scale=0.5,
+):
     """
     Convert the selected lon/lat/depth box into km ranges and aspect ratios.
     """
-    x_bounds, _ = lonlat_to_local_km(
-        [query["lon_min"], query["lon_max"]],
-        [center_lat, center_lat],
-        center_lon,
-        center_lat,
-    )
-    _, y_bounds = lonlat_to_local_km(
-        [center_lon, center_lon],
-        [query["lat_min"], query["lat_max"]],
-        center_lon,
-        center_lat,
-    )
+    is_global = query.get("region_preset") == "Global"
+    if pacific_centered and is_global:
+        km_per_lat_degree = 110.574
+        km_per_lon_degree = 111.320 * math.cos(math.radians(center_lat))
+        km_per_lon_degree = max(abs(km_per_lon_degree), 0.001)
+        x_half_span = 180.0 * km_per_lon_degree
+        y_min = (query["lat_min"] - center_lat) * km_per_lat_degree
+        y_max = (query["lat_max"] - center_lat) * km_per_lat_degree
+        x_range = [-x_half_span, x_half_span]
+        y_range = [min(float(y_min), float(y_max)), max(float(y_min), float(y_max))]
+    else:
+        x_bounds, _ = lonlat_to_local_km(
+            [query["lon_min"], query["lon_max"]],
+            [center_lat, center_lat],
+            center_lon,
+            center_lat,
+        )
+        _, y_bounds = lonlat_to_local_km(
+            [center_lon, center_lon],
+            [query["lat_min"], query["lat_max"]],
+            center_lon,
+            center_lat,
+        )
+        x_range = sorted([float(x_bounds.iloc[0]), float(x_bounds.iloc[1])])
+        y_range = sorted([float(y_bounds.iloc[0]), float(y_bounds.iloc[1])])
 
-    x_range = [float(x_bounds.iloc[0]), float(x_bounds.iloc[1])]
-    y_range = [float(y_bounds.iloc[0]), float(y_bounds.iloc[1])]
     z_range = [float(z_max), float(z_min)]
 
     x_span = max(abs(x_range[1] - x_range[0]), 1.0)
@@ -162,7 +223,7 @@ def selected_area_km_ranges(query, center_lon, center_lat, z_min, z_max):
         dict(
             x=x_span / max_span,
             y=y_span / max_span,
-            z=horizontal_aspect * 0.5,
+            z=horizontal_aspect * max(float(z_aspect_scale), 0.05),
         ),
     )
 
@@ -432,6 +493,23 @@ def visualization_controls(df_plot, query):
             key="eq_marker_size_scale_2d",
         )
 
+        z_aspect_scale_3d = st.slider(
+            "3D Z-axis display scale",
+            min_value=0.1,
+            max_value=2.0,
+            value=0.5,
+            step=0.1,
+            key="eq_z_aspect_scale_3d",
+            help="Lower values flatten depth; higher values emphasize depth.",
+        )
+
+        pacific_center_3d = st.checkbox(
+            "3D Pacific-centered view (180°)",
+            value=(query.get("region_preset") == "Global"),
+            disabled=(query.get("region_preset") != "Global"),
+            key="eq_pacific_center_3d",
+        )
+
         color_option = st.radio(
             "Colorbar variable",
             ["Magnitude", "Hypocenter depth"],
@@ -465,6 +543,8 @@ def visualization_controls(df_plot, query):
         "fig_depth_max": fig_depth_max,
         "marker_size_scale_3d": marker_size_scale_3d,
         "marker_size_scale_2d": marker_size_scale_2d,
+        "z_aspect_scale_3d": z_aspect_scale_3d,
+        "pacific_center_3d": pacific_center_3d and query.get("region_preset") == "Global",
         "color_column": color_column,
         "color_label": color_label,
         "color_range": color_range,
@@ -475,7 +555,11 @@ def render_4d_hypocenter_map(df_plot, query, viz):
     """
     Render the EnvGeo-style 4D hypocenter map.
     """
-    df_plot, center_lon, center_lat = add_local_km_coordinates(df_plot, query)
+    df_plot, center_lon, center_lat, using_pacific_center = add_local_km_coordinates(
+        df_plot,
+        query,
+        pacific_centered=viz.get("pacific_center_3d", False),
+    )
 
     # Plotly 3D/WebGL marker sizes can appear much larger than 2D markers,
     # and the apparent size can differ by browser.  Use a separate, conservative
@@ -492,6 +576,8 @@ def render_4d_hypocenter_map(df_plot, query, viz):
         center_lat,
         viz["fig_depth_min"],
         viz["fig_depth_max"],
+        pacific_centered=using_pacific_center,
+        z_aspect_scale=viz["z_aspect_scale_3d"],
     )
 
     fig_eq = px.scatter_3d(
@@ -556,6 +642,17 @@ def render_4d_hypocenter_map(df_plot, query, viz):
             xanchor="center",
             thickness=15,
         ),
+        legend=dict(
+            x=0.01,
+            y=0.99,
+            xanchor="left",
+            yanchor="top",
+            orientation="v",
+            bgcolor="rgba(255,255,255,0.55)",
+            bordercolor="rgba(80,80,80,0.35)",
+            borderwidth=1,
+            tracegroupgap=2,
+        ),
         margin=dict(r=20, l=10, b=110, t=10),
     )
     fig_eq.update_coloraxes(
@@ -565,9 +662,18 @@ def render_4d_hypocenter_map(df_plot, query, viz):
 
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(envgeo_utils.data_source_GLOBAL)
     if coastline_x and coastline_y:
+        if using_pacific_center:
+            coastline_lon_plot, coastline_lat_plot = wrap_line_with_breaks(
+                coastline_x,
+                coastline_y,
+                center_lon,
+            )
+        else:
+            coastline_lon_plot, coastline_lat_plot = coastline_x, coastline_y
+
         coastline_east, coastline_north = lonlat_to_local_km(
-            coastline_x,
-            coastline_y,
+            coastline_lon_plot,
+            coastline_lat_plot,
             center_lon,
             center_lat,
         )
@@ -575,7 +681,7 @@ def render_4d_hypocenter_map(df_plot, query, viz):
             go.Scatter3d(
                 x=coastline_east,
                 y=coastline_north,
-                z=[viz["fig_depth_min"]] * len(coastline_x),
+                z=[viz["fig_depth_min"]] * len(coastline_east),
                 mode="lines",
                 name="coastline (top)",
                 line=dict(color="blue", width=0.8),
@@ -586,7 +692,7 @@ def render_4d_hypocenter_map(df_plot, query, viz):
             go.Scatter3d(
                 x=coastline_east,
                 y=coastline_north,
-                z=[viz["fig_depth_max"]] * len(coastline_x),
+                z=[viz["fig_depth_max"]] * len(coastline_east),
                 mode="lines",
                 name="coastline (bottom)",
                 line=dict(color="gray", width=0.5),
