@@ -18,7 +18,68 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "0.2.2" #2026/05/05
+version = "0.2.3" #2026/05/06
+
+
+st.set_page_config(
+    page_title="EnvGeo-Earthquake",
+    initial_sidebar_state="auto",
+    menu_items={
+        "Get Help": "https://envgeo.h.kyoto-u.ac.jp/simple-earthquake-hypocenter-visualization/",
+        "Report a bug": "https://www.h.kyoto-u.ac.jp/en_f/faculty_f/ishimura_toyoho_4dea/#mailform",
+        "About": (
+            "EnvGeo-Earthquake: a simple research/education earthquake "
+            "visualization app based on EnvGeo-Seawater."
+            " / EnvGeo-Seawater をもとにした、"
+            "研究・教育向けの簡易地震可視化アプリです。/ "
+            "https://envgeo.h.kyoto-u.ac.jp"
+            " / (Toyoho Ishimura@Kyoto-Univ. 2026) "
+        ),
+    },
+)
+
+JAPAN_REGION_LABEL = "Japan and surrounding area"
+GLOBAL_REGION_LABEL = "Global"
+INDONESIA_REGION_LABEL = "Indonesia (Sunda Arc)"
+NEW_ZEALAND_REGION_LABEL = "New Zealand (Kermadec-Tonga edge)"
+CHILE_REGION_LABEL = "Offshore Chile (Peru-Chile Trench)"
+ALEUTIAN_REGION_LABEL = "Aleutian (North Pacific)"
+ANTARCTIC_REGION_LABEL = "Antarctic margin (Scotia/South Sandwich)"
+CALIFORNIA_MEXICO_REGION_LABEL = "California to W. Mexico"
+KAMCHATKA_REGION_LABEL = "Kamchatka / Kuril"
+NORTH_PACIFIC_WIDE_REGION_LABEL = "North Pacific Rim (Japan-Kuril-Aleutian-California)"
+MEDITERRANEAN_REGION_LABEL = "Mediterranean / Anatolia"
+HIMALAYA_REGION_LABEL = "Himalaya / Hindu Kush"
+PHILIPPINES_REGION_LABEL = "Philippines / Taiwan"
+HOTSPOT_NONE_LABEL = "(none)"
+HOTSPOT_REGION_LABELS = [
+    INDONESIA_REGION_LABEL,
+    NEW_ZEALAND_REGION_LABEL,
+    CHILE_REGION_LABEL,
+    ALEUTIAN_REGION_LABEL,
+    ANTARCTIC_REGION_LABEL,
+    CALIFORNIA_MEXICO_REGION_LABEL,
+    KAMCHATKA_REGION_LABEL,
+    NORTH_PACIFIC_WIDE_REGION_LABEL,
+    MEDITERRANEAN_REGION_LABEL,
+    HIMALAYA_REGION_LABEL,
+    PHILIPPINES_REGION_LABEL,
+]
+REGION_BOUNDS = {
+    JAPAN_REGION_LABEL: (120.0, 155.0, 20.0, 50.0),
+    GLOBAL_REGION_LABEL: (-180.0, 180.0, -90.0, 90.0),
+    INDONESIA_REGION_LABEL: (92.0, 142.0, -14.0, 11.0),
+    NEW_ZEALAND_REGION_LABEL: (165.0, 185.5, -52.0, -10.0),
+    CHILE_REGION_LABEL: (-80.0, -65.0, -48.0, -12.0),
+    ALEUTIAN_REGION_LABEL: (-180.0, -140.0, 45.0, 62.0),
+    ANTARCTIC_REGION_LABEL: (-75.0, -10.0, -70.0, -48.0),
+    CALIFORNIA_MEXICO_REGION_LABEL: (-130.0, -102.0, 14.0, 42.0),
+    KAMCHATKA_REGION_LABEL: (145.0, 170.0, 42.0, 62.0),
+    NORTH_PACIFIC_WIDE_REGION_LABEL: (130.0, 255.0, 20.0, 65.0),
+    MEDITERRANEAN_REGION_LABEL: (15.0, 45.0, 30.0, 43.0),
+    HIMALAYA_REGION_LABEL: (65.0, 100.0, 20.0, 40.0),
+    PHILIPPINES_REGION_LABEL: (117.0, 132.0, 5.0, 28.0),
+}
 
 
 def expanded_float_bounds(series, default_min, default_max, pad=1.0):
@@ -69,12 +130,19 @@ def build_datetime_range(date_range, start_clock, end_clock):
     return start_dt, end_dt
 
 
-def auto_map_view(df):
+def auto_map_view(df, lon_center_hint=None):
     """
     Compute a map center and zoom from the selected earthquake distribution.
     """
-    lat_min, lat_max = df["Latitude_degN"].min(), df["Latitude_degN"].max()
-    lon_min, lon_max = df["Longitude_degE"].min(), df["Longitude_degE"].max()
+    lat_values = pd.to_numeric(df["Latitude_degN"], errors="coerce").dropna()
+    lon_values = pd.to_numeric(df["Longitude_degE"], errors="coerce").dropna()
+    if lat_values.empty or lon_values.empty:
+        return 0.0, 0.0, 1.0
+
+    lat_min, lat_max = lat_values.min(), lat_values.max()
+    if lon_center_hint is not None:
+        lon_values = wrap_longitudes_to_central_meridian(lon_values, float(lon_center_hint))
+    lon_min, lon_max = lon_values.min(), lon_values.max()
 
     center_lat = (lat_min + lat_max) / 2
     center_lon = (lon_min + lon_max) / 2
@@ -89,6 +157,7 @@ def auto_map_view(df):
     if lon_diff > 220:
         center_lat, center_lon, auto_zoom = 0.0, 0.0, 1.0
 
+    center_lon = ((float(center_lon) + 180.0) % 360.0) - 180.0
     return center_lat, center_lon, auto_zoom
 
 
@@ -153,10 +222,11 @@ def add_local_km_coordinates(df, query, pacific_centered=False):
     Add local kilometer coordinates for 3D plots with correct horizontal scale.
     """
     df_km = df.copy()
-    use_pacific_center = pacific_centered and query.get("region_preset") == "Global"
+    use_pacific_center = pacific_centered and query.get("region_preset") == GLOBAL_REGION_LABEL
+    crosses_dateline = query["lon_min"] < -180.0 or query["lon_max"] > 180.0
     center_lon = 180.0 if use_pacific_center else (query["lon_min"] + query["lon_max"]) / 2
     center_lat = (query["lat_min"] + query["lat_max"]) / 2
-    central_meridian = center_lon if use_pacific_center else None
+    central_meridian = center_lon if (use_pacific_center or crosses_dateline) else None
 
     east_km, north_km = lonlat_to_local_km(
         df_km["Longitude_degE"],
@@ -182,7 +252,8 @@ def selected_area_km_ranges(
     """
     Convert the selected lon/lat/depth box into km ranges and aspect ratios.
     """
-    is_global = query.get("region_preset") == "Global"
+    is_global = query.get("region_preset") == GLOBAL_REGION_LABEL
+    crosses_dateline = query["lon_min"] < -180.0 or query["lon_max"] > 180.0
     if pacific_centered and is_global:
         km_per_lat_degree = 110.574
         km_per_lon_degree = 111.320 * math.cos(math.radians(center_lat))
@@ -193,11 +264,13 @@ def selected_area_km_ranges(
         x_range = [-x_half_span, x_half_span]
         y_range = [min(float(y_min), float(y_max)), max(float(y_min), float(y_max))]
     else:
+        central_meridian = center_lon if crosses_dateline else None
         x_bounds, _ = lonlat_to_local_km(
             [query["lon_min"], query["lon_max"]],
             [center_lat, center_lat],
             center_lon,
             center_lat,
+            central_meridian=central_meridian,
         )
         _, y_bounds = lonlat_to_local_km(
             [center_lon, center_lon],
@@ -228,16 +301,31 @@ def selected_area_km_ranges(
     )
 
 
+def apply_region_bounds_to_session(region_label):
+    """
+    Reset lon/lat slider state to the selected preset bounds.
+    """
+    if region_label not in REGION_BOUNDS:
+        return
+    lon_min, lon_max, lat_min, lat_max = REGION_BOUNDS[region_label]
+    st.session_state[f"eq_lon_range_{region_label}"] = (float(lon_min), float(lon_max))
+    st.session_state[f"eq_lat_range_{region_label}"] = (float(lat_min), float(lat_max))
+
+
 def set_region_japan():
     """
     Keep the main-page region checkboxes mutually exclusive.
     """
     if st.session_state.eq_region_japan:
         st.session_state.eq_region_global = False
-        st.session_state.eq_region_choice = "Japan and surrounding area"
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+        st.session_state.eq_region_choice = JAPAN_REGION_LABEL
+        apply_region_bounds_to_session(JAPAN_REGION_LABEL)
     elif not st.session_state.eq_region_global:
         st.session_state.eq_region_japan = True
-        st.session_state.eq_region_choice = "Japan and surrounding area"
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+        st.session_state.eq_region_choice = JAPAN_REGION_LABEL
+        apply_region_bounds_to_session(JAPAN_REGION_LABEL)
 
 
 def set_region_global():
@@ -246,10 +334,38 @@ def set_region_global():
     """
     if st.session_state.eq_region_global:
         st.session_state.eq_region_japan = False
-        st.session_state.eq_region_choice = "Global"
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+        st.session_state.eq_region_choice = GLOBAL_REGION_LABEL
+        apply_region_bounds_to_session(GLOBAL_REGION_LABEL)
     elif not st.session_state.eq_region_japan:
         st.session_state.eq_region_global = True
-        st.session_state.eq_region_choice = "Global"
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+        st.session_state.eq_region_choice = GLOBAL_REGION_LABEL
+        apply_region_bounds_to_session(GLOBAL_REGION_LABEL)
+
+
+def set_region_hotspot():
+    """
+    Apply additional hotspot presets from the main page.
+    """
+    hotspot_choice = st.session_state.get("eq_region_hotspot", HOTSPOT_NONE_LABEL)
+    if hotspot_choice in HOTSPOT_REGION_LABELS:
+        st.session_state.eq_region_japan = False
+        st.session_state.eq_region_global = False
+        st.session_state.eq_region_choice = hotspot_choice
+        apply_region_bounds_to_session(hotspot_choice)
+        return
+
+    if st.session_state.get("eq_region_global", False):
+        st.session_state.eq_region_choice = GLOBAL_REGION_LABEL
+    elif st.session_state.get("eq_region_japan", False):
+        st.session_state.eq_region_choice = JAPAN_REGION_LABEL
+    else:
+        st.session_state.eq_region_japan = True
+        st.session_state.eq_region_choice = JAPAN_REGION_LABEL
+    if st.session_state.eq_region_choice in REGION_BOUNDS:
+        apply_region_bounds_to_session(st.session_state.eq_region_choice)
+    st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
 
 
 def main_region_selector():
@@ -257,30 +373,62 @@ def main_region_selector():
     Select Japan-area or global API bounds from the main page.
     """
     if "eq_region_choice" not in st.session_state:
-        st.session_state.eq_region_choice = "Japan and surrounding area"
+        st.session_state.eq_region_choice = JAPAN_REGION_LABEL
     if "eq_region_japan" not in st.session_state:
         st.session_state.eq_region_japan = True
     if "eq_region_global" not in st.session_state:
         st.session_state.eq_region_global = False
+    if "eq_region_hotspot" not in st.session_state:
+        if st.session_state.eq_region_choice in HOTSPOT_REGION_LABELS:
+            st.session_state.eq_region_hotspot = st.session_state.eq_region_choice
+        else:
+            st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+
+    current_choice = st.session_state.eq_region_choice
+    if current_choice == JAPAN_REGION_LABEL:
+        st.session_state.eq_region_japan = True
+        st.session_state.eq_region_global = False
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+    elif current_choice == GLOBAL_REGION_LABEL:
+        st.session_state.eq_region_japan = False
+        st.session_state.eq_region_global = True
+        st.session_state.eq_region_hotspot = HOTSPOT_NONE_LABEL
+    elif current_choice in HOTSPOT_REGION_LABELS:
+        st.session_state.eq_region_japan = False
+        st.session_state.eq_region_global = False
+        st.session_state.eq_region_hotspot = current_choice
 
     st.subheader("Region")
     col_japan, col_global = st.columns(2)
     with col_japan:
         st.checkbox(
-            "Japan and surrounding area",
+            JAPAN_REGION_LABEL,
             key="eq_region_japan",
             on_change=set_region_japan,
         )
     with col_global:
         st.checkbox(
-            "Global",
+            GLOBAL_REGION_LABEL,
             key="eq_region_global",
             on_change=set_region_global,
         )
 
+    st.selectbox(
+        "Additional seismic hotspot presets",
+        [HOTSPOT_NONE_LABEL] + HOTSPOT_REGION_LABELS,
+        key="eq_region_hotspot",
+        on_change=set_region_hotspot,
+    )
+
+    hotspot_choice = st.session_state.get("eq_region_hotspot", HOTSPOT_NONE_LABEL)
+    if hotspot_choice in HOTSPOT_REGION_LABELS:
+        st.caption(f"Selected hotspot: {hotspot_choice}")
+        st.session_state.eq_region_choice = hotspot_choice
+        return hotspot_choice
+
     if st.session_state.eq_region_global:
-        return "Global"
-    return "Japan and surrounding area"
+        return GLOBAL_REGION_LABEL
+    return JAPAN_REGION_LABEL
 
 
 def sidebar_controls(region_preset):
@@ -291,12 +439,7 @@ def sidebar_controls(region_preset):
     default_end_date = now_utc.date()
     default_start_date = default_end_date - timedelta(days=30)
 
-    region_defaults = {
-        "Japan and surrounding area": (120.0, 155.0, 20.0, 50.0),
-        "Global": (-180.0, 180.0, -90.0, 90.0),
-    }
-
-    default_lon_min, default_lon_max, default_lat_min, default_lat_max = region_defaults[region_preset]
+    default_lon_min, default_lon_max, default_lat_min, default_lat_max = REGION_BOUNDS[region_preset]
 
     with st.sidebar.form("earthquake_api_parameter", clear_on_submit=False):
         st.header(":blue[--- USGS Earthquake API ---]")
@@ -344,7 +487,7 @@ def sidebar_controls(region_preset):
             lon_min, lon_max = st.slider(
                 "Longitude",
                 min_value=-180.0,
-                max_value=180.0,
+                max_value=360.0,
                 value=(default_lon_min, default_lon_max),
                 step=0.5,
                 key=f"eq_lon_range_{region_preset}",
@@ -393,6 +536,15 @@ def sidebar_controls(region_preset):
         st.stop()
     if start_dt > end_dt:
         st.warning("Start datetime must be earlier than end datetime.")
+        st.stop()
+    if lon_max <= lon_min:
+        st.warning("Longitude min must be smaller than longitude max.")
+        st.stop()
+    if (lon_max - lon_min) > 360.0:
+        st.warning(
+            "Longitude range is too wide for USGS rectangle query. "
+            "Please use 360° or less (e.g., -20 to 340, not -20 to 360)."
+        )
         st.stop()
 
     return {
@@ -505,8 +657,8 @@ def visualization_controls(df_plot, query):
 
         pacific_center_3d = st.checkbox(
             "3D Pacific-centered view (180°)",
-            value=(query.get("region_preset") == "Global"),
-            disabled=(query.get("region_preset") != "Global"),
+            value=(query.get("region_preset") == GLOBAL_REGION_LABEL),
+            disabled=(query.get("region_preset") != GLOBAL_REGION_LABEL),
             key="eq_pacific_center_3d",
         )
 
@@ -544,7 +696,7 @@ def visualization_controls(df_plot, query):
         "marker_size_scale_3d": marker_size_scale_3d,
         "marker_size_scale_2d": marker_size_scale_2d,
         "z_aspect_scale_3d": z_aspect_scale_3d,
-        "pacific_center_3d": pacific_center_3d and query.get("region_preset") == "Global",
+        "pacific_center_3d": pacific_center_3d and query.get("region_preset") == GLOBAL_REGION_LABEL,
         "color_column": color_column,
         "color_label": color_label,
         "color_range": color_range,
@@ -560,6 +712,8 @@ def render_4d_hypocenter_map(df_plot, query, viz):
         query,
         pacific_centered=viz.get("pacific_center_3d", False),
     )
+    crosses_dateline = query["lon_min"] < -180.0 or query["lon_max"] > 180.0
+    line_central_meridian = center_lon if (using_pacific_center or crosses_dateline) else None
 
     # Plotly 3D/WebGL marker sizes can appear much larger than 2D markers,
     # and the apparent size can differ by browser.  Use a separate, conservative
@@ -662,11 +816,11 @@ def render_4d_hypocenter_map(df_plot, query, viz):
 
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(envgeo_utils.data_source_GLOBAL)
     if coastline_x and coastline_y:
-        if using_pacific_center:
+        if line_central_meridian is not None:
             coastline_lon_plot, coastline_lat_plot = wrap_line_with_breaks(
                 coastline_x,
                 coastline_y,
-                center_lon,
+                line_central_meridian,
             )
         else:
             coastline_lon_plot, coastline_lat_plot = coastline_x, coastline_y
@@ -676,6 +830,7 @@ def render_4d_hypocenter_map(df_plot, query, viz):
             coastline_lat_plot,
             center_lon,
             center_lat,
+            central_meridian=line_central_meridian,
         )
         fig_eq.add_trace(
             go.Scatter3d(
@@ -707,7 +862,7 @@ def render_4d_hypocenter_map(df_plot, query, viz):
     )
 
 
-def render_2d_distribution_map(df_plot, viz):
+def render_2d_distribution_map(df_plot, query, viz):
     """
     Render the selected hypocenters on an interactive map.
     """
@@ -721,7 +876,10 @@ def render_2d_distribution_map(df_plot, viz):
         key="eq_map_style",
     )
 
-    center_lat, center_lon, auto_zoom = auto_map_view(df_plot)
+    lon_center_hint = None
+    if query["lon_min"] < -180.0 or query["lon_max"] > 180.0:
+        lon_center_hint = (query["lon_min"] + query["lon_max"]) / 2
+    center_lat, center_lon, auto_zoom = auto_map_view(df_plot, lon_center_hint=lon_center_hint)
     df_map = df_plot.copy()
     df_map["MagnitudeMarkerSize"] = df_map["MagnitudeMarkerSize"] * viz["marker_size_scale_2d"]
 
@@ -801,7 +959,7 @@ def display_earthquake_table(df_eq):
 
 
 def main():
-    st.header(f"EnvGeo-Earthquake")
+    st.title(f"EnvGeo-Earthquake")
     st.header(f"4D Visualizer Earthquake ({version})")
     st.caption("Source: USGS Earthquake Catalog. Data may be preliminary and updated.")
     st.caption("震源データ: USGS Earthquake Catalog。速報値を含み、更新される場合があります。")
@@ -829,6 +987,17 @@ def main():
     st.write(f"{len(df_eq)} earthquake events found")
     if query_url:
         st.markdown(f"[USGS API query]({query_url})")
+    if len(df_eq) >= query["limit"]:
+        st.caption(
+            "⚠️ "
+            f"The retrieval limit of {query['limit']} events was reached, so you may be seeing only a subset of all matching events. "
+            "To view recent earthquakes, choose 'time' in 'Order by' on the sidebar. "
+            "To prioritize larger earthquakes, choose 'magnitude'. "
+            "You can change the limit in 'Max events'. / "
+            f"{query['limit']}件の取得上限に達しました。条件に一致する全件ではなく一部のみ表示している可能性があります。"
+            "最近の地震を見たい場合はサイドバーの「Order by」で 'time' 、巨大地震を優先して表示したい場合は、"
+            "'magnitude' を選択してください。上限値の変更は「Max events」です。"
+        )
 
     if df_eq.empty:
         st.warning("No earthquake data available for the selected conditions.")
@@ -842,7 +1011,7 @@ def main():
     st.subheader("4D Hypocenter Map")
     viz = visualization_controls(df_plot, query)
     render_4d_hypocenter_map(df_plot, query, viz)
-    render_2d_distribution_map(df_plot, viz)
+    render_2d_distribution_map(df_plot, query, viz)
     display_earthquake_table(df_eq)
 
     if st.sidebar.button("Reload / clear API cache"):
