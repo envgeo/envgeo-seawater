@@ -3,23 +3,18 @@
 """
 Created on Sat Apr 22 17:15:03 2023
 @author: Toyoho Ishimura @Kyoto-U
-2026/05/01 update (Earthquake map)
+2026/03/11 update 
 """
 
 # --- App version / バージョン情報 ---
-# version = "1.0.0a_stable_20260324" #2026/03/24
-version = "1.0.4e_Earthquake_20260501" #2026/05/01
+version = "1.0.0a_stable_20260324" #2026/03/24
+
 
 
 import pandas as pd
 import streamlit as st
 import numpy as np
 import math
-import json
-from datetime import date, datetime
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 import warnings # for M1/M2 Mac
 # Shapely の内部計算（intersects, intersection, buffer等）から出る
@@ -49,14 +44,12 @@ pd.options.mode.copy_on_write = True
 data_source_JAPAN_SEA    = "Kodama et al. (2024) [ECS - Japan Sea]"
 data_source_AROUND_JAPAN = "with [Around Japan]"
 data_source_GLOBAL       = "with [Global data sets]"
-data_source_USGS_EARTHQUAKE = "USGS Earthquake Catalog [API]"
 
 
 DATA_SOURCES = [
     data_source_JAPAN_SEA,
     data_source_AROUND_JAPAN,
     data_source_GLOBAL,
-    data_source_USGS_EARTHQUAKE,
 ]
 
 
@@ -77,8 +70,6 @@ refs_GLOBAL = ':blue[Data source:] Kodama et al. (2024), Yamamoto et al. (2001),
                 Sakamoto et al. (2022).\
                 :blue[Integrated with:] NASA GISS Global Seawater d18O Database (Jan 23, 2025)\
                 :blue[and] CoralHydro2k d18O Database (Atwood et al., 2026; v1.0.0)'
-
-refs_USGS_EARTHQUAKE = ':blue[Data source:] USGS Earthquake Catalog API (GeoJSON, eventtype=earthquake).'
 
 
 
@@ -251,179 +242,6 @@ def load_coastline_data(ref_data):
     except Exception as e:
         st.error(f"Failed to load the file.: {coastline_excel} - {e}")
         return [], []
-
-
-"""
-##############################################################################
-# --- 2b. LOAD USGS EARTHQUAKE CATALOG DATA ---
-# Fetch hypocenter data from the USGS FDSN Event Web Service and normalize it
-# into an EnvGeo-like dataframe for 4D mapping.
-##############################################################################
-"""
-
-USGS_EARTHQUAKE_QUERY_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
-
-
-def _format_usgs_datetime(value):
-    """
-    Convert date/datetime-like values to ISO8601 strings accepted by the USGS API.
-    """
-    if isinstance(value, pd.Timestamp):
-        value = value.to_pydatetime()
-
-    if isinstance(value, datetime):
-        return value.isoformat(timespec="seconds")
-
-    if isinstance(value, date):
-        return value.isoformat()
-
-    return str(value)
-
-
-def _optional_usgs_param(params, key, value):
-    """
-    Add an API parameter only when the value is meaningful.
-    """
-    if value is None:
-        return
-    if isinstance(value, float) and math.isnan(value):
-        return
-    params[key] = value
-
-
-def usgs_geojson_to_dataframe(payload):
-    """
-    Normalize USGS GeoJSON FeatureCollection records into a dataframe.
-
-    USGS coordinates are ordered as [longitude, latitude, depth_km].
-    """
-    columns = [
-        "EventID", "DateTime_UTC", "Time_UTC", "Updated_UTC",
-        "Longitude_degE", "Latitude_degN", "Depth_km", "Depth_m",
-        "Magnitude", "MagnitudeType", "Place", "Tsunami", "Alert",
-        "Status", "URL", "DetailURL", "Dataset", "reference",
-        "Year", "Month", "Day", "Hour", "Date", "lat", "lon",
-    ]
-
-    features = payload.get("features", []) if isinstance(payload, dict) else []
-    if not features:
-        return pd.DataFrame(columns=columns)
-
-    records = []
-    for feature in features:
-        props = feature.get("properties") or {}
-        geometry = feature.get("geometry") or {}
-        coords = geometry.get("coordinates") or [None, None, None]
-
-        lon = coords[0] if len(coords) > 0 else None
-        lat = coords[1] if len(coords) > 1 else None
-        depth_km = coords[2] if len(coords) > 2 else None
-
-        records.append({
-            "EventID": feature.get("id"),
-            "Time_ms": props.get("time"),
-            "Updated_ms": props.get("updated"),
-            "Longitude_degE": lon,
-            "Latitude_degN": lat,
-            "Depth_km": depth_km,
-            "Magnitude": props.get("mag"),
-            "MagnitudeType": props.get("magType"),
-            "Place": props.get("place"),
-            "Tsunami": props.get("tsunami"),
-            "Alert": props.get("alert"),
-            "Status": props.get("status"),
-            "URL": props.get("url"),
-            "DetailURL": props.get("detail"),
-        })
-
-    df = pd.DataFrame(records)
-
-    numeric_cols = [
-        "Longitude_degE", "Latitude_degN", "Depth_km", "Magnitude",
-        "Tsunami", "Time_ms", "Updated_ms",
-    ]
-    for col in numeric_cols:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    df["Depth_m"] = df["Depth_km"] * 1000.0
-    df["Time_UTC"] = pd.to_datetime(df["Time_ms"], unit="ms", utc=True, errors="coerce")
-    df["Updated_UTC"] = pd.to_datetime(df["Updated_ms"], unit="ms", utc=True, errors="coerce")
-    df["DateTime_UTC"] = df["Time_UTC"].dt.strftime("%Y-%m-%d %H:%M:%S UTC")
-    df["Date"] = df["Time_UTC"].dt.strftime("%Y-%m-%d")
-    df["Year"] = df["Time_UTC"].dt.year.astype("Int64")
-    df["Month"] = df["Time_UTC"].dt.month.astype("Int64")
-    df["Day"] = df["Time_UTC"].dt.day.astype("Int64")
-    df["Hour"] = df["Time_UTC"].dt.hour.astype("Int64")
-    df["lat"] = df["Latitude_degN"]
-    df["lon"] = df["Longitude_degE"]
-    df["Dataset"] = "USGS Earthquake Catalog"
-    df["reference"] = "USGS Earthquake Catalog API"
-
-    df = df.drop(columns=["Time_ms", "Updated_ms"], errors="ignore")
-    df = df[columns]
-    return df
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_usgs_earthquake_data(
-    starttime,
-    endtime,
-    minmagnitude=None,
-    maxmagnitude=None,
-    mindepth=None,
-    maxdepth=None,
-    minlatitude=None,
-    maxlatitude=None,
-    minlongitude=None,
-    maxlongitude=None,
-    limit=2000,
-    orderby="time",
-):
-    """
-    Fetch earthquake hypocenter data from the USGS API and return a dataframe.
-    """
-    params = {
-        "format": "geojson",
-        "eventtype": "earthquake",
-        "starttime": _format_usgs_datetime(starttime),
-        "endtime": _format_usgs_datetime(endtime),
-        "orderby": orderby,
-        "limit": int(limit),
-    }
-
-    optional_params = {
-        "minmagnitude": minmagnitude,
-        "maxmagnitude": maxmagnitude,
-        "mindepth": mindepth,
-        "maxdepth": maxdepth,
-        "minlatitude": minlatitude,
-        "maxlatitude": maxlatitude,
-        "minlongitude": minlongitude,
-        "maxlongitude": maxlongitude,
-    }
-    for key, value in optional_params.items():
-        _optional_usgs_param(params, key, value)
-
-    query_url = f"{USGS_EARTHQUAKE_QUERY_URL}?{urlencode(params)}"
-    request = Request(
-        query_url,
-        headers={"User-Agent": "EnvGeoSeawater earthquake visualizer"},
-    )
-
-    try:
-        with urlopen(request, timeout=30) as response:
-            payload = json.load(response)
-    except HTTPError as e:
-        raise RuntimeError(f"USGS API error ({e.code}): {e.reason}") from e
-    except URLError as e:
-        raise RuntimeError(f"USGS API connection error: {e.reason}") from e
-    except TimeoutError as e:
-        raise RuntimeError("USGS API request timed out.") from e
-
-    df = usgs_geojson_to_dataframe(payload)
-    df.attrs["query_url"] = query_url
-    return df
     
 
 
@@ -1464,3 +1282,4 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
     #  sld_temp_min, sld_temp_max, 
     #  selected_cruise,
     #  submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+
