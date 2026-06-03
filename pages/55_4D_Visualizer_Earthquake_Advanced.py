@@ -40,6 +40,13 @@ st.set_page_config(
     },
 )
 
+st.title("EnvGeo-Earthquake")
+st.info("This test page has moved to a dedicated site. / このテストページは専用サイトへ移動しました。")
+st.markdown("Please use the new site below. / 新しいサイトはこちらをご利用ください。")
+st.link_button("Open EnvGeo-Earthquake", "https://envgeo-earthquake.streamlit.app")
+st.markdown("[https://envgeo-earthquake.streamlit.app](https://envgeo-earthquake.streamlit.app)")
+st.stop()
+
 
 JAPAN_REGION_LABEL = "Japan and surrounding area"
 GLOBAL_REGION_LABEL = "Global"
