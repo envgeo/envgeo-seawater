@@ -143,7 +143,9 @@ df_filtered = envgeo_utils.sidebar_filter_and_display(
 
 ## Testing
 
-Basic functionality can be verified using pytest:
+The test suite in tests/ focuses on the core non-UI functionality used by the Streamlit application, including data loading, validation of required columns, numeric type conversion, gap-row insertion for depth profiles, custom colorscale selection, and coastline data loading.
+
+Run the tests from the repository root with:
 
 ```bash
 pytest
