@@ -8,7 +8,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Current version:** 1.30
+**Current version:** 1.3.0
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -75,20 +75,15 @@ for the main visualization tools:
 - `pages/90_Integrated_Visualizer_beta.py`  
   Experimental integrated visualizer. It can run the original visualization workflows inside one beta page, temporarily merge uploaded user data into those workflows, and test a shared-filter tab workflow with ocean-region map presets for future integration. The standalone uploader page remains separate because it uses its own upload-first workflow.
 
-Older navigation pages, duplicate current-page copies, and retired experimental
-pages have been removed from the current source tree. Historical versions are
-kept through local backups and GitHub release/tag history. The former standalone
-about page was merged into `home.py`.
+The former standalone about page was merged into `home.py`.
 
 ---
 
 ## Local Diagnostic Tool
 
-The package includes a local Streamlit-based environment checker. During local
-development, `pages/99_Environment_Check.py` exposes it in the Streamlit
-sidebar. For public deployment, remove that sidebar wrapper and run the tool
-directly when you need to confirm Python paths and installed dependency
-versions. The diagnostic results can be exported as CSV or PDF reports:
+The package includes a local Streamlit-based environment checker. It is intended
+for local use when confirming Python paths and installed dependency versions.
+The diagnostic results can be exported as CSV or PDF reports:
 
 ```bash
 streamlit run tools/env_check_streamlit.py
@@ -253,10 +248,6 @@ pytest
   Basic pytest tests for imports, dataset loading, numeric conversion, gap-row
   insertion, colorscales, and coastline loading.
 
-- `old/`, `__GitHub関連/`  
-  Development history and local project-management notes. These are useful
-  during preparation but should be reviewed before a public release.
-
 Core functionality is implemented as reusable Python functions in `envgeo_utils.py`, allowing programmatic access outside the Streamlit interface.
 
 ---
@@ -300,12 +291,6 @@ Experimental features are included for development purposes and may change in fu
   smartphones and tablets.
 - User data upload is currently Excel-centered and depends on the expected
   column structure.
-- Retired development and experimental pages are not included in the current
-  source tree; use GitHub release/tag history or local backups when older
-  versions need to be inspected.
-- The current code organization keeps UI, data loading, filtering, and plotting
-  utilities close together in `envgeo_utils.py`; this is being refactored
-  gradually to improve testing and reuse.
 - Dataset interpretation depends on the original data sources, analytical
   methods, and metadata. Users should cite and evaluate the underlying data
   providers when using outputs in publications.
@@ -326,15 +311,6 @@ EnvGeo-Seawater and the original dataset providers used in the selected
 visualization. Source details are shown in the app and in the Markdown files
 under `data_text/`.
 
-### Source certainty audit
-
-The current repository organization and bundled source notes were reviewed on
-2026-09-07 during repository cleanup. Before a formal release, dataset licenses,
-redistribution permissions, preferred citations, and external links should be
-checked again against the original provider pages.
-
----
-
 ## Live Demo
 
 Primary stable demo:
@@ -347,9 +323,9 @@ https://envgeo-seawater-pre.streamlit.app
 
 ## Citation
 
-Ishimura, T. (2026).
-EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data.
-DOI: (to be assigned)
+Ishimura, T. (2026).  
+EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data.  
+Archival citation details will be added after release.
 
 ---
 

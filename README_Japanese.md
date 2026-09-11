@@ -6,7 +6,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**現在のバージョン:** 1.30
+**現在のバージョン:** 1.3.0
 
 **海水同位体・水文データを、地図・断面・T-S図・3D/4D表示で探索する研究用Webアプリです。**
 
@@ -71,13 +71,13 @@ EnvGeo-Seawater は、海洋地球化学研究における海水同位体デー�
 - `pages/90_Integrated_Visualizer_beta.py`  
   試作統合ページ。既存の可視化ワークフローを1ページ内から選択実行できる互換モード、既存ページへのユーザーデータ一時結合、海域プリセット付きの共通フィルタ・タブ切り替えモードを含みます。独立アップロードページはアップロード起点の別ワークフローのため、統合ページ内の選択肢からは外しています。
 
-古いナビゲーションページ、重複していた現在版コピー、退役した実験ページは、現在のソースツリーからは除外しました。過去版はローカルバックアップと GitHub の release/tag 履歴で確認します。以前の独立した about ページは `home.py` に統合しました。
+以前の独立した about ページは `home.py` に統合しました。
 
 ---
 
 ## ローカル環境診断ツール
 
-配布パッケージには、ローカル環境確認用の Streamlit 診断ツールを含めています。開発中は `pages/99_Environment_Check.py` から呼び出すため、ローカルの Streamlit サイドバーにも表示されます。公開アプリに含めない場合は、公開前にこのサイドバー用ページを外し、`tools/env_check_streamlit.py` を直接実行します。診断結果は CSV または PDF レポートとして保存できます。
+配布パッケージには、ローカル環境確認用の Streamlit 診断ツールを含めています。Python パスや依存パッケージを確認するためのローカル用ツールです。診断結果は CSV または PDF レポートとして保存できます。
 
 ```bash
 streamlit run tools/env_check_streamlit.py
@@ -245,9 +245,6 @@ pytest
 - `test/`  
   基本的な pytest テスト。
 
-- `old/`, `__GitHub関連/`  
-  開発履歴とローカル運用メモ。公開リリース前に含める範囲を確認する必要があります。
-
 ---
 
 ## 使い方
@@ -284,8 +281,6 @@ pytest
 - 全球データを大きく選択した場合、3D/4D表示は重くなることがあります。
 - Plotly の3D操作はPCでの利用に向いています。スマートフォンやタブレットでは2D表示が適しています。
 - ユーザーデータアップロードは現在 Excel 中心で、想定された列構造に依存しています。
-- 退役した開発用・実験用ページは、現在のソースツリーには含めません。過去版を確認する場合は、GitHub の release/tag 履歴またはローカルバックアップを参照します。
-- 現在は UI、データ読み込み、フィルタリング、描画補助が `envgeo_utils.py` に近接しており、今後段階的に整理します。
 - 出力結果の解釈には、元データの出典、分析手法、メタデータの確認が必要です。出版物で利用する場合は、EnvGeo-Seawater と元データ提供者の両方を適切に引用してください。
 
 ---
@@ -303,14 +298,6 @@ pytest
 
 詳細な出典情報は、アプリ内および `data_text/` 以下の Markdown ファイルに記載しています。
 
-### 出典確認メモ
-
-現在のリポジトリ構成と同梱されている出典メモは、リポジトリ整理の一環として 2026-09-07 に確認しました。
-
-正式なリリース前には、各データセットのライセンス、再配布可否、推奨引用、外部リンクを、元データ提供者のページで再確認してください。
-
----
-
 ## Live Demo
 
 Primary stable demo:
@@ -325,7 +312,7 @@ https://envgeo-seawater-pre.streamlit.app
 
 Ishimura, T. (2026).  
 EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data.  
-DOI: 未定
+正式なアーカイブ公開後に引用情報を更新します。
 
 ---
 
