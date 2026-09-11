@@ -10,7 +10,7 @@ Created on Sun May 21 16:00:21 2023
 """
 
 # --- Version info ---
-version = "1.30" #v220_20260429　mapセンター調整済
+version = "1.3.0" #v220_20260429　mapセンター調整済
 
 # ToDo
 # 最後のマップのカラーバーの初期値を調整必要
@@ -111,6 +111,33 @@ def main():
     def normalize_lon_to_center(lon, center):
         return ((np.asarray(lon) - (center - 180)) % 360) + (center - 180)
 
+    # Convert shared map-region presets to the longitude frame used by Fig.3-Fig.6.
+    # 共通の海域プリセットを、Fig.3-Fig.6で使う経度系に合わせる。
+    def region_bounds_for_4d(bounds, lon_min, lon_max, lat_min, lat_max, center):
+        preset_lon_min, preset_lon_max, preset_lat_min, preset_lat_max = bounds
+        original_lon_span = abs(preset_lon_max - preset_lon_min)
+
+        if original_lon_span >= 300:
+            converted_lon = (lon_min, lon_max)
+        else:
+            converted_pair = normalize_lon_to_center([preset_lon_min, preset_lon_max], center)
+            converted_lon_min = float(converted_pair[0])
+            converted_lon_max = float(converted_pair[1])
+            if converted_lon_min > converted_lon_max:
+                converted_lon = (lon_min, lon_max)
+            else:
+                converted_lon = (
+                    max(lon_min, int(np.floor(converted_lon_min))),
+                    min(lon_max, int(np.ceil(converted_lon_max))),
+                )
+
+        converted_lat = (
+            max(lat_min, int(np.floor(preset_lat_min))),
+            min(lat_max, int(np.ceil(preset_lat_max))),
+        )
+
+        return converted_lon, converted_lat
+
     # Insert line breaks at large longitude jumps so coastlines do not draw false horizontal connectors.
     # 海岸線の大きな経度ジャンプで線を切り、不要な横線が描かれないようにする。
     def wrap_coastline_with_breaks(lon, lat, center, jump_threshold=180):
@@ -149,7 +176,7 @@ def main():
 
    # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
-        st.subheader(envgeo_utils.MAP_DISPLAY_SETTINGS_LABEL)
+        st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
 
         # Match the map-center selector used in the 2D mapping page.
         # 2D マップページと同じ地図中心の切り替え UI を使う。
@@ -172,7 +199,7 @@ def main():
         )
         map_colorscale = colormap_options[selected_colormap_label]
 
-        st.subheader(envgeo_utils.FIGURE_SCALE_SETTINGS_LABEL)
+        st.subheader(getattr(envgeo_utils, "FIGURE_SCALE_SETTINGS_LABEL", "Figure scale settings"))
 
         # Allow Fig3-Fig6 map views to use explicit lon/lat windows from the sidebar.
         # Fig3-Fig6 の地図表示範囲を、サイドバーから緯度経度で直接調整できるようにする。
@@ -192,7 +219,26 @@ def main():
             lon_slider_min, lon_slider_max = (0, 360) if lon_center_3d == 180 else (-180, 180)
             lat_slider_min, lat_slider_max = -90, 90
 
-        figure_scale_state_key = f"figure_scale_settings::{ref_data}::{lon_center_3d}"
+        region_preset_4d = st.selectbox(
+            "Region preset (Fig.3-Fig.6)",
+            ["Dataset default"] + list(envgeo_utils.MAP_REGION_PRESETS),
+            help=(
+                "Set the longitude and latitude range for Fig.3-Fig.6. "
+                "You can still fine-tune the range with the sliders below."
+            ),
+        )
+
+        if region_preset_4d != "Dataset default":
+            map_lon_default, map_lat_default = region_bounds_for_4d(
+                envgeo_utils.MAP_REGION_PRESETS[region_preset_4d]["bounds"],
+                lon_slider_min,
+                lon_slider_max,
+                lat_slider_min,
+                lat_slider_max,
+                lon_center_3d,
+            )
+
+        figure_scale_state_key = f"figure_scale_settings::{ref_data}::{lon_center_3d}::{region_preset_4d}"
         if figure_scale_state_key not in st.session_state:
             st.session_state[figure_scale_state_key] = {
                 "map_lon_raw": map_lon_default,
@@ -203,7 +249,7 @@ def main():
 
         figure_scale_settings = st.session_state[figure_scale_state_key]
 
-        with st.form(key=f"figure_scale_form::{ref_data}::{lon_center_3d}"):
+        with st.form(key=f"figure_scale_form::{ref_data}::{lon_center_3d}::{region_preset_4d}"):
             map_lon_raw_form = st.slider(
                 'Map Longitude (Fig.3-Fig.6)',
                 lon_slider_min,

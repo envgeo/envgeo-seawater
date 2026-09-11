@@ -11,7 +11,7 @@ Created on Sun May 21 16:00:21 2023
 
 
 # --- Version info ---
-version = "1.30" #v220_20260317
+version = "1.3.0" #v220_20260317
 
 # ToDo
 
@@ -175,7 +175,7 @@ def main():
     ##############################################################################
    
     # #スペース入れる
-    # st.sidebar.subheader(envgeo_utils.FIGURE_CONTROLS_LABEL)
+    # st.sidebar.subheader("Figure controls")
     
 
     ##############################################################################

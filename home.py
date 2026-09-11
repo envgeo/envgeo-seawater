@@ -180,7 +180,7 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
-### Version 1.30 (2026-09-11)
+### Version 1.3.0 (2026-09-11)
 
 - Cleaner interface wording, page titles, and figure controls.
 - Expanded parameter plotting for d18O, dD, d-excess, salinity, temperature, depth, latitude, and longitude.
@@ -204,6 +204,10 @@ def render_update_history() -> None:
 def main():
 
     st.title('EnvGeo Seawater')
+    
+    # st.title(':red[Unpublished version]')
+    # st.title(':red[for internal use only]')
+    
     st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
     st.write('Interactive 3D/4D Seawater Isotope and Hydrographic Database – Japan Marginal Seas and Global Ocean')
     st.write(':blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]')

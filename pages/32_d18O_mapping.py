@@ -10,7 +10,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.30" #v220f_20260425
+version = "1.3.0" #v220f_20260425
 
 # ToDo
 # このバージョンは補完計算の調整が必要
@@ -159,7 +159,7 @@ def main():
 
     # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
-        st.subheader(envgeo_utils.MAP_DISPLAY_SETTINGS_LABEL)
+        st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
         
         center_option = st.radio(
             ":blue[Map Center:]",
@@ -361,7 +361,7 @@ def main():
     ###############################################################################################
     ###############################################################################################
 
-    st.caption(envgeo_utils.MAP_AREA_HELP_TEXT)
+    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map extent and figure size can be adjusted in the sidebar."))
     st.caption(f"Map parameter: {parameter_plotly_label}")
 
 

@@ -13,7 +13,7 @@ d-excess 計算、地図表示設定、共通テーブル表示をここに集�
 """
 
 # --- App version / バージョン情報 ---
-APP_VERSION = "1.30"
+APP_VERSION = "1.3.0"
 APP_VERSION_DATE = "2026-09-11"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 

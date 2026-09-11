@@ -18,7 +18,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "1.30"
+version = "1.3.0"
 fig_title = "envgeo-seawater-database"
 
 
@@ -167,7 +167,7 @@ def main():
         return
 
     with st.sidebar.container(border=True):
-        st.subheader(envgeo_utils.CUSTOM_PLOT_SETTINGS_LABEL)
+        st.subheader(getattr(envgeo_utils, "CUSTOM_PLOT_SETTINGS_LABEL", "Custom plot settings"))
 
         x_axis = st.selectbox(
             "X axis",

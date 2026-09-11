@@ -8,7 +8,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.30" #v220_20260317
+version = "1.3.0" #v220_20260317
 
 # ToDo
 
@@ -295,7 +295,7 @@ def main():
     
     
     with st.sidebar.container(border=True):
-        st.subheader(envgeo_utils.FIGURE_CONTROLS_LABEL)
+        st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
         
         # st.sidebar.subheader('描画水深の範囲')
         if ref_data == data_source_JAPAN_SEA:
@@ -430,7 +430,7 @@ def main():
     ############################################################################################### 
     ###############################################################################################
     ###############################################################################################
-    st.caption(envgeo_utils.MAP_AREA_HELP_TEXT)
+    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map extent and figure size can be adjusted in the sidebar."))
 
 
 

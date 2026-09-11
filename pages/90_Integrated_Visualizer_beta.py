@@ -22,7 +22,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "1.30"
+version = "1.3.0"
 
 BASE_DIR = Path(__file__).resolve().parent
 

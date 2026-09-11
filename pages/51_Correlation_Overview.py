@@ -7,7 +7,7 @@ Created on Sat Apr 22 17:15:03 2023
 """
 
 # --- バージョン管理の設定 ---
-version = "1.30" #2026/02/23
+version = "1.3.0" #2026/02/23
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 
@@ -381,7 +381,7 @@ def main():
         
         
         
-        st.subheader(envgeo_utils.DATA_RANGE_SETTINGS_LABEL)
+        st.subheader(getattr(envgeo_utils, "DATA_RANGE_SETTINGS_LABEL", "Data range settings"))
         
         
         
@@ -486,7 +486,7 @@ def main():
         #スペース入れる
         # st.subheader(':blue[  ]')
         # st.subheader(':blue[  ]')
-        st.subheader(envgeo_utils.FIGURE_CONTROLS_LABEL)
+        st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
         
         
         #地図の描画範囲（拡大）

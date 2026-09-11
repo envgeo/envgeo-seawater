@@ -11,7 +11,7 @@ Created on Sun May 21 16:00:21 2023
 
 
 # --- Version info ---
-version = "1.30" #v220_20260317
+version = "1.3.0" #v220_20260317
 
 # ToDo
 
@@ -161,7 +161,7 @@ def main():
     ##############################################################################
     
     with st.sidebar.container(border=True):
-        st.subheader(envgeo_utils.FIGURE_CONTROLS_LABEL)
+        st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
     
     
         # マーカーの問明度調整
@@ -364,7 +364,7 @@ def main():
     ###############################################################################################
     ###############################################################################################
 
-    st.caption(envgeo_utils.MAP_AREA_HELP_TEXT)
+    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map extent and figure size can be adjusted in the sidebar."))
 
 
 
