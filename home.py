@@ -13,13 +13,15 @@ import streamlit as st
 import re
 from pathlib import Path
 
+import envgeo_utils
+
 
 BASE_DIR = Path(__file__).resolve().parent
 
 
 # page info
 st.set_page_config(
-    page_title="Ocean Geochemical Database", 
+    page_title="EnvGeo Seawater Isotope Database", 
     # page_icon=image, 
     # layout="wide", 
     initial_sidebar_state="auto", 
@@ -27,8 +29,8 @@ st.set_page_config(
          'Get Help': 'https://envgeo.h.kyoto-u.ac.jp/sw_jpn/',
          'Report a bug': "https://www.h.kyoto-u.ac.jp/en_f/faculty_f/ishimura_toyoho_4dea/#mailform",
          'About': """
-         Interactive 3D-4D Seawater Isotope & Geochemical Database
-         – Japan Marginal Seas & Global Ocean –
+         Interactive 3D/4D Seawater Isotope and Hydrographic Database
+         – Japan Marginal Seas and Global Ocean
             by T. Ishimura
               https://envgeo.h.kyoto-u.ac.jp/sw_jpn/"""
      })
@@ -37,7 +39,6 @@ st.set_page_config(
 # to show markdown files with local images
 def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> None:
     image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
-
     buffer = []
 
     for line in md_text.splitlines():
@@ -50,9 +51,17 @@ def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> Non
                 buffer = []
 
             caption, image_path = match.groups()
-            if base_dir and not image_path.startswith(("http://", "https://", "data:")):
-                image_path = str((base_dir / image_path).resolve())
-            st.image(image_path, caption=caption if caption else None)
+            if image_path.startswith(("http://", "https://", "data:")):
+                st.image(image_path, caption=caption if caption else None)
+                continue
+
+            if base_dir:
+                resolved_path = (base_dir / image_path).resolve()
+                if resolved_path.exists() and resolved_path.is_file():
+                    st.image(str(resolved_path), caption=caption if caption else None)
+                    continue
+
+            buffer.append(line)
         else:
             buffer.append(line)
 
@@ -87,21 +96,128 @@ def render_external_link(label: str, url: str) -> None:
         st.markdown(f"[{label}]({url})")
 
 
+def render_tab_style() -> None:
+    """
+    Render compact, readable tabs for the Home page.
+
+    Home画面のタブを、境界と選択状態が分かりやすい表示に整えます。
+    """
+    st.markdown(
+        """
+        <style>
+        div[data-baseweb="tab-list"] {
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(49, 51, 63, 0.18);
+            padding-bottom: 0;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"] {
+            background: rgba(248, 249, 250, 0.95);
+            color: #1f2937;
+            border: 1px solid rgba(49, 51, 63, 0.20);
+            border-bottom-color: rgba(49, 51, 63, 0.12);
+            border-radius: 6px 6px 0 0;
+            padding: 0.38rem 0.72rem;
+            min-height: 2.15rem;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"] p {
+            margin: 0;
+            color: inherit;
+        }
+        div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
+            background: linear-gradient(180deg, #e6f7fb 0%, #d7eef5 100%);
+            border-color: #2f8da8;
+            border-bottom-color: #d7eef5;
+            color: #075064;
+            box-shadow: inset 0 0 0 1px rgba(47, 141, 168, 0.34);
+        }
+        html[data-theme="dark"] div[data-baseweb="tab-list"] {
+            border-bottom-color: rgba(240, 244, 250, 0.18);
+        }
+        html[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"],
+        body[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"] {
+            background: rgba(44, 49, 61, 0.96);
+            color: rgba(245, 247, 250, 0.95);
+            border-color: rgba(240, 244, 250, 0.26);
+        }
+        html[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
+        body[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
+            background: linear-gradient(180deg, #17485a 0%, #123645 100%);
+            color: #e9fbff;
+            border-color: #68c3dc;
+            box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+        }
+        @media (prefers-color-scheme: dark) {
+            div[data-baseweb="tab-list"] {
+                border-bottom-color: rgba(240, 244, 250, 0.18);
+            }
+            div[data-baseweb="tab-list"] button[role="tab"] {
+                background: rgba(44, 49, 61, 0.96);
+                color: rgba(245, 247, 250, 0.95);
+                border-color: rgba(240, 244, 250, 0.26);
+            }
+            div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
+                background: linear-gradient(180deg, #17485a 0%, #123645 100%);
+                color: #e9fbff;
+                border-color: #68c3dc;
+                box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+            }
+        }
+        @media (max-width: 900px) {
+            div[data-baseweb="tab-list"] button[role="tab"] {
+                font-size: 0.86rem;
+                padding: 0.32rem 0.54rem;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_update_history() -> None:
+    st.markdown(
+        """
+### Version 1.30 (2026-09-11)
+
+- Cleaner interface wording, page titles, and figure controls.
+- Expanded parameter plotting for d18O, dD, d-excess, salinity, temperature, depth, latitude, and longitude.
+- Improved map display with region presets, API-key-free basemaps, and cmocean/EnvGeo colormap options.
+- Added user-data upload support in the integrated beta workflow, including overlay styling and quality summaries.
+- Added shared quality checks, d-excess calculation, filename handling, and filtered-data summaries.
+- Expanded pytest coverage for core utilities, data loading, and public app structure.
+
+### Earlier Versions
+
+- `1.0.1` (2026-03-24): Improved the stable public Streamlit app structure and documentation.
+- `1.0.0` (2026-03-18): Updated the main seawater isotope and hydrographic visualization workflows.
+- `0.2.0` (2026-02-18): Improved the pre-1.0 integrated app structure.
+- `b20` (2024-12-14): Added Excel upload support, custom plotting, and additional datasets.
+- `b03` (2023-05-22): Initial pre-release version.
+        """
+    )
+
+
 
 def main():
 
     st.title('EnvGeo Seawater')
     st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
-    st.write('Interactive 3D-4D Seawater Isotope & Geochemical Database – Japan Marginal Seas & Global Ocean –')
-    st.write(':blue[seawater isotopes (d18O, dD), temperature, salinity, seasonality, and annual variations around JAPAN]')
-    st.write('Version 1.0.1 (2026-03-24)')
+    st.write('Interactive 3D/4D Seawater Isotope and Hydrographic Database – Japan Marginal Seas and Global Ocean')
+    st.write(':blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]')
+    st.write(f'Version {envgeo_utils.APP_VERSION_LABEL}')
     # st.write('Current Version: Version 1.0 _(v220-20260316)_')
     # st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
 
 
 
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["MAIN", "ABOUT", "DATA SOURCES", "MANUAL", "UPDATE LOG", "JAPANESE"])
+    render_tab_style()
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+        ["Main", "About", "Data Sources", "Manual", "Updates", "Japanese"]
+    )
     
     
     ##############################################################
@@ -139,7 +255,16 @@ def main():
 
         st.markdown("<h6 style='text-align: center; color: grey;'>Animation created with GMT (The Generic Mapping Tools)</h6>", unsafe_allow_html=True)
 
-        st.warning('Note: This application may have limited performance under heavy traffic. If the page fails to load or respond, please refresh your browser or try again after a short while.')
+        st.markdown(
+            """
+### Start Exploring
+
+- **Core dataset:** explore the highly comparable Japan-region seawater isotope dataset.
+- **Reference datasets:** expand the view to regional and global comparison datasets.
+- **Visualization pages:** use the sidebar to open maps, 3D/4D views, T-S diagrams, depth profiles, and beta tools.
+- **User data:** upload your own seawater dataset for temporary, session-only comparison.
+            """
+        )
 
     
 
@@ -268,13 +393,16 @@ def main():
     ##############################################################
     with tab5:
 
-        st.header('Update Log')
-        
-        ###############
-        # --- アップデートログ　外部ファイル (update_log.md) の読み込みと実行 ---
+        st.header('Update History')
+        render_update_history()
+
         update_log_file = resolve_path('data_text', 'update_log.md')
-        render_markdown_file(update_log_file, f"情報: {update_log_file.name} が見つかりません。")
-        ###############
+        update_log_ja_file = resolve_path('data_text', 'update_log_Japanese.md')
+        with st.expander("Detailed update log (English)"):
+            render_markdown_file(update_log_file, f"情報: {update_log_file.name} が見つかりません。")
+        with st.expander("Detailed update log (Japanese)"):
+            render_markdown_file(update_log_ja_file, f"情報: {update_log_ja_file.name} が見つかりません。")
+
         st.write('_____')
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     

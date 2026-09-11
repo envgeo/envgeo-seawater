@@ -1,12 +1,14 @@
-This repository is a mirror site, where the trial public version is updated regularly. For the stable release, please visit the official site: https://envgeo-seawater-map.streamlit.app
-
 # EnvGeo-Seawater 🌊
 
 EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hydrographic data.
 
+[日本語版 README](README_Japanese.md)
+
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Current version:** 1.30
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -37,6 +39,63 @@ The platform is designed to support both **exploratory data analysis** and **rep
 
 ---
 
+## Main Pages
+
+The stable Streamlit app uses `home.py` for the about, data-source, manual,
+update-log, and Japanese information tabs. The `pages/` directory is reserved
+for the main visualization tools:
+
+- `pages/03_3D_Visualizer.py`  
+  Interactive 3D plots for isotope-hydrographic relationships and selected sample locations.
+
+- `pages/04_4D_Visualizer.py`  
+  Main 3D/4D seawater visualizer for longitude, latitude, depth, and selected variables.
+
+- `pages/05_3D4D_Visualizer_Uploader.py`  
+  User-upload visualizer for Excel-based custom datasets and comparison with reference data.
+
+- `pages/31_Salinity-d18O_Relationship.py`  
+  Salinity-δ18O relationship plots with optional regression lines.
+
+- `pages/32_d18O_mapping.py`  
+  2D map and contour-style visualization for d18O, dD, d-excess, salinity, and temperature distributions.
+
+- `pages/34_T-S_diagram.py`  
+  Temperature-salinity diagrams with density contours.
+
+- `pages/37_Depth_Profile_(T,S,d18O).py`  
+  Depth profiles for δ18O, δD, d-excess, temperature, and salinity.
+
+- `pages/35_Custom_Parameter_Plot_beta.py`  
+  Experimental custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
+
+- `pages/53_Vertical_Section_Visualizer.py`  
+  Vertical Section Visualizer beta. This experimental page is used to refine section-line selection, interpolation, bathymetry handling, and vertical-section plotting.
+
+- `pages/90_Integrated_Visualizer_beta.py`  
+  Experimental integrated visualizer. It can run the original visualization workflows inside one beta page, temporarily merge uploaded user data into those workflows, and test a shared-filter tab workflow with ocean-region map presets for future integration. The standalone uploader page remains separate because it uses its own upload-first workflow.
+
+Older navigation pages, duplicate current-page copies, and retired experimental
+pages have been removed from the current source tree. Historical versions are
+kept through local backups and GitHub release/tag history. The former standalone
+about page was merged into `home.py`.
+
+---
+
+## Local Diagnostic Tool
+
+The package includes a local Streamlit-based environment checker. During local
+development, `pages/99_Environment_Check.py` exposes it in the Streamlit
+sidebar. For public deployment, remove that sidebar wrapper and run the tool
+directly when you need to confirm Python paths and installed dependency
+versions. The diagnostic results can be exported as CSV or PDF reports:
+
+```bash
+streamlit run tools/env_check_streamlit.py
+```
+
+---
+
 ## User Data Integration
 
 `91_USER_UPLOAD_UNPUB.xlsx` is provided as a template for user-defined comparison data.
@@ -46,6 +105,10 @@ The platform is designed to support both **exploratory data analysis** and **rep
 - Run the app locally to integrate your dataset  
 
 This allows direct comparison between user datasets and curated reference datasets across all supported visualizations.
+
+Uploaded files are intended to be handled in memory during the current
+Streamlit session only. The integrated beta workflow does not save uploaded
+files or merged user/reference datasets to local or server storage.
 
 ---
 
@@ -90,15 +153,17 @@ Unpublished or restricted datasets are **not included**.
 
 ## Installation & Requirements
 
-This project requires **Python 3.12** for full compatibility with validated dependencies.
-Due to specific library dependencies (scikit-learn 1.8.0+), Python 3.10 and below are not supported.
+The currently verified environment is **Python 3.10.15** in the Anaconda
+`envgeo_streamlit142` environment. Python 3.12 support should be re-verified
+with the dependency set and Streamlit pages before it is recommended as the
+default environment.
 
 ### 💡 Special Note for macOS (Apple Silicon) Users:
 To avoid build errors with geospatial libraries, it is highly recommended to use **Conda** to install core dependencies before running pip:
 
 ```bash
 # 1. Create and activate environment
-conda create -n envgeo python=3.12
+conda create -n envgeo python=3.10
 conda activate envgeo
 
 # 2. Install pre-built geospatial binaries
@@ -143,9 +208,7 @@ df_filtered = envgeo_utils.sidebar_filter_and_display(
 
 ## Testing
 
-The test suite in tests/ focuses on the core non-UI functionality used by the Streamlit application, including data loading, validation of required columns, numeric type conversion, gap-row insertion for depth profiles, custom colorscale selection, and coastline data loading.
-
-Run the tests from the repository root with:
+Basic functionality can be verified using pytest:
 
 ```bash
 pytest
@@ -155,14 +218,44 @@ pytest
 
 ## Directory Structure
 
-- home.py             : Main application entry point
-- envgeo_utils.py     : Utility functions
-- pages/              : Streamlit app pages
-- data/               : Curated datasets for the application
-- dataset/            : Curated seawater datasets
-- data_text/          : Text resources (about, references, manuals)
-- images/             : Figures and example outputs
-- coastline/          : Coastline data (mapping utilities)
+- `home.py`  
+  Main Streamlit entry point for EnvGeo-Seawater.
+
+- `envgeo_utils.py`  
+  Shared utilities for dataset loading, data cleaning, filtering, common Plotly
+  layout, map styles, coastline loading, and table display.
+
+- `pages/`  
+  Stable visualization page files shown in the app sidebar.
+
+- `tools/`  
+  Local support tools that are included in the package but not shown in the
+  public Streamlit app sidebar.
+
+- `dataset/`  
+  Curated seawater isotope and hydrographic datasets used by the application.
+
+- `data/`  
+  Sample files and media used by the app, including template data, GIF/MP4
+  examples, and temporary coastline sample files.
+
+- `data_text/`  
+  Markdown resources for about text, references, manuals, Japanese notes, and
+  English/Japanese update logs.
+
+- `images/`  
+  Figures and example outputs used in README and documentation.
+
+- `coastline/`  
+  Local coastline coordinate files for map and 3D reference overlays.
+
+- `test/`  
+  Basic pytest tests for imports, dataset loading, numeric conversion, gap-row
+  insertion, colorscales, and coastline loading.
+
+- `old/`, `__GitHub関連/`  
+  Development history and local project-management notes. These are useful
+  during preparation but should be reviewed before a public release.
 
 Core functionality is implemented as reusable Python functions in `envgeo_utils.py`, allowing programmatic access outside the Streamlit interface.
 
@@ -200,7 +293,26 @@ Experimental features are included for development purposes and may change in fu
 
 ---
 
-## Data Sources
+## Limitations
+
+- Interactive 3D/4D visualizations can be slow with large global selections.
+- Plotly 3D interaction is best on a PC; 2D plots are more suitable for
+  smartphones and tablets.
+- User data upload is currently Excel-centered and depends on the expected
+  column structure.
+- Retired development and experimental pages are not included in the current
+  source tree; use GitHub release/tag history or local backups when older
+  versions need to be inspected.
+- The current code organization keeps UI, data loading, filtering, and plotting
+  utilities close together in `envgeo_utils.py`; this is being refactored
+  gradually to improve testing and reuse.
+- Dataset interpretation depends on the original data sources, analytical
+  methods, and metadata. Users should cite and evaluate the underlying data
+  providers when using outputs in publications.
+
+---
+
+## Data Sources and Attribution
 
 The platform integrates major seawater isotope datasets:
 
@@ -208,6 +320,18 @@ The platform integrates major seawater isotope datasets:
 - NASA GISS Global Seawater Oxygen-18 Database (Schmidt et al., 1999)  
 - Kodama et al. (2024), *Geochemical Journal*  
 - Additional regional datasets  
+
+For publication, teaching material, or redistributed outputs, cite both
+EnvGeo-Seawater and the original dataset providers used in the selected
+visualization. Source details are shown in the app and in the Markdown files
+under `data_text/`.
+
+### Source certainty audit
+
+The current repository organization and bundled source notes were reviewed on
+2026-09-07 during repository cleanup. Before a formal release, dataset licenses,
+redistribution permissions, preferred citations, and external links should be
+checked again against the original provider pages.
 
 ---
 
@@ -218,7 +342,6 @@ https://envgeo-seawater-map.streamlit.app
 
 Stable demo with experimental updates:
 https://envgeo-seawater-pre.streamlit.app
-
 
 ---
 

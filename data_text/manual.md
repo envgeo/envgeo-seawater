@@ -1,0 +1,14 @@
+Select a page from the sidebar to start exploring the data.
+
+For the best experience, use this app on a desktop or laptop computer.
+
+Note: Mobile or tablet displays may have limited features or layout constraints.
+
+Suggested starting points:
+
+- Use the 2D mapping page for a quick spatial overview.
+- Use the 3D/4D visualizers to explore longitude, latitude, depth, and variable relationships.
+- Use the T-S, salinity-d18O, and depth-profile pages for detailed hydrographic and isotope relationships.
+- Use beta pages for experimental workflows such as integrated views and vertical sections.
+
+[Description of each page is here](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/#pages)

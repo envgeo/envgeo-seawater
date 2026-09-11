@@ -1,13 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 22 17:15:03 2023
-@author: Toyoho Ishimura @Kyoto-U
-2026/03/11 update 
+Shared utility functions for EnvGeo-Seawater.
+
+This module keeps common app behavior in one place: dataset choices, version
+metadata, data loading, quality normalization, d-excess calculation, map
+styling, and reusable Streamlit table display.
+
+EnvGeo-Seawater 共通処理モジュールです。
+データセット選択肢、バージョン情報、データ読み込み、品質チェック、
+d-excess 計算、地図表示設定、共通テーブル表示をここに集約します。
 """
 
 # --- App version / バージョン情報 ---
-version = "1.0.0a_stable_20260324" #2026/03/24
+APP_VERSION = "1.30"
+APP_VERSION_DATE = "2026-09-11"
+APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
+
+# Backward-compatible alias used by older pages.
+# 既存ページとの互換性を保つため、従来の version 変数も残します。
+version = APP_VERSION
+
+# Shared UI labels / 共通UIラベル
+FIGURE_CONTROLS_LABEL = "Figure controls"
+FIGURE_SCALE_SETTINGS_LABEL = "Figure scale settings"
+MAP_DISPLAY_SETTINGS_LABEL = "Map display settings"
+CUSTOM_PLOT_SETTINGS_LABEL = "Custom plot settings"
+DATA_RANGE_SETTINGS_LABEL = "Data range settings"
+DATA_FILTERING_LABEL = "Data filtering"
+MAP_AREA_HELP_TEXT = "Map extent and figure size can be adjusted in the sidebar."
 
 
 
@@ -15,6 +36,9 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import math
+import re
+import unicodedata
+from datetime import datetime
 
 import warnings # for M1/M2 Mac
 # Shapely の内部計算（intersects, intersection, buffer等）から出る
@@ -30,6 +54,48 @@ warnings.filterwarnings("ignore", message="invalid value encountered in") # メ�
 """
 
 pd.options.mode.copy_on_write = True
+
+
+
+"""
+##############################################################################
+# --- Common filename helpers / ファイル名の共通整形 ---
+##############################################################################
+"""
+
+
+def safe_filename_text(value, fallback="figure", max_length=180):
+    """Convert figure titles and filter labels to safe ASCII filename text.
+
+    図タイトルやフィルタ条件の文字列を、保存用ファイル名として安全な形に整えます。
+    """
+    text = "" if value is None else str(value).strip()
+    text = unicodedata.normalize("NFKD", text)
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = re.sub(r"[\\/:*?\"<>|]+", "_", text)
+    text = re.sub(r"\s+", "_", text)
+    text = re.sub(r"[^A-Za-z0-9._+=()-]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("._-")
+
+    if not text:
+        text = fallback
+
+    return text[:max_length]
+
+
+def build_figure_filename(prefix, subtitle=None, extension="png"):
+    """Build a consistent download filename for figures.
+
+    各ページの図保存ファイル名を、同じルールで作成します。
+    """
+    safe_prefix = safe_filename_text(prefix, fallback="figure")
+    safe_extension = safe_filename_text(str(extension).lstrip("."), fallback="png").lower()
+
+    if subtitle is None or str(subtitle).strip() == "":
+        return f"{safe_prefix}.{safe_extension}"
+
+    safe_subtitle = safe_filename_text(subtitle, fallback="selection")
+    return f"{safe_prefix}_{safe_subtitle}.{safe_extension}"
 
 
 
@@ -51,6 +117,407 @@ DATA_SOURCES = [
     data_source_AROUND_JAPAN,
     data_source_GLOBAL,
 ]
+
+
+STANDARD_UPLOAD_COLUMNS = [
+    "Dataset",
+    "reference",
+    "Cruise",
+    "Station",
+    "Year",
+    "Month",
+    "Day",
+    "Longitude_degE",
+    "Latitude_degN",
+    "Depth_m",
+    "Temperature_degC",
+    "Salinity",
+    "d18O",
+    "dD",
+]
+
+
+UPLOAD_COLUMN_ALIASES = {
+    "Longitude_degE": [
+        "longitude_dege",
+        "longitude",
+        "long",
+        "lon",
+        "x",
+        "east_longitude",
+        "longitude_e",
+    ],
+    "Latitude_degN": [
+        "latitude_degn",
+        "latitude",
+        "lat",
+        "y",
+        "north_latitude",
+        "latitude_n",
+    ],
+    "Depth_m": [
+        "depth_m",
+        "depth",
+        "water_depth",
+        "waterdepth",
+        "sample_depth",
+        "sampledepth",
+        "depthmeter",
+    ],
+    "Temperature_degC": [
+        "temperature_degc",
+        "temperature",
+        "temp",
+        "temp_c",
+        "temperature_c",
+        "t",
+    ],
+    "Salinity": [
+        "salinity",
+        "sal",
+        "psu",
+        "s",
+    ],
+    "d18O": [
+        "d18o",
+        "delta18o",
+        "delta_18o",
+        "o18",
+        "δ18o",
+        "δ18O",
+    ],
+    "dD": [
+        "dd",
+        "d2h",
+        "delta_d",
+        "d_h",
+        "deuterium",
+        "δd",
+        "δD",
+    ],
+    "d-excess": [
+        "d-excess",
+        "dexcess",
+        "d_excess",
+        "d excess",
+    ],
+}
+
+
+def _normalize_column_label(label):
+    """
+    Normalize a column label for alias matching.
+
+    列名の別名判定に使うため、空白・記号・大文字小文字の違いを吸収します。
+    """
+    text = str(label).strip()
+    text = text.replace("δ", "delta")
+    text = text.replace("Δ", "delta")
+    text = text.replace("‰", "")
+    normalized_chars = []
+    for char in text.lower():
+        if char.isalnum():
+            normalized_chars.append(char)
+        else:
+            normalized_chars.append("_")
+    normalized = "_".join(part for part in "".join(normalized_chars).split("_") if part)
+    return normalized
+
+
+def standardize_uploaded_column_names(df):
+    """
+    Rename common uploaded-data column aliases to EnvGeo-Seawater standard names.
+
+    アップロードデータでよく使われる列名の別名を、EnvGeo-Seawaterの標準列名へ
+    自動的に変換します。既に標準列がある場合は、その列を優先します。
+    """
+    df = df.copy()
+    normalized_to_original = {
+        _normalize_column_label(column): column for column in df.columns
+    }
+    rename_map = {}
+
+    for standard_column, aliases in UPLOAD_COLUMN_ALIASES.items():
+        if standard_column in df.columns:
+            continue
+        normalized_aliases = {_normalize_column_label(standard_column)}
+        normalized_aliases.update(_normalize_column_label(alias) for alias in aliases)
+        for normalized_alias in normalized_aliases:
+            original_column = normalized_to_original.get(normalized_alias)
+            if original_column is not None and original_column not in rename_map:
+                rename_map[original_column] = standard_column
+                break
+
+    df = df.rename(columns=rename_map)
+    df.attrs["standardized_column_renames"] = rename_map
+    return df
+
+
+MAP_REGION_AUTO = "Auto from filtered data"
+MAP_REGION_PRESETS = {
+    "Japan and surrounding area": {
+        "bounds": (120.0, 155.0, 20.0, 50.0),
+        "description_ja": "日本周辺を広めに表示します。",
+    },
+    "ECS - Japan Sea": {
+        "bounds": (120.0, 145.0, 20.0, 47.0),
+        "description_ja": "東シナ海から日本海を中心に表示します。",
+    },
+    "East China Sea": {
+        "bounds": (118.0, 132.0, 23.0, 34.0),
+        "description_ja": "東シナ海を中心に表示します。",
+    },
+    "Sea of Japan": {
+        "bounds": (127.0, 143.0, 34.0, 48.0),
+        "description_ja": "日本海を中心に表示します。",
+    },
+    "Kuroshio region": {
+        "bounds": (120.0, 150.0, 20.0, 38.0),
+        "description_ja": "黒潮および黒潮続流の西部域を表示します。",
+    },
+    "Oyashio region": {
+        "bounds": (140.0, 165.0, 35.0, 55.0),
+        "description_ja": "親潮から亜寒帯西部北太平洋を表示します。",
+    },
+    "Okhotsk Sea": {
+        "bounds": (135.0, 165.0, 43.0, 62.0),
+        "description_ja": "オホーツク海周辺を表示します。",
+    },
+    "Bering Sea": {
+        "bounds": (160.0, 205.0, 50.0, 67.0),
+        "description_ja": "ベーリング海周辺を表示します。",
+    },
+    "North Pacific": {
+        "bounds": (120.0, 240.0, 0.0, 65.0),
+        "description_ja": "日本から北太平洋東部までを表示します。",
+    },
+    "Western North Pacific": {
+        "bounds": (115.0, 180.0, 0.0, 65.0),
+        "description_ja": "日本周辺から西部北太平洋を表示します。",
+    },
+    "Tropical Pacific": {
+        "bounds": (120.0, 290.0, -25.0, 25.0),
+        "description_ja": "熱帯太平洋を広く表示します。",
+    },
+    "Equatorial Pacific": {
+        "bounds": (120.0, 290.0, -10.0, 10.0),
+        "description_ja": "赤道太平洋を中心に表示します。",
+    },
+    "South Pacific": {
+        "bounds": (140.0, 290.0, -60.0, 0.0),
+        "description_ja": "南太平洋を広く表示します。",
+    },
+    "Indo-Pacific": {
+        "bounds": (90.0, 180.0, -45.0, 35.0),
+        "description_ja": "インド洋東部から西部太平洋を表示します。",
+    },
+    "Indian Ocean": {
+        "bounds": (20.0, 120.0, -45.0, 30.0),
+        "description_ja": "インド洋全域を表示します。",
+    },
+    "Arabian Sea": {
+        "bounds": (45.0, 80.0, 5.0, 30.0),
+        "description_ja": "アラビア海を中心に表示します。",
+    },
+    "Bay of Bengal": {
+        "bounds": (78.0, 100.0, 5.0, 25.0),
+        "description_ja": "ベンガル湾を中心に表示します。",
+    },
+    "North Atlantic": {
+        "bounds": (-85.0, 20.0, 0.0, 70.0),
+        "description_ja": "北大西洋を広く表示します。",
+    },
+    "South Atlantic": {
+        "bounds": (-70.0, 25.0, -60.0, 5.0),
+        "description_ja": "南大西洋を広く表示します。",
+    },
+    "Equatorial Atlantic": {
+        "bounds": (-60.0, 15.0, -15.0, 15.0),
+        "description_ja": "赤道大西洋を中心に表示します。",
+    },
+    "Mediterranean Sea": {
+        "bounds": (-6.0, 37.0, 30.0, 46.0),
+        "description_ja": "地中海を中心に表示します。",
+    },
+    "Arctic Ocean": {
+        "bounds": (-180.0, 180.0, 65.0, 90.0),
+        "description_ja": "北極海を全球経度で表示します。",
+    },
+    "Nordic Seas": {
+        "bounds": (-25.0, 25.0, 60.0, 82.0),
+        "description_ja": "グリーンランド海・ノルウェー海周辺を表示します。",
+    },
+    "Southern Ocean": {
+        "bounds": (-180.0, 180.0, -80.0, -40.0),
+        "description_ja": "南大洋を全球経度で表示します。",
+    },
+    "Antarctic margin": {
+        "bounds": (-180.0, 180.0, -78.0, -55.0),
+        "description_ja": "南極周辺の海域を表示します。",
+    },
+    "Southern Ocean - Atlantic sector": {
+        "bounds": (-70.0, 20.0, -80.0, -40.0),
+        "description_ja": "南大洋の大西洋セクターを表示します。",
+    },
+    "Southern Ocean - Indian sector": {
+        "bounds": (20.0, 150.0, -80.0, -40.0),
+        "description_ja": "南大洋のインド洋セクターを表示します。",
+    },
+    "Southern Ocean - Pacific sector": {
+        "bounds": (150.0, 290.0, -80.0, -40.0),
+        "description_ja": "南大洋の太平洋セクターを表示します。",
+    },
+    "Global": {
+        "bounds": (-180.0, 180.0, -90.0, 90.0),
+        "description_ja": "全球を表示します。",
+    },
+}
+
+
+def map_region_view(region_label):
+    """
+    Return map center and approximate zoom for a named lon/lat region preset.
+
+    地図表示用の海域プリセット名から、中心座標と概略ズームを返します。
+    Bounds are stored as (lon_min, lon_max, lat_min, lat_max).
+    """
+    preset = MAP_REGION_PRESETS[region_label]
+    lon_min, lon_max, lat_min, lat_max = preset["bounds"]
+    center_lat = (lat_min + lat_max) / 2
+    center_lon = (lon_min + lon_max) / 2
+    if center_lon > 180:
+        center_lon -= 360
+    elif center_lon < -180:
+        center_lon += 360
+
+    lon_span = max(lon_max - lon_min, 0.1)
+    lat_span = max(lat_max - lat_min, 0.1)
+    zoom_lon = math.log2((1200 * 360) / (lon_span * 256))
+    zoom_lat = math.log2((700 * 180) / (lat_span * 256))
+    zoom = max(1, min(15, min(zoom_lon, zoom_lat) - 0.8))
+
+    if lon_span >= 300:
+        center_lon = 0.0
+        zoom = 1.0 if lat_span > 40 else 1.8
+
+    return center_lat, center_lon, zoom
+
+
+QUALITY_FLAG_COLUMN = "Quality_Flags"
+QUALITY_ORIGINAL_VALUE_COLUMN = "Quality_Original_Values"
+
+QUALITY_VALUE_RULES = {
+    "Depth_m": {
+        "valid_range": (0, None),
+        "flag": "Depth_m outside valid range; converted to NaN",
+        "description_ja": "水深が0 m未満の場合は不適切値としてNaNに変換します。",
+    },
+    "Temperature_degC": {
+        "valid_range": (-5, 45),
+        "flag": "Temperature_degC outside valid range; converted to NaN",
+        "description_ja": "水温が-5から45 degCの範囲外の場合はNaNに変換します。",
+    },
+    "Salinity": {
+        "valid_range": (0, 50),
+        "flag": "Salinity outside valid range; converted to NaN",
+        "description_ja": "塩分が0から50の範囲外の場合はNaNに変換します。",
+    },
+}
+
+
+def quality_flag_criteria_text():
+    """
+    Return compact quality-flag criteria for UI footnotes.
+
+    品質フラグの判定基準を、ページ下部に置ける短い注記として返します。
+    """
+    return (
+        "Quality flags: invalid values are converted to NaN "
+        "(Depth_m < 0, Temperature_degC outside -5 to 45, Salinity outside 0 to 50)."
+    )
+
+
+def render_quality_flag_criteria_note():
+    """
+    Render a small Streamlit note explaining quality flag criteria.
+
+    Sidebar-filtered datasetなどの下に置くための小さな注記です。
+    """
+    st.caption(quality_flag_criteria_text())
+
+
+def normalize_quality_values(df):
+    """
+    Convert known invalid or sentinel values to NaN while preserving the
+    original values in quality-report columns.
+
+    既知の不適切値・欠損コードをNaNに変換し、元の値と理由を
+    `Quality_Flags` と `Quality_Original_Values` に残します。
+    これにより、可視化では異常値を除きつつ、元データ精査用の
+    手がかりを失わないようにします。
+    """
+    df = df.copy()
+    df[QUALITY_FLAG_COLUMN] = ""
+    df[QUALITY_ORIGINAL_VALUE_COLUMN] = ""
+
+    empty_series = pd.Series(index=df.index, dtype="float64")
+    quality_rules = {
+        "Depth_m": (
+            df.get("Depth_m", empty_series) < 0,
+            QUALITY_VALUE_RULES["Depth_m"]["flag"],
+        ),
+        "Temperature_degC": (
+            ~df.get("Temperature_degC", empty_series).between(-5, 45)
+            & df.get("Temperature_degC", empty_series).notna(),
+            QUALITY_VALUE_RULES["Temperature_degC"]["flag"],
+        ),
+        "Salinity": (
+            ~df.get("Salinity", empty_series).between(0, 50)
+            & df.get("Salinity", empty_series).notna(),
+            QUALITY_VALUE_RULES["Salinity"]["flag"],
+        ),
+    }
+
+    for col, (mask, message) in quality_rules.items():
+        if col not in df.columns:
+            continue
+
+        mask = mask.fillna(False)
+        if not mask.any():
+            continue
+
+        original_values = df.loc[mask, col].astype(str)
+        additions = message + " (original=" + original_values + ")"
+        existing_flags = df.loc[mask, QUALITY_FLAG_COLUMN].astype(str)
+        existing_values = df.loc[mask, QUALITY_ORIGINAL_VALUE_COLUMN].astype(str)
+
+        df.loc[mask, QUALITY_FLAG_COLUMN] = [
+            f"{old}; {message}" if old else message for old in existing_flags
+        ]
+        df.loc[mask, QUALITY_ORIGINAL_VALUE_COLUMN] = [
+            f"{old}; {new}" if old else new for old, new in zip(existing_values, additions)
+        ]
+        df.loc[mask, col] = np.nan
+
+    return df
+
+
+def add_d_excess(df, output_col="d-excess", d18o_col="d18O", dd_col="dD"):
+    """
+    Add d-excess, defined as dD - 8 * d18O, using numeric isotope columns.
+
+    d-excess (= dD - 8 * d18O) を共通計算列として追加します。
+    同位体列がない場合や数値化できない場合は、誤った値を入れずNaNにします。
+    """
+    df = df.copy()
+    if d18o_col not in df.columns or dd_col not in df.columns:
+        df[output_col] = np.nan
+        return df
+
+    d18o = pd.to_numeric(df[d18o_col], errors="coerce")
+    dd = pd.to_numeric(df[dd_col], errors="coerce")
+    df[output_col] = dd - 8 * d18o
+    return df
 
 
 
@@ -190,7 +657,7 @@ def load_isotope_data(ref_data, sheet_num=0):
     #########################################################################
     try:
         # Replace placeholders ('**') with NaN / プレースホルダ ('**') をNaNへ置換する
-        df = df.replace('**', np.nan)
+        df = df.mask(df.eq('**'), np.nan)
         
         # Enforce numeric conversion for safety (applies to all datasets) / 安全のため数値列を明示的に数値化する
         target_cols = ['d18O', 'dD', 'Longitude_degE', 'Latitude_degN', 
@@ -200,6 +667,9 @@ def load_isotope_data(ref_data, sheet_num=0):
             if col in df.columns:
                 # Use errors='coerce' to turn non-numeric values (e.g., whitespace) into NaN
                 df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        df = normalize_quality_values(df)
+        df = add_d_excess(df)
         
         # Standardize categorical columns as strings / カテゴリ列を文字列として標準化する
         str_cols = ['Station', 'Date', 'Cruise', "Transect", "reference"]
@@ -352,6 +822,129 @@ def get_custom_colorscale(selected_item):
     return standard_scale
 
 
+CMOCEAN_COLORMAP_VARIABLE_SUGGESTIONS = {
+    "Temperature_degC": "cmocean thermal",
+    "Temperature": "cmocean thermal",
+    "Temp": "cmocean thermal",
+    "Salinity": "cmocean haline",
+    "Depth_m": "cmocean deep",
+    "Water Depth": "cmocean deep",
+    "depth": "cmocean deep",
+    "d18O": "cmocean balance",
+    "dD": "cmocean balance",
+    "d-excess": "cmocean delta",
+}
+
+
+def get_plotly_colormap_options(selected_item=None):
+    """
+    Return reusable Plotly colorscale choices for EnvGeo-Seawater pages.
+
+    EnvGeo-Seawaterの各ページで使い回すPlotly用カラースケール候補を返します。
+    cmocean系の名前はPlotlyに組み込まれているため、追加依存なしで利用できます。
+    """
+    return {
+        "EnvGeo variable default": get_custom_colorscale(selected_item),
+        "cmocean thermal": "thermal",
+        "cmocean haline": "haline",
+        "cmocean deep": "deep",
+        "cmocean dense": "dense",
+        "cmocean balance": "balance",
+        "cmocean delta": "delta",
+        "cmocean oxy": "oxy",
+        "cmocean matter": "matter",
+        "Jet": "jet",
+        "Turbo": "Turbo",
+        "Viridis": "Viridis",
+        "Plasma": "Plasma",
+        "Cividis": "Cividis",
+        "RdYlBu": "RdYlBu_r",
+    }
+
+
+def recommended_plotly_colormap_label(selected_item):
+    """
+    Return the default colormap label for a selected variable.
+
+    既存図との連続性を保つため、初期値はEnvGeo標準にします。
+    cmocean系は選択肢として残し、ユーザーが必要に応じて切り替えます。
+    """
+    return "EnvGeo variable default"
+
+
+def suggested_cmocean_colormap_label(selected_item):
+    """
+    Return a cmocean suggestion for a selected oceanographic variable.
+
+    選択された海洋データ変数に対して、試用候補となるcmocean名を返します。
+    """
+    return CMOCEAN_COLORMAP_VARIABLE_SUGGESTIONS.get(selected_item)
+
+
+def get_plotly_colormap(selected_item=None, colormap_label=None):
+    """
+    Resolve a selected colormap label to a Plotly colorscale.
+
+    選択されたカラーマップ名を、Plotlyで使えるcolorscaleへ変換します。
+    """
+    options = get_plotly_colormap_options(selected_item)
+    if colormap_label is None:
+        colormap_label = recommended_plotly_colormap_label(selected_item)
+    return options.get(colormap_label, options["EnvGeo variable default"])
+
+
+def get_matplotlib_colormap(selected_item=None, colormap_label=None):
+    """
+    Resolve a selected colormap label to a Matplotlib colormap.
+
+    選択されたカラーマップ名を、Matplotlibで使えるcolormapへ変換します。
+    cmoceanが使えない環境では、EnvGeo標準カラーマップへ戻します。
+    """
+    import matplotlib.colors as mcolors
+    import matplotlib.pyplot as plt
+
+    if colormap_label is None:
+        colormap_label = recommended_plotly_colormap_label(selected_item)
+
+    envgeo_default = mcolors.LinearSegmentedColormap.from_list(
+        f"envgeo_{selected_item or 'default'}",
+        get_custom_colorscale(selected_item),
+    )
+    if colormap_label == "EnvGeo variable default":
+        return envgeo_default
+
+    cmocean_names = {
+        "cmocean thermal": "thermal",
+        "cmocean haline": "haline",
+        "cmocean deep": "deep",
+        "cmocean dense": "dense",
+        "cmocean balance": "balance",
+        "cmocean delta": "delta",
+        "cmocean oxy": "oxy",
+        "cmocean matter": "matter",
+    }
+    if colormap_label in cmocean_names:
+        try:
+            import cmocean
+
+            return getattr(cmocean.cm, cmocean_names[colormap_label])
+        except Exception:
+            return envgeo_default
+
+    matplotlib_names = {
+        "Jet": "jet",
+        "Turbo": "turbo",
+        "Viridis": "viridis",
+        "Plasma": "plasma",
+        "Cividis": "cividis",
+        "RdYlBu": "RdYlBu_r",
+    }
+    try:
+        return plt.get_cmap(matplotlib_names.get(colormap_label, colormap_label))
+    except Exception:
+        return envgeo_default
+
+
 
 
 """
@@ -361,16 +954,29 @@ def get_custom_colorscale(selected_item):
 ##############################################################################
 """
 
+MAP_MODE_OPTIONS = ["Standard", "Satellite", "Bathymetry (Sea)", "Contour (GSI)"]
+MAP_MODE_DESCRIPTIONS_JA = {
+    "Standard": "APIキー不要のOpenStreetMap背景です。",
+    "Satellite": "USGSの衛星画像タイルを使います。",
+    "Bathymetry (Sea)": "Esri World Ocean Baseの海底地形背景を使います。",
+    "Contour (GSI)": "国土地理院の標準地図タイルを使います。",
+}
+
+
 def apply_map_style(fig, map_mode):
     """
     Apply the selected background tile layer to the Mapbox figure.
     All tile sources have been verified for web-use licensing.
+
+    Note:
+        CARTO Positron previously worked without a key, but CARTO basemaps now
+        require an API key. The Standard mode therefore uses OpenStreetMap.
     """
     
-    fig.update_layout(mapbox_style="carto-positron")
+    fig.update_layout(mapbox_style="open-street-map")
 
     if map_mode == "Standard":
-        fig.update_layout(mapbox_style="carto-positron")
+        fig.update_layout(mapbox_style="open-street-map")
         
     
     elif map_mode == "Satellite":
@@ -489,6 +1095,148 @@ def insert_gap_rows(df):
 
    
 
+def summarize_filtered_data(df):
+    """
+    Return compact statistics for sidebar-filtered data.
+
+    サイドバーで抽出されたデータの概要統計を返します。
+    Streamlit表示から切り離しておくことで、pytestで確認しやすくします。
+    """
+    stats_columns = ["d18O", "dD", "d-excess", "Salinity", "Temperature_degC", "Depth_m"]
+    summary = {}
+
+    for col in stats_columns:
+        if col not in df.columns:
+            continue
+
+        values = pd.to_numeric(df[col], errors="coerce").dropna()
+        summary[col] = {
+            "count": int(values.count()),
+            "mean": np.nan if values.empty else float(values.mean()),
+            "std": np.nan if values.empty else float(values.std(ddof=0)),
+            "min": np.nan if values.empty else float(values.min()),
+            "max": np.nan if values.empty else float(values.max()),
+        }
+
+    if QUALITY_FLAG_COLUMN in df.columns:
+        flags = df[QUALITY_FLAG_COLUMN].fillna("").astype(str)
+        quality_flag_count = int((flags != "").sum())
+    else:
+        quality_flag_count = 0
+
+    return {
+        "row_count": int(len(df)),
+        "quality_flag_count": quality_flag_count,
+        "statistics": summary,
+    }
+
+
+def filtered_statistics_dataframe(summary):
+    """
+    Convert sidebar-filtered summary statistics into a table.
+
+    サイドバー抽出データの統計情報を、表示・CSV/PDF出力しやすい表へ変換します。
+    """
+    statistic_rows = []
+    for col, values in summary["statistics"].items():
+        statistic_rows.append(
+            {
+                "Parameter": col,
+                "Count": values["count"],
+                "Mean": values["mean"],
+                "Stdev": values["std"],
+                "Min": values["min"],
+                "Max": values["max"],
+            }
+        )
+
+    if not statistic_rows:
+        return pd.DataFrame(columns=["Parameter", "Count", "Mean", "Stdev", "Min", "Max"])
+
+    return pd.DataFrame(statistic_rows)
+
+
+def build_filtered_report_tables(df, filter_conditions=None, selected_counts=None):
+    """
+    Build report tables for sidebar-filtered data.
+
+    フィルタ済みデータのCSV/PDFレポートに使う表を作ります。
+    """
+    summary = summarize_filtered_data(df)
+    overview_df = pd.DataFrame(
+        [
+            {"Item": "Report generated", "Value": datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+            {"Item": "Rows", "Value": summary["row_count"]},
+            {"Item": "Quality flags", "Value": summary["quality_flag_count"]},
+        ]
+    )
+
+    if filter_conditions is None:
+        filter_conditions = {}
+    filter_df = pd.DataFrame(
+        [{"Item": key, "Value": value} for key, value in filter_conditions.items()]
+    )
+
+    if selected_counts is None:
+        selected_counts = {}
+    selected_counts_df = pd.DataFrame(
+        [{"Item": key, "Value": value} for key, value in selected_counts.items()]
+    )
+
+    statistics_df = filtered_statistics_dataframe(summary)
+    return overview_df, filter_df, selected_counts_df, statistics_df
+
+
+def build_filtered_report_csv(df, filter_conditions=None, selected_counts=None):
+    """
+    Return a UTF-8 BOM CSV report for sidebar-filtered data.
+
+    Excelで開きやすいようにUTF-8 BOM付きCSVとして返します。
+    """
+    overview_df, filter_df, selected_counts_df, statistics_df = build_filtered_report_tables(
+        df,
+        filter_conditions,
+        selected_counts,
+    )
+
+    overview_export = overview_df.copy()
+    overview_export.insert(0, "Section", "Overview")
+    filter_export = filter_df.copy()
+    filter_export.insert(0, "Section", "Filter Conditions")
+    selected_counts_export = selected_counts_df.copy()
+    selected_counts_export.insert(0, "Section", "Selected Data Counts")
+    statistics_export = statistics_df.rename(columns={"Parameter": "Item"}).copy()
+    statistics_export.insert(0, "Section", "Statistics")
+
+    return pd.concat(
+        [overview_export, filter_export, selected_counts_export, statistics_export],
+        ignore_index=True,
+        sort=False,
+    ).to_csv(index=False).encode("utf-8-sig")
+
+
+def render_filtered_report_download(
+    df,
+    filter_conditions=None,
+    selected_counts=None,
+    key_prefix="filtered_data",
+):
+    """
+    Render a CSV download button for sidebar-filtered data.
+
+    各ページで再利用できる、フィルタ済みデータ概要CSVのダウンロードボタンです。
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M")
+    st.download_button(
+        "Download filtered-data summary CSV",
+        data=build_filtered_report_csv(df, filter_conditions, selected_counts),
+        file_name=f"envgeo_filtered_data_summary_{timestamp}.csv",
+        mime="text/csv",
+        key=f"{key_prefix}_download_filtered_summary_csv",
+        help="Export filter conditions, row counts, quality-flag counts, and summary statistics as CSV.",
+    )
+
+
 
 """
 ##############################################################################
@@ -508,7 +1256,8 @@ def display_isotope_table(df, title="Sidebar-filtered dataset (CSV)"):
         target_cols = [
             'reference','Cruise', 'Station', 'Date', 'Year', 'Month', 
             'Longitude_degE', 'Latitude_degN', 'Depth_m', 
-            'Temperature_degC', 'Salinity', 'd18O', 'dD'
+            'Temperature_degC', 'Salinity', 'd18O', 'dD', 'd-excess',
+            QUALITY_FLAG_COLUMN, QUALITY_ORIGINAL_VALUE_COLUMN
         ]
         
         # Extract only existing columns to avoid KeyError / KeyErrorを避けるため存在する列だけを抜き出す
@@ -534,6 +1283,7 @@ def display_isotope_table(df, title="Sidebar-filtered dataset (CSV)"):
         st.dataframe(df_display,
                 # use_container_width=True
                 )
+        render_quality_flag_criteria_note()
 
 
 
@@ -617,7 +1367,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
     with st.sidebar.form("parameter", clear_on_submit=False):
         
         
-        st.header(':blue[--- Data filtering ---]')
+        st.header(DATA_FILTERING_LABEL)
         
         st.form_submit_button(":red[submit]")
 
@@ -709,48 +1459,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
             st.image("data/sites_20230515.gif")
 
 
-          
-        
-                
-        ##########################
-        # Station filtering
-        ##########################
-        # st.sidebar.subheader('航海区の範囲')dfから要素抽出
-        
-        # 1. Station列の空欄（欠損値）を "no_name" に置き換える
-        df1["Station"] = df1["Station"].fillna("no_name")
-        
-        # ※もし前の処理で 'nan' や 'None' という「文字列」になっている場合の念押し安全対策
-        df1["Station"] = df1["Station"].replace({'nan': 'no_name', 'None': 'no_name', '': 'no_name'})
-
-        # 2. 【変更】 .dropna() をしない、"no_name" もリストに含めるようにする
-        Station_list = df1["Station"].unique().tolist()
-        # print(Station_list, "AAA")
-        
-        
-        # 3. マルチセレクトの作成
-        with st.expander("Station", expanded=False):
-            # st.sidebar.subheader('Stationの範囲')dfから要素抽出
-            Transect_list = df1["Station"].dropna().unique().tolist()
-            # print(Station_list,"<<< Station list")
             
-            selected_Station = st.multiselect('Station', Station_list,default=Station_list)
-        
-
-        # --- 地点（Station）の範囲 ---　2026/04/05 追加
-        # #streamlitのマルチ選択用
-        df1 = df1[(df1['Station'].isin(selected_Station))
-                   | df1['Station'].isna()]  # ← 【修正】Stationが空欄（または空白行）なら残す
-    
-        if df1.empty:
-            st.warning("⚠️ no data found.")
-            st.stop()
-            
-
-
-          
-          
-          
 
         ##########################
         # Year filtering
@@ -1151,78 +1860,56 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
     # print('要素と出現数:', d_select_add2_sum)
     # print('---------------')
                         
-    # with表記
     with st.expander("📊 Details and statistics of sidebar-filtered data", expanded=False):
-
-    #選んだパラメーター表示
-
-    # When month is slider / 月がスライダーの場合
-        # st.write(':green[YEAR]:'+str(sld_year_min)+'-'+str(sld_year_max)+', '
-        #           +':green[MONTH]:'+str(sld_month_min)+'-'+str(sld_month_max)+', '
-        #           +':green[Longitude]:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', '
-        #           +':green[Latitude]:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', '
-        #           +':green[Water_depth]:'+str(sld_depth_min)+'-'+str(sld_depth_max)+', '
-        #           +':green[Salinity]:'+str(sld_sal_min)+'-'+str(sld_sal_max))
-        
-    # 月がマルチセレクトの場合　　リストを文字列に変換（例: [1, 2] -> "1, 2"）
-    # When month is selected via multiselect, convert the list to a display string / 月を複数選択した場合は表示用の文字列に変換する　　リストを文字列に変換（例: [1, 2] -> "1, 2"）
+        # 月を複数選択した場合は、表示・レポート・図タイトルで使いやすい文字列へ整形する
+        # Format selected months for display, reporting, and figure titles.
         month_display = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-    
-        st.write(':green[YEAR]:' + str(sld_year_min) + '-' + str(sld_year_max) + ', '
-                 + ':green[MONTH]:' + '[' + month_display + ']' + ', '
-                 + ':green[Longitude]:' + str(sld_lon_min) + '-' + str(sld_lon_max) + ', '
-                 + ':green[Latitude]:' + str(sld_lat_min) + '-' + str(sld_lat_max) + ', '
-                 + ':green[Water_depth]:' + str(sld_depth_min) + '-' + str(sld_depth_max) + ', '
-                 + ':green[Salinity]:' + str(sld_sal_min) + '-' + str(sld_sal_max))
-            
-            
-        
-        # st.write('Area(Cruise)',selected_cruise)
         selected_cruise_indicate =str(list(selected_cruise[:]))
-        st.write(':green[Selected Data (Cruise, papers)]', selected_cruise_indicate)
-    
-        st.write(':green[Selected Data (detail)]',d_select_add2)
-        
-        
-        st.write(':green[Average values]')
-                                
-        #平均値と標準偏差
-        col1, col2, col3, col4 = st.columns(4)
-    
-        with col2:
-            average = np.mean(df1['d18O'])
-            average = round(average,3)
-            st.write('d18O _ave:', average)
-    
-        with col3:
-            stdev = np.std(df1['d18O'])
-            stdev = round(stdev,3)
-            st.write('stdev: ±', stdev)
-            
-        
-        col1, col2, col3, col4 = st.columns(4)
-    
-        with col2:
-            average = np.mean(df1['Salinity'])
-            average = round(average,2)
-            st.write('Sal_ave:', average)
-    
-        with col3:
-            stdev = np.std(df1['Salinity'])
-            stdev = round(stdev,2)
-            st.write('stdev ±:', stdev)
-            
-        col1, col2, col3, col4 = st.columns(4)
-    
-        with col2:
-            average = np.mean(df1['Temperature_degC'])
-            average = round(average,2)
-            st.write('Temp_ave:', average)
-    
-        with col3:
-            stdev = np.std(df1['Temperature_degC'])
-            stdev = round(stdev,2)
-            st.write('stdev ±:', stdev)
+
+        filter_conditions = {
+            "Year": f"{sld_year_min}-{sld_year_max}",
+            "Month": f"[{month_display}]",
+            "Longitude_degE": f"{sld_lon_min}-{sld_lon_max}",
+            "Latitude_degN": f"{sld_lat_min}-{sld_lat_max}",
+            "Depth_m": f"{sld_depth_min}-{sld_depth_max}",
+            "Salinity": f"{sld_sal_min}-{sld_sal_max}",
+            "d18O": f"{sld_d18O_min}-{sld_d18O_max}",
+            "Temperature_degC": f"{sld_temp_min}-{sld_temp_max}",
+            "Selected Data (Cruise, papers)": selected_cruise_indicate,
+        }
+        summary = summarize_filtered_data(df1)
+        metric_cols = st.columns(2)
+        metric_cols[0].metric("Rows", f"{summary['row_count']:,}")
+        metric_cols[1].metric("Quality flags", f"{summary['quality_flag_count']:,}")
+
+        st.markdown("**Filter conditions**")
+        st.dataframe(
+            pd.DataFrame(
+                [{"Item": key, "Value": value} for key, value in filter_conditions.items()]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.markdown("**Selected data counts**")
+        df_selected_counts = pd.DataFrame(
+            [{"Dataset": key, "Rows": value} for key, value in d_select_add2.items()]
+        )
+        if not df_selected_counts.empty:
+            st.dataframe(df_selected_counts, use_container_width=True, hide_index=True)
+
+        st.markdown("**Summary statistics**")
+        df_stats = filtered_statistics_dataframe(summary)
+        if not df_stats.empty:
+            numeric_cols = ["Mean", "Stdev", "Min", "Max"]
+            df_stats[numeric_cols] = df_stats[numeric_cols].round(3)
+            st.dataframe(df_stats, use_container_width=True)
+        render_filtered_report_download(
+            df1,
+            filter_conditions,
+            selected_counts=d_select_add2,
+            key_prefix="sidebar_filtered_data",
+        )
                 
     ##############################################################################
 
@@ -1282,4 +1969,3 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
     #  sld_temp_min, sld_temp_max, 
     #  selected_cruise,
     #  submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
-

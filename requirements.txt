@@ -1,16 +1,36 @@
-#Python 3.10 to 3.12
+# ==============================================================================
+# EnvGeo SEAWATER GEOCHEMICAL DATABASE - Requirements
+# ------------------------------------------------------------------------------
+# - Verified Environment: Anaconda envgeo_streamlit142
+# - Verified Python: 3.10 series
+# - These versions follow the local Anaconda environment checked on 2026-09-10.
+# - Apple Silicon (M1/M2) Users: 
+#   To avoid build errors (especially for pyproj/cartopy), 
+#   follow the Conda-first installation steps in README.md.
+# ==============================================================================
 
-streamlit==1.42.0 
-plotly==5.24.1
-gsw==3.6.20
-pandas==2.3.3
-cartopy==0.25.0
-scikit-learn==1.8.0 # sklearn
-scipy==1.11.4  
+# --- Core Framework ---
+streamlit==1.42.0
+
+# --- Data Science & Analytics ---
 numpy==1.26.4
-matplotlib==3.10.8
-streamlit-plotly-events==0.0.6 
-openpyxl==3.1.5
+pandas==2.3.3
+scipy==1.15.3
+scikit-learn==1.7.2
 
-folium # for Vertical Section Visualizer
-streamlit_folium # for Vertical Section Visualizer
+# --- Visualization ---
+plotly==5.24.1
+matplotlib==3.10.8
+streamlit-plotly-events==0.0.6
+folium==0.20.0
+streamlit-folium==0.26.1
+cmocean==4.0.3
+
+# --- Geospatial & Oceanography ---
+# NOTE: For macOS (M1/M2), install 'proj' and 'cartopy' via Conda first:
+# conda install -c conda-forge proj pyproj cartopy -y
+gsw==3.6.20
+cartopy==0.25.0
+
+# --- Utilities ---
+openpyxl==3.1.5
