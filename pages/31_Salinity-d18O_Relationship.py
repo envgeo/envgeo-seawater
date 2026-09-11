@@ -73,7 +73,12 @@ def main():
 
     col1, col2 = st.columns([1,1])
     with col1:
-        plot_all_data = st.radio("Show all data in background (red):", ("Yes", "No"), horizontal=True, args=[1, 0])
+        plot_all_data = st.radio(
+            "Show all data in background (red):",
+            ("Yes", "No"),
+            index=1,
+            horizontal=True,
+        )
     
     with col2:
         plot_reg_lines = st.radio("Add regression line(s):", ("Yes", "No"), horizontal=True, args=[1, 0])
@@ -166,6 +171,69 @@ def main():
                                     value=(0.9),
                                     step=0.05
                                     )
+
+        sal_d18o_color_candidates = [
+            "Single color",
+            "Depth_m",
+            "Latitude_degN",
+            "Longitude_degE",
+            "Year",
+            "Month",
+            "d18O",
+            "dD",
+            "d-excess",
+            "Salinity",
+            "Temperature_degC",
+        ]
+        sal_d18o_color_options = [
+            item for item in sal_d18o_color_candidates
+            if item == "Single color" or item in df1.columns
+        ]
+        sal_d18o_color_by = st.selectbox(
+            "Color filtered plot by",
+            sal_d18o_color_options,
+            index=0,
+            help=(
+                "Use a single blue marker color, or color the filtered "
+                "salinity-d18O data by a numeric parameter."
+            ),
+        )
+
+        sal_d18o_color_range = None
+        if sal_d18o_color_by != "Single color":
+            sal_d18o_matplotlib_colormap = envgeo_utils.get_matplotlib_colormap(sal_d18o_color_by)
+            sal_d18o_color_source = pd.to_numeric(df1[sal_d18o_color_by], errors="coerce").dropna()
+            if not sal_d18o_color_source.empty:
+                sal_d18o_color_min = float(sal_d18o_color_source.min())
+                sal_d18o_color_max = float(sal_d18o_color_source.max())
+
+                if sal_d18o_color_min == sal_d18o_color_max:
+                    sal_d18o_color_range = (sal_d18o_color_min, sal_d18o_color_max)
+                    st.caption(f"Color range: {sal_d18o_color_min:g}")
+                elif sal_d18o_color_by in ["Year", "Month"]:
+                    sal_d18o_color_range = st.slider(
+                        "Color range",
+                        min_value=int(np.floor(sal_d18o_color_min)),
+                        max_value=int(np.ceil(sal_d18o_color_max)),
+                        value=(int(np.floor(sal_d18o_color_min)), int(np.ceil(sal_d18o_color_max))),
+                        step=1,
+                    )
+                else:
+                    color_step = 10.0 if sal_d18o_color_by == "Depth_m" else 0.1
+                    sal_d18o_color_range = st.slider(
+                        "Color range",
+                        min_value=float(np.floor(sal_d18o_color_min)),
+                        max_value=float(np.ceil(sal_d18o_color_max)),
+                        value=(
+                            float(np.floor(sal_d18o_color_min)),
+                            float(np.ceil(sal_d18o_color_max)),
+                        ),
+                        step=color_step,
+                    )
+            else:
+                st.caption(f"No valid {sal_d18o_color_by} values are available for color scaling.")
+        else:
+            sal_d18o_matplotlib_colormap = None
     
         #図の描画範囲
         if ref_data == data_source_GLOBAL:
@@ -196,6 +264,74 @@ def main():
                                         max_value=5.0,
                                         value=(-5.0, 1.0),
                                         )
+
+        # --- Matplotlib figure appearance ---
+        # T-S Diagramと同じ考え方で、論文図向けの見た目を調整する。
+        fig_size_col1, fig_size_col2 = st.columns(2)
+        with fig_size_col1:
+            sld_fig_size_x = st.number_input(
+                "Fig width (x)",
+                min_value=4,
+                max_value=24,
+                value=12,
+                step=1,
+                key="sal_d18o_fig_width_x",
+                help="Adjust the width of the Matplotlib salinity-d18O figure.",
+            )
+        with fig_size_col2:
+            sld_fig_size_y = st.number_input(
+                "Fig height (y)",
+                min_value=4,
+                max_value=24,
+                value=9,
+                step=1,
+                key="sal_d18o_fig_height_y",
+                help="Adjust the height of the Matplotlib salinity-d18O figure.",
+            )
+
+        font_col1, font_col2 = st.columns(2)
+        with font_col1:
+            sld_font_size_tick = st.number_input(
+                "Tick font size",
+                min_value=6,
+                max_value=32,
+                value=15,
+                step=1,
+                key="sal_d18o_tick_font_size",
+                help="Adjust the tick-label font size.",
+            )
+        with font_col2:
+            sld_font_size_label = st.number_input(
+                "Label font size",
+                min_value=6,
+                max_value=32,
+                value=16,
+                step=1,
+                key="sal_d18o_label_font_size",
+                help="Adjust the axis-label and colorbar-label font size.",
+            )
+
+        tick_col1, tick_col2 = st.columns(2)
+        with tick_col1:
+            tick_count_x = st.number_input(
+                "X tick count",
+                min_value=3,
+                max_value=30,
+                value=9,
+                step=1,
+                key="sal_d18o_x_tick_count",
+                help="Adjust the number of major tick marks on the salinity axis.",
+            )
+        with tick_col2:
+            tick_count_y = st.number_input(
+                "Y tick count",
+                min_value=3,
+                max_value=30,
+                value=9,
+                step=1,
+                key="sal_d18o_y_tick_count",
+                help="Adjust the number of major tick marks on the d18O axis.",
+            )
 
 
     ##############################################################################
@@ -239,9 +375,9 @@ def main():
     ######      font size line etc..       #####
     ############################################
 
-    plt.rcParams["font.size"] = 15
+    plt.rcParams["font.size"] = sld_font_size_tick
     
-    fig_size = [12,9] #図のサイズ
+    fig_size = [sld_fig_size_x, sld_fig_size_y] #図のサイズ
     fig_dpi = 150 #図の解像度
     ax_length = 15
     
@@ -333,8 +469,8 @@ def main():
     
 
     
-        ax.set_xlabel(X_label + iso_scale_X)
-        ax.set_ylabel(Y_label + iso_scale_Y)  
+        ax.set_xlabel(X_label + iso_scale_X, fontsize=sld_font_size_label)
+        ax.set_ylabel(Y_label + iso_scale_Y, fontsize=sld_font_size_label)  
         
         if plot_all_data == "Yes":
             ax.scatter(-1000, -1000, s=X_Y_S,c=X_Y_C,marker=X_Y_M, alpha=alpha_all, label='ALL') #凡例等のダミー
@@ -369,8 +505,11 @@ def main():
 
         ax.set_xlim(lim_min_X, lim_max_X) 
         ax.set_ylim(lim_min_Y, lim_max_Y) 
+        ax.set_xticks(np.linspace(lim_min_X, lim_max_X, tick_count_x))
+        ax.set_yticks(np.linspace(lim_min_Y, lim_max_Y, tick_count_y))
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.f"))
         ax.yaxis.set_major_formatter(FormatStrFormatter("%+.1f"))
+        ax.tick_params(labelsize=sld_font_size_tick)
         ax.tick_params(length=ax_length)
 
         plt.title(fig_title_X_Y) #
@@ -396,7 +535,7 @@ def main():
                 reg_line = 'ALL:  y' + ' = ' + '{:.2f}'.format(coef[0]) + 'x ' +' + (' + '{:.2f}'.format(coef[1]) 
                 line_r = np.corrcoef(Xa, Ya)
             
-                ax.text(0.99, 0.05+0.01, reg_line + ")   (R=" + '{:.2f}'.format(line_r[0,1])+', N=' + str(d_select_main_sum)+')', horizontalalignment='right', transform=ax.transAxes)
+                ax.text(0.99, 0.05+0.01, reg_line + ")   (R=" + '{:.2f}'.format(line_r[0,1])+', N=' + str(d_select_main_sum)+')', horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3))
             # ax.text(0.99, 0.01, line_r, horizontalalignment='right', transform=ax.transAxes)
         
   
@@ -422,13 +561,19 @@ def main():
                 # --------------------------------------
                 # フィルターデータ用のデータフレーム読み込みと整理
                 # --------------------------------------
-                # 塩分とd18Oが無いデータを削除
-                df_fig_add = df1.dropna(subset=["Salinity", "d18O"]).reset_index(drop=True)
+                # 塩分、d18O、色分け列に必要なデータだけを残す
+                filtered_required_columns = ["Salinity", "d18O"]
+                if sal_d18o_color_by != "Single color":
+                    filtered_required_columns.append(sal_d18o_color_by)
+                df_fig_add = df1.dropna(subset=filtered_required_columns).reset_index(drop=True)
 
                 # 排除したサンプル数を計算（オプション：前述の英語メッセージなどで使う用）
                 excluded_count_add = len(df1) - len(df_fig_add)
                 if excluded_count_add > 0:
-                    st.caption(f":blue[Filtered plot: {len(df_fig_add):,} / {len(df1):,} plotted ({excluded_count_add:,} excluded due to missing d18O/salinity).]")
+                    missing_label = "d18O/salinity"
+                    if sal_d18o_color_by != "Single color":
+                        missing_label = f"d18O/salinity/{sal_d18o_color_by}"
+                    st.caption(f":blue[Filtered plot: {len(df_fig_add):,} / {len(df1):,} plotted ({excluded_count_add:,} excluded due to missing {missing_label}).]")
                         
 
                 
@@ -445,7 +590,27 @@ def main():
                 d_select_add2_sum = df1[selected_row].count().sum()
 
                 
-                ax.scatter(X_add, Y_add, s=X_Y_S,c=X_Y_C_add,marker=X_Y_M, alpha=alpha_selected,lw=0.5, ec="black", label= sheet_names_add2)
+                if sal_d18o_color_by != "Single color" and sal_d18o_color_range is not None:
+                    color_values = pd.to_numeric(df_fig_add[sal_d18o_color_by], errors="coerce")
+                    filtered_scatter = ax.scatter(
+                        X_add,
+                        Y_add,
+                        s=X_Y_S,
+                        c=color_values,
+                        cmap=sal_d18o_matplotlib_colormap,
+                        vmin=sal_d18o_color_range[0],
+                        vmax=sal_d18o_color_range[1],
+                        marker=X_Y_M,
+                        alpha=alpha_selected,
+                        lw=0.5,
+                        ec="black",
+                        label=sheet_names_add2,
+                    )
+                    cbar = fig.colorbar(filtered_scatter, ax=ax, pad=0.02, fraction=0.045)
+                    cbar.set_label(sal_d18o_color_by, fontsize=sld_font_size_label)
+                    cbar.ax.tick_params(labelsize=sld_font_size_tick)
+                else:
+                    ax.scatter(X_add, Y_add, s=X_Y_S,c=X_Y_C_add,marker=X_Y_M, alpha=alpha_selected,lw=0.5, ec="black", label= sheet_names_add2)
 
 
                 
@@ -461,7 +626,7 @@ def main():
                     reg_line_add = sheet_names_add2 + ':  y' + ' = ' + '{:.2f}'.format(coef_add[0]) + 'x ' +' + (' + '{:.2f}'.format(coef_add[1]) 
                     line_r_add = np.corrcoef(X_add, Y_add)
                 
-                    ax.text(0.99, 0.05*3+0.01, reg_line_add + ")   (R=" + '{:.2f}'.format(line_r_add[0,1])+', N=' + str(d_select_add2_sum)+')', horizontalalignment='right', transform=ax.transAxes)
+                    ax.text(0.99, 0.05*3+0.01, reg_line_add + ")   (R=" + '{:.2f}'.format(line_r_add[0,1])+', N=' + str(d_select_add2_sum)+')', horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3))
                     # ax.text(0.99, 0.01, line_r, horizontalalignment='right', transform=ax.transAxes)
                 
                 
@@ -497,7 +662,7 @@ def main():
                 #　R2の計算
                 R2_all =  r2_score(Ya, Y_all_pred)  
                 
-                ax.text(0.99, 0+0.01, 'RMSE_all: ' + '{:.3f}'.format(RMES_all)+', R$^{2}$_all: ' + '{:.2f}'.format(R2_all), horizontalalignment='right', transform=ax.transAxes, fontsize=12, c='red')
+                ax.text(0.99, 0+0.01, 'RMSE_all: ' + '{:.3f}'.format(RMES_all)+', R$^{2}$_all: ' + '{:.2f}'.format(R2_all), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='red')
             else:()
                 
             
@@ -510,7 +675,7 @@ def main():
             #　R2の計算
             R2_add =  r2_score(Y_add, Y_add_pred)  
             
-            ax.text(0.99, 0.05*2+0.01, 'RMSE_add: ' + '{:.3f}'.format(RMES_add)+', R$^{2}$_add: ' + '{:.2f}'.format(R2_add), horizontalalignment='right', transform=ax.transAxes, fontsize=12, c='blue')
+            ax.text(0.99, 0.05*2+0.01, 'RMSE_add: ' + '{:.3f}'.format(RMES_add)+', R$^{2}$_add: ' + '{:.2f}'.format(R2_add), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='blue')
         
         else: ()
     
@@ -563,7 +728,7 @@ def main():
         title_head = str(main_title+'\n'+main_title2+'\n'+sub_title2)
         
         title_head2 = title_head.replace('_', ' ') #図のタイトル表示用
-        fig.suptitle(title_head2,fontsize=20)
+        fig.suptitle(title_head2,fontsize=sld_font_size_label + 4)
         
 
     else:()
