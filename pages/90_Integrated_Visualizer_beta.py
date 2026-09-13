@@ -30,7 +30,7 @@ FULL_PAGE_WORKFLOWS = {
     "3D Visualizer": "03_3D_Visualizer.py",
     "4D Visualizer": "04_4D_Visualizer.py",
     "Salinity-d18O Relationship": "31_Salinity-d18O_Relationship.py",
-    "Seawater Parameter Mapping": "32_d18O_mapping.py",
+    "Isotope & Hydrographic Mapping": "32_Isotope_Hydrographic_Mapping.py",
     "T-S Diagram": "34_T-S_diagram.py",
     "Depth Profile": "37_Depth_Profile.py",
     "Correlation Overview": "51_Correlation_Overview.py",

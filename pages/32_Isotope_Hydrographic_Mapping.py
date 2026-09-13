@@ -80,7 +80,10 @@ def main():
     
         
     # タイトル
-    st.header(f'Seawater Parameter Mapping ({version})')
+    st.header(f'Isotope & Hydrographic Mapping ({version})')
+    st.caption(
+        "Map d18O, dD, d-excess, salinity, temperature, and related seawater parameters."
+    )
   
     # リロードボタン
     st.button('Reload')
@@ -129,7 +132,6 @@ def main():
         st.warning("No data available for the selected conditions.")
         return
 
-
     ##############################################################################
     # サイドバーここから　　df1フィルタリング　も一括で
     #　2026/03/06　Min-Maxをdfから取得に変更
@@ -150,6 +152,42 @@ def main():
      selected_cruise,
      submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
 
+    map_parameter_candidates = [
+        "d18O",
+        "dD",
+        "d-excess",
+        "Salinity",
+        "Temperature_degC",
+    ]
+    map_parameter_options = [
+        item for item in map_parameter_candidates
+        if item in df1.columns
+    ]
+    if not map_parameter_options:
+        st.warning("No mappable isotope or hydrographic parameters are available.")
+        return
+
+    st.subheader("Map")
+    parameter_col, map_type_col = st.columns([1, 1])
+    with parameter_col:
+        selected_parameter = st.selectbox(
+            "Mapped parameter",
+            map_parameter_options,
+            index=0,
+            help=(
+                "Choose the seawater parameter plotted on the map. "
+                "Rows without values for the selected parameter are excluded from the map."
+            ),
+        )
+    with map_type_col:
+        map_type = st.radio(
+            "Map type",
+            ("Scatter Map", "Contour Map"),
+            horizontal=True,
+        )
+    parameter_label = MAP_PARAMETER_LABELS.get(selected_parameter, selected_parameter)
+    parameter_plotly_label = MAP_PARAMETER_PLOTLY_LABELS.get(selected_parameter, selected_parameter)
+
 
 
 
@@ -168,29 +206,6 @@ def main():
         )
         
         lon_center = 0 if "Atlantic" in center_option else 180
-
-        map_parameter_candidates = [
-            "d18O",
-            "dD",
-            "d-excess",
-            "Salinity",
-            "Temperature_degC",
-        ]
-        map_parameter_options = [
-            item for item in map_parameter_candidates
-            if item in df1.columns
-        ]
-        selected_parameter = st.selectbox(
-            "Map parameter",
-            map_parameter_options,
-            index=0,
-            help=(
-                "Choose the seawater parameter plotted on the map. "
-                "Rows without values for the selected parameter are excluded from the map."
-            ),
-        )
-        parameter_label = MAP_PARAMETER_LABELS.get(selected_parameter, selected_parameter)
-        parameter_plotly_label = MAP_PARAMETER_PLOTLY_LABELS.get(selected_parameter, selected_parameter)
 
         colormap_options = envgeo_utils.get_plotly_colormap_options(selected_parameter)
         selected_colormap_label = st.selectbox(
@@ -361,8 +376,7 @@ def main():
     ###############################################################################################
     ###############################################################################################
 
-    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map extent and figure size can be adjusted in the sidebar."))
-    st.caption(f"Map parameter: {parameter_plotly_label}")
+    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
 
 
 
@@ -459,15 +473,6 @@ def main():
 
 
     plt.rcParams["font.size"] = 15
-
-    #############################################################
-    # 表示切替
-    #############################################################
-    map_type = st.radio(
-        ":blue[Map Type:]",
-        ("Scatter Map", "Contour Map"),
-        horizontal=True
-    )
 
     # Keep the requested extent inside the longitude domain used by the current center option.
     # 指定された表示範囲が、現在の地図中心で使う経度範囲から外れないようにする。

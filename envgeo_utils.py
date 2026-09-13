@@ -28,7 +28,7 @@ MAP_DISPLAY_SETTINGS_LABEL = "Map display settings"
 CUSTOM_PLOT_SETTINGS_LABEL = "Custom plot settings"
 DATA_RANGE_SETTINGS_LABEL = "Data range settings"
 DATA_FILTERING_LABEL = "Data filtering"
-MAP_AREA_HELP_TEXT = "Map extent and figure size can be adjusted in the sidebar."
+MAP_AREA_HELP_TEXT = "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."
 
 
 

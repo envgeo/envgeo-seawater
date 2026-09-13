@@ -18,6 +18,7 @@
 
 ### 2026-09-11
 
+- 変更: 複数の同位体・海洋環境パラメーターを地図表示するページになったため、`32_d18O_mapping.py` を `32_Isotope_Hydrographic_Mapping.py` に変更し、ページタイトルを `Isotope & Hydrographic Mapping` に変更。
 - 変更: Depth Profile ページは dD や d-excess など複数パラメーターに対応したため、ファイル名を `37_Depth_Profile_(T,S,d18O).py` から `37_Depth_Profile.py` に変更。
 - 追加: Custom Parameter Plot beta ページに `Size contrast` を追加し、マーカーサイズ差をより強調できるようにした。
 - 追加: Custom Parameter Plot beta ページで、カラーバー用のカラーマップを選択できるようにした。
@@ -38,7 +39,7 @@
 - 変更: Temperature-Salinity Diagram と Depth Profile ページで、フォントサイズと目盛本数の2値スライダーを個別の数値入力に変更。
 - 修正: 現在のアプリおよび各ページのバージョン表示を `1.3.0` に統一。
 - 追加: Depth Profile ページの横軸候補に dD と d-excess を追加し、欠損除外数の表示と選択パラメーターによる地図色分けに対応。
-- 変更: d18O Mapping ページを Seawater Parameter Mapping として整理し、d18O、dD、d-excess、塩分、水温を選択して地図表示できるようにした。
+- 変更: 同位体・海洋環境パラメーターの地図表示ページを整理し、d18O、dD、d-excess、塩分、水温を選択して地図表示できるようにした。
 - 追加: Temperature-Salinity Diagram ページで、フィルタ後データを水深、緯度、経度、年、月、d18O、dD、d-excess などで色分けできるようにした。
 - 追加: Temperature-Salinity Diagram ページで、選択した色分けパラメーターごとにカラーバーレンジを調整できるようにした。
 - 追加: Temperature-Salinity Diagram ページで、図の縦横サイズ、目盛本数、フォントサイズを調整できるようにした。
@@ -47,7 +48,7 @@
 
 ### 2026-09-10
 
-- 追加: d18O Mapping ページの Matplotlib 図で、カラーバーの太さ、長さ、フォントサイズを調整できるようにした。
+- 追加: 同位体・海洋環境パラメーターの地図表示ページの Matplotlib 図で、カラーバーの太さ、長さ、フォントサイズを調整できるようにした。
 - 改善: HomeのMainタブ導線、About本文、Data Sources見出し、Manualの開始案内を、Core Dataset / Reference Datasets の考え方に沿って整理。
 - 改善: Home/About/Manual の英語表現を、データセット範囲、推奨端末、図の利用・引用案内が伝わりやすい表現へ修正。
 - 改善: 統合 beta ページの Map タブを `st.fragment` 化し、地図設定変更時にページ全体が再実行されにくい構成へ変更。
@@ -60,8 +61,8 @@
 - 変更: 環境診断用 Streamlit ツールの実体を `tools/env_check_streamlit.py` に置き、ローカル開発中は `pages/99_Environment_Check.py` からサイドバー表示できる構成に整理。
 - 変更: `requirements.txt` を現在の Anaconda `envgeo_streamlit142` 環境に合わせて更新し、Python 3.10系で確認済みの依存関係として整理。
 - 追加: 共通海域プリセットを拡充し、日本近海、黒潮・親潮、北太平洋、熱帯太平洋、インド洋、大西洋、地中海、北極海、南大洋セクターなどを選択できるようにした。
-- 変更: d18O mapping ページの初期カラーマップを元の `Jet` に戻し、EnvGeo と cmocean の選択肢は残した。
-- 追加: d18O mapping ページで、Matplotlib/Cartopy地図とPlotly Mapbox地図の両方に cmocean / EnvGeo カラーマップ選択を追加。
+- 変更: 同位体・海洋環境パラメーターの地図表示ページの初期カラーマップを元の `Jet` に戻し、EnvGeo と cmocean の選択肢は残した。
+- 追加: 同位体・海洋環境パラメーターの地図表示ページで、Matplotlib/Cartopy地図とPlotly Mapbox地図の両方に cmocean / EnvGeo カラーマップ選択を追加。
 - 変更: 海洋データ向けの cmocean カラーマップ候補を正式採用しつつ、既存図との連続性のため初期値は `EnvGeo variable default` のままにした。
 - 追加: Plotly図で使う共通カラーマップ選択ヘルパーを追加。
 - 追加: 最新版作業フォルダから 4D Visualizer と 3D/4D Uploader の改訂版を取り込み、Correlation Overview と Vertical Section Visualizer を採用候補ページとして追加。

@@ -42,7 +42,7 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
         "04_4D_Visualizer.py",
         "05_3D4D_Visualizer_Uploader.py",
         "31_Salinity-d18O_Relationship.py",
-        "32_d18O_mapping.py",
+        "32_Isotope_Hydrographic_Mapping.py",
         "34_T-S_diagram.py",
         "35_Custom_Parameter_Plot_beta.py",
         "37_Depth_Profile.py",

@@ -18,6 +18,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ### 2026-09-11
 
+- Renamed `32_d18O_mapping.py` to `32_Isotope_Hydrographic_Mapping.py` and updated the page title to `Isotope & Hydrographic Mapping` because the page now maps multiple isotope and hydrographic parameters.
 - Renamed the Depth Profile page file from `37_Depth_Profile_(T,S,d18O).py` to `37_Depth_Profile.py` because the page now supports additional parameters.
 - Added a `Size contrast` control to Custom Parameter Plot beta so marker-size differences can be emphasized more strongly.
 - Added colormap selection for the Custom Parameter Plot beta colorbar.
@@ -38,7 +39,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Changed paired font-size and tick-count controls from range sliders to separate numeric inputs in the Temperature-Salinity Diagram and Depth Profile pages.
 - Corrected current app and page version displays to `1.3.0`.
 - Added dD and d-excess as target parameters in the Depth Profile page, with missing-value counts and selected-parameter map coloring.
-- Changed the d18O Mapping page into a broader Seawater Parameter Mapping page with selectable d18O, dD, d-excess, salinity, and temperature map parameters.
+- Changed the isotope and hydrographic mapping page into a broader workflow with selectable d18O, dD, d-excess, salinity, and temperature map parameters.
 - Added a filtered-data color-by selector to the Temperature-Salinity Diagram page, with support for depth, latitude, longitude, year, month, d18O, dD, and d-excess.
 - Added user-adjustable colorbar ranges for each selected T-S color parameter.
 - Added figure-size, tick-count, and font-size controls to the Temperature-Salinity Diagram page.
@@ -47,7 +48,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ### 2026-09-10
 
-- Added adjustable Matplotlib d18O colorbar thickness, length, and font-size controls to the d18O Mapping page.
+- Added adjustable Matplotlib colorbar thickness, length, and font-size controls to the isotope and hydrographic mapping page.
 - Improved the Home main-tab guidance, About text, Data Sources headings, and Manual starting-point notes.
 - Improved Home/About/Manual wording for dataset scope, device guidance, and figure-use citation guidance.
 - Removed the old heavy-traffic warning from the Home page main tab.
@@ -63,8 +64,8 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Kept the Streamlit environment checker implementation in `tools/env_check_streamlit.py` and added `pages/99_Environment_Check.py` as a local-development sidebar wrapper.
 - Updated `requirements.txt` to match the current Anaconda `envgeo_streamlit142` environment and document the verified Python 3.10 dependency set.
 - Expanded shared ocean-region map presets for Japan-adjacent seas, Kuroshio/Oyashio regions, North Pacific, tropical Pacific, Indian Ocean, Atlantic Ocean, Mediterranean Sea, Arctic Ocean, and Southern Ocean sectors.
-- Restored `Jet` as the default colormap for the d18O mapping page while keeping EnvGeo and cmocean options selectable.
-- Added cmocean/EnvGeo colormap selection to the d18O mapping page for both Matplotlib Cartopy maps and Plotly Mapbox maps.
+- Restored `Jet` as the default colormap for the isotope and hydrographic mapping page while keeping EnvGeo and cmocean options selectable.
+- Added cmocean/EnvGeo colormap selection to the isotope and hydrographic mapping page for both Matplotlib Cartopy maps and Plotly Mapbox maps.
 - Adopted cmocean colormap options for oceanographic variables while keeping `EnvGeo variable default` as the initial selection for continuity with existing figures.
 - Added shared colormap-selection helpers for Plotly figures.
 - Imported the latest working-page revisions for 4D Visualizer and 3D/4D Uploader, and added Correlation Overview and Vertical Section Visualizer as active candidate pages.

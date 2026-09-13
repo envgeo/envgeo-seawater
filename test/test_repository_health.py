@@ -229,10 +229,10 @@ def test_standard_map_style_uses_openstreetmap_not_carto():
 # The parameter mapping page should use shared colormap helpers for both Plotly and Matplotlib maps.
 # parameter mappingページでは、Plotly地図とMatplotlib地図の両方で共通カラーマップ関数を使う。
 def test_parameter_mapping_uses_shared_colormap_helpers():
-    page_text = (ROOT / "pages" / "32_d18O_mapping.py").read_text(encoding="utf-8")
+    page_text = (ROOT / "pages" / "32_Isotope_Hydrographic_Mapping.py").read_text(encoding="utf-8")
 
-    assert "Seawater Parameter Mapping" in page_text
-    assert '"Map parameter"' in page_text
+    assert "Isotope & Hydrographic Mapping" in page_text
+    assert '"Mapped parameter"' in page_text
     assert '"d-excess"' in page_text
     assert "get_plotly_colormap_options" in page_text
     assert "get_plotly_colormap(" in page_text

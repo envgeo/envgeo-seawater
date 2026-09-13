@@ -57,8 +57,8 @@ for the main visualization tools:
 - `pages/31_Salinity-d18O_Relationship.py`  
   Salinity-δ18O relationship plots with optional regression lines.
 
-- `pages/32_d18O_mapping.py`  
-  2D map and contour-style visualization for d18O, dD, d-excess, salinity, and temperature distributions.
+- `pages/32_Isotope_Hydrographic_Mapping.py`  
+  Isotope and hydrographic maps for d18O, dD, d-excess, salinity, and temperature distributions.
 
 - `pages/34_T-S_diagram.py`  
   Temperature-salinity diagrams with density contours.

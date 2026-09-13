@@ -53,8 +53,8 @@ EnvGeo-Seawater は、海洋地球化学研究における海水同位体デー�
 - `pages/31_Salinity-d18O_Relationship.py`  
   塩分-δ18O 関係を表示し、必要に応じて回帰線を加えるページ。
 
-- `pages/32_d18O_mapping.py`  
-  d18O、dD、d-excess、塩分、水温の分布を2D地図やコンター風の図として表示するページ。
+- `pages/32_Isotope_Hydrographic_Mapping.py`  
+  d18O、dD、d-excess、塩分、水温などの同位体・海洋環境パラメーターを2D地図やコンター風の図として表示するページ。
 
 - `pages/34_T-S_diagram.py`  
   密度等値線付きの T-S 図を表示するページ。

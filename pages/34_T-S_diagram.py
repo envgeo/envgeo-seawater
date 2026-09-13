@@ -372,7 +372,7 @@ def main():
     ###############################################################################################
     ###############################################################################################
     
-    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map extent and figure size can be adjusted in the sidebar."))
+    st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
     
     
     
