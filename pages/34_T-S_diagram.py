@@ -60,13 +60,22 @@ def main():
     # データソース選択
     ##############################################################################
 
-    # 全データをプロットするかどうか
-    plot_all_data = st.radio(
-        "Show all data in background (red):",
-        ("Yes", "No"),
-        index=1,
-        horizontal=True,
-    )
+    # 全データと凡例を表示するかどうか
+    plot_option_col1, plot_option_col2 = st.columns([1, 1])
+    with plot_option_col1:
+        plot_all_data = st.radio(
+            "Show all data in background (red):",
+            ("Yes", "No"),
+            index=1,
+            horizontal=True,
+        )
+    with plot_option_col2:
+        show_legend = st.radio(
+            "Show legend:",
+            ("Yes", "No"),
+            index=0,
+            horizontal=True,
+        )
     
 
 
@@ -493,7 +502,8 @@ def main():
 
         if plot_all_data == "Yes":
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
-            plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
+            if show_legend == "Yes":
+                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
         else:()
             
             
@@ -542,7 +552,8 @@ def main():
                 ec="black",
                 label=sheet_names_add2,
             )
-            plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
+            if show_legend == "Yes":
+                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
         else:
             color_values = pd.to_numeric(df_fig_add[ts_color_by], errors="coerce")
             color_valid = color_values.notna()
@@ -594,7 +605,8 @@ def main():
                     label=f"{sheet_names_add2} (no {ts_color_by})",
                 )
 
-            plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
+            if show_legend == "Yes":
+                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
 
  
         ##############################################################################

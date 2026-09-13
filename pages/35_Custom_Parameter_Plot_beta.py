@@ -207,6 +207,21 @@ def main():
             step=5,
             help="Base marker size for the selected data points.",
         )
+        if size_by != "Fixed size":
+            size_contrast = st.number_input(
+                "Size contrast",
+                min_value=1.5,
+                max_value=8.0,
+                value=4.0,
+                step=0.5,
+                help=(
+                    "Controls the maximum marker-size multiplier for the "
+                    "selected Size by parameter. Larger values emphasize "
+                    "differences more strongly."
+                ),
+            )
+        else:
+            size_contrast = 1.0
         marker_alpha = st.number_input(
             "Marker transparency",
             min_value=0.05,
@@ -216,8 +231,24 @@ def main():
             help="Marker opacity for the selected data points.",
         )
 
-        show_background = st.radio(
-            "Show all data in background (gray):",
+        display_col1, display_col2 = st.columns([1, 1])
+        with display_col1:
+            show_background = st.radio(
+                "Show all data in background (gray):",
+                ("Yes", "No"),
+                index=1,
+                horizontal=True,
+            )
+        with display_col2:
+            show_legend = st.radio(
+                "Show legend:",
+                ("Yes", "No"),
+                index=0,
+                horizontal=True,
+            )
+
+        add_regression_line = st.radio(
+            "Add regression line(s):",
             ("Yes", "No"),
             index=1,
             horizontal=True,
@@ -239,7 +270,18 @@ def main():
         )
 
         color_range = None
+        colormap_label = None
         if color_by != "Single color":
+            colormap_options = envgeo_utils.get_plotly_colormap_options(color_by)
+            colormap_label = st.selectbox(
+                "Colormap",
+                list(colormap_options.keys()),
+                index=list(colormap_options.keys()).index(
+                    envgeo_utils.recommended_plotly_colormap_label(color_by)
+                ),
+                key=f"custom_plot_colormap::{color_by}",
+                help="Choose the colormap used for the Custom Parameter Plot colorbar.",
+            )
             color_default_min, color_default_max = default_axis_range(df_filtered[color_by])
             color_range = numeric_input_pair(
                 "Color range",
@@ -300,7 +342,7 @@ def main():
             point_sizes = np.full(len(df_plot), marker_size)
         else:
             scaled = (size_values - size_min) / (size_max - size_min)
-            point_sizes = marker_size * (0.4 + scaled * 1.6)
+            point_sizes = marker_size * (0.15 + scaled * (size_contrast - 0.15))
 
     if color_by == "Single color":
         ax.scatter(
@@ -320,7 +362,7 @@ def main():
             df_plot[y_axis],
             s=point_sizes,
             c=color_values,
-            cmap=envgeo_utils.get_matplotlib_colormap(color_by),
+            cmap=envgeo_utils.get_matplotlib_colormap(color_by, colormap_label),
             vmin=color_range[0] if color_range is not None else None,
             vmax=color_range[1] if color_range is not None else None,
             alpha=marker_alpha,
@@ -332,6 +374,38 @@ def main():
         cbar.set_label(PARAMETER_LABELS.get(color_by, color_by), fontsize=label_font_size)
         cbar.ax.tick_params(labelsize=tick_font_size)
 
+    if add_regression_line == "Yes":
+        x_values = pd.to_numeric(df_plot[x_axis], errors="coerce")
+        y_values = pd.to_numeric(df_plot[y_axis], errors="coerce")
+        regression_df = pd.DataFrame({"x": x_values, "y": y_values}).dropna()
+
+        if len(regression_df) >= 2 and regression_df["x"].nunique() > 1:
+            coef = np.polyfit(regression_df["x"], regression_df["y"], 1)
+            x_line = np.linspace(x_min, x_max, 100)
+            y_line = np.poly1d(coef)(x_line)
+            ax.plot(
+                x_line,
+                y_line,
+                color="black",
+                linewidth=1.6,
+                linestyle="-",
+                label="Regression line",
+            )
+
+            r_value = np.corrcoef(regression_df["x"], regression_df["y"])[0, 1]
+            ax.text(
+                0.99,
+                0.02,
+                f"y = {coef[0]:.3g}x + {coef[1]:.3g}; R = {r_value:.2f}; N = {len(regression_df)}",
+                transform=ax.transAxes,
+                ha="right",
+                va="bottom",
+                fontsize=max(8, tick_font_size - 3),
+                color="black",
+            )
+        else:
+            st.caption(":gray[Regression line was skipped because fewer than two valid x-y points are available.]")
+
     ax.set_xlabel(x_label, fontsize=label_font_size)
     ax.set_ylabel(y_label, fontsize=label_font_size)
     ax.set_xlim(x_min, x_max)
@@ -342,7 +416,8 @@ def main():
     ax.yaxis.set_major_formatter(FormatStrFormatter("%.1f"))
     ax.tick_params(labelsize=tick_font_size, length=6)
     ax.grid(True, color="0.88", linewidth=0.6)
-    ax.legend(fontsize=tick_font_size)
+    if show_legend == "Yes":
+        ax.legend(fontsize=tick_font_size)
 
     month_display = "All" if len(selected_months) == 12 else ", ".join(map(str, sorted(selected_months)))
     subtitle = (

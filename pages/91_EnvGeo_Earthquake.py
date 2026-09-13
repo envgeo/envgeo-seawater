@@ -1044,7 +1044,7 @@ def sidebar_controls(region_preset):
             key="eq_limit",
         )
 
-        st.form_submit_button(":red[Fetch / update]")
+        st.form_submit_button("Fetch / update", use_container_width=True)
 
     start_dt, end_dt = build_datetime_range(date_range, start_clock, end_clock)
     if start_dt is None or end_dt is None:

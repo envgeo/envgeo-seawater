@@ -306,6 +306,8 @@ def plot_xy_with_regression(
 
 def main():
     st.header(f'Correlation Overview ({version})')
+    # Preserve this page as a research-prototype view of the original exploratory workflow.
+    st.caption("This page preserves the original exploratory workflow used during development.")
     
     
     # リロードボタン
@@ -358,30 +360,21 @@ def main():
     
 ######  scalebarで制御してsubmitする場合 ################
 
+    st.sidebar.header("Correlation controls")
+    st.sidebar.caption(f"Correlation Overview ({version})")
+
     with st.sidebar.form("parameter", clear_on_submit=False):
-        
-        st.header('select parameters ➡ submit')
-        
 
 ##############################################################################
 # サイドバーここから
 ##############################################################################
 
-        
-        
-        st.form_submit_button(":red[submit]")
-
-        ###このセットでsubmitボタン二つに出来る
-        # st.form_submit_button(":red[submit (TOP)]")
-        # submitted = st.form_submit_button(":red[submit (BOTTOM)]")
-        
-        
-        #　一つだけの時は以下
-        # submitted = st.form_submit_button(":red[submit]")
-        
-        
-        
-        st.subheader(getattr(envgeo_utils, "DATA_RANGE_SETTINGS_LABEL", "Data range settings"))
+        st.subheader(getattr(envgeo_utils, "DATA_FILTERING_LABEL", "Data filtering"))
+        st.caption("Set the shared filters used for the compiled correlation figures.")
+        submit_top = st.form_submit_button(
+            "Apply settings",
+            use_container_width=True,
+        )
         
         
         
@@ -477,7 +470,7 @@ def main():
         
         
         
-        st.write('Cruise Area (2015-2021)')
+        st.caption('Cruise area reference (2015-2021)')
         st.image("data/sites_20230515.gif") 
     
           
@@ -518,7 +511,11 @@ def main():
         # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
     
                             
-        submitted = st.form_submit_button(":red[submit!]")
+        submit_bottom = st.form_submit_button(
+            "Apply settings!",
+            use_container_width=True,
+        )
+        submitted = submit_top or submit_bottom
 
 ##############################################################################
 # サイドバーここまで

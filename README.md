@@ -63,7 +63,7 @@ for the main visualization tools:
 - `pages/34_T-S_diagram.py`  
   Temperature-salinity diagrams with density contours.
 
-- `pages/37_Depth_Profile_(T,S,d18O).py`  
+- `pages/37_Depth_Profile.py`  
   Depth profiles for δ18O, δD, d-excess, temperature, and salinity.
 
 - `pages/35_Custom_Parameter_Plot_beta.py`  

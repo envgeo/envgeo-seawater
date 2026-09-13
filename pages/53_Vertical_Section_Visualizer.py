@@ -33,6 +33,9 @@ pd.set_option('future.no_silent_downcasting', True)
 DEFAULT_GEBCO_PATH = "data_beta/GEBCO_2025_6min.nc"
 MAX_MAP_POINTS = 50000
 DEFAULT_MAX_ROWS_FOR_SECTION_PLOT = 3000
+BATHY_SOURCE_OBSERVED = "Observed deepest samples"
+BATHY_SOURCE_GEBCO = "Built-in GEBCO"
+BATHY_SOURCE_UPLOAD = "Upload bathymetry CSV/Excel"
 GEBCO_ATTRIBUTION = (
     "Bathymetry data source: GEBCO Compilation Group (2025), GEBCO 2025 Grid. "
     "GEBCO Grid data are in the public domain and may be used free of charge. "
@@ -494,7 +497,7 @@ def estimate_plot_depth_slider_max(
 
     bottom_profile = None
     if section_mode == "A-B section":
-        if bathy_source == "Built-in GEBCO" and section_vertices is not None and section_length_km > 0:
+        if bathy_source == BATHY_SOURCE_GEBCO and section_vertices is not None and section_length_km > 0:
             try:
                 bottom_profile = sample_netcdf_bathymetry_along_section(
                     DEFAULT_GEBCO_PATH,
@@ -503,7 +506,7 @@ def estimate_plot_depth_slider_max(
                 )
             except Exception:
                 bottom_profile = None
-        elif bathy_source == "Upload CSV/Excel" and df_bathy_loaded is not None:
+        elif bathy_source == BATHY_SOURCE_UPLOAD and df_bathy_loaded is not None:
             bottom_profile = sample_bathymetry_along_section(
                 df_bathy_loaded,
                 section_vertices,
@@ -915,7 +918,8 @@ def main():
     version = envgeo_utils.APP_VERSION
     st.title(f"Vertical Section Visualizer beta ({version})")
     st.caption("Experimental section-view workflow. Interpolation and display settings are still being refined.")
-    st.sidebar.title("Section Control Panel beta")
+    st.sidebar.header("Section controls")
+    st.sidebar.caption("Vertical Section Visualizer beta")
 
     ref_data_source = st.radio("Select Data Source:", envgeo_utils.DATA_SOURCES)
     try:
@@ -924,9 +928,7 @@ def main():
         st.error(f"Data loading error: {exc}")
         return
 
-    st.sidebar.markdown("---")
-
-    with st.sidebar.expander("Dataset Filters", expanded=False):
+    with st.sidebar.expander(getattr(envgeo_utils, "DATA_FILTERING_LABEL", "Data filtering"), expanded=True):
         # 元コードのデータ絞り込み操作はできるだけ維持する
         # Preserve the original dataset filtering workflow as much as possible.
         df_f = df_raw.copy()
@@ -975,49 +977,55 @@ def main():
                 & df_f["Longitude_degE"].between(sel_lon[0], sel_lon[1])
             ]
 
-    target_col = st.sidebar.radio("Target Parameter", ["d18O", "Salinity", "Temperature_degC", "dD"])
-    section_mode = st.sidebar.radio("Section Mode", ["Axis-based", "A-B section"], index=1)
-    x_axis_option = None
-    if section_mode == "Axis-based":
-        x_axis_option = st.sidebar.selectbox("X-axis for Section", ["Longitude_degE", "Latitude_degN", "Distance_km"])
-    if ref_data_source == envgeo_utils.data_source_JAPAN_SEA:
-        corridor_default = 30.0
-    elif ref_data_source == envgeo_utils.data_source_AROUND_JAPAN:
-        corridor_default = 100.0
-    else:
-        corridor_default = 150.0
-    corridor_km = st.sidebar.slider("Half-width of section corridor (km)", 1.0, 300.0, corridor_default, 1.0)
-    grid_res = st.sidebar.select_slider("Resolution", options=[30, 50, 70, 90, 110, 130, 150, 180], value=70)
-    smoothness = st.sidebar.slider("Smoothing (visual only)", 0.0, 5.0, 1.0)
-    show_seafloor = st.sidebar.checkbox("Show Seafloor", value=True)
-    bottom_fill_limit_m = st.sidebar.slider(
-        "Bottom fill limit below deepest data (m)",
-        0.0,
-        1000.0,
-        250.0,
-        10.0,
-    )
-    bathy_source = st.sidebar.selectbox(
-        "Bathymetry Source",
-        ["Observed deepest samples", "Built-in GEBCO", "Upload CSV/Excel"],
-        index=1,
-    )
-    with st.sidebar.popover("Map controls", use_container_width=True):
+    with st.sidebar.expander("Section settings", expanded=True):
+        target_col = st.radio("Target parameter", ["d18O", "Salinity", "Temperature_degC", "dD"])
+        section_mode = st.radio("Section mode", ["Axis-based", "A-B section"], index=1)
+        x_axis_option = None
+        if section_mode == "Axis-based":
+            x_axis_option = st.selectbox("X-axis for section", ["Longitude_degE", "Latitude_degN", "Distance_km"])
+        if ref_data_source == envgeo_utils.data_source_JAPAN_SEA:
+            corridor_default = 30.0
+        elif ref_data_source == envgeo_utils.data_source_AROUND_JAPAN:
+            corridor_default = 100.0
+        else:
+            corridor_default = 150.0
+        corridor_km = st.slider("Half-width of section corridor (km)", 1.0, 300.0, corridor_default, 1.0)
+
+    with st.sidebar.expander("Seafloor / bathymetry", expanded=True):
+        show_seafloor = st.checkbox("Show seafloor", value=True)
+        bottom_fill_limit_m = st.slider(
+            "Bottom fill limit below deepest data (m)",
+            0.0,
+            1000.0,
+            250.0,
+            10.0,
+        )
+        bathy_source = st.selectbox(
+            "Bathymetry source",
+            [BATHY_SOURCE_OBSERVED, BATHY_SOURCE_GEBCO, BATHY_SOURCE_UPLOAD],
+            index=1,
+        )
+        uploaded_bathy = None
+        if bathy_source == BATHY_SOURCE_UPLOAD:
+            uploaded_bathy = st.file_uploader(
+                "Upload bathymetry CSV/Excel",
+                type=["csv", "txt", "xlsx", "xls"],
+                help="Columns like Longitude_degE, Latitude_degN, Depth_m are supported.",
+            )
+        if bathy_source == BATHY_SOURCE_GEBCO:
+            st.caption(GEBCO_ATTRIBUTION)
+
+    with st.sidebar.expander("Display controls", expanded=False):
+        grid_res = st.select_slider("Resolution", options=[30, 50, 70, 90, 110, 130, 150, 180], value=70)
+        smoothness = st.slider("Smoothing (visual only)", 0.0, 5.0, 1.0)
         map_mode = st.selectbox("Map mode", MAP_MODE_OPTIONS, index=0)
-    max_rows_for_section_plot = int(
-        st.sidebar.number_input(
+        max_rows_for_section_plot = int(st.number_input(
             "Max valid rows for section plotting",
             min_value=100,
             max_value=50000,
             value=DEFAULT_MAX_ROWS_FOR_SECTION_PLOT,
             step=100,
-        )
-    )
-
-    if bathy_source == "Built-in GEBCO":
-        st.caption(GEBCO_ATTRIBUTION)
-
-    st.sidebar.markdown("---")
+        ))
 
     if df_f.empty:
         st.warning("No data remain after filtering.")
@@ -1058,15 +1066,16 @@ def main():
     if section_mode == "A-B section":
         # A-B モードでは手入力と地図描画入力の両方を残す
         # In A-B mode, keep both manual endpoint entry and map-based drawing.
-        endpoint_mode = st.sidebar.radio("A-B input", ["Manual", "Draw on map"], index=1, horizontal=False)
-        st.sidebar.caption("Section endpoints")
-        col_a, col_b = st.sidebar.columns(2)
-        with col_a:
-            a_lat = st.number_input("A lat", value=float(default_a["Latitude_degN"]), format="%.4f")
-            a_lon = st.number_input("A lon", value=float(default_a["Longitude_degE"]), format="%.4f")
-        with col_b:
-            b_lat = st.number_input("B lat", value=float(default_b["Latitude_degN"]), format="%.4f")
-            b_lon = st.number_input("B lon", value=float(default_b["Longitude_degE"]), format="%.4f")
+        with st.sidebar.expander("A-B endpoints", expanded=True):
+            endpoint_mode = st.radio("A-B input", ["Manual", "Draw on map"], index=1, horizontal=False)
+            st.caption("Section endpoints")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                a_lat = st.number_input("A lat", value=float(default_a["Latitude_degN"]), format="%.4f")
+                a_lon = st.number_input("A lon", value=float(default_a["Longitude_degE"]), format="%.4f")
+            with col_b:
+                b_lat = st.number_input("B lat", value=float(default_b["Latitude_degN"]), format="%.4f")
+                b_lon = st.number_input("B lon", value=float(default_b["Longitude_degE"]), format="%.4f")
         section_vertices = section_vertices_from_ab(a_lat, a_lon, b_lat, b_lon)
 
         if endpoint_mode == "Draw on map":
@@ -1080,12 +1089,12 @@ def main():
                     if drawn_vertices is not None:
                         st.caption(
                             f"Detected drawn line with {len(drawn_vertices)} vertices. "
-                            "Click Submit to use this line for section plotting."
+                            "Click Apply drawn A-B line to use this line for section plotting."
                         )
                     submit_col, clear_col = st.columns(2)
                     with submit_col:
                         submitted_draw_line = st.button(
-                            "Submit drawn A-B line",
+                            "Apply drawn A-B line",
                             disabled=drawn_vertices is None,
                             use_container_width=True,
                         )
@@ -1113,19 +1122,11 @@ def main():
                         st.caption(f"Vertices in submitted section: {len(section_vertices)}")
                     else:
                         section_ready_for_plot = False
-                        st.info("Draw a line and click 'Submit drawn A-B line' to run the section plot.")
+                        st.info("Draw a line and click 'Apply drawn A-B line' to run the section plot.")
                 except Exception as exc:
                     st.warning(f"Interactive line drawing is unavailable here: {exc}")
             else:
                 st.warning(section_plot_blocked_message)
-
-    uploaded_bathy = None
-    if bathy_source == "Upload CSV/Excel":
-        uploaded_bathy = st.sidebar.file_uploader(
-            "Bathymetry CSV/Excel",
-            type=["csv", "txt", "xlsx", "xls"],
-            help="Columns like Longitude_degE, Latitude_degN, Depth_m are supported.",
-        )
 
     if section_mode == "A-B section":
         # A-B 線に沿って点群を投影し、断面用データを作る
@@ -1162,7 +1163,7 @@ def main():
 
     df_bathy_loaded = None
     bathy_message = None
-    if show_seafloor and section_mode == "A-B section" and bathy_source == "Upload CSV/Excel":
+    if show_seafloor and section_mode == "A-B section" and bathy_source == BATHY_SOURCE_UPLOAD:
         # ユーザー地形ファイルを使う場合
         # Case 1: use user-uploaded bathymetry.
         df_bathy_loaded, bathy_error = load_bathymetry_table(uploaded_bathy)
@@ -1180,13 +1181,14 @@ def main():
             df_bathy_loaded,
         )
         default_depth_max = min(slider_depth_max, max(10.0, float(df_section["Depth_m"].max())))
-        plot_depth_max = st.sidebar.slider(
-            "Max plotting depth (m)",
-            min_value=10.0,
-            max_value=max(10.0, slider_depth_max),
-            value=max(10.0, default_depth_max),
-            step=10.0,
-        )
+        with st.sidebar.expander("Plot scale", expanded=True):
+            plot_depth_max = st.slider(
+                "Max plotting depth (m)",
+                min_value=10.0,
+                max_value=max(10.0, slider_depth_max),
+                value=max(10.0, default_depth_max),
+                step=10.0,
+            )
     else:
         plot_depth_max = 100.0
 
@@ -1211,7 +1213,7 @@ def main():
             if show_seafloor:
                 # 海底線データは GEBCO -> upload -> 観測最深点 の順で優先する
                 # Prioritize seafloor sources in this order: GEBCO -> upload -> deepest observations.
-                if bathy_source == "Built-in GEBCO" and section_mode == "A-B section":
+                if bathy_source == BATHY_SOURCE_GEBCO and section_mode == "A-B section":
                     try:
                         bottom_profile = sample_netcdf_bathymetry_along_section(
                             DEFAULT_GEBCO_PATH,
@@ -1236,7 +1238,7 @@ def main():
                     bottom_profile = build_bottom_profile_generic(df_section, "SectionDistance_km", xi)
 
                 if bottom_profile is None:
-                    if bathy_source == "Built-in GEBCO" and section_mode == "A-B section" and bathy_message is None:
+                    if bathy_source == BATHY_SOURCE_GEBCO and section_mode == "A-B section" and bathy_message is None:
                         bathy_message = "Built-in GEBCO returned no valid profile here, so observed maximum depth is being used instead."
                     bottom_profile = build_bottom_profile_from_observations(df_section, xi)
             else:
@@ -1267,7 +1269,8 @@ def main():
             valid_vals = df_section[target_col].dropna()
             d_min = float(valid_vals.min()) if not valid_vals.empty else -10.0
             d_max = float(valid_vals.max()) if not valid_vals.empty else 35.0
-            z_min, z_max = st.sidebar.slider(f"{target_col} Scale", -15.0, 40.0, (d_min, d_max))
+            with st.sidebar.expander("Color scale", expanded=True):
+                z_min, z_max = st.slider(f"{target_col} scale", -15.0, 40.0, (d_min, d_max))
 
             tab_color, tab_line = st.tabs(["Color", "Line"])
             with tab_color:

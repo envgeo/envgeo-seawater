@@ -4,7 +4,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased
 
-### Version 1.30 concise summary - 2026-09-11
+### Version 1.3.0 concise summary - 2026-09-11
 
 - Refined the EnvGeo-Seawater interface for clearer public testing, including updated page titles, sidebar labels, map guidance, and figure-control wording.
 - Expanded plotting options for seawater parameters, including d18O, dD, d-excess, salinity, temperature, depth, latitude, and longitude.
@@ -18,6 +18,16 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ### 2026-09-11
 
+- Renamed the Depth Profile page file from `37_Depth_Profile_(T,S,d18O).py` to `37_Depth_Profile.py` because the page now supports additional parameters.
+- Added a `Size contrast` control to Custom Parameter Plot beta so marker-size differences can be emphasized more strongly.
+- Added colormap selection for the Custom Parameter Plot beta colorbar.
+- Added legend on/off and regression-line on/off controls to the Custom Parameter Plot beta page.
+- Added a legend on/off control next to the background-data option in the Temperature-Salinity Diagram page.
+- Simplified README content by removing internal project-management notes and keeping only public-facing setup, usage, data, and citation guidance.
+- Added fallback UI labels in active pages to reduce errors when a test deployment has an older `envgeo_utils.py`.
+- Changed the default background-data setting in the Salinity-d18O Relationship page to `No`.
+- Added numeric figure-size, tick-count, and font-size controls to the Salinity-d18O Relationship page.
+- Added parameter-based colorbar support to the Salinity-d18O Relationship page for filtered data points.
 - Removed implementation-oriented `Auto-Zoom` wording from visible plot and map headings while keeping the existing map update behavior.
 - Changed the 3D Visualizer Plotly color controls from radio buttons to `Color filtered` selectors with expanded available parameter options.
 - Improved remaining sidebar and map guidance labels by replacing decorated legacy phrases with plain shared UI text.
@@ -26,7 +36,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Renamed the Correlation Overview page title from `Compiled figs` to `Correlation Overview`.
 - Added `35_Custom_Parameter_Plot_beta.py` as an experimental T-S-style custom 2D plotting page with selectable X axis, Y axis, color, marker size, numeric plot controls, and missing-value counts.
 - Changed paired font-size and tick-count controls from range sliders to separate numeric inputs in the Temperature-Salinity Diagram and Depth Profile pages.
-- Changed current app and page version displays to `1.30`.
+- Corrected current app and page version displays to `1.3.0`.
 - Added dD and d-excess as target parameters in the Depth Profile page, with missing-value counts and selected-parameter map coloring.
 - Changed the d18O Mapping page into a broader Seawater Parameter Mapping page with selectable d18O, dD, d-excess, salinity, and temperature map parameters.
 - Added a filtered-data color-by selector to the Temperature-Salinity Diagram page, with support for depth, latitude, longitude, year, month, d18O, dD, and d-excess.
@@ -71,14 +81,14 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Added `90_Integrated_Visualizer_beta.py` as an experimental integrated visualizer with full existing-page compatibility mode and shared-filter beta mode.
 - Added uploaded-data support to the integrated beta page for selected original visualization workflows, map, T-S, salinity-d18O, and custom 2D/3D plots.
 - Removed the standalone 3D/4D uploader from the integrated beta workflow selector because it uses a separate upload-first workflow.
-- Changed the shared app version metadata to `1.30`.
+- Changed the shared app version metadata to `1.3.0`.
 - Added Japanese explanations to `envgeo_utils.py` for quality normalization and d-excess calculation.
 - Added reusable quality-rule metadata for invalid depth, temperature, and salinity values.
 - Centralized d-excess calculation in `envgeo_utils.py` for reuse across Streamlit pages.
 - Added quality flag columns to preserve original invalid values after NaN conversion.
 - Prepared repository cleanup for future public releases.
 - Merged the former standalone about page into `home.py`.
-- Removed retired navigation pages, duplicate page copies, and obsolete beta pages from the current source tree after confirming that older versions are kept in local backups and GitHub release/tag history.
+- Removed retired navigation pages, duplicate page copies, and obsolete beta pages from the current source tree.
 - Added `.gitignore` and cleaned generated local files such as `.DS_Store`, `__pycache__`, and `.pytest_cache`.
 - Added a Japanese README.
 - Simplified public-facing repository wording in README and app update history.

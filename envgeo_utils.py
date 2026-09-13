@@ -1369,14 +1369,14 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         
         st.header(DATA_FILTERING_LABEL)
         
-        st.form_submit_button(":red[submit]")
+        submit_top = st.form_submit_button("Apply settings", use_container_width=True)
 
         # Two buttons can be placed at the top and bottom if needed / 必要ならsubmitボタンを上下に配置できる
-        # st.form_submit_button(":red[submit (TOP)]")
-        # submitted = st.form_submit_button(":red[submit (BOTTOM)]")
+        # In Streamlit 1.42, form submit buttons do not support key, so labels must be unique.
+        # Streamlit 1.42 では form submit button に key が使えないため、ラベルを変えて重複を避ける。
 
         #　一つだけの時は以下
-        # submitted = st.form_submit_button(":red[submit]")
+        # submitted = st.form_submit_button("Apply settings")
         
         
 
@@ -1796,7 +1796,8 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
 
  
         
-        submitted = st.form_submit_button(":red[submit!]")
+        submit_bottom = st.form_submit_button("Apply settings!", use_container_width=True)
+        submitted = submit_top or submit_bottom
         
     # ----------------サイドバーここまで------------------------
     

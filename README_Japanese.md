@@ -59,7 +59,7 @@ EnvGeo-Seawater は、海洋地球化学研究における海水同位体デー�
 - `pages/34_T-S_diagram.py`  
   密度等値線付きの T-S 図を表示するページ。
 
-- `pages/37_Depth_Profile_(T,S,d18O).py`  
+- `pages/37_Depth_Profile.py`  
   δ18O、δD、d-excess、水温、塩分の深度プロファイルを表示するページ。
 
 - `pages/35_Custom_Parameter_Plot_beta.py`  

@@ -32,7 +32,7 @@ FULL_PAGE_WORKFLOWS = {
     "Salinity-d18O Relationship": "31_Salinity-d18O_Relationship.py",
     "Seawater Parameter Mapping": "32_d18O_mapping.py",
     "T-S Diagram": "34_T-S_diagram.py",
-    "Depth Profile": "37_Depth_Profile_(T,S,d18O).py",
+    "Depth Profile": "37_Depth_Profile.py",
     "Correlation Overview": "51_Correlation_Overview.py",
     "Vertical Section beta": "53_Vertical_Section_Visualizer.py",
 }
