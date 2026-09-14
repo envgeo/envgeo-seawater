@@ -82,6 +82,22 @@ def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_
     return lon_min, lon_max, lat_min, lat_max
 
 
+def set_cartopy_extent_safely(ax, extent):
+    """
+    Apply a map extent without crashing on Cartopy projection seam issues.
+
+    Streamlit Cloud can raise ``ValueError: Axis limits cannot be NaN or Inf``
+    for nearly global PlateCarree extents. If that happens, fall back to a
+    global view so the figure still renders.
+    """
+    try:
+        ax.set_extent(extent, crs=ccrs.PlateCarree())
+        return True
+    except ValueError:
+        ax.set_global()
+        return False
+
+
 def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
     """
     Return slider limits, default color range, and step for each map parameter.
@@ -528,9 +544,9 @@ def main():
             projection=ccrs.PlateCarree(central_longitude=lon_center)
         )
         
-        ax.set_extent(
+        set_cartopy_extent_safely(
+            ax,
             [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
-            crs=ccrs.PlateCarree()
         )
         
         ax.coastlines(resolution="50m", zorder=3)
@@ -626,9 +642,9 @@ def main():
             projection=ccrs.PlateCarree(central_longitude=lon_center)
         )
         
-        ax2.set_extent(
+        set_cartopy_extent_safely(
+            ax2,
             [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
-            crs=ccrs.PlateCarree()
         )
         
         levels = np.linspace(parameter_min, parameter_max, 51)
