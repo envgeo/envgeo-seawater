@@ -18,6 +18,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ### 2026-09-14
 
+- Fixed a Streamlit Cloud Cartopy error in Isotope & Hydrographic Mapping by avoiding exact full-globe longitude bounds when changing map centers.
 - Refined the Isotope & Hydrographic Mapping page by moving the mapped-parameter selector next to the map-type control and removing redundant parameter captions.
 - Updated the shared map guidance text to mention map center, extent, colormap, and figure settings in the sidebar.
 - Added colormap selection beside `Color filtered` in the 3D Visualizer Plotly views and connected the selected colormap to both the scatter plot and matching map.
@@ -29,6 +30,18 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Adjusted the `Lon-Lat-depth-[custom]` template to behave like the existing Fig.3-Fig.6 map-depth views, including map-centered longitude handling, coastline traces, and geographic aspect scaling.
 - Removed an implementation-oriented custom-beta caption from the 4D Visualizer UI.
 - Added a shared `Area filter preset` control to the common Data filtering sidebar so users can initialize longitude and latitude filters from familiar ocean-region presets and still fine-tune the sliders manually.
+- Refined 4D Visualizer UI wording for the main view selector, custom view controls, map-depth settings, colorbar range controls, and sampling-location map labels.
+- Harmonized visible UI wording across the 3D Visualizer, T-S, salinity-d18O, isotope/hydrographic mapping, Depth Profile, and Custom Parameter Plot pages, including map labels, map-style controls, color-parameter controls, background-data toggles, and selection-table labels.
+- Moved 2D figure download buttons below their corresponding figures in the T-S, salinity-d18O, Depth Profile, isotope/hydrographic mapping, and Custom Parameter Plot pages.
+- Added concise help text to common user controls, including color-parameter selectors, background-data toggles, regression-line controls, map-style selectors, 4D view selectors, and profile-parameter controls.
+- Adjusted the Depth Profile figure title wrapping and top margin so long filter-condition titles fit better in downloaded images.
+- Changed Depth Profile figure width and height controls from a paired slider to numeric inputs for more precise layout adjustment.
+- Standardized precise figure controls by using numeric inputs for figure size, font size, tick counts, and the mapping-page colorbar font size where applicable.
+- Updated the English and Japanese README files to reflect the current page structure, beta/local-development page roles, environment-check workflow, user-data integration status, and a more cautious reproducibility description.
+- Added `docs/README.md` and `docs/release_checklist.md` to separate release, deployment, Zenodo, and future JOSS-oriented notes from the top-level README.
+- Added `docs/testing.md` and `docs/testing_Japanese.md` to explain the current pytest suite, its scope, limitations, and planned expansion in a public-facing format.
+- Added English and Japanese user-manual skeletons under `docs/manual/` and `docs/manual_Japanese/`, including overview, shared filtering, and page-by-page manual templates.
+- Revised the testing documentation to keep it public-facing, moving JOSS-specific planning out of `testing.md` and `testing_Japanese.md`.
 - Added project ToDo notes for future user-data upload support in individual pages, Streamlit submit-button key cleanup after upgrade, Integrated Visualizer publication strategy, and the likely private/development-only role of the standalone 3D/4D uploader.
 
 ### 2026-09-11

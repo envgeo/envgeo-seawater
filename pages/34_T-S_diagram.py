@@ -64,17 +64,19 @@ def main():
     plot_option_col1, plot_option_col2 = st.columns([1, 1])
     with plot_option_col1:
         plot_all_data = st.radio(
-            "Show all data in background (red):",
+            "Show background data",
             ("Yes", "No"),
             index=1,
             horizontal=True,
+            help=getattr(envgeo_utils, "BACKGROUND_DATA_HELP_TEXT", "Show the unfiltered dataset behind the currently filtered data for context."),
         )
     with plot_option_col2:
         show_legend = st.radio(
-            "Show legend:",
+            "Show legend",
             ("Yes", "No"),
             index=0,
             horizontal=True,
+            help="Show or hide the legend for plotted data groups.",
         )
     
 
@@ -176,13 +178,13 @@ def main():
             if item == "Single color" or item in df1.columns
         ]
         ts_color_by = st.selectbox(
-            "Color filtered T-S plot by",
+            "Color parameter",
             ts_color_options,
             index=0,
             help=(
-                "Use a single blue marker color, or color the filtered T-S "
-                "data by a numeric column such as depth, latitude, longitude, "
-                "year, month, d18O, dD, or d-excess."
+                "Use a single marker color, or color the filtered T-S data by "
+                "a numeric column such as depth, latitude, longitude, year, "
+                "month, d18O, dD, or d-excess."
             ),
         )
 
@@ -196,10 +198,10 @@ def main():
 
                 if ts_color_min == ts_color_max:
                     ts_color_range = (ts_color_min, ts_color_max)
-                    st.caption(f"T-S color range: {ts_color_min:g}")
+                    st.caption(f"Colorbar range: {ts_color_min:g}")
                 elif ts_color_by in ["Year", "Month"]:
                     ts_color_range = st.slider(
-                        "T-S color range",
+                        "Colorbar range",
                         min_value=int(math.floor(ts_color_min)),
                         max_value=int(math.ceil(ts_color_max)),
                         value=(int(math.floor(ts_color_min)), int(math.ceil(ts_color_max))),
@@ -213,7 +215,7 @@ def main():
                 else:
                     color_step = 10.0 if ts_color_by == "Depth_m" else 0.1
                     ts_color_range = st.slider(
-                        "T-S color range",
+                        "Colorbar range",
                         min_value=float(math.floor(ts_color_min)),
                         max_value=float(math.ceil(ts_color_max)),
                         value=(
@@ -228,7 +230,7 @@ def main():
                         ),
                     )
             else:
-                st.caption(f"No valid {ts_color_by} values are available for color scaling.")
+                st.caption(f"No valid {ts_color_by} values are available for the colorbar.")
         else:
             ts_matplotlib_colormap = None
         
@@ -708,16 +710,15 @@ def main():
     fn = envgeo_utils.build_figure_filename("Fig_T-S_SW", main_title2)
     img = io.BytesIO()
     plt.savefig(img, format='png')
+    img.seek(0)
      
+    st.pyplot(fig)
+
     btn = st.download_button(
        label="Download image",
        data=img,
        file_name=fn,
        mime="image/png")
-    
-    
-    
-    st.pyplot(fig)
    
 
 
@@ -739,19 +740,20 @@ def main():
     # 選択されたデータの地点プロット
     # --- Location map / 採取地点の地図表示 ---
     st.divider()
-    st.subheader('Location Map')
+    st.subheader('Sampling Location Map')
     
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
     with st.popover("Map controls", use_container_width=True):
-        map_mode = st.radio(
-            "Map Style:", 
-            envgeo_utils.MAP_MODE_OPTIONS, 
-            horizontal=True,
-            key="map_style_31_auto"
-        )
-    st.caption(f"Map Style: {map_mode}")
+            map_mode = st.radio(
+                "Map style", 
+                envgeo_utils.MAP_MODE_OPTIONS, 
+                horizontal=True,
+                key="map_style_31_auto",
+                help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
+            )
+    st.caption(f"Map style: {map_mode}")
 
     # 2. データの範囲から中心座標とズームレベルを計算
     lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()

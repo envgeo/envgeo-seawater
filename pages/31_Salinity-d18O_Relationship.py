@@ -74,14 +74,21 @@ def main():
     col1, col2 = st.columns([1,1])
     with col1:
         plot_all_data = st.radio(
-            "Show all data in background (red):",
+            "Show background data",
             ("Yes", "No"),
             index=1,
             horizontal=True,
+            help=getattr(envgeo_utils, "BACKGROUND_DATA_HELP_TEXT", "Show the unfiltered dataset behind the currently filtered data for context."),
         )
     
     with col2:
-        plot_reg_lines = st.radio("Add regression line(s):", ("Yes", "No"), horizontal=True, args=[1, 0])
+        plot_reg_lines = st.radio(
+            "Regression line",
+            ("Yes", "No"),
+            horizontal=True,
+            args=[1, 0],
+            help=getattr(envgeo_utils, "REGRESSION_HELP_TEXT", "Add a simple least-squares regression line for quick visual reference."),
+        )
 
 
 
@@ -190,7 +197,7 @@ def main():
             if item == "Single color" or item in df1.columns
         ]
         sal_d18o_color_by = st.selectbox(
-            "Color filtered plot by",
+            "Color parameter",
             sal_d18o_color_options,
             index=0,
             help=(
@@ -209,7 +216,7 @@ def main():
 
                 if sal_d18o_color_min == sal_d18o_color_max:
                     sal_d18o_color_range = (sal_d18o_color_min, sal_d18o_color_max)
-                    st.caption(f"Color range: {sal_d18o_color_min:g}")
+                    st.caption(f"Colorbar range: {sal_d18o_color_min:g}")
                 elif sal_d18o_color_by in ["Year", "Month"]:
                     sal_d18o_color_range = st.slider(
                         "Color range",
@@ -231,7 +238,7 @@ def main():
                         step=color_step,
                     )
             else:
-                st.caption(f"No valid {sal_d18o_color_by} values are available for color scaling.")
+                st.caption(f"No valid {sal_d18o_color_by} values are available for the colorbar.")
         else:
             sal_d18o_matplotlib_colormap = None
     
@@ -749,15 +756,15 @@ def main():
     fn = envgeo_utils.build_figure_filename("Fig_sal_d18O_SW", main_title2)
     img = io.BytesIO()
     plt.savefig(img, format='png')
+    img.seek(0)
      
+    st.pyplot(fig)
+
     btn = st.download_button(
        label="Download image",
        data=img,
        file_name=fn,
        mime="image/png")
-    
-
-    st.pyplot(fig)
    
 
     ###############################################################################################
@@ -769,7 +776,7 @@ def main():
     # 選択されたデータの地点プロット
     # --- Location map / 採取地点の地図表示 ---
     st.divider()
-    st.subheader('Location Map')
+    st.subheader('Sampling Location Map')
 
     import math
 
@@ -777,12 +784,13 @@ def main():
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
     with st.popover("Map controls", use_container_width=True):
         map_mode = st.radio(
-            "Map Style:", 
+            "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 
             horizontal=True,
-            key="map_style_31_auto"
+            key="map_style_31_auto",
+            help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
-    st.caption(f"Map Style: {map_mode}")
+    st.caption(f"Map style: {map_mode}")
 
  # 2. データの範囲から中心座標とズームレベルを計算
     lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()

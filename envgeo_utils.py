@@ -34,6 +34,21 @@ AREA_FILTER_HELP_TEXT = (
     "Choose a preset to set the initial longitude and latitude range, "
     "then fine-tune the sliders if needed."
 )
+COLOR_PARAMETER_HELP_TEXT = (
+    "Choose the variable used to color the plotted points or map markers."
+)
+COLORBAR_RANGE_HELP_TEXT = (
+    "Set the displayed color range. Values outside the range use the end colors."
+)
+BACKGROUND_DATA_HELP_TEXT = (
+    "Show the unfiltered dataset behind the currently filtered data for context."
+)
+MAP_STYLE_HELP_TEXT = (
+    "Choose the background map style for the sampling-location map."
+)
+REGRESSION_HELP_TEXT = (
+    "Add a simple least-squares regression line for quick visual reference."
+)
 
 
 

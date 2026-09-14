@@ -234,24 +234,27 @@ def main():
         display_col1, display_col2 = st.columns([1, 1])
         with display_col1:
             show_background = st.radio(
-                "Show all data in background (gray):",
+                "Show background data",
                 ("Yes", "No"),
                 index=1,
                 horizontal=True,
+                help=getattr(envgeo_utils, "BACKGROUND_DATA_HELP_TEXT", "Show the unfiltered dataset behind the currently filtered data for context."),
             )
         with display_col2:
             show_legend = st.radio(
-                "Show legend:",
+                "Show legend",
                 ("Yes", "No"),
                 index=0,
                 horizontal=True,
+                help="Show or hide the legend for plotted data groups.",
             )
 
         add_regression_line = st.radio(
-            "Add regression line(s):",
+            "Regression line",
             ("Yes", "No"),
             index=1,
             horizontal=True,
+            help=getattr(envgeo_utils, "REGRESSION_HELP_TEXT", "Add a simple least-squares regression line for quick visual reference."),
         )
 
         x_default_min, x_default_max = default_axis_range(df_filtered[x_axis])
@@ -438,14 +441,15 @@ def main():
     img = io.BytesIO()
     fig.savefig(img, format="png", dpi=300, bbox_inches="tight")
     img.seek(0)
+
+    st.pyplot(fig)
+
     st.download_button(
         "Download image",
         img,
         fn,
         "image/png",
     )
-
-    st.pyplot(fig)
 
     with st.expander("Selected dataset (CSV)", expanded=False):
         table_columns = [

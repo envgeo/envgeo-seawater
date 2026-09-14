@@ -49,9 +49,14 @@ def render_color_controls(df, key_prefix):
     control_col, colormap_col = st.columns([1, 1])
     with control_col:
         selected_label = st.selectbox(
-            "Color filtered",
+            "Color parameter",
             list(col_map.keys()),
             key=f"{key_prefix}_color_filtered",
+            help=getattr(
+                envgeo_utils,
+                "COLOR_PARAMETER_HELP_TEXT",
+                "Choose the variable used to color the plotted points or map markers.",
+            ),
         )
     target_column = col_map[selected_label]
     colormap_options = envgeo_utils.get_plotly_colormap_options(target_column)
@@ -187,6 +192,7 @@ def main():
     
     # 注意書き
     st.header(f'3D Visualizer ({version})')
+    st.caption("Use interactive Plotly selection to link T-S or salinity-δ18O plots with sampling locations.")
     
 
     ############################################################
@@ -293,7 +299,13 @@ def main():
     fig_type_TS = "Temperature–Salinity (T–S) diagram"
 
 
-    plot_figure = st.radio(":blue[Select plot type:]", (fig_type_d18Osal, fig_type_TS), horizontal=True, args=[1, 0])
+    plot_figure = st.radio(
+        "Plot type",
+        (fig_type_d18Osal, fig_type_TS),
+        horizontal=True,
+        args=[1, 0],
+        help="Choose the interactive Plotly view to display.",
+    )
     
 
 
@@ -401,7 +413,7 @@ def main():
         if 'ts_selected_indices' not in st.session_state:
             st.session_state.ts_selected_indices = []
         
-        st.subheader('Temperature-Salinity Relationship')
+        st.subheader('Temperature-Salinity Diagram')
         
         sel_col, target_item, c_scale_final = render_color_controls(df1, "fig_TS_zoom")
 
@@ -416,7 +428,7 @@ def main():
         # 排除したサンプル数を計算（メッセージなどで使う用）
         excluded_count = len(df1) - len(df_plot_ts)
         if excluded_count > 0:
-            st.caption(f":red[Note: {excluded_count:,} samples were excluded due to missing ({sel_col}, temperature, salinity) data.]")
+            st.caption(f":red[{excluded_count:,} rows excluded because {sel_col}, temperature, or salinity was missing.]")
     
         fig_fixed_TS = px.scatter(
             df_plot_ts, # リセット済みのデータを使用
@@ -486,7 +498,7 @@ def main():
             st.session_state.ts_selected_indices = selected_indices
             num_selected = len(selected_indices)
             # 地図のすぐ上に個数を表示
-            st.write(f"📊 **Number of selected points: {num_selected}**")
+            st.write(f"**Selected points: {num_selected}**")
         else:
             # 何も選択されていない場合は全データ（初期状態）
             st.session_state.ts_selected_indices = []
@@ -566,11 +578,17 @@ def main():
         # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
         with st.popover("Map controls", use_container_width=True):
             map_mode_ts = st.radio(
-                "Map Style:", 
+                "Map style", 
                 envgeo_utils.MAP_MODE_OPTIONS, 
-                horizontal=True, key="ms_ts"
+                horizontal=True,
+                key="ms_ts",
+                help=getattr(
+                    envgeo_utils,
+                    "MAP_STYLE_HELP_TEXT",
+                    "Choose the background map style for the sampling-location map.",
+                ),
             )
-        st.caption(f"Map Style: {map_mode_ts}")
+        st.caption(f"Map style: {map_mode_ts}")
     
         
         #  設定ファイルからスタイルを適用
@@ -593,7 +611,7 @@ def main():
         # Sidebar-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df1)
         # Plotly-filtered datasetを読み出しデータフレームを作成
-        envgeo_utils.display_isotope_table(df_ts_map_display,  title="Dataset from Box/Lasso selection (CSV)")
+        envgeo_utils.display_isotope_table(df_ts_map_display,  title="Box/Lasso-selected dataset (CSV)")
         
         
         
@@ -629,6 +647,11 @@ def main():
                 "Regression line",
                 value=False,
                 key="fig_d18O_zoom_regression_line",
+                help=getattr(
+                    envgeo_utils,
+                    "REGRESSION_HELP_TEXT",
+                    "Add a simple least-squares regression line for quick visual reference.",
+                ),
             )
         regression_stats_text_d18o = ""
 
@@ -644,7 +667,7 @@ def main():
         # 排除したサンプル数を計算（メッセージなどで使う用）
         excluded_count2 = len(df1) - len(df_plot_d18o)
         if excluded_count2 > 0:
-            st.caption(f":red[Note: {excluded_count2:,} samples were excluded due to missing ({sel_col_d18o}, Salinity, d18O) data.]")
+            st.caption(f":red[{excluded_count2:,} rows excluded because {sel_col_d18o}, salinity, or d18O was missing.]")
     
     
         fig_d18O = px.scatter(
@@ -715,7 +738,7 @@ def main():
             st.session_state.d18o_selected_indices = selected_indices_d18o
             num_selected_d18o = len(selected_indices_d18o)
             # 地図のすぐ上に個数を太字で表示
-            st.write(f"📊 **Number of selected points: {num_selected_d18o}**")
+            st.write(f"**Selected points: {num_selected_d18o}**")
         else:
             st.session_state.d18o_selected_indices = []
             
@@ -773,11 +796,17 @@ def main():
         # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
         with st.popover("Map controls", use_container_width=True):
             map_mode_d18o = st.radio(
-                "Map Style:", 
+                "Map style", 
                 envgeo_utils.MAP_MODE_OPTIONS, 
-                horizontal=True, key="ms_d18o"
+                horizontal=True,
+                key="ms_d18o",
+                help=getattr(
+                    envgeo_utils,
+                    "MAP_STYLE_HELP_TEXT",
+                    "Choose the background map style for the sampling-location map.",
+                ),
             )
-        st.caption(f"Map Style: {map_mode_d18o}")
+        st.caption(f"Map style: {map_mode_d18o}")
     
         
         #  設定ファイルからスタイルを適用
@@ -800,7 +829,7 @@ def main():
         # Sidebar-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df1)
         # Plotly-filtered datasetを読み出しデータフレームを作成
-        envgeo_utils.display_isotope_table(df_map_d18o,  title="Dataset from Box/Lasso selection (CSV)")
+        envgeo_utils.display_isotope_table(df_map_d18o,  title="Box/Lasso-selected dataset (CSV)")
         
         
         #htmlで書き出す場合

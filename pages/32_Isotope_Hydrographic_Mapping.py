@@ -51,6 +51,37 @@ MAP_PARAMETER_PLOTLY_LABELS = {
 }
 
 
+def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_domain_max):
+    """
+    Return a Cartopy-safe map extent.
+
+    Cartopy may produce NaN axis limits when the longitude extent exactly matches
+    the full projection domain, especially on Streamlit Cloud with 0-360 maps.
+    This keeps the requested view visually unchanged while nudging the bounds
+    slightly inside the projection seam.
+    """
+    lon_min = max(float(lon_domain_min), float(lon_min))
+    lon_max = min(float(lon_domain_max), float(lon_max))
+    lat_min = max(-90.0, float(lat_min))
+    lat_max = min(90.0, float(lat_max))
+
+    epsilon = 0.001
+    lon_domain_span = float(lon_domain_max) - float(lon_domain_min)
+    if (lon_max - lon_min) >= (lon_domain_span - epsilon):
+        lon_min = float(lon_domain_min) + epsilon
+        lon_max = float(lon_domain_max) - epsilon
+
+    if lon_min >= lon_max:
+        lon_min = float(lon_domain_min) + epsilon
+        lon_max = float(lon_domain_max) - epsilon
+
+    if lat_min >= lat_max:
+        lat_min = max(-90.0, lat_min - epsilon)
+        lat_max = min(90.0, lat_max + epsilon)
+
+    return lon_min, lon_max, lat_min, lat_max
+
+
 def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
     """
     Return slider limits, default color range, and step for each map parameter.
@@ -323,7 +354,7 @@ def main():
                     "100 uses the full available width."
                 ),
             )
-            colorbar_font_size_form = st.slider(
+            colorbar_font_size_form = st.number_input(
                 "Colorbar font size",
                 min_value=8,
                 max_value=20,
@@ -474,12 +505,17 @@ def main():
 
     plt.rcParams["font.size"] = 15
 
-    # Keep the requested extent inside the longitude domain used by the current center option.
-    # 指定された表示範囲が、現在の地図中心で使う経度範囲から外れないようにする。
-    map_lon_min = max(lon_slider_min, map_lon_min)
-    map_lon_max = min(lon_slider_max, map_lon_max)
-    map_lat_min = max( -90, map_lat_min)
-    map_lat_max = min(  90, map_lat_max)
+    # Keep the requested extent inside the current longitude domain.
+    # Exact full-globe bounds can fail in Cartopy on Streamlit Cloud, so the
+    # helper nudges them slightly inside the projection seam.
+    map_lon_min, map_lon_max, map_lat_min, map_lat_max = safe_cartopy_extent(
+        map_lon_min,
+        map_lon_max,
+        map_lat_min,
+        map_lat_max,
+        lon_slider_min,
+        lon_slider_max,
+    )
     
     if map_type == "Scatter Map":
         #############################################################
@@ -543,6 +579,8 @@ def main():
         img_scatter = io.BytesIO()
         fig.savefig(img_scatter, format="png", dpi=300, bbox_inches="tight")
         img_scatter.seek(0)
+
+        st.pyplot(fig)
         
         st.download_button(
             "Download Scatter Map",
@@ -553,7 +591,6 @@ def main():
             ),
             "image/png"
         )
-        st.pyplot(fig)
     
     else:
         #############################################################
@@ -649,6 +686,8 @@ def main():
         img_contour = io.BytesIO()
         fig_contour.savefig(img_contour, format="png", dpi=300, bbox_inches="tight")
         img_contour.seek(0)
+
+        st.pyplot(fig_contour)
         
         st.download_button(
             "Download Contour Map",
@@ -659,7 +698,6 @@ def main():
             ),
             "image/png"
         )
-        st.pyplot(fig_contour)
 
 
     ###############################################################################################
@@ -678,7 +716,7 @@ def main():
     # 選択されたデータの地点プロット
     # --- Location map / 採取地点の地図表示 ---
     st.divider()
-    st.subheader('Location Map')
+    st.subheader('Sampling Location Map')
 
 
 
@@ -686,12 +724,13 @@ def main():
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
     with st.popover("Map controls", use_container_width=True):
         map_mode = st.radio(
-            "Map Style:",
+            "Map style",
             envgeo_utils.MAP_MODE_OPTIONS,
             horizontal=True,
-            key="map_style_31_auto"
+            key="map_style_31_auto",
+            help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
-    st.caption(f"Map Style: {map_mode}")
+    st.caption(f"Map style: {map_mode}")
 
     # 2. データの範囲から中心座標とズームレベルを計算
     lat_min, lat_max = df1["Latitude_degN"].min(), df1["Latitude_degN"].max()

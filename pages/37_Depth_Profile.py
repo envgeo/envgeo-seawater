@@ -80,14 +80,21 @@ def main():
 
     col1, col2 = st.columns([1,1])
     with col1:
-        plot_all_data = st.radio("Show all data in background (gray lines):", ("Yes", "No"), horizontal=True, args=[1, 0])
+        plot_all_data = st.radio(
+            "Show background data",
+            ("Yes", "No"),
+            horizontal=True,
+            args=[1, 0],
+            help=getattr(envgeo_utils, "BACKGROUND_DATA_HELP_TEXT", "Show the unfiltered dataset behind the currently filtered data for context."),
+        )
     
     with col2:
         plot_element = st.radio(
-            "Target Parameter:",
+            "Profile parameter",
             ("d18O(VSMOW)", "dD(VSMOW)", "d-excess", "Temperature (°C)", "Salinity"),
             horizontal=True,
             args=[1, 0],
+            help="Choose the seawater parameter plotted against water depth.",
         )
 
 
@@ -299,7 +306,7 @@ def main():
         
         # st.sidebar.subheader('描画水深の範囲')
         if ref_data == data_source_JAPAN_SEA:
-            fig_depth_min, fig_depth_max = st.slider(label='Depth scale',
+            fig_depth_min, fig_depth_max = st.slider(label='Depth range',
                                         min_value=0,
                                         max_value=1000,
                                         value=(0, 500),
@@ -308,7 +315,7 @@ def main():
             # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
             
         elif ref_data == data_source_AROUND_JAPAN:
-            fig_depth_min, fig_depth_max = st.slider(label='Depth scale',
+            fig_depth_min, fig_depth_max = st.slider(label='Depth range',
                                         min_value=0,
                                         max_value=3500,
                                         value=(0, 2000),
@@ -317,7 +324,7 @@ def main():
             # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
             
         else:
-            fig_depth_min, fig_depth_max = st.slider(label='Depth scale',
+            fig_depth_min, fig_depth_max = st.slider(label='Depth range',
                                         min_value=0,
                                         max_value=9000,
                                         value=(0, 2000),
@@ -344,12 +351,27 @@ def main():
 
         #図のサイズXY
         # st.sidebar.subheader('図のサイズ')
-        sld_fig_size_min_X, sld_fig_size_max_Y = st.slider(label='Fig size (x vs y)',
-                                    min_value=1,
-                                    max_value=40,
-                                    value=(8, 12),
-                                    )
-        # st.sidebar.write(f'Selected: {sld_fig_size_min_X} ~ {sld_fig_size_max_Y}')
+        fig_size_col1, fig_size_col2 = st.columns(2)
+        with fig_size_col1:
+            sld_fig_size_min_X = st.number_input(
+                "Figure width",
+                min_value=1.0,
+                max_value=40.0,
+                value=8.0,
+                step=0.5,
+                key=f"depth_profile_figure_width::{plot_element}",
+                help="Set the figure width in inches.",
+            )
+        with fig_size_col2:
+            sld_fig_size_max_Y = st.number_input(
+                "Figure height",
+                min_value=1.0,
+                max_value=40.0,
+                value=12.0,
+                step=0.5,
+                key=f"depth_profile_figure_height::{plot_element}",
+                help="Set the figure height in inches.",
+            )
         
     
     
@@ -486,11 +508,16 @@ def main():
 
     sub_title2 = ''
     
-    title_head = str(main_title+'\n'+sub_title+'\n'+sub_title2)
+    # Keep the saved Depth Profile title inside the figure width.
+    # Depth Profileはフィルタ条件が長くなりやすいため、保存図では少し短めに折り返す。
+    import textwrap
+    wrapped_sub_title = "\n".join(textwrap.wrap(sub_title, width=62))
+    title_head = str(main_title+'\n'+wrapped_sub_title+'\n'+sub_title2)
     
     title_head2 = title_head.replace('_', ' ') #図のタイトル表示用
 
-    fig.suptitle(title_head2,fontsize=20)
+    fig.suptitle(title_head2, fontsize=max(14, sld_font_size_max_L - 3), y=0.97)
+    fig.subplots_adjust(top=0.87)
     
     
 
@@ -707,17 +734,16 @@ def main():
     fn = envgeo_utils.build_figure_filename(f"Fig_depth_{safe_parameter_name}", sub_title)
     img = io.BytesIO()
     plt.savefig(img, format='png')
+    img.seek(0)
      
+    st.pyplot(fig)
+
     btn = st.download_button(
        label="Download image",
        data=img,
        file_name=fn,
        mime="image/png"
        )
-    
-    
-
-    st.pyplot(fig)
     
     
     
@@ -732,19 +758,20 @@ def main():
     # 選択されたデータの地点プロット
     # --- Location map / 採取地点の地図表示 ---
     st.divider()
-    st.subheader('Location Map')
+    st.subheader('Sampling Location Map')
 
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
     with st.popover("Map controls", use_container_width=True):
         map_mode = st.radio(
-            "Map Style:", 
+            "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 
             horizontal=True,
-            key="map_style_31_auto"
+            key="map_style_31_auto",
+            help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
-    st.caption(f"Map Style: {map_mode}")
+    st.caption(f"Map style: {map_mode}")
 
  # 2. データの範囲から中心座標とズームレベルを計算
     lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()

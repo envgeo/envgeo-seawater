@@ -65,3 +65,36 @@ Planned direction:
 - Use matching button labels, such as `Apply settings`, with separate keys for
   the top and bottom buttons.
 - Apply the same pattern to other long sidebar forms if needed.
+
+## User-facing UI Polish
+
+### Reduce small points of confusion in the plotting workflow
+
+Date added: 2026-09-14
+
+Current status:
+- Major plotting pages now use more consistent labels such as `Sampling Location
+  Map`, `Map style`, `Color parameter`, and `Show background data`.
+- 2D figure download buttons have been moved below the corresponding figures.
+- `Data filtering` includes a short note explaining that users should click
+  `Apply settings` after changing filter conditions.
+
+Planned direction:
+- Make the `Data filtering` apply workflow even clearer if users still miss it.
+  A possible wording is: `Change filters, then click Apply settings to refresh
+  all figures.`
+- Add short help text to `Color parameter` controls where the same label has
+  page-specific meaning, such as marker color in T-S plots, mapped parameter in
+  map views, or color axis in 3D/4D views.
+- Review whether `Map controls` popovers are discoverable enough. If needed,
+  add concise help text so users know they can change the map background there.
+- Keep improving the distinction between `Sidebar-filtered dataset` and
+  `Box/Lasso-selected dataset` in 3D/interactive pages. A short caption may help
+  first-time users understand that Box/Lasso selection is an additional
+  interactive subset.
+- Decide how to handle Plotly map/figure downloads. Static Matplotlib figures
+  now have clear `Download image` buttons below the figures, while Plotly views
+  currently rely more on the Plotly modebar camera/export behavior.
+- Before public release, explain the role of `beta` pages clearly. Some beta
+  pages are active research/development tools, while others may become advanced
+  or private workflows.

@@ -18,6 +18,7 @@
 
 ### 2026-09-14
 
+- 修正: Isotope & Hydrographic Mapping ページで Map Center を変更した際、Streamlit Cloud の Cartopy で全球に近い経度範囲が NaN になって落ちる問題を回避。
 - 改善: Isotope & Hydrographic Mapping ページで、地図表示パラメーター選択を Map type の横に移動し、重複していた小さなパラメーター caption を削除。
 - 改善: 共通の地図案内文を、サイドバーで Map center、表示範囲、カラーマップ、図設定を調整できることが分かる表現へ変更。
 - 追加: 3D Visualizer の Plotly 図で、`Color filtered` の横にカラーマップ選択を追加し、散布図と対応する地図の両方に反映。
@@ -29,6 +30,18 @@
 - 改善: `Lon-Lat-depth-[custom]` は地図系テンプレートとして扱い、Fig.3-Fig.6 と同様に、地図中心に合わせた経度、海岸線、地理的な縦横比を反映するようにした。
 - 削除: 4D Visualizer 画面上の実装説明寄りの custom beta caption を削除。
 - 追加: 共通 Data filtering サイドバーに `Area filter preset` を追加し、既存の海域プリセットから Longitude / Latitude フィルタの初期範囲を選び、その後スライダーで微調整できるようにした。
+- 改善: 4D Visualizer のメイン表示選択、custom view 設定、map-depth 設定、カラーバーレンジ、採水地点マップまわりのUI文言を整理。
+- 改善: 3D Visualizer、T-S、塩分-d18O、同位体・海洋環境マッピング、Depth Profile、Custom Parameter Plot の画面表示文言を整理し、地図ラベル、Map style、色分けパラメーター、背景データ表示、選択データ表の表現を統一。
+- 改善: T-S、塩分-d18O、Depth Profile、同位体・海洋環境マッピング、Custom Parameter Plot で、2D図のダウンロードボタンを対応する図の直下に移動。
+- 追加: 色分けパラメーター、背景データ表示、回帰線、Map style、4D view、Profile parameter など、主要な操作項目に短い help テキストを追加。
+- 修正: Depth Profile の保存画像で、長いフィルタ条件入りタイトルがはみ出しにくいように、タイトルの折り返し幅と上部余白を調整。
+- 改善: Depth Profile の図幅・図高さ設定を、2値スライダーから個別の数値入力へ変更し、より細かく調整できるようにした。
+- 改善: 図サイズ、フォントサイズ、目盛数、マッピングページのカラーバーフォントサイズなど、精密な再現性が必要な図設定を数値入力中心に整理。
+- 改善: 英語版・日本語版 README を更新し、現在のページ構成、beta/ローカル開発ページの位置づけ、環境診断ツール、ユーザーデータ機能の現状、再現性に関する表現を整理。
+- 追加: `docs/README.md` と `docs/release_checklist.md` を追加し、公開前確認、Streamlit公開、GitHubリリース、Zenodo、将来のJOSS対応メモをトップREADMEとは別枠で管理できるようにした。
+- 追加: `docs/testing.md` と `docs/testing_Japanese.md` を追加し、現在の pytest 群の内容、テスト範囲、限界、今後の拡充方針を公開向けに説明。
+- 追加: `docs/manual/` と `docs/manual_Japanese/` に、全体概要、共通フィルタ、各ページ別の詳細マニュアル骨組みを英語版・日本語版で追加。
+- 改善: `docs/testing.md` と `docs/testing_Japanese.md` を公開向けのテスト説明に整理し、JOSS固有の計画メモを外した。
 - 準備: 個別ページへのユーザーデータアップロード対応、Streamlit 更新後の submit button key 対応、Integrated Visualizer 中心の公開方針、独立 3D/4D uploader の非公開・開発用候補化を ToDo に記録。
 
 ### 2026-09-11

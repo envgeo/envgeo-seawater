@@ -29,6 +29,7 @@ pd.set_option('future.no_silent_downcasting', True)
 def main():
     
     st.header(f'4D Visualizer ({version})')
+    st.caption("Explore filtered seawater data as linked 4D scatter and map-depth views.")
 
     st.button('Reload')
 
@@ -205,9 +206,10 @@ def main():
         # Match the map-center selector used in the 2D mapping page.
         # 2D マップページと同じ地図中心の切り替え UI を使う。
         center_option_3d = st.radio(
-            "Map Center: (Fig.3-Fig.6)",
+            "Map center for map-depth views",
             ("Atlantic (0°)", "Pacific (180°)"),
-            horizontal=True
+            horizontal=True,
+            help="Used for map-depth views and custom longitude-latitude-depth plots.",
         )
         lon_center_3d = 0 if "Atlantic" in center_option_3d else 180
 
@@ -215,11 +217,12 @@ def main():
         # 海洋データ向けのcmocean候補を含む共通カラーマップを使う。
         colormap_options = envgeo_utils.get_plotly_colormap_options("d18O")
         selected_colormap_label = st.selectbox(
-            "Colormap for map figures",
+            "Colormap",
             list(colormap_options.keys()),
             index=list(colormap_options.keys()).index(
                 envgeo_utils.recommended_plotly_colormap_label("d18O")
-            )
+            ),
+            help="Applied to the 4D plot and the sampling-location map.",
         )
         map_colorscale = colormap_options[selected_colormap_label]
 
@@ -244,10 +247,10 @@ def main():
             lat_slider_min, lat_slider_max = -90, 90
 
         region_preset_4d = st.selectbox(
-            "Region preset (Fig.3-Fig.6)",
+            "Map-depth region preset",
             ["Dataset default"] + list(envgeo_utils.MAP_REGION_PRESETS),
             help=(
-                "Set the longitude and latitude range for Fig.3-Fig.6. "
+                "Set the longitude and latitude range for map-depth views. "
                 "You can still fine-tune the range with the sliders below."
             ),
         )
@@ -275,14 +278,14 @@ def main():
 
         with st.form(key=f"figure_scale_form::{ref_data}::{lon_center_3d}::{region_preset_4d}"):
             map_lon_raw_form = st.slider(
-                'Map Longitude (Fig.3-Fig.6)',
+                'Map longitude range',
                 lon_slider_min,
                 lon_slider_max,
                 figure_scale_settings["map_lon_raw"],
                 step=1
             )
             map_lat_raw_form = st.slider(
-                'Map Latitude (Fig.3-Fig.6)',
+                'Map latitude range',
                 lat_slider_min,
                 lat_slider_max,
                 figure_scale_settings["map_lat_raw"],
@@ -290,7 +293,7 @@ def main():
             )
 
             fig_depth_raw_form = st.slider(
-                label='Depth scale',
+                label='Depth range for 3D view',
                 min_value=0,
                 max_value=int(sld_depth_max + 100), # 整数化して小数点を防止
                 value=figure_scale_settings["fig_depth_raw"],
@@ -298,8 +301,8 @@ def main():
             )
             
             # サイドバーにサイズ調整を追加
-            marker_size_form = st.slider("Marker Size", 1, 10, figure_scale_settings["marker_size"])
-            apply_figure_scale_settings = st.form_submit_button("Apply figure scale")
+            marker_size_form = st.slider("Marker size", 1, 10, figure_scale_settings["marker_size"])
+            apply_figure_scale_settings = st.form_submit_button("Apply figure settings")
 
         if apply_figure_scale_settings:
             figure_scale_settings = {
@@ -1115,38 +1118,46 @@ def main():
     # fig1-fig6を選択して表示
     # 個別のfigは st.plotly_chartで書き出さず，ここで選ぶようにする
         
-    # --- 1. 二段組み（グリッド）にするためのCSS ---
-    st.markdown("""
-        <style>
-        /* ラジオボタンの項目を2列の並びにする */
-        div[role="radiogroup"] {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-    # --- 2. 選択肢の定義 ---
+    # --- 1. 選択肢の定義 ---
     # リストにしておくことで、if文での判定ミス（一文字違いなど）を物理的に防ぐ
     options = [
-        "4D salinity-δ18O-depth-temperature (Fig.1)", 
-        "4D salinity-temperature-depth-d18O (Fig.2)", 
-        "4D map-depth-d18O (Fig.3)", 
-        "4D map-depth-temperature (Fig.4)", 
-        "4D map-depth-salinity (Fig.5)", 
-        "4D map-depth-d-excess (Fig.6)",
-        "Custom 4D plot beta"
+        "Salinity-δ18O-depth-temperature (Fig.1)", 
+        "Salinity-temperature-depth-δ18O (Fig.2)", 
+        "Map-depth-δ18O (Fig.3)", 
+        "Map-depth-temperature (Fig.4)", 
+        "Map-depth-salinity (Fig.5)", 
+        "Map-depth-d-excess (Fig.6)",
+        "Custom 4D view beta",
     ]
     custom_option = options[-1]
+    custom_salinity_d18o_mode = "Salinity-δ18O with custom Z and color"
+    custom_ts_mode = "Temperature-salinity with custom Z and color"
+    custom_map_depth_mode = "Map-depth with custom color"
 
-    # --- 3. ラジオボタンの設置 ---
-    display_option = st.radio(
-        "Choose data to display:",
-        options
+    st.markdown(
+        """
+        <style>
+        div[role="radiogroup"][aria-label="4D view"] {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem 1.6rem;
+        }
+        div[role="radiogroup"][aria-label="4D view"] > label {
+            margin: 0;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
 
-    # --- 4. 選択された項目に応じて表示するfigとdfを決定する ---
+    # --- 2. ラジオボタンの設置 ---
+    display_option = st.radio(
+        "4D view",
+        options,
+        help="Choose one of the standard 4D views or the custom 4D view.",
+    )
+
+    # --- 3. 選択された項目に応じて表示するfigとdfを決定する ---
     custom_mode = None
     custom_x = custom_y = custom_z = custom_color = None
 
@@ -1165,66 +1176,70 @@ def main():
         ]
         numeric_options = available_numeric_columns(df1, preferred_numeric_columns)
         if len(numeric_options) < 4:
-            st.warning("Custom 4D plot requires at least four numeric columns.")
+            st.warning("Custom 4D view requires at least four numeric columns.")
             return
 
         custom_mode = st.radio(
-            "Custom template",
+            "Custom view type",
             [
-                "Salinity-d18O-[custom]-[custom]",
-                "T-S-[custom]-[custom]",
-                "Lon-Lat-depth-[custom]",
+                custom_salinity_d18o_mode,
+                custom_ts_mode,
+                custom_map_depth_mode,
             ],
             horizontal=True,
+            help="Choose the base layout for the custom 4D plot.",
         )
 
-        custom_is_map_template = custom_mode == "Lon-Lat-depth-[custom]"
+        custom_is_map_template = custom_mode == custom_map_depth_mode
 
-        if custom_mode == "Salinity-d18O-[custom]-[custom]":
+        if custom_mode == custom_salinity_d18o_mode:
             custom_x = "Salinity"
             custom_y = "d18O"
             custom_cols = st.columns(2)
             with custom_cols[0]:
                 custom_z = st.selectbox(
-                    "Z",
+                    "Z axis",
                     numeric_options,
                     index=safe_option_index(numeric_options, "Depth_m"),
                     key="custom_4d_sal_d18o_z",
                 )
             with custom_cols[1]:
                 custom_color = st.selectbox(
-                    "Color",
+                    "Color parameter",
                     numeric_options,
                     index=safe_option_index(numeric_options, "Temperature_degC"),
                     key="custom_4d_sal_d18o_color",
+                    help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
                 )
-        elif custom_mode == "T-S-[custom]-[custom]":
+        elif custom_mode == custom_ts_mode:
             custom_x = "Salinity"
             custom_y = "Temperature_degC"
             custom_cols = st.columns(2)
             with custom_cols[0]:
                 custom_z = st.selectbox(
-                    "Z",
+                    "Z axis",
                     numeric_options,
                     index=safe_option_index(numeric_options, "Depth_m"),
                     key="custom_4d_ts_z",
                 )
             with custom_cols[1]:
                 custom_color = st.selectbox(
-                    "Color",
+                    "Color parameter",
                     numeric_options,
                     index=safe_option_index(numeric_options, "d18O"),
                     key="custom_4d_ts_color",
+                    help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
                 )
         else:
             custom_x = "Longitude_degE"
             custom_y = "Latitude_degN"
             custom_z = "Depth_m"
             custom_color = st.selectbox(
-                "Color",
+                "Color parameter",
                 numeric_options,
                 index=safe_option_index(numeric_options, "d18O"),
                 key="custom_4d_map_color",
+                help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
             )
 
         custom_required_columns = [custom_x, custom_y, custom_z, custom_color]
@@ -1233,13 +1248,12 @@ def main():
         plotted_num_custom = len(df_custom)
         if removed_num_custom > 0:
             st.caption(
-                f":red[Note: {plotted_num_custom} samples were plotted and "
-                f"{removed_num_custom} samples were excluded due to incomplete data "
-                f"for the selected custom variables.]"
+                f":red[{plotted_num_custom} samples plotted; "
+                f"{removed_num_custom} rows excluded because selected variables were incomplete.]"
             )
 
         if df_custom.empty:
-            st.warning("No valid rows remain for the selected custom 4D variables.")
+            st.warning("No valid rows remain for the selected custom variables.")
             return
 
         plot_x = custom_x
@@ -1348,37 +1362,37 @@ def main():
         plot_key = "p1"
         df_map = df_fig1
         if removed_num_fig1 > 0:
-            st.caption(f":red[Note: {plotted_num_fig1} samples were plotted and {removed_num_fig1} samples were excluded due to incomplete data (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig1} samples plotted; {removed_num_fig1} rows excluded because required variables were incomplete.]")
     elif display_option == options[1]:
         target_fig = fig2
         plot_key = "p2"
         df_map = df_fig2
         if removed_num_fig2 > 0:
-            st.caption(f":red[Note: {plotted_num_fig2} samples were plotted and {removed_num_fig2} samples were excluded due to incomplete data (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig2} samples plotted; {removed_num_fig2} rows excluded because required variables were incomplete.]")
     elif display_option == options[2]:
         target_fig = fig3
         plot_key = "p3"
         df_map = df_fig3
         if removed_num_fig3 > 0:
-            st.caption(f":red[Note: {plotted_num_fig3} samples were plotted and {removed_num_fig3} samples were excluded due to incomplete data (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig3} samples plotted; {removed_num_fig3} rows excluded because required variables were incomplete.]")
     elif display_option == options[3]:
         target_fig = fig4
         plot_key = "p4"
         df_map = df_fig4
         if removed_num_fig4 > 0:
-            st.caption(f":red[Note: {plotted_num_fig4} samples were plotted and {removed_num_fig4} samples were excluded due to incomplete data (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig4} samples plotted; {removed_num_fig4} rows excluded because required variables were incomplete.]")
     elif display_option == options[4]:
         target_fig = fig5
         plot_key = "p5"
         df_map = df_fig5
         if removed_num_fig5 > 0:
-            st.caption(f":red[Note: {plotted_num_fig5} samples were plotted and {removed_num_fig5} samples were excluded due to incomplete data (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig5} samples plotted; {removed_num_fig5} rows excluded because required variables were incomplete.]")
     else:
         target_fig = fig6
         plot_key = "p6"
         df_map = df_fig6
         if removed_num_fig6 > 0:
-            st.caption(f":red[Note: {plotted_num_fig6} samples were plotted and {removed_num_fig6} samples were excluded due to calculation errors (missing one or more variables).]")
+            st.caption(f":red[{plotted_num_fig6} samples plotted; {removed_num_fig6} rows excluded because d-excess could not be calculated.]")
 
 
 
@@ -1432,7 +1446,7 @@ def main():
     d_range = default_ranges.get(t_col, (v_min_actual, v_max_actual))
 
     r_3d = st.slider(
-        f"Colorbar scale adjustment: {t_lbl}",
+        f"Colorbar range: {t_lbl}",
         min_value=float(math.floor(v_min_actual * 10) / 10),
         max_value=float(math.ceil(v_max_actual * 10) / 10),
         value=d_range, # ここに自動設定された初期値が入る
@@ -1513,19 +1527,20 @@ def main():
     # --- Location map / 採取地点の地図表示 ---
     st.divider()
     # st.subheader('Location Map')
-    st.subheader("Geographical Distribution Map")
+    st.subheader("Sampling Location Map")
     import math
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
     with st.popover("Map controls", use_container_width=True):
         map_mode = st.radio(
-            "Map Style:", 
+            "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 
             horizontal=True,
-            key="map_style_31_auto"
+            key="map_style_31_auto",
+            help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
-    st.caption(f"Map Style: {map_mode}")
+    st.caption(f"Map style: {map_mode}")
 
     # データの範囲から中心座標とズームレベルを計算
     lat_min, lat_max = df_map["Latitude_degN"].min(), df_map["Latitude_degN"].max()
@@ -1583,7 +1598,7 @@ def main():
     # st.write(f"### Map Scale Control ({m_label})")
     mv1, mv2 = float(df_map[m_target].min()), float(df_map[m_target].max())
     r_map = st.slider(
-        f"Colorbar scale adjustment: {t_lbl} ", 
+        f"Map colorbar range: {m_label}", 
         float(math.floor(mv1*10)/10), float(math.ceil(mv2*10)/10), (mv1, mv2), 
         0.1, key=f"slider_map_{envgeo_utils.safe_filename_text(m_target)}_{envgeo_utils.safe_filename_text(display_option)}"
     )
