@@ -32,6 +32,30 @@ def main():
 
     st.button('Reload')
 
+    def label_for_column(column):
+        labels = {
+            "Longitude_degE": "Longitude",
+            "Latitude_degN": "Latitude",
+            "Depth_m": "Water Depth",
+            "Temperature_degC": "Temperature(C)",
+            "Salinity": "Salinity",
+            "d18O": "d18O",
+            "dD": "dD",
+            "d-excess": "d-excess",
+            "Year": "Year",
+            "Month": "Month",
+        }
+        return labels.get(column, column)
+
+    def available_numeric_columns(df, preferred_columns):
+        return [
+            column for column in preferred_columns
+            if column in df.columns and pd.api.types.is_numeric_dtype(df[column])
+        ]
+
+    def safe_option_index(options_list, preferred):
+        return options_list.index(preferred) if preferred in options_list else 0
+
 
     ##############################################################################
     # データソースの変数、envgeo_utilsから読み出す
@@ -1111,8 +1135,10 @@ def main():
         "4D map-depth-d18O (Fig.3)", 
         "4D map-depth-temperature (Fig.4)", 
         "4D map-depth-salinity (Fig.5)", 
-        "4D map-depth-d-excess (Fig.6)"
+        "4D map-depth-d-excess (Fig.6)",
+        "Custom 4D plot beta"
     ]
+    custom_option = options[-1]
 
     # --- 3. ラジオボタンの設置 ---
     display_option = st.radio(
@@ -1121,7 +1147,203 @@ def main():
     )
 
     # --- 4. 選択された項目に応じて表示するfigとdfを決定する ---
-    if display_option == options[0]:
+    custom_mode = None
+    custom_x = custom_y = custom_z = custom_color = None
+
+    if display_option == custom_option:
+        preferred_numeric_columns = [
+            "Longitude_degE",
+            "Latitude_degN",
+            "Depth_m",
+            "Salinity",
+            "Temperature_degC",
+            "d18O",
+            "dD",
+            "d-excess",
+            "Year",
+            "Month",
+        ]
+        numeric_options = available_numeric_columns(df1, preferred_numeric_columns)
+        if len(numeric_options) < 4:
+            st.warning("Custom 4D plot requires at least four numeric columns.")
+            return
+
+        custom_mode = st.radio(
+            "Custom template",
+            [
+                "Salinity-d18O-[custom]-[custom]",
+                "T-S-[custom]-[custom]",
+                "Lon-Lat-depth-[custom]",
+            ],
+            horizontal=True,
+        )
+
+        custom_is_map_template = custom_mode == "Lon-Lat-depth-[custom]"
+
+        if custom_mode == "Salinity-d18O-[custom]-[custom]":
+            custom_x = "Salinity"
+            custom_y = "d18O"
+            custom_cols = st.columns(2)
+            with custom_cols[0]:
+                custom_z = st.selectbox(
+                    "Z",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "Depth_m"),
+                    key="custom_4d_sal_d18o_z",
+                )
+            with custom_cols[1]:
+                custom_color = st.selectbox(
+                    "Color",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "Temperature_degC"),
+                    key="custom_4d_sal_d18o_color",
+                )
+        elif custom_mode == "T-S-[custom]-[custom]":
+            custom_x = "Salinity"
+            custom_y = "Temperature_degC"
+            custom_cols = st.columns(2)
+            with custom_cols[0]:
+                custom_z = st.selectbox(
+                    "Z",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "Depth_m"),
+                    key="custom_4d_ts_z",
+                )
+            with custom_cols[1]:
+                custom_color = st.selectbox(
+                    "Color",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "d18O"),
+                    key="custom_4d_ts_color",
+                )
+        else:
+            custom_x = "Longitude_degE"
+            custom_y = "Latitude_degN"
+            custom_z = "Depth_m"
+            custom_color = st.selectbox(
+                "Color",
+                numeric_options,
+                index=safe_option_index(numeric_options, "d18O"),
+                key="custom_4d_map_color",
+            )
+
+        custom_required_columns = [custom_x, custom_y, custom_z, custom_color]
+        df_custom = df1.dropna(subset=custom_required_columns).copy()
+        removed_num_custom = len(df1) - len(df_custom)
+        plotted_num_custom = len(df_custom)
+        if removed_num_custom > 0:
+            st.caption(
+                f":red[Note: {plotted_num_custom} samples were plotted and "
+                f"{removed_num_custom} samples were excluded due to incomplete data "
+                f"for the selected custom variables.]"
+            )
+
+        if df_custom.empty:
+            st.warning("No valid rows remain for the selected custom 4D variables.")
+            return
+
+        plot_x = custom_x
+        plot_y = custom_y
+        if custom_is_map_template:
+            # Use the same map-centered longitude frame as Fig.3-Fig.6.
+            # Fig.3-Fig.6 と同じ地図中心の経度系と海岸線を使う。
+            df_custom["lon_plot"] = normalize_lon_to_center(df_custom["lon"], lon_center_3d)
+            plot_x = "lon_plot"
+            plot_y = "lat"
+
+        target_fig = px.scatter_3d(
+            df_custom,
+            x=plot_x,
+            y=plot_y,
+            z=custom_z,
+            color=custom_color,
+            width=700,
+            height=600,
+            color_continuous_scale=map_colorscale,
+            hover_data={
+                column: True for column in [
+                    "Longitude_degE",
+                    "Latitude_degN",
+                    "Depth_m",
+                    "d18O",
+                    "dD",
+                    "d-excess",
+                    "Salinity",
+                    "Temperature_degC",
+                    "Year",
+                    "Month",
+                    "Day",
+                    "Cruise",
+                    "Station",
+                    "reference",
+                ] if column in df_custom.columns
+            },
+        )
+        target_fig.update_traces(mode="markers", marker=dict(size=marker_size))
+        z_axis_settings = {}
+        if custom_z == "Depth_m":
+            z_axis_settings = dict(range=[fig_depth_max, fig_depth_min], autorange=False)
+        if custom_is_map_template:
+            target_fig.update_layout(scene=dict(zaxis=z_axis_settings))
+            target_fig = envgeo_utils.apply_common_layout(
+                target_fig,
+                ref_data,
+                fig_depth_max,
+                fig_depth_min,
+                x_range=map_x_range,
+                y_range=map_y_range,
+            )
+            target_fig.update_layout(scene=dict(aspectmode="manual", aspectratio=map_aspectratio))
+
+            custom_coastline_x, custom_coastline_y = envgeo_utils.load_coastline_data(ref_data)
+            custom_coastline_x_plot, custom_coastline_y_plot = wrap_coastline_with_breaks(
+                custom_coastline_x,
+                custom_coastline_y,
+                lon_center_3d,
+            )
+            target_fig.add_traces(
+                go.Scatter3d(
+                    x=custom_coastline_x_plot,
+                    y=custom_coastline_y_plot,
+                    z=[fig_depth_min] * len(custom_coastline_x_plot),
+                    mode="lines",
+                    marker=dict(size=3),
+                    name="coastline",
+                    line=dict(color="blue", width=0.8),
+                    hoverinfo="none",
+                )
+            )
+            target_fig.add_traces(
+                go.Scatter3d(
+                    x=custom_coastline_x_plot,
+                    y=custom_coastline_y_plot,
+                    z=[fig_depth_max] * len(custom_coastline_x_plot),
+                    mode="lines",
+                    marker=dict(size=3),
+                    name="coastline",
+                    line=dict(color="gray", width=0.5),
+                    hoverinfo="none",
+                )
+            )
+        else:
+            target_fig.update_layout(
+                scene=dict(
+                    xaxis_title=label_for_column(custom_x),
+                    yaxis_title=label_for_column(custom_y),
+                    zaxis_title=label_for_column(custom_z),
+                    zaxis=z_axis_settings,
+                    aspectmode="manual",
+                    aspectratio=dict(x=1, y=1, z=1),
+                    camera=dict(
+                        eye=dict(x=-0.6, y=-1.1, z=1.9),
+                        center=dict(x=0, y=0, z=-0.1),
+                    ),
+                ),
+                margin=dict(r=20, l=10, b=10, t=10),
+            )
+        plot_key = "p_custom_4d"
+        df_map = df_custom
+    elif display_option == options[0]:
         target_fig = fig1
         plot_key = "p1"
         df_map = df_fig1
@@ -1193,9 +1415,13 @@ def main():
         }
 
     # display_option から現在のインデックスを取得して短縮名に変換
-    idx = options.index(display_option) if display_option in options else 0
-    t_col = c_int[idx]
-    t_lbl = c_lbl[idx]
+    if display_option == custom_option:
+        t_col = custom_color
+        t_lbl = label_for_column(custom_color)
+    else:
+        idx = options.index(display_option) if display_option in options else 0
+        t_col = c_int[idx]
+        t_lbl = c_lbl[idx]
 
     # --- 3D図専用のスライダー ---
     # データの絶対的な最小・最大
@@ -1211,7 +1437,7 @@ def main():
         max_value=float(math.ceil(v_max_actual * 10) / 10),
         value=d_range, # ここに自動設定された初期値が入る
         step=0.1,
-        key="c3_slider"
+        key=f"c3_slider_{envgeo_utils.safe_filename_text(t_col)}_{envgeo_utils.safe_filename_text(display_option)}"
     )
 
     # --- 各Figの更新と反映 ---
@@ -1245,6 +1471,21 @@ def main():
                 c_min, c_max = default_ranges.get(current_fig_col, (None, None))
                 if c_min is not None:
                     f.update_coloraxes(cmin=c_min, cmax=c_max)
+
+    if display_option == custom_option:
+        target_fig.update_layout(
+            coloraxis_colorbar=dict(
+                title=t_lbl,
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                x=0.5,
+                xanchor="center",
+                thickness=15,
+            ),
+            margin=dict(b=100),
+        )
+        target_fig.update_coloraxes(cmin=r_3d[0], cmax=r_3d[1])
 
     # --- 5. 最後に一回だけ表示を実行 ---
     st.plotly_chart(
@@ -1330,9 +1571,13 @@ def main():
     m_lbls = ["Temperature(C)", "d18O", "d18O", "Temperature(C)", "Salinity", "d-excess"]
     
     # 現在の選択から項目を特定
-    m_idx = options.index(display_option) if display_option in options else 0
-    m_target = m_cols[m_idx]
-    m_label = m_lbls[m_idx]
+    if display_option == custom_option:
+        m_target = custom_color
+        m_label = label_for_column(custom_color)
+    else:
+        m_idx = options.index(display_option) if display_option in options else 0
+        m_target = m_cols[m_idx]
+        m_label = m_lbls[m_idx]
     
     # Map専用スライダーの作成（ここで r_map を定義）
     # st.write(f"### Map Scale Control ({m_label})")
@@ -1340,7 +1585,7 @@ def main():
     r_map = st.slider(
         f"Colorbar scale adjustment: {t_lbl} ", 
         float(math.floor(mv1*10)/10), float(math.ceil(mv2*10)/10), (mv1, mv2), 
-        0.1, key="slider_map_unique"
+        0.1, key=f"slider_map_{envgeo_utils.safe_filename_text(m_target)}_{envgeo_utils.safe_filename_text(display_option)}"
     )
     
     # 地図作成 (color="d18O" 固定を解除)
@@ -1434,8 +1679,8 @@ def main():
             envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
         ]
 
-        # d-excessの時だけd-excess追加
-        if display_option == options[5]:
+        # d-excess が使える時だけ追加
+        if 'd-excess' in df_map.columns:
             table_columns.append('d-excess')
 
         available_columns = [col for col in table_columns if col in df_map.columns]

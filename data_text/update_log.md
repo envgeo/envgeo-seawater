@@ -16,6 +16,21 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Improved project documentation, Japanese README content, update logs, and repository cleanup toward a future public release.
 - Expanded pytest coverage for public structure, data loading, quality rules, filename helpers, and core utility behavior.
 
+### 2026-09-14
+
+- Refined the Isotope & Hydrographic Mapping page by moving the mapped-parameter selector next to the map-type control and removing redundant parameter captions.
+- Updated the shared map guidance text to mention map center, extent, colormap, and figure settings in the sidebar.
+- Added colormap selection beside `Color filtered` in the 3D Visualizer Plotly views and connected the selected colormap to both the scatter plot and matching map.
+- Added an optional regression line to the 3D Visualizer salinity-d18O Plotly view, including compact regression statistics beside the control.
+- Kept the Temperature-Salinity view in the 3D Visualizer free of regression-line controls after testing the feature.
+- Fixed Box/Lasso selection in the 3D Visualizer so added regression-line traces do not interfere with highlighting matching sampling locations on the map.
+- Added `Custom 4D plot beta` to the 4D Visualizer while preserving Fig.1-Fig.6.
+- Added custom 4D templates for `Salinity-d18O-[custom]-[custom]`, `T-S-[custom]-[custom]`, and `Lon-Lat-depth-[custom]`.
+- Adjusted the `Lon-Lat-depth-[custom]` template to behave like the existing Fig.3-Fig.6 map-depth views, including map-centered longitude handling, coastline traces, and geographic aspect scaling.
+- Removed an implementation-oriented custom-beta caption from the 4D Visualizer UI.
+- Added a shared `Area filter preset` control to the common Data filtering sidebar so users can initialize longitude and latitude filters from familiar ocean-region presets and still fine-tune the sliders manually.
+- Added project ToDo notes for future user-data upload support in individual pages, Streamlit submit-button key cleanup after upgrade, Integrated Visualizer publication strategy, and the likely private/development-only role of the standalone 3D/4D uploader.
+
 ### 2026-09-11
 
 - Renamed `32_d18O_mapping.py` to `32_Isotope_Hydrographic_Mapping.py` and updated the page title to `Isotope & Hydrographic Mapping` because the page now maps multiple isotope and hydrographic parameters.

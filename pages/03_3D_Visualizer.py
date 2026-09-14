@@ -40,6 +40,112 @@ def available_color_filtered_options(df):
     }
 
 
+def render_color_controls(df, key_prefix):
+    """Render color-column and colormap controls side by side.
+
+    色分けする列とカラーマップを横並びで選択します。
+    """
+    col_map = available_color_filtered_options(df)
+    control_col, colormap_col = st.columns([1, 1])
+    with control_col:
+        selected_label = st.selectbox(
+            "Color filtered",
+            list(col_map.keys()),
+            key=f"{key_prefix}_color_filtered",
+        )
+    target_column = col_map[selected_label]
+    colormap_options = envgeo_utils.get_plotly_colormap_options(target_column)
+    colormap_labels = list(colormap_options.keys())
+    default_index = (
+        colormap_labels.index("EnvGeo variable default")
+        if "EnvGeo variable default" in colormap_labels
+        else 0
+    )
+    with colormap_col:
+        selected_colormap_label = st.selectbox(
+            "Colormap",
+            colormap_labels,
+            index=default_index,
+            key=f"{key_prefix}_colormap",
+            help=(
+                "Choose the color palette used for the filtered plot and matching map. "
+                "cmocean palettes are designed for oceanographic data."
+            ),
+        )
+    colorscale = envgeo_utils.get_plotly_colormap(target_column, selected_colormap_label)
+    return selected_label, target_column, colorscale
+
+
+def add_regression_line(fig, df, x_col, y_col, line_name="Regression line"):
+    """Add a simple least-squares regression line to a Plotly scatter figure.
+
+    試験的な近似直線を追加します。点数不足や同じX値のみの場合は何もしません。
+    """
+    regression_df = df[[x_col, y_col]].apply(pd.to_numeric, errors="coerce").dropna()
+    if len(regression_df) < 2 or regression_df[x_col].nunique() < 2:
+        return None
+
+    slope, intercept = np.polyfit(regression_df[x_col], regression_df[y_col], 1)
+    x_min = float(regression_df[x_col].min())
+    x_max = float(regression_df[x_col].max())
+    x_vals = np.array([x_min, x_max])
+    y_vals = slope * x_vals + intercept
+    r_value = regression_df[x_col].corr(regression_df[y_col])
+    stats_text = f"y = {slope:.3g}x + {intercept:.3g} | R = {r_value:.2f}"
+    fig.add_scatter(
+        x=x_vals,
+        y=y_vals,
+        mode="lines",
+        line=dict(color="black", width=2),
+        name=f"{line_name}: {stats_text}",
+        hoverinfo="name",
+    )
+    return stats_text
+
+
+def render_regression_stats(stats_text):
+    """Render compact regression statistics beside the control."""
+    if not stats_text:
+        st.caption("Regression unavailable")
+        return
+
+    st.markdown(
+        f"""
+        <div style="
+            margin-top: 0.18rem;
+            padding: 0.38rem 0.55rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 0.82rem;
+            line-height: 1.35;
+            white-space: nowrap;
+        ">
+            <strong>Regression</strong>&nbsp;&nbsp;{stats_text}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def selected_point_indices(selected_points, max_len):
+    """Return selected indices from the main scatter trace only.
+
+    近似直線などの追加traceが混ざっても、元の散布点だけを地図連動に使います。
+    """
+    indices = []
+    for point in selected_points or []:
+        if point.get("curveNumber", 0) != 0:
+            continue
+        point_index = point.get("pointIndex")
+        if point_index is None:
+            continue
+        if 0 <= point_index < max_len:
+            indices.append(point_index)
+    return indices
+
+
 def show_selection_tip():
     """Show a compact guide below Plotly selection figures.
 
@@ -72,6 +178,7 @@ from streamlit_plotly_events import plotly_events
 import math
 import envgeo_utils  
 import pandas as pd
+import numpy as np
 pd.set_option('future.no_silent_downcasting', True)
 
 
@@ -296,12 +403,7 @@ def main():
         
         st.subheader('Temperature-Salinity Relationship')
         
-        col_map = available_color_filtered_options(df1)
-        sel_col = st.selectbox("Color filtered", list(col_map.keys()), key="fig_TS_zoom")
-        target_item = col_map[sel_col]
-        
-        # カラースケール，depthの時は反転
-        c_scale_final = envgeo_utils.get_custom_colorscale(target_item)
+        sel_col, target_item, c_scale_final = render_color_controls(df1, "fig_TS_zoom")
 
         
         # --- 2. T-S図の描画とサイズ圧縮 ---
@@ -379,9 +481,10 @@ def main():
         show_selection_tip()
         
         # --- 【選択個数の処理】 ---
-        if selected_points:
-            st.session_state.ts_selected_indices = [p['pointIndex'] for p in selected_points]
-            num_selected = len(selected_points)
+        selected_indices = selected_point_indices(selected_points, len(df_plot_ts))
+        if selected_indices:
+            st.session_state.ts_selected_indices = selected_indices
+            num_selected = len(selected_indices)
             # 地図のすぐ上に個数を表示
             st.write(f"📊 **Number of selected points: {num_selected}**")
         else:
@@ -519,11 +622,15 @@ def main():
     
         st.subheader('Salinity-δ18O Relationship')
     
-        col_map = available_color_filtered_options(df1)
-        sel_col_d18o = st.selectbox("Color filtered", list(col_map.keys()), key="fig_d18O_zoom")
-        target_item = col_map[sel_col_d18o]
-        # カラースケール，depthの時は反転
-        c_scale_final = envgeo_utils.get_custom_colorscale(target_item)
+        sel_col_d18o, target_item, c_scale_final = render_color_controls(df1, "fig_d18O_zoom")
+        regression_control_col, regression_stats_col = st.columns([0.9, 2.1])
+        with regression_control_col:
+            show_regression_d18o = st.checkbox(
+                "Regression line",
+                value=False,
+                key="fig_d18O_zoom_regression_line",
+            )
+        regression_stats_text_d18o = ""
 
         
         
@@ -560,6 +667,16 @@ def main():
                 "reference": True
             }
         )
+        if show_regression_d18o:
+            regression_stats_text_d18o = add_regression_line(
+                fig_d18O,
+                df_plot_d18o,
+                "Salinity",
+                "d18O",
+            )
+        with regression_stats_col:
+            if show_regression_d18o:
+                render_regression_stats(regression_stats_text_d18o)
         
         fig_d18O = unify_plot_layout(fig_d18O, "Salinity", "δ18O (‰)", sel_col_d18o)
         
@@ -593,9 +710,10 @@ def main():
     
             
             # --- 【個数表示とセッション更新の処理】 ---
-        if selected_points_d18o:
-            st.session_state.d18o_selected_indices = [p['pointIndex'] for p in selected_points_d18o]
-            num_selected_d18o = len(selected_points_d18o)
+        selected_indices_d18o = selected_point_indices(selected_points_d18o, len(df_plot_d18o))
+        if selected_indices_d18o:
+            st.session_state.d18o_selected_indices = selected_indices_d18o
+            num_selected_d18o = len(selected_indices_d18o)
             # 地図のすぐ上に個数を太字で表示
             st.write(f"📊 **Number of selected points: {num_selected_d18o}**")
         else:

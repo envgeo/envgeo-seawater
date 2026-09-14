@@ -104,6 +104,32 @@ def test_map_region_presets_include_expected_ocean_regions():
         assert 1 <= zoom <= 15
 
 
+# Verifies that area presets can initialize Data filtering lon/lat sliders.
+# Data filtering のエリアプリセットが、緯度経度スライダーの初期範囲として使えることを確認する。
+def test_area_filter_bounds_uses_region_presets_within_data_extent():
+    lon_min, lon_max, lat_min, lat_max = envgeo_utils.area_filter_bounds(
+        "Japan and surrounding area",
+        100,
+        180,
+        0,
+        70,
+    )
+
+    assert (lon_min, lon_max, lat_min, lat_max) == (120.0, 155.0, 20.0, 50.0)
+
+
+# Verifies that Manual keeps the full current data extent.
+# Manual 選択時は、現在のデータ範囲全体を保つことを確認する。
+def test_area_filter_bounds_manual_keeps_full_data_extent():
+    assert envgeo_utils.area_filter_bounds(
+        envgeo_utils.AREA_FILTER_MANUAL,
+        110,
+        150,
+        10,
+        60,
+    ) == (110.0, 150.0, 10.0, 60.0)
+
+
 # Verifies that the Japan Sea dataset can be loaded successfully and is not empty.
 # 日本海データセットが正常に読み込まれ、空でないことを確認する。
 def test_load_isotope_data_japan_sea_not_empty():

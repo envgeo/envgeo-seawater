@@ -29,6 +29,11 @@ CUSTOM_PLOT_SETTINGS_LABEL = "Custom plot settings"
 DATA_RANGE_SETTINGS_LABEL = "Data range settings"
 DATA_FILTERING_LABEL = "Data filtering"
 MAP_AREA_HELP_TEXT = "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."
+AREA_FILTER_MANUAL = "Manual / full data range"
+AREA_FILTER_HELP_TEXT = (
+    "Choose a preset to set the initial longitude and latitude range, "
+    "then fine-tune the sliders if needed."
+)
 
 
 
@@ -401,6 +406,55 @@ def map_region_view(region_label):
         zoom = 1.0 if lat_span > 40 else 1.8
 
     return center_lat, center_lon, zoom
+
+
+def area_filter_bounds(region_label, lon_min, lon_max, lat_min, lat_max):
+    """
+    Return slider-friendly lon/lat bounds for a Data filtering area preset.
+
+    Data filtering 用のエリアプリセットを、現在のデータ範囲に合わせて
+    Longitude / Latitude スライダーの初期値として使える範囲に変換します。
+    """
+    lon_min = float(lon_min)
+    lon_max = float(lon_max)
+    lat_min = float(lat_min)
+    lat_max = float(lat_max)
+
+    if region_label == AREA_FILTER_MANUAL or region_label not in MAP_REGION_PRESETS:
+        return lon_min, lon_max, lat_min, lat_max
+
+    preset_lon_min, preset_lon_max, preset_lat_min, preset_lat_max = (
+        MAP_REGION_PRESETS[region_label]["bounds"]
+    )
+
+    # Match the preset longitude frame to the dataset when possible.
+    # 可能な範囲で、プリセット経度をデータ側の経度表現に合わせます。
+    if lon_min >= 0 and lon_max > 180:
+        if preset_lon_min < 0:
+            preset_lon_min += 360
+        if preset_lon_max < 0:
+            preset_lon_max += 360
+    elif lon_min < 0 and lon_max <= 180:
+        if preset_lon_min > 180:
+            preset_lon_min -= 360
+        if preset_lon_max > 180:
+            preset_lon_max -= 360
+
+    preset_crosses_dateline = preset_lon_min > preset_lon_max
+    if preset_crosses_dateline:
+        selected_lon_min, selected_lon_max = lon_min, lon_max
+    else:
+        selected_lon_min = max(lon_min, float(preset_lon_min))
+        selected_lon_max = min(lon_max, float(preset_lon_max))
+        if selected_lon_min >= selected_lon_max:
+            selected_lon_min, selected_lon_max = lon_min, lon_max
+
+    selected_lat_min = max(lat_min, float(preset_lat_min))
+    selected_lat_max = min(lat_max, float(preset_lat_max))
+    if selected_lat_min >= selected_lat_max:
+        selected_lat_min, selected_lat_max = lat_min, lat_max
+
+    return selected_lon_min, selected_lon_max, selected_lat_min, selected_lat_max
 
 
 QUALITY_FLAG_COLUMN = "Quality_Flags"
@@ -1368,6 +1422,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         
         
         st.header(DATA_FILTERING_LABEL)
+        st.caption("Change filters, then click **Apply settings** to update the figures.")
         
         submit_top = st.form_submit_button("Apply settings", use_container_width=True)
 
@@ -1555,14 +1610,39 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         # 経度は範囲が広いため、整数(int)にしておくとユーザーが操作しやすくなる
         min_df_lon = int(math.floor(df1['Longitude_degE'].min()))
         max_df_lon = int(math.ceil(df1['Longitude_degE'].max()))
+        max_df_lat = int(math.ceil(df1['Latitude_degN'].max()))
+        min_df_lat = int(math.floor(df1['Latitude_degN'].min()))
+
+        area_filter_preset = st.selectbox(
+            "Area filter preset",
+            [AREA_FILTER_MANUAL] + list(MAP_REGION_PRESETS),
+            help=AREA_FILTER_HELP_TEXT,
+        )
+        (
+            default_lon_min,
+            default_lon_max,
+            default_lat_min,
+            default_lat_max,
+        ) = area_filter_bounds(
+            area_filter_preset,
+            min_df_lon,
+            max_df_lon,
+            min_df_lat,
+            max_df_lat,
+        )
+        default_lon_min = int(math.floor(default_lon_min))
+        default_lon_max = int(math.ceil(default_lon_max))
+        default_lat_min = int(math.floor(default_lat_min))
+        default_lat_max = int(math.ceil(default_lat_max))
         
         # 2. スライダーの設定
         sld_lon_min, sld_lon_max = st.slider(
             label='Longitude',  # ラベルを少し自然に
             min_value=min_df_lon,
             max_value=max_df_lon,
-            value=(min_df_lon, max_df_lon),
-            step=1
+            value=(default_lon_min, default_lon_max),
+            step=1,
+            key=f"filter_longitude::{area_filter_preset}",
             # formatは指定しないことでエラーを回避
         )
 
@@ -1581,19 +1661,15 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
         ##########################
         # Latitude filtering
         ##########################
-        # 小数点以下を考慮して、最小値は切り下げ、最大値は切り上げる
-        # Floor the minimum and ceil the maximum to keep the slider robust / スライダーを安定させるため、最小値は切り下げ、最大値は切り上げる
-        
-        max_df_lat = int(math.ceil(df1['Latitude_degN'].max()))
-        min_df_lat = int(math.floor(df1['Latitude_degN'].min()))
         
         # 2. スライダーの設定
         sld_lat_min, sld_lat_max = st.slider(
             label='Latitude',
             min_value=min_df_lat,
             max_value=max_df_lat,
-            value=(min_df_lat, max_df_lat),
-            step=1  # 整数刻みに設定
+            value=(default_lat_min, default_lat_max),
+            step=1,  # 整数刻みに設定
+            key=f"filter_latitude::{area_filter_preset}",
         )
         
 

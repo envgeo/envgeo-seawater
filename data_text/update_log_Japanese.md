@@ -16,6 +16,21 @@
 - 将来の公開リリースに向けて、README、日本語README、更新履歴、リポジトリ構成を整理。
 - 公開構成、データ読み込み、品質ルール、保存ファイル名、主要ユーティリティに関する pytest を拡充。
 
+### 2026-09-14
+
+- 改善: Isotope & Hydrographic Mapping ページで、地図表示パラメーター選択を Map type の横に移動し、重複していた小さなパラメーター caption を削除。
+- 改善: 共通の地図案内文を、サイドバーで Map center、表示範囲、カラーマップ、図設定を調整できることが分かる表現へ変更。
+- 追加: 3D Visualizer の Plotly 図で、`Color filtered` の横にカラーマップ選択を追加し、散布図と対応する地図の両方に反映。
+- 追加: 3D Visualizer の塩分-d18O Plotly 図に、任意表示の近似直線と、式・相関係数を小さく表示する情報ボックスを追加。
+- 変更: 試験後、3D Visualizer の Temperature-Salinity 図では近似直線を表示しない構成に戻した。
+- 修正: 3D Visualizer で近似直線を追加しても、Box/Lasso 選択による対応採水地点の地図ハイライトが機能するようにした。
+- 追加: 既存の Fig.1-Fig.6 を温存したまま、4D Visualizer に `Custom 4D plot beta` を追加。
+- 追加: Custom 4D plot beta に、`Salinity-d18O-[custom]-[custom]`、`T-S-[custom]-[custom]`、`Lon-Lat-depth-[custom]` のテンプレートを追加。
+- 改善: `Lon-Lat-depth-[custom]` は地図系テンプレートとして扱い、Fig.3-Fig.6 と同様に、地図中心に合わせた経度、海岸線、地理的な縦横比を反映するようにした。
+- 削除: 4D Visualizer 画面上の実装説明寄りの custom beta caption を削除。
+- 追加: 共通 Data filtering サイドバーに `Area filter preset` を追加し、既存の海域プリセットから Longitude / Latitude フィルタの初期範囲を選び、その後スライダーで微調整できるようにした。
+- 準備: 個別ページへのユーザーデータアップロード対応、Streamlit 更新後の submit button key 対応、Integrated Visualizer 中心の公開方針、独立 3D/4D uploader の非公開・開発用候補化を ToDo に記録。
+
 ### 2026-09-11
 
 - 変更: 複数の同位体・海洋環境パラメーターを地図表示するページになったため、`32_d18O_mapping.py` を `32_Isotope_Hydrographic_Mapping.py` に変更し、ページタイトルを `Isotope & Hydrographic Mapping` に変更。
