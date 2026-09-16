@@ -29,8 +29,8 @@
 
 ## 出力
 
-- Sidebar-filtered dataset
-- Details and statistics of sidebar-filtered data
+- Filtered dataset
+- Details and statistics of filtered data
 - 抽出データ概要CSV
 - 品質フラグ基準
 

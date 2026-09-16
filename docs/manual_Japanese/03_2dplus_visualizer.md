@@ -1,4 +1,4 @@
-# 3D Visualizer
+# Interactive 2D/2.5D Visualizer
 
 ## このページでできること
 
@@ -26,7 +26,7 @@ Plotly のインタラクティブ散布図と採水地点マップを連動し�
 - Temperature-Salinity のインタラクティブ図
 - Salinity-d18O のインタラクティブ図
 - Sampling Location Map
-- Sidebar-filtered dataset
+- Filtered dataset
 - Box/Lasso-selected dataset
 
 ## 注意点
@@ -34,4 +34,3 @@ Plotly のインタラクティブ散布図と採水地点マップを連動し�
 - 回帰線は探索的な目安として使います。
 - Box/Lasso 選択は Plotly の操作仕様に依存します。
 - 点数が多い場合、古いPCでは動作が重くなることがあります。
-

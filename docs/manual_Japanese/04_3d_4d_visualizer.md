@@ -1,4 +1,4 @@
-# 4D Visualizer
+# Interactive 3D/4D Visualizer
 
 ## このページでできること
 
@@ -35,4 +35,3 @@
 - 全球データなど大きな選択では重くなることがあります。
 - map-depth 表示では、地理的な縦横比と海岸線を反映します。
 - Custom 4D view beta は試験的機能です。
-

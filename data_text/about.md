@@ -6,7 +6,7 @@ The platform supports consistent, quantitative comparison of seawater isotope da
 
 The Japan-region core dataset consists of samples analyzed under consistent conditions, which improves comparability across locations and sampling periods. Additional high-quality datasets from the Northwest Pacific are planned for integration after publication.
 
-Figures may be downloaded for research and educational use. Please cite the original data sources listed in `Data Sources` and `Selected Data`, as well as this application: [https://envgeo.h.kyoto-u.ac.jp/sw_jpn/](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/) by T. Ishimura. (Mar. 2026)
+Figures may be downloaded for research and educational use. Please cite the original data sources listed in `Data Sources` and `Filtered dataset`, as well as this application: [https://envgeo.h.kyoto-u.ac.jp/sw_jpn/](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/) by T. Ishimura. (Mar. 2026)
 
 [For more information and permissions for use, click here](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 

@@ -3,7 +3,7 @@
 """
 USGS earthquake hypocenter 4D visualizer for EnvGeo.
 Created on Sun May 1 2026
-Created from 04_4D_Visualizer.py and simplified as an earthquake-only page.
+Created from the EnvGeo 3D/4D visualizer and simplified as an earthquake-only page.
 @author: Toyoho Ishimura @Kyoto-U
 """
 

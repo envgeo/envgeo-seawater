@@ -16,10 +16,23 @@
 - 将来の公開リリースに向けて、README、日本語README、更新履歴、リポジトリ構成を整理。
 - 公開構成、データ読み込み、品質ルール、保存ファイル名、主要ユーティリティに関する pytest を拡充。
 
+### 2026-09-16
+
+- 変更: 旧3D/4Dページを `Interactive 2D/2.5D Visualizer` と `Interactive 3D/4D Visualizer` に整理し、ページファイル名も短めに変更。
+- 追加: Interactive 2D/2.5D Visualizer に `dD-δ18O relationship` と `Custom 2D/2.5D plot beta` を追加し、Box/Lasso 選択と対応する採水地点マップの連動表示を再利用できるようにした。
+- 追加: Custom 2D/2.5D plot に単色表示を追加し、純粋な2D散布図としても、色分け付き2.5D散布図としても使えるようにした。
+- 変更: 2D/2.5D ページのファイル名を `03_2Dplus_Visualizer.py` に変更し、Custom plot の色分けパラメーターとカラーマップを横並びに整理。初期表示は単色ではなくデータパラメーターによる色分けにした。
+- 追加: 4D Visualizer の custom view に `Full custom X-Y-Z-color` を追加し、X/Y/Z軸と色分けパラメーターをすべて選択できるようにした。
+- 改善: 3D/4D Visualizer で、map-depth のスケール設定が Fig.3-Fig.6 用であることと、採水地点マップの詳細設定が別物であることが分かるように文言を整理。
+- 改善: データ表の用語を整理し、サイドバーで抽出された結果は `Filtered dataset`、Plotly の Box/Lasso で選択した結果は `Box/Lasso-selected dataset` として区別。
+
 ### 2026-09-14
 
 - 修正: Isotope & Hydrographic Mapping ページで Map Center を変更した際、Streamlit Cloud の Cartopy で全球に近い経度範囲が NaN になって落ちる問題を回避。
+- 修正: Isotope & Hydrographic Mapping ページで陸地塗りつぶしの輪郭線と海岸線が重なり、海岸線が二重に見える問題を修正。
+- 追加: Isotope & Hydrographic Mapping ページの Map display settings に `Region preset` を追加し、フィルタ済みデータを変えずに図の表示範囲だけ切り替えられるようにした。
 - 改善: Isotope & Hydrographic Mapping ページで、地図表示パラメーター選択を Map type の横に移動し、重複していた小さなパラメーター caption を削除。
+- 試験: Custom Parameter Plot beta のサイドバー折りたたみ表示を試したが、現在のフィルタUIでは expander の入れ子が適さないため、通常の bordered container 表示に戻した。
 - 改善: 共通の地図案内文を、サイドバーで Map center、表示範囲、カラーマップ、図設定を調整できることが分かる表現へ変更。
 - 追加: 3D Visualizer の Plotly 図で、`Color filtered` の横にカラーマップ選択を追加し、散布図と対応する地図の両方に反映。
 - 追加: 3D Visualizer の塩分-d18O Plotly 図に、任意表示の近似直線と、式・相関係数を小さく表示する情報ボックスを追加。
@@ -38,10 +51,10 @@
 - 改善: Depth Profile の図幅・図高さ設定を、2値スライダーから個別の数値入力へ変更し、より細かく調整できるようにした。
 - 改善: 図サイズ、フォントサイズ、目盛数、マッピングページのカラーバーフォントサイズなど、精密な再現性が必要な図設定を数値入力中心に整理。
 - 改善: 英語版・日本語版 README を更新し、現在のページ構成、beta/ローカル開発ページの位置づけ、環境診断ツール、ユーザーデータ機能の現状、再現性に関する表現を整理。
-- 追加: `docs/README.md` と `docs/release_checklist.md` を追加し、公開前確認、Streamlit公開、GitHubリリース、Zenodo、将来のJOSS対応メモをトップREADMEとは別枠で管理できるようにした。
+- 追加: `docs/README.md` と `docs/release_checklist.md` を追加し、公開前確認、Streamlit公開、GitHubリリース、Zenodo、内部計画メモをトップREADMEとは別枠で管理できるようにした。
 - 追加: `docs/testing.md` と `docs/testing_Japanese.md` を追加し、現在の pytest 群の内容、テスト範囲、限界、今後の拡充方針を公開向けに説明。
 - 追加: `docs/manual/` と `docs/manual_Japanese/` に、全体概要、共通フィルタ、各ページ別の詳細マニュアル骨組みを英語版・日本語版で追加。
-- 改善: `docs/testing.md` と `docs/testing_Japanese.md` を公開向けのテスト説明に整理し、JOSS固有の計画メモを外した。
+- 改善: `docs/testing.md` と `docs/testing_Japanese.md` を公開向けのテスト説明に整理し、内部計画メモを外した。
 - 準備: 個別ページへのユーザーデータアップロード対応、Streamlit 更新後の submit button key 対応、Integrated Visualizer 中心の公開方針、独立 3D/4D uploader の非公開・開発用候補化を ToDo に記録。
 
 ### 2026-09-11
@@ -82,8 +95,8 @@
 - 改善: 統合 beta ページの Map タブを `st.fragment` 化し、地図設定変更時にページ全体が再実行されにくい構成へ変更。
 - 改善: 統合 beta ページの Map タブで、左側に色設定とRegion preset、右側1/3幅にMap Styleを置く二段レイアウトへ調整。
 - 改善: 統合 beta ページの Shared-filter beta タブ名とタブCSSを、earthquake Advancedに近い見分けやすい表示へ変更。
-- 追加: `Sidebar-filtered dataset (CSV)` の下に、品質フラグの判定基準を小さな注記として表示。
-- 追加: `Details and statistics of sidebar-filtered data` に、フィルタ条件・選択データ別件数・行数・品質フラグ数・概要統計をCSVで書き出す機能を追加。
+- 追加: `Filtered dataset (CSV)` の下に、品質フラグの判定基準を小さな注記として表示。
+- 追加: `Details and statistics of filtered data` に、フィルタ条件・フィルタ後データ別件数・行数・品質フラグ数・概要統計をCSVで書き出す機能を追加。
 - 変更: CARTO basemapのAPI key必須化に対応するため、共通地図スタイルの標準背景を `carto-positron` からAPIキー不要の `open-street-map` へ変更。
 - 追加: 環境診断ツールに、実行環境・依存パッケージ・主要ファイル確認結果をCSV/PDFレポートとして書き出す機能を追加。
 - 変更: 環境診断用 Streamlit ツールの実体を `tools/env_check_streamlit.py` に置き、ローカル開発中は `pages/99_Environment_Check.py` からサイドバー表示できる構成に整理。

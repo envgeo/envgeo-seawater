@@ -28,7 +28,7 @@ pd.set_option('future.no_silent_downcasting', True)
 
 def main():
     
-    st.header(f'4D Visualizer ({version})')
+    st.header(f'Interactive 3D/4D Visualizer ({version})')
     st.caption("Explore filtered seawater data as linked 4D scatter and map-depth views.")
 
     st.button('Reload')
@@ -226,7 +226,7 @@ def main():
         )
         map_colorscale = colormap_options[selected_colormap_label]
 
-        st.subheader(getattr(envgeo_utils, "FIGURE_SCALE_SETTINGS_LABEL", "Figure scale settings"))
+        st.subheader("Figure scale settings for Fig.3-Fig.6 map-depth views")
 
         # Allow Fig3-Fig6 map views to use explicit lon/lat windows from the sidebar.
         # Fig3-Fig6 の地図表示範囲を、サイドバーから緯度経度で直接調整できるようにする。
@@ -247,10 +247,10 @@ def main():
             lat_slider_min, lat_slider_max = -90, 90
 
         region_preset_4d = st.selectbox(
-            "Map-depth region preset",
+            "Map-depth region preset (Fig.3-Fig.6)",
             ["Dataset default"] + list(envgeo_utils.MAP_REGION_PRESETS),
             help=(
-                "Set the longitude and latitude range for map-depth views. "
+                "Set the longitude and latitude range for Fig.3-Fig.6 map-depth views. "
                 "You can still fine-tune the range with the sliders below."
             ),
         )
@@ -1133,6 +1133,7 @@ def main():
     custom_salinity_d18o_mode = "Salinity-δ18O with custom Z and color"
     custom_ts_mode = "Temperature-salinity with custom Z and color"
     custom_map_depth_mode = "Map-depth with custom color"
+    custom_full_mode = "Full custom X-Y-Z-color"
 
     st.markdown(
         """
@@ -1185,6 +1186,7 @@ def main():
                 custom_salinity_d18o_mode,
                 custom_ts_mode,
                 custom_map_depth_mode,
+                custom_full_mode,
             ],
             horizontal=True,
             help="Choose the base layout for the custom 4D plot.",
@@ -1230,7 +1232,7 @@ def main():
                     key="custom_4d_ts_color",
                     help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
                 )
-        else:
+        elif custom_mode == custom_map_depth_mode:
             custom_x = "Longitude_degE"
             custom_y = "Latitude_degN"
             custom_z = "Depth_m"
@@ -1241,8 +1243,44 @@ def main():
                 key="custom_4d_map_color",
                 help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
             )
+        else:
+            custom_cols_top = st.columns(2)
+            with custom_cols_top[0]:
+                custom_x = st.selectbox(
+                    "X axis",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "d18O"),
+                    key="custom_4d_full_x",
+                )
+            with custom_cols_top[1]:
+                custom_y = st.selectbox(
+                    "Y axis",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "dD"),
+                    key="custom_4d_full_y",
+                )
+            custom_cols_bottom = st.columns(2)
+            with custom_cols_bottom[0]:
+                custom_z = st.selectbox(
+                    "Z axis",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "Depth_m"),
+                    key="custom_4d_full_z",
+                )
+            with custom_cols_bottom[1]:
+                custom_color = st.selectbox(
+                    "Color parameter",
+                    numeric_options,
+                    index=safe_option_index(numeric_options, "Temperature_degC"),
+                    key="custom_4d_full_color",
+                    help=getattr(envgeo_utils, "COLOR_PARAMETER_HELP_TEXT", "Choose the variable used to color the plotted points or map markers."),
+                )
 
-        custom_required_columns = [custom_x, custom_y, custom_z, custom_color]
+        if custom_mode == custom_full_mode and len({custom_x, custom_y, custom_z}) < 3:
+            st.warning("Full custom 4D view requires different X, Y, and Z axes.")
+            return
+
+        custom_required_columns = list(dict.fromkeys([custom_x, custom_y, custom_z, custom_color]))
         df_custom = df1.dropna(subset=custom_required_columns).copy()
         removed_num_custom = len(df1) - len(df_custom)
         plotted_num_custom = len(df_custom)
@@ -1528,11 +1566,12 @@ def main():
     st.divider()
     # st.subheader('Location Map')
     st.subheader("Sampling Location Map")
+    st.caption("Map detail settings below apply only to this sampling-location map.")
     import math
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover("Map detail settings", use_container_width=True):
         map_mode = st.radio(
             "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 
@@ -1680,11 +1719,11 @@ def main():
     ###############################################################################################
     ###############################################################################################
 
-    ##選ばれたデータを表示
+    ##フィルタ後・現在表示中のデータを表示
     # 例：特定の列だけを選択して新しいデータフレームを作成
         
 
-    with st.expander("selected dataset (CSV)", expanded=False):
+    with st.expander("Filtered dataset for current view (CSV)", expanded=False):
         
         table_columns = [
             'reference', 'Cruise', 'Station', 'Date', 'Year', 'Month',

@@ -34,14 +34,14 @@ streamlit run home.py
 - [ ] Confirm `Area filter preset` changes the initial Longitude / Latitude range.
 - [ ] Confirm manual Longitude / Latitude slider adjustment still works after choosing an area preset.
 - [ ] Confirm `Apply settings` updates figures after changing filters.
-- [ ] Confirm `Details and statistics of sidebar-filtered data` opens and exports CSV correctly.
+- [ ] Confirm `Details and statistics of filtered data` opens and exports CSV correctly.
 
 ## 4. Main Visualization Pages
 
 Open each page and perform a light visual check.
 
-- [ ] `03_3D_Visualizer.py`
-- [ ] `04_4D_Visualizer.py`
+- [ ] `03_2Dplus_Visualizer.py`
+- [ ] `04_3D_4D_Visualizer.py`
 - [ ] `31_Salinity-d18O_Relationship.py`
 - [ ] `32_Isotope_Hydrographic_Mapping.py`
 - [ ] `34_T-S_diagram.py`
@@ -153,4 +153,3 @@ pytest
 - [ ] Confirm examples and user documentation are sufficient for reviewers.
 - [ ] Confirm installation instructions are reproducible on a clean environment.
 - [ ] Confirm citation instructions include both EnvGeo-Seawater and original data providers.
-

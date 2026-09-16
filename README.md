@@ -45,11 +45,11 @@ The Streamlit app uses `home.py` for the about, data-source, manual,
 update-log, and Japanese information tabs. The `pages/` directory contains the
 main visualization tools, along with selected beta and local-development pages:
 
-- `pages/03_3D_Visualizer.py`  
-  Interactive 3D plots for isotope-hydrographic relationships and selected sample locations.
+- `pages/03_2Dplus_Visualizer.py`  
+  Interactive 2D/2.5D plots for isotope-hydrographic relationships and selected sample locations.
 
-- `pages/04_4D_Visualizer.py`  
-  Main 3D/4D seawater visualizer for longitude, latitude, depth, and selected variables.
+- `pages/04_3D_4D_Visualizer.py`  
+  Interactive 3D/4D seawater visualizer for longitude, latitude, depth, and selected variables.
 
 - `pages/05_3D4D_Visualizer_Uploader.py`  
   Development-oriented 3D/4D uploader for Excel-based custom datasets. This page is likely to remain an advanced or private workflow unless its role is redesigned.

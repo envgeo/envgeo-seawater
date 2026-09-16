@@ -27,6 +27,32 @@ COLOR_FILTERED_OPTIONS = {
     "Longitude": "Longitude_degE",
 }
 
+PLOT_PARAMETER_LABELS = {
+    "d18O": "δ18O (‰)",
+    "dD": "δD (‰)",
+    "d-excess": "d-excess (‰)",
+    "Temperature_degC": "Temperature (C)",
+    "Salinity": "Salinity",
+    "Depth_m": "Depth (m)",
+    "Latitude_degN": "Latitude (degN)",
+    "Longitude_degE": "Longitude (degE)",
+    "Year": "Year",
+    "Month": "Month",
+}
+
+CUSTOM_PLOT_PARAMETER_ORDER = [
+    "d18O",
+    "dD",
+    "d-excess",
+    "Salinity",
+    "Temperature_degC",
+    "Depth_m",
+    "Latitude_degN",
+    "Longitude_degE",
+    "Year",
+    "Month",
+]
+
 
 def available_color_filtered_options(df):
     """Return color options available in the current dataframe.
@@ -79,6 +105,20 @@ def render_color_controls(df, key_prefix):
         )
     colorscale = envgeo_utils.get_plotly_colormap(target_column, selected_colormap_label)
     return selected_label, target_column, colorscale
+
+
+def available_numeric_plot_columns(df):
+    """Return numeric columns suitable for custom Plotly scatter plots."""
+    options = []
+    for column in CUSTOM_PLOT_PARAMETER_ORDER:
+        if column in df.columns and pd.to_numeric(df[column], errors="coerce").notna().any():
+            options.append(column)
+    return options
+
+
+def plot_label(column):
+    """Return a compact display label for a plot column."""
+    return PLOT_PARAMETER_LABELS.get(column, column)
 
 
 def add_regression_line(fig, df, x_col, y_col, line_name="Regression line"):
@@ -191,8 +231,8 @@ pd.set_option('future.no_silent_downcasting', True)
 def main():
     
     # 注意書き
-    st.header(f'3D Visualizer ({version})')
-    st.caption("Use interactive Plotly selection to link T-S or salinity-δ18O plots with sampling locations.")
+    st.header(f'Interactive 2D/2.5D Visualizer ({version})')
+    st.caption("Use interactive Plotly selection to link T-S, isotope, or custom 2D plots with sampling locations.")
     
 
     ############################################################
@@ -295,13 +335,15 @@ def main():
     # --- 図の種類選択　---　　 
     ##############################################################################
 
-    fig_type_d18Osal = "d18O-Salinity relationship"   
+    fig_type_d18Osal = "d18O-Salinity relationship"
+    fig_type_dD_d18O = "dD-δ18O relationship"
     fig_type_TS = "Temperature–Salinity (T–S) diagram"
+    fig_type_custom_xy = "Custom 2D/2.5D plot beta"
 
 
     plot_figure = st.radio(
         "Plot type",
-        (fig_type_d18Osal, fig_type_TS),
+        (fig_type_d18Osal, fig_type_dD_d18O, fig_type_TS, fig_type_custom_xy),
         horizontal=True,
         args=[1, 0],
         help="Choose the interactive Plotly view to display.",
@@ -398,6 +440,270 @@ def main():
     
     # 区切り線
     st.divider()
+
+    def render_linked_xy_plot(
+        x_col,
+        y_col,
+        plot_title,
+        key_prefix,
+        allow_regression=True,
+        allow_single_color=False,
+    ):
+        """Render a selectable 2D Plotly scatter plot and linked sampling map."""
+        if x_col == y_col:
+            st.warning("Please choose different X and Y parameters.")
+            return
+
+        color_col = None
+        colorscale = None
+        selected_label = "Single color"
+        if allow_single_color:
+            available_colors = available_color_filtered_options(df1)
+            color_options = ["Single color"] + list(available_colors.keys())
+            default_color_choice = (
+                "Water Depth"
+                if "Water Depth" in available_colors
+                else next(iter(available_colors), "Single color")
+            )
+            color_control_col, colormap_control_col = st.columns([1, 1])
+            with color_control_col:
+                color_choice = st.selectbox(
+                    "Color parameter",
+                    color_options,
+                    index=color_options.index(default_color_choice),
+                    key=f"{key_prefix}_color_mode",
+                    help=(
+                        "Use a fixed marker color for a simple 2D plot, or choose "
+                        "a numeric parameter for a 2.5D colorbar."
+                    ),
+                )
+            if color_choice != "Single color":
+                color_col = available_colors[color_choice]
+                selected_label = color_choice
+                colormap_options = envgeo_utils.get_plotly_colormap_options(color_col)
+                colormap_labels = list(colormap_options.keys())
+                default_index = (
+                    colormap_labels.index("EnvGeo variable default")
+                    if "EnvGeo variable default" in colormap_labels
+                    else 0
+                )
+                with colormap_control_col:
+                    selected_colormap_label = st.selectbox(
+                        "Colormap",
+                        colormap_labels,
+                        index=default_index,
+                        key=f"{key_prefix}_colormap",
+                        help=(
+                            "Choose the color palette used for the filtered plot "
+                            "and matching map."
+                        ),
+                    )
+                colorscale = envgeo_utils.get_plotly_colormap(color_col, selected_colormap_label)
+            else:
+                with colormap_control_col:
+                    st.caption("Colormap is used when a color parameter is selected.")
+        else:
+            selected_label, color_col, colorscale = render_color_controls(df1, key_prefix)
+
+        regression_stats_text = ""
+        if allow_regression:
+            regression_control_col, regression_stats_col = st.columns([0.9, 2.1])
+            with regression_control_col:
+                show_regression = st.checkbox(
+                    "Regression line",
+                    value=False,
+                    key=f"{key_prefix}_regression_line",
+                    help=getattr(
+                        envgeo_utils,
+                        "REGRESSION_HELP_TEXT",
+                        "Add a simple least-squares regression line for quick visual reference.",
+                    ),
+                )
+        else:
+            show_regression = False
+            regression_stats_col = None
+
+        required_columns = [x_col, y_col]
+        if color_col is not None:
+            required_columns.append(color_col)
+        df_plot = df1.dropna(subset=required_columns).reset_index(drop=True)
+        excluded_count = len(df1) - len(df_plot)
+        if excluded_count > 0:
+            st.caption(
+                f":red[{excluded_count:,} rows excluded because selected X, Y, "
+                "or color values were missing.]"
+            )
+        if df_plot.empty:
+            st.warning("No valid rows remain for the selected plot settings.")
+            return
+
+        scatter_kwargs = {
+            "data_frame": df_plot,
+            "x": x_col,
+            "y": y_col,
+            "hover_data": {
+                column: True
+                for column in [
+                    "d18O",
+                    "dD",
+                    "d-excess",
+                    "Salinity",
+                    "Temperature_degC",
+                    "Depth_m",
+                    "Latitude_degN",
+                    "Longitude_degE",
+                    "Year",
+                    "Month",
+                    "Day",
+                    "Cruise",
+                    "Station",
+                    "reference",
+                ]
+                if column in df_plot.columns
+            },
+        }
+        if color_col is not None:
+            scatter_kwargs.update(color=color_col, color_continuous_scale=colorscale)
+        else:
+            scatter_kwargs.update(color_discrete_sequence=["#2563eb"])
+        fig_xy = px.scatter(**scatter_kwargs)
+
+        if show_regression:
+            regression_stats_text = add_regression_line(fig_xy, df_plot, x_col, y_col)
+            with regression_stats_col:
+                render_regression_stats(regression_stats_text)
+
+        fig_xy = unify_plot_layout(
+            fig_xy,
+            plot_label(x_col),
+            plot_label(y_col),
+            selected_label,
+        )
+        fig_xy.update_layout(
+            hovermode="closest",
+            hoverdistance=5,
+            width=800,
+            margin=dict(l=80, r=200, t=50, b=80, autoexpand=False),
+            coloraxis_colorbar=dict(x=1.02, xanchor="left", len=0.8),
+            xaxis=dict(
+                zeroline=False,
+                zerolinewidth=1,
+                zerolinecolor="grey",
+                showline=True,
+                linewidth=1,
+                linecolor="grey",
+                mirror=True,
+            ),
+            yaxis=dict(
+                zeroline=False,
+                zerolinewidth=1,
+                zerolinecolor="grey",
+                showline=True,
+                linewidth=1,
+                linecolor="grey",
+                mirror=True,
+            ),
+        )
+
+        selected_points = plotly_events(
+            fig_xy,
+            select_event=True,
+            key=f"{key_prefix}_event",
+            override_height=600,
+            override_width=850,
+        )
+        show_selection_tip()
+
+        selected_indices_key = f"{key_prefix}_selected_indices"
+        selected_indices = selected_point_indices(selected_points, len(df_plot))
+        if selected_indices:
+            st.session_state[selected_indices_key] = selected_indices
+            st.write(f"**Selected points: {len(selected_indices)}**")
+        else:
+            st.session_state[selected_indices_key] = []
+
+        is_selected = len(st.session_state[selected_indices_key]) > 0
+        df_map = df_plot.iloc[st.session_state[selected_indices_key]] if is_selected else df_plot
+
+        lat_min, lat_max = df_map["Latitude_degN"].min(), df_map["Latitude_degN"].max()
+        lon_min, lon_max = df_map["Longitude_degE"].min(), df_map["Longitude_degE"].max()
+        center_lat = df_map["Latitude_degN"].mean()
+        center_lon = df_map["Longitude_degE"].mean()
+        lat_diff = max(lat_max - lat_min, 0.1)
+        lon_diff = max(lon_max - lon_min, 0.1)
+        zoom_lon = math.log2((850 * 360) / (lon_diff * 256))
+        zoom_lat = math.log2((600 * 180) / (lat_diff * 256))
+        auto_zoom = min(zoom_lon, zoom_lat) - (0.8 if is_selected else 1.5)
+        auto_zoom = max(1, min(15, auto_zoom))
+
+        map_kwargs = {
+            "data_frame": df_map,
+            "lat": "Latitude_degN",
+            "lon": "Longitude_degE",
+            "mapbox_style": "open-street-map",
+            "hover_data": [
+                column for column in [
+                    "d18O",
+                    "dD",
+                    "d-excess",
+                    "Salinity",
+                    "Temperature_degC",
+                    "Year",
+                    "Month",
+                    "Day",
+                    "Cruise",
+                    "Station",
+                    "Depth_m",
+                    "reference",
+                ] if column in df_map.columns
+            ],
+        }
+        if color_col is not None:
+            map_kwargs.update(color=color_col, color_continuous_scale=colorscale)
+        else:
+            map_kwargs.update(color_discrete_sequence=["#2563eb"])
+        fig_map = px.scatter_mapbox(**map_kwargs)
+        fig_map = unify_plot_layout(fig_map, "Lon", "Lat", selected_label)
+        fig_map.update_layout(
+            mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=auto_zoom),
+            margin=dict(l=0, r=0, t=0, b=0),
+            autosize=True,
+            height=500,
+            coloraxis_colorbar=dict(
+                title=selected_label,
+                x=0.98,
+                xanchor="right",
+                y=0.5,
+                yanchor="middle",
+                len=0.8,
+                thickness=15,
+            ),
+        )
+
+        with st.popover("Map controls", use_container_width=True):
+            map_mode = st.radio(
+                "Map style",
+                envgeo_utils.MAP_MODE_OPTIONS,
+                horizontal=True,
+                key=f"{key_prefix}_map_style",
+                help=getattr(
+                    envgeo_utils,
+                    "MAP_STYLE_HELP_TEXT",
+                    "Choose the background map style for the sampling-location map.",
+                ),
+            )
+        st.caption(f"Map style: {map_mode}")
+        fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
+
+        st.plotly_chart(
+            fig_map,
+            use_container_width=True,
+            key=f"{key_prefix}_map",
+            config={"scrollZoom": True, "displayModeBar": True},
+        )
+
+        envgeo_utils.display_isotope_table(df1)
+        envgeo_utils.display_isotope_table(df_map, title="Box/Lasso-selected dataset (CSV)")
     
     
     ###############################################################################################
@@ -623,6 +929,47 @@ def main():
     ############################################################################################### 
     ###############################################################################################
     ###############################################################################################
+
+    elif plot_figure == fig_type_dD_d18O:
+        st.subheader("δD-δ18O Relationship")
+        render_linked_xy_plot(
+            "d18O",
+            "dD",
+            "δD-δ18O Relationship",
+            "fig_dD_d18O",
+            allow_regression=True,
+        )
+
+    elif plot_figure == fig_type_custom_xy:
+        st.subheader("Custom 2D/2.5D Plot beta")
+        numeric_options = available_numeric_plot_columns(df1)
+        if len(numeric_options) < 2:
+            st.warning("At least two numeric parameters are required for a custom 2D plot.")
+            return
+        custom_cols = st.columns(2)
+        with custom_cols[0]:
+            custom_x = st.selectbox(
+                "X axis",
+                numeric_options,
+                index=numeric_options.index("d18O") if "d18O" in numeric_options else 0,
+                key="3d_custom_xy_x",
+            )
+        with custom_cols[1]:
+            y_default = "dD" if "dD" in numeric_options else numeric_options[min(1, len(numeric_options) - 1)]
+            custom_y = st.selectbox(
+                "Y axis",
+                numeric_options,
+                index=numeric_options.index(y_default),
+                key="3d_custom_xy_y",
+            )
+        render_linked_xy_plot(
+            custom_x,
+            custom_y,
+            "Custom 2D/2.5D Plot beta",
+            f"fig_custom_xy_{custom_x}_{custom_y}",
+            allow_regression=True,
+            allow_single_color=True,
+        )
 
 
     

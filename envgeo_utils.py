@@ -1273,7 +1273,7 @@ def build_filtered_report_csv(df, filter_conditions=None, selected_counts=None):
     filter_export = filter_df.copy()
     filter_export.insert(0, "Section", "Filter Conditions")
     selected_counts_export = selected_counts_df.copy()
-    selected_counts_export.insert(0, "Section", "Selected Data Counts")
+    selected_counts_export.insert(0, "Section", "Filtered Data Counts")
     statistics_export = statistics_df.rename(columns={"Parameter": "Item"}).copy()
     statistics_export.insert(0, "Section", "Statistics")
 
@@ -1315,7 +1315,7 @@ def render_filtered_report_download(
 """
 
 
-def display_isotope_table(df, title="Sidebar-filtered dataset (CSV)"):
+def display_isotope_table(df, title="Filtered dataset (CSV)"):
     """
     Format and render the dataframe in a Streamlit expander.
     Includes integer conversion for dates and string-casting to prevent Arrow errors.
@@ -1396,7 +1396,12 @@ def display_isotope_table(df, title="Sidebar-filtered dataset (CSV)"):
 # Apply filters while exempting NaN rows (Gap Rows) to preserve data segmentation.
 
 
-def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN):
+def sidebar_filter_and_display(
+    df1,
+    ref_data,
+    data_source_JAPAN_SEA,
+    data_source_AROUND_JAPAN,
+):
     """
     サイドバーのフィルター設定、データ抽出、および選択データの統計表示を一括で行う関数。
     引数:
@@ -1952,7 +1957,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
     # print('要素と出現数:', d_select_add2_sum)
     # print('---------------')
                         
-    with st.expander("📊 Details and statistics of sidebar-filtered data", expanded=False):
+    with st.expander("📊 Details and statistics of filtered data", expanded=False):
         # 月を複数選択した場合は、表示・レポート・図タイトルで使いやすい文字列へ整形する
         # Format selected months for display, reporting, and figure titles.
         month_display = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
@@ -1967,7 +1972,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
             "Salinity": f"{sld_sal_min}-{sld_sal_max}",
             "d18O": f"{sld_d18O_min}-{sld_d18O_max}",
             "Temperature_degC": f"{sld_temp_min}-{sld_temp_max}",
-            "Selected Data (Cruise, papers)": selected_cruise_indicate,
+            "Filtered data (Cruise, papers)": selected_cruise_indicate,
         }
         summary = summarize_filtered_data(df1)
         metric_cols = st.columns(2)
@@ -1983,7 +1988,7 @@ def sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source
             hide_index=True,
         )
 
-        st.markdown("**Selected data counts**")
+        st.markdown("**Filtered data counts by dataset**")
         df_selected_counts = pd.DataFrame(
             [{"Dataset": key, "Rows": value} for key, value in d_select_add2.items()]
         )

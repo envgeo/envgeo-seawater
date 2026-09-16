@@ -1366,7 +1366,7 @@ def main():
         config={"scrollZoom": True},
     )
 
-    with st.expander("selected dataset (CSV)", expanded=False):
+    with st.expander("Section dataset (CSV)", expanded=False):
         # 断面描画に実際に使ったデータだけを、見やすい列順で表示する
         # Show only the dataset actually used for plotting, with a readable column order.
         preferred_cols = [

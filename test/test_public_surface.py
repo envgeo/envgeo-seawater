@@ -38,8 +38,8 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
     page_names = sorted(path.name for path in (ROOT / "pages").glob("*.py"))
 
     assert page_names == [
-        "03_3D_Visualizer.py",
-        "04_4D_Visualizer.py",
+        "03_2Dplus_Visualizer.py",
+        "04_3D_4D_Visualizer.py",
         "05_3D4D_Visualizer_Uploader.py",
         "31_Salinity-d18O_Relationship.py",
         "32_Isotope_Hydrographic_Mapping.py",

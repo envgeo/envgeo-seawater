@@ -33,7 +33,7 @@ This beta page creates flexible 2D plots from selected numeric parameters.
 - Optional colorbar and size scaling
 - Optional regression line
 - Downloadable PNG figure
-- Selected dataset table
+- Filtered dataset table
 
 ## Notes And Limitations
 

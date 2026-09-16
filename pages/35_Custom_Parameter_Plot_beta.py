@@ -356,7 +356,7 @@ def main():
             alpha=marker_alpha,
             edgecolors="black",
             linewidths=0.5,
-            label="Selected data",
+            label="Filtered data",
         )
     else:
         color_values = pd.to_numeric(df_plot[color_by], errors="coerce")
@@ -371,7 +371,7 @@ def main():
             alpha=marker_alpha,
             edgecolors="black",
             linewidths=0.5,
-            label="Selected data",
+            label="Filtered data",
         )
         cbar = fig.colorbar(scatter, ax=ax, orientation="vertical", pad=0.02, fraction=0.04)
         cbar.set_label(PARAMETER_LABELS.get(color_by, color_by), fontsize=label_font_size)
@@ -442,6 +442,7 @@ def main():
     fig.savefig(img, format="png", dpi=300, bbox_inches="tight")
     img.seek(0)
 
+    st.caption("Adjust Custom plot settings in the sidebar.")
     st.pyplot(fig)
 
     st.download_button(
@@ -451,7 +452,7 @@ def main():
         "image/png",
     )
 
-    with st.expander("Selected dataset (CSV)", expanded=False):
+    with st.expander("Filtered dataset (CSV)", expanded=False):
         table_columns = [
             "reference",
             "Cruise",

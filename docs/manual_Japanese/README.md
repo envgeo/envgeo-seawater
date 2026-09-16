@@ -8,8 +8,8 @@ Markdown 形式で作成しているため、GitHub、JOSS関連資料、研究�
 
 - [概要](00_overview.md)
 - [Data filtering](01_data_filtering.md)
-- [3D Visualizer](03_3d_visualizer.md)
-- [4D Visualizer](04_4d_visualizer.md)
+- [Interactive 2D/2.5D Visualizer](03_2dplus_visualizer.md)
+- [Interactive 3D/4D Visualizer](04_3d_4d_visualizer.md)
 - [Salinity-d18O Relationship](31_salinity_d18o.md)
 - [Isotope & Hydrographic Mapping](32_mapping.md)
 - [Temperature-Salinity Diagram](34_ts_diagram.md)
@@ -23,4 +23,3 @@ Markdown 形式で作成しているため、GitHub、JOSS関連資料、研究�
 1. まず [概要](00_overview.md) を確認します。
 2. 多くのページで共通する [Data filtering](01_data_filtering.md) を確認します。
 3. 利用したい可視化ページの個別マニュアルを参照します。
-

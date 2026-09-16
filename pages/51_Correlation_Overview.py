@@ -1402,7 +1402,7 @@ def main():
 ##################################選択データ表示　2024/10/07###################################################################################################################
             
     # with表記 (推奨)
-    with st.expander("selected data", expanded=False):
+    with st.expander("Filtered data", expanded=False):
 
     #選んだパラメーター表示
     
@@ -1429,9 +1429,9 @@ def main():
         
         # st.write('Area(Cruise)',selected_cruise)
         selected_cruise_indicate =str(list(selected_cruise[:]))
-        st.write(':green[Selected Data (Cruise, papers)]', selected_cruise_indicate)
+        st.write(':green[Filtered data (Cruise, papers)]', selected_cruise_indicate)
     
-        st.write(':green[Selected Data (detail)]',d_select_add2)
+        st.write(':green[Filtered data (detail)]',d_select_add2)
         
         
         st.write(':green[Average values]')

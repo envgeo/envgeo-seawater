@@ -16,10 +16,23 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Improved project documentation, Japanese README content, update logs, and repository cleanup toward a future public release.
 - Expanded pytest coverage for public structure, data loading, quality rules, filename helpers, and core utility behavior.
 
+### 2026-09-16
+
+- Renamed the former 3D/4D pages to `Interactive 2D/2.5D Visualizer` and `Interactive 3D/4D Visualizer`, with shorter page filenames.
+- Added `dD-δ18O relationship` and `Custom 2D/2.5D plot beta` options to the Interactive 2D/2.5D Visualizer, reusing Box/Lasso selection and linked sampling-location maps.
+- Added a single-color option to the Custom 2D/2.5D plot so it can be used as either a pure 2D plot or a color-coded 2.5D plot.
+- Renamed the 2D/2.5D page file to `03_2Dplus_Visualizer.py` and aligned Custom plot color controls horizontally; the default Custom color mode now uses a data parameter instead of single color.
+- Added a `Full custom X-Y-Z-color` mode to the 4D Visualizer custom view so users can choose all three axes and the color parameter.
+- Clarified 3D/4D Visualizer labels so map-depth scale settings are identified as Fig.3-Fig.6 controls and sampling-location map settings are labeled separately.
+- Standardized data-table wording: sidebar-filtered results are labeled `Filtered dataset`, while Plotly Box/Lasso outputs remain `Box/Lasso-selected dataset`.
+
 ### 2026-09-14
 
 - Fixed a Streamlit Cloud Cartopy error in Isotope & Hydrographic Mapping by avoiding exact full-globe longitude bounds when changing map centers.
+- Removed duplicate-looking coastline outlines in Isotope & Hydrographic Mapping by using the land layer only as a fill and keeping coastline lines separate.
+- Added a `Region preset` control to Isotope & Hydrographic Mapping map display settings so the figure extent can be changed without changing the filtered dataset.
 - Refined the Isotope & Hydrographic Mapping page by moving the mapped-parameter selector next to the map-type control and removing redundant parameter captions.
+- Tested collapsible sidebar panels in Custom Parameter Plot beta, then restored the standard bordered sidebar layout because nested expanders are not suitable for the current filtering UI.
 - Updated the shared map guidance text to mention map center, extent, colormap, and figure settings in the sidebar.
 - Added colormap selection beside `Color filtered` in the 3D Visualizer Plotly views and connected the selected colormap to both the scatter plot and matching map.
 - Added an optional regression line to the 3D Visualizer salinity-d18O Plotly view, including compact regression statistics beside the control.
@@ -38,10 +51,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Changed Depth Profile figure width and height controls from a paired slider to numeric inputs for more precise layout adjustment.
 - Standardized precise figure controls by using numeric inputs for figure size, font size, tick counts, and the mapping-page colorbar font size where applicable.
 - Updated the English and Japanese README files to reflect the current page structure, beta/local-development page roles, environment-check workflow, user-data integration status, and a more cautious reproducibility description.
-- Added `docs/README.md` and `docs/release_checklist.md` to separate release, deployment, Zenodo, and future JOSS-oriented notes from the top-level README.
+- Added `docs/README.md` and `docs/release_checklist.md` to separate release, deployment, Zenodo, and internal planning notes from the top-level README.
 - Added `docs/testing.md` and `docs/testing_Japanese.md` to explain the current pytest suite, its scope, limitations, and planned expansion in a public-facing format.
 - Added English and Japanese user-manual skeletons under `docs/manual/` and `docs/manual_Japanese/`, including overview, shared filtering, and page-by-page manual templates.
-- Revised the testing documentation to keep it public-facing, moving JOSS-specific planning out of `testing.md` and `testing_Japanese.md`.
+- Revised the testing documentation to keep it public-facing, moving internal planning out of `testing.md` and `testing_Japanese.md`.
 - Added project ToDo notes for future user-data upload support in individual pages, Streamlit submit-button key cleanup after upgrade, Integrated Visualizer publication strategy, and the likely private/development-only role of the standalone 3D/4D uploader.
 
 ### 2026-09-11
@@ -85,8 +98,8 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Improved the integrated beta Map tab with `st.fragment` so map-control changes can rerun only the map section instead of the full page.
 - Improved the integrated beta Map tab controls with color and region settings on the left and Map Style in the right one-third column.
 - Improved the integrated beta Shared-filter tab labels and tab CSS with a clearer style similar to the earthquake Advanced page.
-- Added a compact quality-flag criteria note below the `Sidebar-filtered dataset (CSV)` table.
-- Added CSV export for `Details and statistics of sidebar-filtered data`, including filter conditions, selected-data counts, row counts, quality-flag counts, and summary statistics.
+- Added a compact quality-flag criteria note below the `Filtered dataset (CSV)` table.
+- Added CSV export for `Details and statistics of filtered data`, including filter conditions, filtered-data counts, row counts, quality-flag counts, and summary statistics.
 - Changed the shared standard map background from `carto-positron` to API-key-free `open-street-map` because CARTO basemaps now require API keys.
 - Added CSV and PDF report export to the environment checker for runtime, dependency, and project-file diagnostics.
 - Kept the Streamlit environment checker implementation in `tools/env_check_streamlit.py` and added `pages/99_Environment_Check.py` as a local-development sidebar wrapper.

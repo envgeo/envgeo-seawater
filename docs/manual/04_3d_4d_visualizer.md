@@ -1,4 +1,4 @@
-# 4D Visualizer
+# Interactive 3D/4D Visualizer
 
 ## What This Page Does
 
@@ -35,4 +35,3 @@ This page visualizes seawater data using 3D/4D scatter plots, including map-dept
 - This page can be slow for large global selections.
 - Map-depth views use geographic scaling and coastline overlays.
 - Custom 4D view beta is experimental and may change.
-

@@ -442,7 +442,7 @@ def test_build_filtered_report_csv_includes_filters_and_statistics():
 
     assert "Overview" in csv_text
     assert "Filter Conditions" in csv_text
-    assert "Selected Data Counts" in csv_text
+    assert "Filtered Data Counts" in csv_text
     assert "Statistics" in csv_text
     assert header == "Section,Item,Value,Count,Mean,Stdev,Min,Max"
     assert "Quality flags" in csv_text

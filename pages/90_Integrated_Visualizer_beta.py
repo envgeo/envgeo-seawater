@@ -27,8 +27,8 @@ version = "1.3.0"
 BASE_DIR = Path(__file__).resolve().parent
 
 FULL_PAGE_WORKFLOWS = {
-    "3D Visualizer": "03_3D_Visualizer.py",
-    "4D Visualizer": "04_4D_Visualizer.py",
+    "Interactive 2D/2.5D Visualizer": "03_2Dplus_Visualizer.py",
+    "Interactive 3D/4D Visualizer": "04_3D_4D_Visualizer.py",
     "Salinity-d18O Relationship": "31_Salinity-d18O_Relationship.py",
     "Isotope & Hydrographic Mapping": "32_Isotope_Hydrographic_Mapping.py",
     "T-S Diagram": "34_T-S_diagram.py",

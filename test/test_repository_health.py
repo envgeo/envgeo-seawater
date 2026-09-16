@@ -52,10 +52,10 @@ def test_key_project_documents_exist():
         assert (ROOT / filename).exists(), f"{filename} is missing"
 
 
-# The 4D visualizer has its own selected-data table, so it must include quality columns explicitly.
-# 4D Visualizerは独自の選択データ表を持つため、品質情報列を明示的に含める必要がある。
-def test_4d_visualizer_selected_table_includes_quality_columns():
-    page_text = (ROOT / "pages" / "04_4D_Visualizer.py").read_text(encoding="utf-8")
+# The 3D/4D visualizer has its own selected-data table, so it must include quality columns explicitly.
+# 3D/4D Visualizerは独自の選択データ表を持つため、品質情報列を明示的に含める必要がある。
+def test_3d_4d_visualizer_selected_table_includes_quality_columns():
+    page_text = (ROOT / "pages" / "04_3D_4D_Visualizer.py").read_text(encoding="utf-8")
 
     assert "QUALITY_FLAG_COLUMN" in page_text
     assert "QUALITY_ORIGINAL_VALUE_COLUMN" in page_text
@@ -160,8 +160,8 @@ def test_filtered_data_summary_csv_export_is_available():
     assert "render_filtered_report_download" in integrated_text
 
 
-# The sidebar-filtered data table should explain quality-flag criteria near the table.
-# Sidebar-filtered datasetの近くで品質フラグ基準を確認できることを守る。
+# The filtered data table should explain quality-flag criteria near the table.
+# Filtered datasetの近くで品質フラグ基準を確認できることを守る。
 def test_sidebar_filtered_table_mentions_quality_flag_criteria():
     utils_text = (ROOT / "envgeo_utils.py").read_text(encoding="utf-8")
 

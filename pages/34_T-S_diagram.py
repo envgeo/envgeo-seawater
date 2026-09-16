@@ -422,7 +422,7 @@ def main():
     fig_title_X_Y= X_label + " - "+ Y_label + "" # 書き出し専用
     
     #追加データのlabel
-    sheet_names_add2 = "selected data"
+    sheet_names_add2 = "filtered data"
     
     #プロットの透明度
     alpha_all = 0.2 #メインプロット

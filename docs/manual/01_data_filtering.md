@@ -29,8 +29,8 @@ Most EnvGeo-Seawater pages use a shared sidebar filter to select the data shown 
 
 ## Outputs
 
-- Sidebar-filtered dataset
-- Details and statistics of sidebar-filtered data
+- Filtered dataset
+- Details and statistics of filtered data
 - Filtered-data summary CSV
 - Quality flag criteria near exported tables
 

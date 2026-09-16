@@ -8,8 +8,8 @@ The documents are written in Markdown so they can be reused in GitHub, project d
 
 - [Overview](00_overview.md)
 - [Data Filtering](01_data_filtering.md)
-- [3D Visualizer](03_3d_visualizer.md)
-- [4D Visualizer](04_4d_visualizer.md)
+- [Interactive 2D/2.5D Visualizer](03_2dplus_visualizer.md)
+- [Interactive 3D/4D Visualizer](04_3d_4d_visualizer.md)
 - [Salinity-d18O Relationship](31_salinity_d18o.md)
 - [Isotope & Hydrographic Mapping](32_mapping.md)
 - [Temperature-Salinity Diagram](34_ts_diagram.md)
@@ -23,4 +23,3 @@ The documents are written in Markdown so they can be reused in GitHub, project d
 1. Start with [Overview](00_overview.md).
 2. Read [Data Filtering](01_data_filtering.md), because most visualization pages use the same filtering workflow.
 3. Open the page-specific manual for the visualization you want to use.
-

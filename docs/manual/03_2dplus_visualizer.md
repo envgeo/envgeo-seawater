@@ -1,4 +1,4 @@
-# 3D Visualizer
+# Interactive 2D/2.5D Visualizer
 
 ## What This Page Does
 
@@ -26,7 +26,7 @@ This page links interactive Plotly scatter plots with sampling-location maps.
 - Temperature-Salinity interactive plot
 - Salinity-d18O interactive plot
 - Sampling location map
-- Sidebar-filtered dataset table
+- Filtered dataset table
 - Box/Lasso-selected dataset table
 
 ## Notes And Limitations
@@ -34,4 +34,3 @@ This page links interactive Plotly scatter plots with sampling-location maps.
 - The regression line is intended for quick visual reference.
 - Box/Lasso selection depends on Plotly interaction behavior.
 - Very dense selections may be slower on older computers.
-

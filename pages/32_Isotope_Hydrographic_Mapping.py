@@ -98,6 +98,33 @@ def set_cartopy_extent_safely(ax, extent):
         return False
 
 
+def map_display_preset_bounds(region_label, lon_center):
+    """
+    Convert a map-region preset to the longitude frame used by the map center.
+
+    Map display presets change only the figure view. They do not change the
+    sidebar data-filtering result.
+    """
+    if region_label not in envgeo_utils.MAP_REGION_PRESETS:
+        return None
+
+    lon_min, lon_max, lat_min, lat_max = envgeo_utils.MAP_REGION_PRESETS[region_label]["bounds"]
+    if lon_center == 0:
+        if lon_min > 180:
+            lon_min -= 360
+        if lon_max > 180:
+            lon_max -= 360
+        if lon_min > lon_max:
+            lon_min, lon_max = -180.0, 180.0
+    else:
+        if lon_min < 0:
+            lon_min += 360
+        if lon_max < 0:
+            lon_max += 360
+
+    return (float(lon_min), float(lon_max)), (float(lat_min), float(lat_max))
+
+
 def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
     """
     Return slider limits, default color range, and step for each map parameter.
@@ -282,8 +309,6 @@ def main():
         # 太平洋中心では 0-360 を使い、120-240E のような範囲をそのまま選べるようにする。
         lon_slider_min = -180 if lon_center == 0 else 0
         lon_slider_max = 180 if lon_center == 0 else 360
-
-        map_state_key = f"map_display_settings::{ref_data}::{lon_center}"
         
         # --- 図のスケール設定 (表示は整数、内部計算は微小オフセットあり) ---
         if ref_data == data_source_JAPAN_SEA:
@@ -303,6 +328,43 @@ def main():
             map_lon_default = (-180, 180) if lon_center == 0 else (0, 360)
             map_lat_default = (-90, 90)
             lat_slider_min, lat_slider_max = -90, 90
+
+        dataset_lon_default = map_lon_default
+        dataset_lat_default = map_lat_default
+
+        region_preset_options = ["Dataset default"] + list(envgeo_utils.MAP_REGION_PRESETS)
+        region_preset = st.selectbox(
+            "Region preset",
+            region_preset_options,
+            index=0,
+            help=(
+                "Set the map display extent from a common ocean-region preset. "
+                "This changes only the figure view, not the sidebar-filtered data."
+            ),
+        )
+        preset_bounds = map_display_preset_bounds(region_preset, lon_center)
+        if preset_bounds is not None:
+            preset_lon_default, preset_lat_default = preset_bounds
+            candidate_lon_default = (
+                max(lon_slider_min, int(math.floor(preset_lon_default[0]))),
+                min(lon_slider_max, int(math.ceil(preset_lon_default[1]))),
+            )
+            candidate_lat_default = (
+                max(lat_slider_min, int(math.floor(preset_lat_default[0]))),
+                min(lat_slider_max, int(math.ceil(preset_lat_default[1]))),
+            )
+            if (
+                candidate_lon_default[0] < candidate_lon_default[1]
+                and candidate_lat_default[0] < candidate_lat_default[1]
+            ):
+                map_lon_default = candidate_lon_default
+                map_lat_default = candidate_lat_default
+            else:
+                map_lon_default = dataset_lon_default
+                map_lat_default = dataset_lat_default
+
+        map_state_key = f"map_display_settings::{ref_data}::{lon_center}::{region_preset}"
+
         color_range_min, color_range_max, color_range_default, color_range_step = (
             get_parameter_color_range_defaults(
                 selected_parameter,
@@ -552,7 +614,7 @@ def main():
         ax.coastlines(resolution="50m", zorder=3)
         ax.add_feature(cfeature.LAND,
                        facecolor="white",
-                       edgecolor="black",
+                       edgecolor="none",
                        linewidth=0.5,
                        zorder=2)
         
@@ -662,7 +724,7 @@ def main():
         ax2.add_feature(
             cfeature.LAND,
             facecolor="white",
-            edgecolor="black",
+            edgecolor="none",
             linewidth=0.5,
             zorder=2
         )
