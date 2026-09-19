@@ -8,7 +8,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.3.0" #v220_20260317
+version = "1.3.1"  # 2026-09-19
 
 # ToDo
 
@@ -24,9 +24,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 import math
+import io
+import textwrap
 from matplotlib.ticker import FormatStrFormatter
 import envgeo_utils  
-pd.set_option('future.no_silent_downcasting', True)
 
     
 
@@ -52,7 +53,7 @@ def main():
     ##############################################################################
     # データソース選択
     ##############################################################################
-    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True, args=[1, 0])
+    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
 
 
@@ -84,7 +85,6 @@ def main():
             "Show background data",
             ("Yes", "No"),
             horizontal=True,
-            args=[1, 0],
             help=getattr(envgeo_utils, "BACKGROUND_DATA_HELP_TEXT", "Show the unfiltered dataset behind the currently filtered data for context."),
         )
     
@@ -93,7 +93,6 @@ def main():
             "Profile parameter",
             ("d18O(VSMOW)", "dD(VSMOW)", "d-excess", "Temperature (°C)", "Salinity"),
             horizontal=True,
-            args=[1, 0],
             help="Choose the seawater parameter plotted against water depth.",
         )
 
@@ -220,7 +219,8 @@ def main():
         else:
             fig_x_min, fig_x_max = 28, 36  # Around JAPAN(標準)
     
-    else:()
+    else:
+        pass
 
 
 
@@ -510,7 +510,6 @@ def main():
     
     # Keep the saved Depth Profile title inside the figure width.
     # Depth Profileはフィルタ条件が長くなりやすいため、保存図では少し短めに折り返す。
-    import textwrap
     wrapped_sub_title = "\n".join(textwrap.wrap(sub_title, width=62))
     title_head = str(main_title+'\n'+wrapped_sub_title+'\n'+sub_title2)
     
@@ -619,7 +618,8 @@ def main():
 
         if plot_all_data == "Yes":
             plt.plot(df_fig_ALL[X_data], df_fig_ALL[Y_data],c=X_Y_C, marker=X_Y_M, lw=0.5, alpha=alpha_all, label='ALL')
-        else:()
+        else:
+            pass
 
 
 
@@ -659,7 +659,8 @@ def main():
             ax.yaxis.set_major_formatter(FormatStrFormatter("%.f"))
 
         
-        else:()
+        else:
+            pass
 
             
 
@@ -717,8 +718,10 @@ def main():
 
 
                 
-        else:()
-    else:()
+        else:
+            pass
+    else:
+        pass
     
 
      
@@ -729,7 +732,6 @@ def main():
 
     
     #Save to memory first. の場合は，ローカルに保存されないので安心
-    import io
     safe_parameter_name = envgeo_utils.safe_filename_text(X_data)
     fn = envgeo_utils.build_figure_filename(f"Fig_depth_{safe_parameter_name}", sub_title)
     img = io.BytesIO()
@@ -763,7 +765,9 @@ def main():
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
         map_mode = st.radio(
             "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 

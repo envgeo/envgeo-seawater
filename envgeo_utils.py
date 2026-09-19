@@ -13,8 +13,8 @@ d-excess 計算、地図表示設定、共通テーブル表示をここに集�
 """
 
 # --- App version / バージョン情報 ---
-APP_VERSION = "1.3.0"
-APP_VERSION_DATE = "2026-09-11"
+APP_VERSION = "1.3.1"
+APP_VERSION_DATE = "2026-09-19"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 
 # Backward-compatible alias used by older pages.
@@ -55,6 +55,7 @@ REGRESSION_HELP_TEXT = (
 import pandas as pd
 import streamlit as st
 import numpy as np
+import inspect
 import math
 import re
 import unicodedata
@@ -73,7 +74,41 @@ warnings.filterwarnings("ignore", message="invalid value encountered in") # メ�
 ##############################################################################
 """
 
-pd.options.mode.copy_on_write = True
+def _major_version(version_text):
+    """Return the leading numeric component of a package version."""
+    match = re.match(r"(\d+)", str(version_text))
+    return int(match.group(1)) if match else 0
+
+
+def configure_pandas_compatibility():
+    """Enable future Pandas behavior only where the options are still needed.
+
+    Pandas 3 uses these behaviors by default and warns when the former opt-in
+    options are set. Pandas 2 still benefits from explicitly enabling them.
+    """
+    if _major_version(pd.__version__) < 3:
+        pd.options.mode.copy_on_write = True
+        pd.set_option("future.no_silent_downcasting", True)
+
+
+def stretch_width_kwargs(widget):
+    """Return full-width arguments compatible with old and new Streamlit APIs.
+
+    Streamlit 1.42 uses ``use_container_width=True``. Newer releases use
+    ``width="stretch"``. Inspection also handles widgets such as ``dataframe``
+    whose older API already had a numeric ``width`` argument.
+    """
+    width_parameter = inspect.signature(widget).parameters.get("width")
+    supports_stretch = width_parameter is not None and (
+        "Width" in str(width_parameter.annotation)
+        or width_parameter.default in {"stretch", "content"}
+    )
+    if supports_stretch:
+        return {"width": "stretch"}
+    return {"use_container_width": True}
+
+
+configure_pandas_compatibility()
 
 
 
@@ -1042,8 +1077,6 @@ def apply_map_style(fig, map_mode):
         require an API key. The Standard mode therefore uses OpenStreetMap.
     """
     
-    fig.update_layout(mapbox_style="open-street-map")
-
     if map_mode == "Standard":
         fig.update_layout(mapbox_style="open-street-map")
         
@@ -1444,7 +1477,9 @@ def sidebar_filter_and_display(
         st.header(DATA_FILTERING_LABEL)
         st.caption("Change filters, then click **Apply settings** to update the figures.")
         
-        submit_top = st.form_submit_button("Apply settings", use_container_width=True)
+        submit_top = st.form_submit_button(
+            "Apply settings", **stretch_width_kwargs(st.form_submit_button)
+        )
 
         # Two buttons can be placed at the top and bottom if needed / 必要ならsubmitボタンを上下に配置できる
         # In Streamlit 1.42, form submit buttons do not support key, so labels must be unique.
@@ -1892,7 +1927,9 @@ def sidebar_filter_and_display(
 
  
         
-        submit_bottom = st.form_submit_button("Apply settings!", use_container_width=True)
+        submit_bottom = st.form_submit_button(
+            "Apply settings!", **stretch_width_kwargs(st.form_submit_button)
+        )
         submitted = submit_top or submit_bottom
         
     # ----------------サイドバーここまで------------------------
@@ -1914,11 +1951,11 @@ def sidebar_filter_and_display(
 
     
     # バリデーション処理
-    if df_empty == 1:  #データが無かったとき
+    if df_empty:  #データが無かったとき
         st.warning('no data found')
         # 条件を満たないときは処理を停止する
         st.stop()
-    elif df_empty == 0: #データがあったとき
+    else: #データがあったとき
         st.write(data_found_num,'data found')
         
         
@@ -1984,8 +2021,8 @@ def sidebar_filter_and_display(
             pd.DataFrame(
                 [{"Item": key, "Value": value} for key, value in filter_conditions.items()]
             ),
-            use_container_width=True,
             hide_index=True,
+            **stretch_width_kwargs(st.dataframe),
         )
 
         st.markdown("**Filtered data counts by dataset**")
@@ -1993,14 +2030,18 @@ def sidebar_filter_and_display(
             [{"Dataset": key, "Rows": value} for key, value in d_select_add2.items()]
         )
         if not df_selected_counts.empty:
-            st.dataframe(df_selected_counts, use_container_width=True, hide_index=True)
+            st.dataframe(
+                df_selected_counts,
+                hide_index=True,
+                **stretch_width_kwargs(st.dataframe),
+            )
 
         st.markdown("**Summary statistics**")
         df_stats = filtered_statistics_dataframe(summary)
         if not df_stats.empty:
             numeric_cols = ["Mean", "Stdev", "Min", "Max"]
             df_stats[numeric_cols] = df_stats[numeric_cols].round(3)
-            st.dataframe(df_stats, use_container_width=True)
+            st.dataframe(df_stats, **stretch_width_kwargs(st.dataframe))
         render_filtered_report_download(
             df1,
             filter_conditions,

@@ -11,7 +11,7 @@ Created on Sun May 21 16:00:21 2023
 
 
 # --- Version info ---
-version = "1.3.0" #v220_20260317
+version = "1.3.1"  # 2026-09-19
 
 # ToDo
 
@@ -30,8 +30,8 @@ from matplotlib.ticker import FormatStrFormatter
 import plotly.express as px
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
+import io
 import envgeo_utils  
-pd.set_option('future.no_silent_downcasting', True)
 
 
 
@@ -62,7 +62,7 @@ def main():
     ##############################################################################
     # データソース選択
     ##############################################################################
-    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True, args=[1, 0])
+    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
 
 
@@ -86,7 +86,6 @@ def main():
             "Regression line",
             ("Yes", "No"),
             horizontal=True,
-            args=[1, 0],
             help=getattr(envgeo_utils, "REGRESSION_HELP_TEXT", "Add a simple least-squares regression line for quick visual reference."),
         )
 
@@ -506,7 +505,8 @@ def main():
 
     
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
-        else:()
+        else:
+            pass
             
             
 
@@ -547,8 +547,10 @@ def main():
         
   
         
-            else:()    
-        else:()    
+            else:
+                pass
+        else:
+            pass
         
         
         
@@ -638,11 +640,14 @@ def main():
                 
                 
        
-                else:()
+                else:
+                    pass
                 
-            else:()
+            else:
+                pass
             
-        else:()
+        else:
+            pass
     
     
     
@@ -670,7 +675,8 @@ def main():
                 R2_all =  r2_score(Ya, Y_all_pred)  
                 
                 ax.text(0.99, 0+0.01, 'RMSE_all: ' + '{:.3f}'.format(RMES_all)+', R$^{2}$_all: ' + '{:.2f}'.format(R2_all), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='red')
-            else:()
+            else:
+                pass
                 
             
             
@@ -684,7 +690,8 @@ def main():
             
             ax.text(0.99, 0.05*2+0.01, 'RMSE_add: ' + '{:.3f}'.format(RMES_add)+', R$^{2}$_add: ' + '{:.2f}'.format(R2_add), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='blue')
         
-        else: ()
+        else:
+            pass
     
         #==========  ここまで，近似直線の計算　============
     
@@ -699,10 +706,6 @@ def main():
         # --- 月 (スライダー用) ---  
         # sub_title = 'Lon:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', Lat:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', Y:'+str(sld_year_min)+'-'+str(sld_year_max)+', M:'+str(sld_month_min)+'-'+str(sld_month_max)+', S:'+str(sld_sal_min)+'-'+str(sld_sal_max)+', D:'+str(sld_depth_min)+'-'+str(sld_depth_max)+'m'
         # --- 月 (multiselect用) ---
-        # 月の表示用テキストを作成（選択されたリストをカンマ区切りにする）
-        month_text = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-        
-        
         ### もし「月が多すぎてサブタイトルが長くなる」のが嫌な場合
       # 月の表示ロジック
         if len(selected_months) == 12:
@@ -738,7 +741,8 @@ def main():
         fig.suptitle(title_head2,fontsize=sld_font_size_label + 4)
         
 
-    else:()
+    else:
+        pass
             
     
     
@@ -752,7 +756,6 @@ def main():
     ##############################################################################
     
     #Save to memory first. の場合は，ローカルに保存されないので安心
-    import io
     fn = envgeo_utils.build_figure_filename("Fig_sal_d18O_SW", main_title2)
     img = io.BytesIO()
     plt.savefig(img, format='png')
@@ -782,7 +785,9 @@ def main():
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
         map_mode = st.radio(
             "Map style", 
             envgeo_utils.MAP_MODE_OPTIONS, 

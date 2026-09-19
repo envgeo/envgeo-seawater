@@ -6,7 +6,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**現在のバージョン:** 1.3.0
+**現在の開発バージョン:** 1.3.1
 
 **海水同位体・水文データを、地図・断面・T-S図・3D/4D表示で探索する研究用Webアプリです。**
 
@@ -66,7 +66,7 @@ Streamlit アプリでは、`home.py` が About、データソース、マニュ
   X軸、Y軸、色、マーカーサイズを任意の数値パラメーターから選ぶ試験的な2Dプロットページ。
 
 - `pages/51_Correlation_Overview.py`  
-  相関・概要確認用の探索的ページ。開発過程で使ってきた元の探索ワークフローを残す位置づけです。
+  手書きで開発してきた元の探索ワークフローを保存するアーカイブ表示ページです。開発記録として残し、新機能は追加しません。
 
 - `pages/53_Vertical_Section_Visualizer.py`  
   Vertical Section Visualizer beta。測線選択、補間、海底地形、鉛直断面図の表示方法を調整するための試験版ページです。
@@ -149,9 +149,7 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 
 ## インストールと必要環境
 
-検証済み環境として、現在は **Python 3.10.15**（Anaconda `envgeo_streamlit142`）を想定しています。
-
-一部の依存ライブラリ、特に geospatial 系ライブラリや scikit-learn のバージョンにより、Python バージョンとの相性に注意が必要です。Python 3.12系への更新は、依存関係と各ページの動作を再確認してから行う予定です。
+現在は **Python 3.10.15 / Streamlit 1.42** と **Python 3.12.14 / Streamlit 1.63** の両環境で互換性を確認し、Plotly 5.24をリリース基準として維持しています。検証環境の組合せと残りの対話操作確認は `docs/streamlit_migration_Japanese.md` を参照してください。
 
 ### macOS Apple Silicon ユーザー向けメモ
 

@@ -10,6 +10,9 @@ This directory collects project documents that are too detailed for the top-leve
 - `testing.md` / `testing_Japanese.md`  
   Public-facing explanation of the current pytest suite, its scope, limitations, and planned expansion.
 
+- `streamlit_migration.md` / `streamlit_migration_Japanese.md`
+  Local migration log for Python 3.12, Streamlit 1.63, Plotly compatibility, environment comparisons, and visual checks.
+
 - `manual/` / `manual_Japanese/`  
   Page-by-page user manual skeletons for GitHub documentation, JOSS-related documentation, and laboratory website reuse.
 

@@ -8,7 +8,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.3.0" #v220_20260317
+version = "1.3.1"  # 2026-09-19
 
 # ToDo
 
@@ -27,8 +27,8 @@ import pandas as pd
 import plotly.express as px
 import math
 import gsw
+import io
 import envgeo_utils  
-pd.set_option('future.no_silent_downcasting', True)
 
 
 def main():
@@ -53,7 +53,7 @@ def main():
     ##############################################################################
     # データソース選択
     ##############################################################################
-    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True, args=[1, 0])
+    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
 
     ##############################################################################
@@ -472,7 +472,8 @@ def main():
 
         if plot_all_data == "Yes":
             ax.scatter(-1000, -1000, s=X_Y_S,c=X_Y_C,marker=X_Y_M, alpha=alpha_all, label='ALL') #凡例等のダミー
-        else:()
+        else:
+            pass
         
 
         
@@ -506,7 +507,8 @@ def main():
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
             if show_legend == "Yes":
                 plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
-        else:()
+        else:
+            pass
             
             
         plt.title(fig_title_X_Y) 
@@ -700,13 +702,13 @@ def main():
         fig.suptitle(title_head2,fontsize=sld_font_size_label + 4)
         
  
-    else:()
+    else:
+        pass
             
     
     
     
     #Save to memory first. の場合は，ローカルに保存されないので安心
-    import io
     fn = envgeo_utils.build_figure_filename("Fig_T-S_SW", main_title2)
     img = io.BytesIO()
     plt.savefig(img, format='png')
@@ -745,7 +747,9 @@ def main():
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
             map_mode = st.radio(
                 "Map style", 
                 envgeo_utils.MAP_MODE_OPTIONS, 
@@ -847,9 +851,9 @@ def main():
     # マウスホイールでのズームが強制的に有効
     st.plotly_chart(
         fig_map, 
-        use_container_width=True, # クラウドではTrueの方が見やすいです
         key="TS_plot",
-        config={'scrollZoom': True, 'displayModeBar': True} # ズームを有効化
+        config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
 
 

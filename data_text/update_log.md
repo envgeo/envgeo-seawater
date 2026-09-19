@@ -4,6 +4,22 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased
 
+### 2026-09-19
+
+- Updated the development version to 1.3.1 for the Python 3.10-3.12 and Streamlit 1.42-1.63 compatibility cycle.
+- Set the test-site Streamlit requirement range to 1.42-1.63 while retaining Plotly 5.24 as the release baseline.
+- Adopted a staged Plotly migration policy: move to MapLibre APIs while still using Plotly 5.24, then verify the same code with Plotly 6.7 and 7.1.
+- Confirmed the long-term plan to add memory-only user-data upload and overlay plotting to individual pages through shared utility functions and staged tests.
+- Defined Correlation Overview as an archive display of the original hand-written exploratory workflow; it is excluded from new-feature and upload integration work.
+
+### 2026-09-18
+
+- Started compatibility testing with a separate Python 3.12.14 / Streamlit 1.63.0 Conda environment while retaining the verified Streamlit 1.42 environment.
+- Confirmed dependency consistency, 57 passing Seawater tests, 9 passing Earthquake tests with 4 optional skips, and successful Seawater Home startup on the new environment.
+- Added a separate Streamlit 1.63 / Plotly 5.24.1 comparison environment after identifying Plotly 7 Mapbox API removal as the main source of interactive map errors; documented the migration policy and results in dedicated development notes.
+- Added shared compatibility handling for full-width Streamlit elements and Pandas future options, removing repeated deprecation warnings while retaining Streamlit 1.42 support.
+- Re-ran 57 Seawater tests in both Streamlit 1.42 and 1.63 environments and confirmed clean initial rendering of all pages in Streamlit 1.63.
+
 ### Version 1.3.0 concise summary - 2026-09-11
 
 - Refined the EnvGeo-Seawater interface for clearer public testing, including updated page titles, sidebar labels, map guidance, and figure-control wording.
@@ -16,6 +32,12 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Improved project documentation, Japanese README content, update logs, and repository cleanup toward a future public release.
 - Expanded pytest coverage for public structure, data loading, quality rules, filename helpers, and core utility behavior.
 
+### 2026-09-17
+
+- Clarified that the Interactive 2D/2.5D and 3D/4D Visualizers are Plotly-based exploration tools, while publication- and presentation-ready static figures should be created with the corresponding individual pages.
+- Added `TODO_Japanese.md` and linked the English and Japanese ToDo files for easier local development tracking.
+- Reduced `91_EnvGeo_Earthquake.py` to a lightweight redirect page because the active Earthquake implementation is maintained in the dedicated application.
+
 ### 2026-09-16
 
 - Renamed the former 3D/4D pages to `Interactive 2D/2.5D Visualizer` and `Interactive 3D/4D Visualizer`, with shorter page filenames.
@@ -25,6 +47,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Added a `Full custom X-Y-Z-color` mode to the 4D Visualizer custom view so users can choose all three axes and the color parameter.
 - Clarified 3D/4D Visualizer labels so map-depth scale settings are identified as Fig.3-Fig.6 controls and sampling-location map settings are labeled separately.
 - Standardized data-table wording: sidebar-filtered results are labeled `Filtered dataset`, while Plotly Box/Lasso outputs remain `Box/Lasso-selected dataset`.
+- Applied low-risk cleanup from an external code review, including clearer radio-widget calls, idiomatic empty `else` blocks, top-level imports, and removal of a no-op uploaded-marker colorscale setting.
+- Added Claude review follow-up items to `TODO.md` for future data-source selector, auto-zoom, month-display, XY scatter, legacy-variable, and upload-loader refactoring.
+- Applied additional low-risk cleanup from the full-file Claude review, including boolean empty-data checks, removal of unused 4D variables, corrected Custom plot exclusion counts, removal of unused month-display variables, and safer Vertical Section color-scale/import handling.
+- Added publication/package follow-up notes to `TODO.md` for research-impact citations, paper figures, packaging, development requirements, dependency pins, and future refactoring.
 
 ### 2026-09-14
 
@@ -103,7 +129,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Changed the shared standard map background from `carto-positron` to API-key-free `open-street-map` because CARTO basemaps now require API keys.
 - Added CSV and PDF report export to the environment checker for runtime, dependency, and project-file diagnostics.
 - Kept the Streamlit environment checker implementation in `tools/env_check_streamlit.py` and added `pages/99_Environment_Check.py` as a local-development sidebar wrapper.
-- Updated `requirements.txt` to match the current Anaconda `envgeo_streamlit142` environment and document the verified Python 3.10 dependency set.
+- Updated `requirements.txt` to match the current Anaconda `envgeo_st142_py310_plotly5` environment and document the verified Python 3.10 dependency set.
 - Expanded shared ocean-region map presets for Japan-adjacent seas, Kuroshio/Oyashio regions, North Pacific, tropical Pacific, Indian Ocean, Atlantic Ocean, Mediterranean Sea, Arctic Ocean, and Southern Ocean sectors.
 - Restored `Jet` as the default colormap for the isotope and hydrographic mapping page while keeping EnvGeo and cmocean options selectable.
 - Added cmocean/EnvGeo colormap selection to the isotope and hydrographic mapping page for both Matplotlib Cartopy maps and Plotly Mapbox maps.

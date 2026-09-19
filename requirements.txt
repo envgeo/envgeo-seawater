@@ -1,16 +1,16 @@
 # ==============================================================================
 # EnvGeo SEAWATER GEOCHEMICAL DATABASE - Requirements
 # ------------------------------------------------------------------------------
-# - Verified Environment: Anaconda envgeo_streamlit142
-# - Verified Python: 3.10 series
-# - These versions follow the local Anaconda environment checked on 2026-09-10.
+# - Verified environments: Python 3.10 / Streamlit 1.42 and
+#   Python 3.12 / Streamlit 1.63, both with Plotly 5.24.
+# - A fresh test-site installation resolves to Streamlit 1.63.
 # - Apple Silicon (M1/M2) Users: 
 #   To avoid build errors (especially for pyproj/cartopy), 
 #   follow the Conda-first installation steps in README.md.
 # ==============================================================================
 
 # --- Core Framework ---
-streamlit==1.42.0
+streamlit>=1.42.0,<=1.63.0
 
 # --- Data Science & Analytics ---
 numpy==1.26.4

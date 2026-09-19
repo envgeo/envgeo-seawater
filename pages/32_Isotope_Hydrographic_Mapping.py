@@ -10,7 +10,7 @@ Created on Sat Apr 22 17:15:03 2023
 
 
 # --- Version info ---
-version = "1.3.0" #v220f_20260425
+version = "1.3.1"  # 2026-09-19
 
 # ToDo
 # このバージョンは補完計算の調整が必要
@@ -31,7 +31,6 @@ import envgeo_utils
 from scipy.interpolate import griddata # コンターマップ用
 import cartopy.feature as cfeature  # 陸地塗りつぶし用
 import io # ファイル処理用
-pd.set_option('future.no_silent_downcasting', True)
 
 
 MAP_PARAMETER_LABELS = {
@@ -174,7 +173,7 @@ def main():
     ##############################################################################
     # データソース選択
     ##############################################################################
-    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True, args=[1, 0])
+    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
 
 
@@ -535,10 +534,6 @@ def main():
     # --- 月 (スライダー用) ---
     # sub_title = 'Lon:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', Lat:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', Y:'+str(sld_year_min)+'-'+str(sld_year_max)+', M:'+str(sld_month_min)+'-'+str(sld_month_max)+', S:'+str(sld_sal_min)+'-'+str(sld_sal_max)+', D:'+str(sld_depth_min)+'-'+str(sld_depth_max)+'m'
     # --- 月 (multiselect用) ---
-    # 月の表示用テキストを作成（選択されたリストをカンマ区切りにする）
-    month_text = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-    
-    
     ### もし「月が多すぎてサブタイトルが長くなる」のが嫌な場合
    # 月の表示ロジック
     if len(selected_months) == 12:
@@ -800,7 +795,9 @@ def main():
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
         map_mode = st.radio(
             "Map style",
             envgeo_utils.MAP_MODE_OPTIONS,
@@ -908,9 +905,9 @@ def main():
     # マウスホイールでのズームが強制的に有効
     st.plotly_chart(
         fig_map,
-        use_container_width=True, # クラウドではTrueの方が見やすいです
         key=f"parameter_map_{selected_parameter}",
-        config={'scrollZoom': True, 'displayModeBar': True} # ズームを有効化
+        config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
 
 

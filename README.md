@@ -8,7 +8,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Current version:** 1.3.0
+**Current development version:** 1.3.1
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -69,8 +69,8 @@ main visualization tools, along with selected beta and local-development pages:
 - `pages/35_Custom_Parameter_Plot_beta.py`  
   Experimental custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
 
-- `pages/51_Correlation_Overview.py`  
-  Exploratory correlation overview page. This page preserves the original exploratory workflow used during development.
+- `pages/51_Correlation_Overview.py`
+Archive display of the original hand-written exploratory workflow used during development. It is retained as a development record; no new features are planned.
 
 - `pages/53_Vertical_Section_Visualizer.py`  
   Vertical Section Visualizer beta. This experimental page is used to refine section-line selection, interpolation, bathymetry handling, and vertical-section plotting.
@@ -161,10 +161,10 @@ Unpublished or restricted datasets are **not included**.
 
 ## Installation & Requirements
 
-The currently verified environment is **Python 3.10.15** in the Anaconda
-`envgeo_streamlit142` environment. Python 3.12 support should be re-verified
-with the dependency set and Streamlit pages before it is recommended as the
-default environment.
+Compatibility checks currently cover **Python 3.10.15 / Streamlit 1.42** and
+**Python 3.12.14 / Streamlit 1.63**, with Plotly 5.24 retained as the release
+baseline. See `docs/streamlit_migration.md` for the tested environment matrix
+and remaining interactive checks.
 
 ### 💡 Special Note for macOS (Apple Silicon) Users:
 To avoid build errors with geospatial libraries, it is highly recommended to use **Conda** to install core dependencies before running pip:

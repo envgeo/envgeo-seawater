@@ -7,7 +7,7 @@ Created on Sat Apr 22 17:15:03 2023
 """
 
 # --- バージョン管理の設定 ---
-version = "1.3.0" #2026/02/23
+version = "1.3.1"  # 2026-09-19
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 
@@ -307,7 +307,10 @@ def plot_xy_with_regression(
 def main():
     st.header(f'Correlation Overview ({version})')
     # Preserve this page as a research-prototype view of the original exploratory workflow.
-    st.caption("This page preserves the original exploratory workflow used during development.")
+    st.caption(
+        "This page preserves the original exploratory workflow used during development. "
+        "It is maintained as an archive display rather than an actively developed workflow."
+    )
     
     
     # リロードボタン
@@ -373,7 +376,7 @@ def main():
         st.caption("Set the shared filters used for the compiled correlation figures.")
         submit_top = st.form_submit_button(
             "Apply settings",
-            use_container_width=True,
+            **envgeo_utils.stretch_width_kwargs(st.form_submit_button),
         )
         
         
@@ -513,7 +516,7 @@ def main():
                             
         submit_bottom = st.form_submit_button(
             "Apply settings!",
-            use_container_width=True,
+            **envgeo_utils.stretch_width_kwargs(st.form_submit_button),
         )
         submitted = submit_top or submit_bottom
 

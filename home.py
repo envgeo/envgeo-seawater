@@ -180,6 +180,12 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
+### Version 1.3.1 (Unreleased, updated 2026-09-19)
+
+- Added compatibility handling for Python 3.10-3.12 and Streamlit 1.42-1.63 migration testing.
+- Preserved the Plotly 5.24 baseline while preparing a staged Mapbox-to-MapLibre migration for Plotly 7.
+- Continued planning shared, memory-only user-data upload support for individual visualization pages.
+
 ### Version 1.3.0 (2026-09-11)
 
 - Cleaner interface wording, page titles, and figure controls.

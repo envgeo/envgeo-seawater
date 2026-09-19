@@ -5,7 +5,7 @@ Use this checklist before uploading a test site, updating GitHub, creating a rel
 ## 1. Local Environment
 
 - [ ] Confirm the intended Python environment is active.
-- [ ] Confirm the verified Python version, currently Python 3.10.15 in the Anaconda `envgeo_streamlit142` environment.
+- [ ] Confirm one of the tested baselines is active: Python 3.10.15 / Streamlit 1.42 or Python 3.12.14 / Streamlit 1.63, both with Plotly 5.24.
 - [ ] Confirm `requirements.txt` matches the tested environment.
 - [ ] Run the local environment checker if needed:
 
@@ -24,7 +24,7 @@ streamlit run home.py
 ```
 
 - [ ] Confirm `home.py` opens successfully.
-- [ ] Confirm the app version is shown as `1.3.0`.
+- [ ] Confirm the app version is shown as `1.3.1`.
 - [ ] Confirm the Home tabs load: Main, About, Data Sources, Manual, Update History, and Japanese information where applicable.
 
 ## 3. Sidebar And Filtering

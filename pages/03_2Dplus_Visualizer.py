@@ -11,7 +11,7 @@ Created on Sun May 21 16:00:21 2023
 
 
 # --- Version info ---
-version = "1.3.0" #v220_20260317
+version = "1.3.1"  # 2026-09-19
 
 # ToDo
 
@@ -224,7 +224,6 @@ import math
 import envgeo_utils  
 import pandas as pd
 import numpy as np
-pd.set_option('future.no_silent_downcasting', True)
 
 
 
@@ -232,7 +231,10 @@ def main():
     
     # 注意書き
     st.header(f'Interactive 2D/2.5D Visualizer ({version})')
-    st.caption("Use interactive Plotly selection to link T-S, isotope, or custom 2D plots with sampling locations.")
+    st.caption(
+        "Use this Plotly page for interactive data exploration. "
+        "For publication- or presentation-ready static figures, use the corresponding individual pages."
+    )
     
 
     ############################################################
@@ -252,7 +254,7 @@ def main():
     ##############################################################################
     # データソース選択
     ##############################################################################
-    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True, args=[1, 0])
+    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
 
 
@@ -345,7 +347,6 @@ def main():
         "Plot type",
         (fig_type_d18Osal, fig_type_dD_d18O, fig_type_TS, fig_type_custom_xy),
         horizontal=True,
-        args=[1, 0],
         help="Choose the interactive Plotly view to display.",
     )
     
@@ -680,7 +681,9 @@ def main():
             ),
         )
 
-        with st.popover("Map controls", use_container_width=True):
+        with st.popover(
+            "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+        ):
             map_mode = st.radio(
                 "Map style",
                 envgeo_utils.MAP_MODE_OPTIONS,
@@ -697,9 +700,9 @@ def main():
 
         st.plotly_chart(
             fig_map,
-            use_container_width=True,
             key=f"{key_prefix}_map",
             config={"scrollZoom": True, "displayModeBar": True},
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
 
         envgeo_utils.display_isotope_table(df1)
@@ -882,7 +885,9 @@ def main():
         
         # Keep map controls compact so the map remains visible after Streamlit reruns.
         # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-        with st.popover("Map controls", use_container_width=True):
+        with st.popover(
+            "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+        ):
             map_mode_ts = st.radio(
                 "Map style", 
                 envgeo_utils.MAP_MODE_OPTIONS, 
@@ -907,10 +912,9 @@ def main():
         # マウスホイールでのズームが強制的に有効
         st.plotly_chart(
             fig_ts_map, 
-            # width="stretch", # Streamlitあげた復活させる
-            use_container_width=True,
             key="3d_visualizer_map_TS",
-            config={'scrollZoom': True, 'displayModeBar': True} # ズームを有効化
+            config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
         
             
@@ -1141,7 +1145,9 @@ def main():
         
         # Keep map controls compact so the map remains visible after Streamlit reruns.
         # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
-        with st.popover("Map controls", use_container_width=True):
+        with st.popover(
+            "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+        ):
             map_mode_d18o = st.radio(
                 "Map style", 
                 envgeo_utils.MAP_MODE_OPTIONS, 
@@ -1165,10 +1171,9 @@ def main():
         # マウスホイールでのズームが強制的に有効
         st.plotly_chart(
             fig_map_d18o, 
-            # width="stretch", # Streamlitあげた復活させる
-            use_container_width=True,
             key="3d_visualizer_map_d18O",
-            config={'scrollZoom': True, 'displayModeBar': True} # ズームを有効化
+            config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
         
         

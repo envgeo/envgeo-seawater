@@ -27,7 +27,6 @@ from scipy.io import netcdf_file
 
 import envgeo_utils
 
-pd.set_option('future.no_silent_downcasting', True)
 
 
 DEFAULT_GEBCO_PATH = "data_beta/GEBCO_2025_6min.nc"
@@ -284,9 +283,16 @@ def extract_section_vertices_from_draw_result(draw_result):
 
 
 def render_ab_selector_map(df_points, map_mode):
-    import folium
-    from folium.plugins import Draw
-    from streamlit_folium import st_folium
+    try:
+        import folium
+        from folium.plugins import Draw
+        from streamlit_folium import st_folium
+    except ImportError as exc:
+        st.error(
+            "Interactive map drawing requires `folium` and `streamlit-folium`. "
+            "Use manual A-B endpoints, or install these packages in the local environment."
+        )
+        raise exc
 
     # 観測点群の中心を初期表示位置にして、線引き用の対話地図を作る
     # Build an interactive map centered on the observation cloud for drawing a section line.
@@ -1096,12 +1102,12 @@ def main():
                         submitted_draw_line = st.button(
                             "Apply drawn A-B line",
                             disabled=drawn_vertices is None,
-                            use_container_width=True,
+                            **envgeo_utils.stretch_width_kwargs(st.button),
                         )
                     with clear_col:
                         clear_drawn_line = st.button(
                             "Clear submitted line",
-                            use_container_width=True,
+                            **envgeo_utils.stretch_width_kwargs(st.button),
                         )
 
                     if clear_drawn_line:
@@ -1269,8 +1275,26 @@ def main():
             valid_vals = df_section[target_col].dropna()
             d_min = float(valid_vals.min()) if not valid_vals.empty else -10.0
             d_max = float(valid_vals.max()) if not valid_vals.empty else 35.0
+            default_color_ranges = {
+                "d18O": (-5.0, 2.0),
+                "dD": (-200.0, 100.0),
+                "Salinity": (0.0, 42.0),
+                "Temperature_degC": (-5.0, 40.0),
+            }
+            scale_min_default, scale_max_default = default_color_ranges.get(target_col, (d_min, d_max))
+            scale_min = float(min(scale_min_default, d_min))
+            scale_max = float(max(scale_max_default, d_max))
+            value_min = float(max(scale_min, d_min))
+            value_max = float(min(scale_max, d_max))
+            if value_min >= value_max:
+                value_min, value_max = scale_min, scale_max
             with st.sidebar.expander("Color scale", expanded=True):
-                z_min, z_max = st.slider(f"{target_col} scale", -15.0, 40.0, (d_min, d_max))
+                z_min, z_max = st.slider(
+                    f"{target_col} scale",
+                    scale_min,
+                    scale_max,
+                    (value_min, value_max),
+                )
 
             tab_color, tab_line = st.tabs(["Color", "Line"])
             with tab_color:
@@ -1289,7 +1313,7 @@ def main():
                         xaxis_title,
                         hover_mode,
                     ),
-                    use_container_width=True,
+                    **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
             with tab_line:
                 st.plotly_chart(
@@ -1307,7 +1331,7 @@ def main():
                         xaxis_title,
                         hover_mode,
                     ),
-                    use_container_width=True,
+                    **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
         except Exception as exc:
             st.error(f"Interpolation error: {exc}")
@@ -1362,8 +1386,8 @@ def main():
 
     st.plotly_chart(
         map_fig,
-        use_container_width=True,
         config={"scrollZoom": True},
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
 
     with st.expander("Section dataset (CSV)", expanded=False):

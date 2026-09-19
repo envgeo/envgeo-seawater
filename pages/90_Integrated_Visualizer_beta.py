@@ -22,7 +22,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "1.3.0"
+version = "1.3.1"
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -529,7 +529,9 @@ def render_summary(df, quality_df, uploaded_quality_df=None):
     available_stats = [column for column in stats_cols if column in df.columns]
     if available_stats:
         summary = df[available_stats].describe().T[["count", "mean", "std", "min", "max"]]
-        st.dataframe(summary.round(3), use_container_width=True)
+        st.dataframe(
+            summary.round(3), **envgeo_utils.stretch_width_kwargs(st.dataframe)
+        )
     envgeo_utils.render_filtered_report_download(
         df,
         {
@@ -553,7 +555,9 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
         for column in ["d18O", "dD", "d-excess", "Salinity", "Temperature_degC", "Depth_m"]
         if column in clean.columns
     ]
-    with st.popover("Map controls", use_container_width=True):
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
         left_controls, right_controls = st.columns([2, 1])
         with left_controls:
             color_controls = st.columns(2)
@@ -648,7 +652,6 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
                     marker=dict(
                         size=uploaded_style["map_size"],
                         color=uploaded_clean[color_column] if use_colorbar else uploaded_style["color"],
-                        colorscale=None if use_colorbar else None,
                         coloraxis="coloraxis" if use_colorbar else None,
                         symbol=uploaded_style["symbol"],
                         opacity=uploaded_style["opacity"],
@@ -663,7 +666,11 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
                 )
             )
 
-    st.plotly_chart(fig, use_container_width=True, key="integrated_map")
+    st.plotly_chart(
+        fig,
+        key="integrated_map",
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+    )
 
 def render_ts_diagram(df, uploaded_df=None, uploaded_style=None):
     st.subheader("T-S Diagram")
@@ -754,7 +761,11 @@ def render_ts_diagram(df, uploaded_df=None, uploaded_style=None):
                 ),
             )
 
-    st.plotly_chart(fig, use_container_width=True, key="integrated_ts")
+    st.plotly_chart(
+        fig,
+        key="integrated_ts",
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+    )
 
 
 def render_salinity_d18o(df, uploaded_df=None, uploaded_style=None):
@@ -845,7 +856,11 @@ def render_salinity_d18o(df, uploaded_df=None, uploaded_style=None):
                 ),
             )
 
-    st.plotly_chart(fig, use_container_width=True, key="integrated_salinity_d18o")
+    st.plotly_chart(
+        fig,
+        key="integrated_salinity_d18o",
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+    )
 
 
 def render_uploaded_quality_summary(uploaded_quality_df, download_key):
@@ -948,7 +963,11 @@ def render_uploaded_plots(uploaded_df, uploaded_style=None, uploaded_quality_df=
         if fixed_color:
             marker_style["color"] = uploaded_style["color"]
         fig.update_traces(marker=marker_style)
-        st.plotly_chart(fig, use_container_width=True, key="integrated_uploaded_2d")
+        st.plotly_chart(
+            fig,
+            key="integrated_uploaded_2d",
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+        )
         return
 
     if len(numeric_columns) < 3:
@@ -1003,7 +1022,11 @@ def render_uploaded_plots(uploaded_df, uploaded_style=None, uploaded_quality_df=
     fig.update_traces(marker=marker_style)
     if reverse_z:
         fig.update_layout(scene=dict(zaxis=dict(autorange="reversed")))
-    st.plotly_chart(fig, use_container_width=True, key="integrated_uploaded_3d")
+    st.plotly_chart(
+        fig,
+        key="integrated_uploaded_3d",
+        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+    )
 
 
 def render_quality_table(quality_df, uploaded_quality_df=None):

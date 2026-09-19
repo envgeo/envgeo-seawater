@@ -32,15 +32,14 @@ def test_public_readmes_do_not_mention_submission_status():
 
 
 # Streamlit automatically shows Python files directly under pages/.
-# pages/直下はアプリのサイドバーに出るため、安定版、明示的な試作ページ、
-# ローカル開発用診断ページだけに保つ。
+# Public pages are required in every repository. Local-only pages are allowed
+# in the development workspace but are not required in public repositories.
+# pages/直下には公開必須ページと、ローカル開発時だけ許可するページを置く。
 def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
-    page_names = sorted(path.name for path in (ROOT / "pages").glob("*.py"))
-
-    assert page_names == [
+    page_names = {path.name for path in (ROOT / "pages").glob("*.py")}
+    public_pages = {
         "03_2Dplus_Visualizer.py",
         "04_3D_4D_Visualizer.py",
-        "05_3D4D_Visualizer_Uploader.py",
         "31_Salinity-d18O_Relationship.py",
         "32_Isotope_Hydrographic_Mapping.py",
         "34_T-S_diagram.py",
@@ -49,8 +48,15 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
         "51_Correlation_Overview.py",
         "53_Vertical_Section_Visualizer.py",
         "90_Integrated_Visualizer_beta.py",
+        "91_EnvGeo_Earthquake.py",
+    }
+    local_only_pages = {
+        "05_3D4D_Visualizer_Uploader.py",
         "99_Environment_Check.py",
-    ]
+    }
+
+    assert public_pages <= page_names
+    assert page_names <= public_pages | local_only_pages
 
 
 def test_retired_pages_are_not_kept_in_public_source_tree():

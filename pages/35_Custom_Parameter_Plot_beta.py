@@ -18,7 +18,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "1.3.0"
+version = "1.3.1"
 fig_title = "envgeo-seawater-database"
 
 
@@ -125,7 +125,6 @@ def main():
         "Data source (see Home > About):",
         (data_source_japan_sea, data_source_around_japan, data_source_global),
         horizontal=True,
-        args=[1, 0],
     )
 
     if ref_data == data_source_japan_sea:
@@ -307,7 +306,7 @@ def main():
         required_columns.append(size_by)
 
     df_plot = df_filtered.dropna(subset=required_columns).copy()
-    excluded_count = len(df_filtered.dropna(how="all")) - len(df_plot)
+    excluded_count = len(df_filtered) - len(df_plot)
     if excluded_count > 0:
         st.caption(
             f":blue[Custom plot: {len(df_plot):,} samples plotted and "
