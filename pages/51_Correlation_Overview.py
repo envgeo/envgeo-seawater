@@ -1142,16 +1142,16 @@ def main():
 
     
     
-    plt.scatter(df_depth_all["Longitude_degE"], df_depth_all["Latitude_degN"], c='lightblue', s=10, alpha=1, transform=ccrs.PlateCarree(), label="ALL")
+    ax.scatter(df_depth_all["Longitude_degE"], df_depth_all["Latitude_degN"], c='lightblue', s=10, alpha=1, transform=ccrs.PlateCarree(), label="ALL")
     
     #描画　選択した観測点　単一職
-    plt.scatter(df1["Longitude_degE"], df1["Latitude_degN"], c='red', s=10, alpha=1, transform=ccrs.PlateCarree(), label='selected')
+    ax.scatter(df1["Longitude_degE"], df1["Latitude_degN"], c='red', s=10, alpha=1, transform=ccrs.PlateCarree(), label='selected')
     
     
     
     
     ax.set_title('vertical sampling sites (below 30m)', fontsize=20) #Transectでソートした場合           
-    plt.legend(fontsize = 15,loc='lower right',bbox_to_anchor=(1, 0.13)) # 凡例の数字のフォントサイズを設定
+    ax.legend(fontsize = 15,loc='lower right',bbox_to_anchor=(1, 0.13)) # 凡例の数字のフォントサイズを設定
     
     # #列の要素を表示
     # d_select = df1['Transect'].value_counts().to_dict()
@@ -1260,7 +1260,7 @@ def main():
     
     
     #描画　鉛直サンプリングの全観測点
-    plt.scatter(df1["Longitude_degE"], df1["Latitude_degN"], c='gray', s=2, alpha=1, transform=ccrs.PlateCarree(), label="ALL")
+    ax.scatter(df1["Longitude_degE"], df1["Latitude_degN"], c='gray', s=2, alpha=1, transform=ccrs.PlateCarree(), label="ALL")
     
     
     # #描画するTransectを指定 一つだけの場合
@@ -2135,7 +2135,8 @@ def main():
     import io
     fn = envgeo_utils.build_figure_filename("Fig_compiled_SW", sub_title)
     img = io.BytesIO()
-    plt.savefig(img, format='png')
+    fig.savefig(img, format='png')
+    img.seek(0)
      
     btn = st.download_button(
        label="Download image",
@@ -2159,6 +2160,7 @@ def main():
     
     # Matplotlib の Figure を指定して可視化する
     st.pyplot(fig)
+    plt.close(fig)
     
     
     

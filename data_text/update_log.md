@@ -8,6 +8,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 - Updated the development version to 1.3.1 for the Python 3.10-3.12 and Streamlit 1.42-1.63 compatibility cycle.
 - Set the test-site Streamlit requirement range to 1.42-1.63 while retaining Plotly 5.24 as the release baseline.
+- Fixed Matplotlib/Cartopy figure-state conflicts in Correlation Overview and Salinity-d18O Relationship by drawing on explicit GeoAxes, saving explicit figures, and closing completed figures.
 - Adopted a staged Plotly migration policy: move to MapLibre APIs while still using Plotly 5.24, then verify the same code with Plotly 6.7 and 7.1.
 - Confirmed the long-term plan to add memory-only user-data upload and overlay plotting to individual pages through shared utility functions and staged tests.
 - Defined Correlation Overview as an archive display of the original hand-written exploratory workflow; it is excluded from new-feature and upload integration work.

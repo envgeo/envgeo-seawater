@@ -21,6 +21,28 @@ def test_stable_streamlit_pages_compile():
         py_compile.compile(str(path), doraise=True)
 
 
+# Matplotlib figures must be saved explicitly, and Cartopy data must be drawn on GeoAxes.
+# ページ間でFigure状態が混ざらないよう、保存対象とCartopy描画軸を明示する。
+def test_matplotlib_cartopy_pages_use_explicit_figure_and_axes():
+    page31_text = (ROOT / "pages" / "31_Salinity-d18O_Relationship.py").read_text(
+        encoding="utf-8"
+    )
+    page51_text = (ROOT / "pages" / "51_Correlation_Overview.py").read_text(
+        encoding="utf-8"
+    )
+
+    def active_lines(text):
+        return [line.strip() for line in text.splitlines() if not line.lstrip().startswith("#")]
+
+    assert all("plt.savefig(" not in line for line in active_lines(page31_text))
+    assert all("plt.savefig(" not in line for line in active_lines(page51_text))
+    assert "fig.savefig(img, format='png')" in page31_text
+    assert "fig.savefig(img, format='png')" in page51_text
+    assert "ax.scatter(df_depth_all" in page51_text
+    assert "plt.close(fig)" in page31_text
+    assert "plt.close(fig)" in page51_text
+
+
 # README images should point to files that exist in the repository.
 # README内の画像リンクが、実際に存在するファイルを指していることを確認する。
 def test_readme_image_links_point_to_existing_files():

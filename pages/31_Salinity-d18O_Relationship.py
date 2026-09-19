@@ -758,10 +758,11 @@ def main():
     #Save to memory first. の場合は，ローカルに保存されないので安心
     fn = envgeo_utils.build_figure_filename("Fig_sal_d18O_SW", main_title2)
     img = io.BytesIO()
-    plt.savefig(img, format='png')
+    fig.savefig(img, format='png')
     img.seek(0)
      
     st.pyplot(fig)
+    plt.close(fig)
 
     btn = st.download_button(
        label="Download image",
