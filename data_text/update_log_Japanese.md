@@ -9,6 +9,8 @@
 - 変更: Python 3.10〜3.12、Streamlit 1.42〜1.63の互換性改善サイクルとして、開発バージョンを1.3.1へ更新。
 - 変更: Plotly 5.24をリリース基準として維持し、テストサイト用のStreamlit対応範囲を1.42〜1.63に設定。
 - 修正: Correlation OverviewとSalinity-d18O Relationshipで、GeoAxesへの明示描画、Figureの明示保存・解放を行い、Matplotlib/CartopyのFigure状態が混在する問題を解消。
+- 改善: Streamlitサーバーログを読みやすくするため、Correlation Overviewの調査用`print()`出力を無効化。
+- 修正: Custom Parameter Plotの軸・カラー範囲の状態をデータソースごとに分離し、データセット切替時の自動範囲設定を復元。
 - 方針: Plotly 5.24環境のままMapLibre APIへ移行し、同じコードをPlotly 6.7、7.1で検証する段階的な移行方針を採用。
 - 方針: 共通処理と段階的テストを通じて、各個別ページへメモリ内限定のユーザーデータアップロード・重ね描きを追加する長期計画を確定。
 - 方針: Correlation Overviewは手書きの探索ワークフローを残すアーカイブ表示ページとし、新機能・アップロード対応の対象から外す。

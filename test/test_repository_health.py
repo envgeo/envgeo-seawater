@@ -1,3 +1,4 @@
+import ast
 import py_compile
 import re
 from pathlib import Path
@@ -41,6 +42,35 @@ def test_matplotlib_cartopy_pages_use_explicit_figure_and_axes():
     assert "ax.scatter(df_depth_all" in page51_text
     assert "plt.close(fig)" in page31_text
     assert "plt.close(fig)" in page51_text
+
+
+# Correlation Overview should not flood the Streamlit server log with debug output.
+# Correlation Overviewの調査用出力を、Streamlitサーバーログへ流さない。
+def test_correlation_overview_has_no_active_print_calls():
+    page_path = ROOT / "pages" / "51_Correlation_Overview.py"
+    tree = ast.parse(page_path.read_text(encoding="utf-8"))
+
+    print_calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "print"
+    ]
+
+    assert not print_calls
+
+
+# Custom plot ranges should be recalculated when the selected dataset changes.
+# Custom plotの軸・カラー範囲は、データソース切替時に各データセットから再計算する。
+def test_custom_plot_range_widget_keys_include_data_source():
+    page_text = (ROOT / "pages" / "35_Custom_Parameter_Plot_beta.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'f"custom_plot_x_range::{ref_data}::{x_axis}"' in page_text
+    assert 'f"custom_plot_y_range::{ref_data}::{y_axis}"' in page_text
+    assert 'f"custom_plot_color_range::{ref_data}::{color_by}"' in page_text
 
 
 # README images should point to files that exist in the repository.

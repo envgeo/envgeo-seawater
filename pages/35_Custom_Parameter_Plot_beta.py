@@ -262,13 +262,13 @@ def main():
             "X axis range",
             x_default_min,
             x_default_max,
-            f"custom_plot_x_range::{x_axis}",
+            f"custom_plot_x_range::{ref_data}::{x_axis}",
         )
         y_min, y_max = numeric_input_pair(
             "Y axis range",
             y_default_min,
             y_default_max,
-            f"custom_plot_y_range::{y_axis}",
+            f"custom_plot_y_range::{ref_data}::{y_axis}",
         )
 
         color_range = None
@@ -289,7 +289,7 @@ def main():
                 "Color range",
                 color_default_min,
                 color_default_max,
-                f"custom_plot_color_range::{color_by}",
+                f"custom_plot_color_range::{ref_data}::{color_by}",
             )
 
         fig_width = st.number_input("Fig width (x)", min_value=4, max_value=24, value=12, step=1)

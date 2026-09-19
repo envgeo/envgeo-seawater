@@ -205,9 +205,9 @@ def plot_xy_with_regression(
             horizontalalignment="right",
             transform=ax.transAxes,
         )
-        print("回帰直線　ALL:", f"{y_col}={main_coef[0]:.2f} * {x_col}+{main_coef[1]:.2f}")
-        print("相関係数（ｒ）:", np.corrcoef(base_xy[x_col], base_xy[y_col]))
-        print("----------------")
+        # print("回帰直線　ALL:", f"{y_col}={main_coef[0]:.2f} * {x_col}+{main_coef[1]:.2f}")
+        # print("相関係数（ｒ）:", np.corrcoef(base_xy[x_col], base_xy[y_col]))
+        # print("----------------")
 
     if len(selected_xy) >= 1:
         ax.scatter(
@@ -241,19 +241,19 @@ def plot_xy_with_regression(
             transform=ax.transAxes,
         )
         plt.legend(fontsize=10)
-        print("回帰直線　add:", f"{y_col}={selected_coef[0]:.2f} * {x_col}+{selected_coef[1]:.2f}")
-        print("相関係数（ｒ）:", np.corrcoef(selected_xy[x_col], selected_xy[y_col]))
-        print("----------------")
+        # print("回帰直線　add:", f"{y_col}={selected_coef[0]:.2f} * {x_col}+{selected_coef[1]:.2f}")
+        # print("相関係数（ｒ）:", np.corrcoef(selected_xy[x_col], selected_xy[y_col]))
+        # print("----------------")
 
     if main_coef is not None:
         y_pred = main_coef[0] * base_xy[x_col] + main_coef[1]
         mse_all = mean_squared_error(base_xy[y_col], y_pred)
         rmse_all = np.sqrt(mse_all)
         r2_all = r2_score(base_xy[y_col], y_pred)
-        print("--------MES RMSE R2 (all)--------")
-        print("MSE_all:", f"{mse_all:.3f}")
-        print("RMSE_all:", f"{rmse_all:.3f}")
-        print("R2_all:", f"{r2_all:.3f}")
+        # print("--------MES RMSE R2 (all)--------")
+        # print("MSE_all:", f"{mse_all:.3f}")
+        # print("RMSE_all:", f"{rmse_all:.3f}")
+        # print("R2_all:", f"{r2_all:.3f}")
         ax.text(
             0.99,
             0.01,
@@ -269,10 +269,10 @@ def plot_xy_with_regression(
         mse_add = mean_squared_error(selected_xy[y_col], y_pred)
         rmse_add = np.sqrt(mse_add)
         r2_add = r2_score(selected_xy[y_col], y_pred)
-        print("--------MES RMSE R2 (add)--------")
-        print("MSE_add:", f"{mse_add:.3f}")
-        print("RMSE_add:", f"{rmse_add:.3f}")
-        print("R2_add:", f"{r2_add:.3f}")
+        # print("--------MES RMSE R2 (add)--------")
+        # print("MSE_add:", f"{mse_add:.3f}")
+        # print("RMSE_add:", f"{rmse_add:.3f}")
+        # print("R2_add:", f"{r2_add:.3f}")
         ax.text(
             0.99,
             0.11,
@@ -464,7 +464,7 @@ def main():
         # st.sidebar.subheader('航海区の範囲')dfから要素抽出
         # 例：列名が "RockType" の場合
         Transect_list = df_sideber["Transect"].dropna().unique().tolist()
-        print(Transect_list,"AAA")
+        # print(Transect_list,"AAA")
         
         selected_cruise = st.multiselect('Choose cruise area', Transect_list,default=Transect_list)
         
@@ -834,7 +834,7 @@ def main():
     if X_Y == 1:
         # sheet_num_XY = [3,4,5,6,7,8]
         
-        print('-------------SUB_FIG   depth vs d18O-------------')
+        # print('-------------SUB_FIG   depth vs d18O-------------')
         
         # ax = plt.subplot(323)
         # fig = plt.figure()
@@ -1053,8 +1053,8 @@ def main():
                     
                     #列の要素を表示
                     d_select = df_fiｇ_add[selected_row].value_counts().to_dict()
-                    print('要素と出現数:', d_select)
-                    print('---------------')
+                    # print('要素と出現数:', d_select)
+                    # print('---------------')
     
         
                     plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
@@ -1090,7 +1090,7 @@ def main():
         else:()
     else:()
     
-    print("############ DONE ############")
+    # print("############ DONE ############")
     # """DONE"""
     
         
@@ -1398,9 +1398,9 @@ def main():
     #列の要素を表示
     d_select_add2 = df1[selected_row].value_counts().to_dict()
     d_select_add2_sum = df1[selected_row].count().sum()
-    print('要素と出現数:', d_select_add2)
-    print('要素と出現数:', d_select_add2_sum)
-    print('---------------')
+    # print('要素と出現数:', d_select_add2)
+    # print('要素と出現数:', d_select_add2_sum)
+    # print('---------------')
                             
 ##################################選択データ表示　2024/10/07###################################################################################################################
             
@@ -1531,8 +1531,8 @@ def main():
     
     #列の要素を表示
     d_select = df1['Transect'].value_counts().to_dict()
-    print('要素と出現数:', d_select)
-    print('---------------')
+    # print('要素と出現数:', d_select)
+    # print('---------------')
     
     
     
@@ -1774,7 +1774,7 @@ def main():
     
     # """salinity-d18Oのプロットをする場合，回帰直線付き　変更しない"""
     if X_Y == 1:
-        print('-------------SUB_FIG   salinity vs d18O-------------')
+        # print('-------------SUB_FIG   salinity vs d18O-------------')
         ax = plt.subplot(324)
         base_frames = [
             load_isotope_data_cached(ref_data, sheet_num=sheet_num_XY)
@@ -1784,12 +1784,12 @@ def main():
         df_fig_add = df_fig_add_salinity_d18O
         df_fig_add_for_d18O_dD = df_fig_add.copy()
 
-        print('要素と出現数:', df_fig_all[selected_row].value_counts().to_dict())
-        print('要素と出現数:', df_fig_all[selected_row].count().sum())
-        print('---------------')
-        print('要素と出現数:', df_fig_add[selected_row].value_counts().to_dict())
-        print('要素と出現数:', df_fig_add[selected_row].count().sum())
-        print('---------------')
+        # print('要素と出現数:', df_fig_all[selected_row].value_counts().to_dict())
+        # print('要素と出現数:', df_fig_all[selected_row].count().sum())
+        # print('---------------')
+        # print('要素と出現数:', df_fig_add[selected_row].value_counts().to_dict())
+        # print('要素と出現数:', df_fig_add[selected_row].count().sum())
+        # print('---------------')
 
         selected_color = color[sheet_num_add[0]] if X_Y_add2 == 1 and X_Y_C_add_each == 1 else X_Y_C_add
         plot_xy_with_regression(
@@ -2063,7 +2063,7 @@ def main():
     
     # """dD-d18Oのプロットをする場合，回帰直線付き　変更しない"""
     if X_Y == 1:
-        print('-------------SUB_FIG   d13C vs d18O-------------')
+        # print('-------------SUB_FIG   d13C vs d18O-------------')
         ax = plt.subplot(326)
         base_frames = [
             load_isotope_data_cached(ref_data, sheet_num=sheet_num_XY)
@@ -2072,12 +2072,12 @@ def main():
         df_fig_all = pd.concat(base_frames, ignore_index=True)
         df_fig_add = df_fig_add_for_d18O_dD.copy()
 
-        print('要素と出現数:', df_fig_all[selected_row].value_counts().to_dict())
-        print('要素と出現数:', df_fig_all[selected_row].count().sum())
-        print('---------------')
-        print('要素と出現数:', df_fig_add[selected_row].value_counts().to_dict())
-        print('要素と出現数:', df_fig_add[selected_row].count().sum())
-        print('---------------')
+        # print('要素と出現数:', df_fig_all[selected_row].value_counts().to_dict())
+        # print('要素と出現数:', df_fig_all[selected_row].count().sum())
+        # print('---------------')
+        # print('要素と出現数:', df_fig_add[selected_row].value_counts().to_dict())
+        # print('要素と出現数:', df_fig_add[selected_row].count().sum())
+        # print('---------------')
 
         selected_color = color[sheet_num_add[0]] if X_Y_add2 == 1 and X_Y_C_add_each == 1 else X_Y_C_add
         plot_xy_with_regression(
