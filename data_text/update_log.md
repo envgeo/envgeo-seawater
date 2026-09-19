@@ -11,6 +11,8 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Fixed Matplotlib/Cartopy figure-state conflicts in Correlation Overview and Salinity-d18O Relationship by drawing on explicit GeoAxes, saving explicit figures, and closing completed figures.
 - Disabled exploratory `print()` output in Correlation Overview to keep Streamlit server logs readable.
 - Restored automatic Custom Parameter Plot axis and color ranges when switching data sources by keeping widget state separate for each dataset.
+- Replaced Custom Parameter Plot mathtext isotope labels with Unicode labels to avoid a Matplotlib parsing error on Streamlit Cloud.
+- Matched the Vertical Section Visualizer page-title size to the other main visualization pages.
 - Adopted a staged Plotly migration policy: move to MapLibre APIs while still using Plotly 5.24, then verify the same code with Plotly 6.7 and 7.1.
 - Confirmed the long-term plan to add memory-only user-data upload and overlay plotting to individual pages through shared utility functions and staged tests.
 - Defined Correlation Overview as an archive display of the original hand-written exploratory workflow; it is excluded from new-feature and upload integration work.

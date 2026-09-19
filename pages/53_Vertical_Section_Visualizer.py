@@ -922,7 +922,7 @@ def main():
     # アプリ本体。フィルタ、断面条件、補間、地図表示を順にまとめる
     # Main app body: filters, section settings, interpolation, and map visualization.
     version = envgeo_utils.APP_VERSION
-    st.title(f"Vertical Section Visualizer beta ({version})")
+    st.header(f"Vertical Section Visualizer beta ({version})")
     st.caption("Experimental section-view workflow. Interpolation and display settings are still being refined.")
     st.sidebar.header("Section controls")
     st.sidebar.caption("Vertical Section Visualizer beta")
