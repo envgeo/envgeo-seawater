@@ -374,6 +374,7 @@ def main():
 
         st.subheader(getattr(envgeo_utils, "DATA_FILTERING_LABEL", "Data filtering"))
         st.caption("Set the shared filters used for the compiled correlation figures.")
+        st.caption(envgeo_utils.MANUAL_FILTER_APPLY_NOTE)
         submit_top = st.form_submit_button(
             "Apply settings",
             **envgeo_utils.stretch_width_kwargs(st.form_submit_button),

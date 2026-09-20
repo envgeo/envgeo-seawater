@@ -28,6 +28,10 @@ MAP_DISPLAY_SETTINGS_LABEL = "Map display settings"
 CUSTOM_PLOT_SETTINGS_LABEL = "Custom plot settings"
 DATA_RANGE_SETTINGS_LABEL = "Data range settings"
 DATA_FILTERING_LABEL = "Data filtering"
+MANUAL_FILTER_APPLY_NOTE = (
+    ":red[Change filters, then click **Apply settings** to update the figures.]"
+)
+AUTO_APPLY_NOTE = ":blue[Changes in this section are applied automatically.]"
 MAP_AREA_HELP_TEXT = "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."
 AREA_FILTER_MANUAL = "Manual / full data range"
 AREA_FILTER_HELP_TEXT = (
@@ -106,6 +110,20 @@ def stretch_width_kwargs(widget):
     if supports_stretch:
         return {"width": "stretch"}
     return {"use_container_width": True}
+
+
+def bounded_container(max_width=850):
+    """Return a container capped on desktop and fluid on narrow screens.
+
+    Streamlit 1.63 accepts an integer container width and automatically caps it
+    to the parent width. Older supported versions fall back to a normal
+    container.
+
+    PCでは指定幅を上限とし、狭い画面では親幅まで縮むコンテナを返します。
+    """
+    if "width" in inspect.signature(st.container).parameters:
+        return st.container(width=max_width)
+    return st.container()
 
 
 configure_pandas_compatibility()
@@ -1475,7 +1493,7 @@ def sidebar_filter_and_display(
         
         
         st.header(DATA_FILTERING_LABEL)
-        st.caption("Change filters, then click **Apply settings** to update the figures.")
+        st.caption(MANUAL_FILTER_APPLY_NOTE)
         
         submit_top = st.form_submit_button(
             "Apply settings", **stretch_width_kwargs(st.form_submit_button)

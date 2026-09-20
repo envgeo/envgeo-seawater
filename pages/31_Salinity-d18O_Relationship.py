@@ -168,6 +168,7 @@ def main():
     
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
     
     
         # マーカーの問明度調整

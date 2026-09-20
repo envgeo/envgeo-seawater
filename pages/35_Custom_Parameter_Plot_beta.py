@@ -23,9 +23,9 @@ fig_title = "envgeo-seawater-database"
 
 
 PARAMETER_LABELS = {
-    "d18O": r"$\delta^{18}$O",
-    "dD": r"$\delta$D",
-    "d-excess": "d-excess",
+    "d18O": "δ18O (‰)",
+    "dD": "δD (‰)",
+    "d-excess": "d-excess (‰)",
     "Salinity": "Salinity",
     "Temperature_degC": "Temperature (degC)",
     "Depth_m": "Depth (m)",
@@ -167,6 +167,7 @@ def main():
 
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "CUSTOM_PLOT_SETTINGS_LABEL", "Custom plot settings"))
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
 
         x_axis = st.selectbox(
             "X axis",

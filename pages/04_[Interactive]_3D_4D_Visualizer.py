@@ -204,6 +204,7 @@ def main():
    # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
 
         # Match the map-center selector used in the 2D mapping page.
         # 2D マップページと同じ地図中心の切り替え UI を使う。
@@ -267,58 +268,43 @@ def main():
                 lon_center_3d,
             )
 
-        figure_scale_state_key = f"figure_scale_settings::{ref_data}::{lon_center_3d}::{region_preset_4d}"
-        if figure_scale_state_key not in st.session_state:
-            st.session_state[figure_scale_state_key] = {
-                "map_lon_raw": map_lon_default,
-                "map_lat_raw": map_lat_default,
-                "fig_depth_raw": (0, int(sld_depth_max)),
-                "marker_size": 3
-            }
+        figure_scale_state_key = (
+            f"figure_scale::{ref_data}::{lon_center_3d}::{region_preset_4d}"
+        )
+        map_lon_raw = st.slider(
+            "Map longitude range",
+            lon_slider_min,
+            lon_slider_max,
+            map_lon_default,
+            step=1,
+            key=f"{figure_scale_state_key}::longitude",
+        )
+        map_lat_raw = st.slider(
+            "Map latitude range",
+            lat_slider_min,
+            lat_slider_max,
+            map_lat_default,
+            step=1,
+            key=f"{figure_scale_state_key}::latitude",
+        )
 
-        figure_scale_settings = st.session_state[figure_scale_state_key]
+        depth_slider_max = int(sld_depth_max + 100)
+        fig_depth_min, fig_depth_max = st.slider(
+            label="Depth range for 3D view",
+            min_value=0,
+            max_value=depth_slider_max,
+            value=(0, int(sld_depth_max)),
+            step=50,
+            key=f"{figure_scale_state_key}::depth::{depth_slider_max}",
+        )
 
-        with st.form(key=f"figure_scale_form::{ref_data}::{lon_center_3d}::{region_preset_4d}"):
-            map_lon_raw_form = st.slider(
-                'Map longitude range',
-                lon_slider_min,
-                lon_slider_max,
-                figure_scale_settings["map_lon_raw"],
-                step=1
-            )
-            map_lat_raw_form = st.slider(
-                'Map latitude range',
-                lat_slider_min,
-                lat_slider_max,
-                figure_scale_settings["map_lat_raw"],
-                step=1
-            )
-
-            fig_depth_raw_form = st.slider(
-                label='Depth range for 3D view',
-                min_value=0,
-                max_value=int(sld_depth_max + 100), # 整数化して小数点を防止
-                value=figure_scale_settings["fig_depth_raw"],
-                step=50
-            )
-            
-            # サイドバーにサイズ調整を追加
-            marker_size_form = st.slider("Marker size", 1, 10, figure_scale_settings["marker_size"])
-            apply_figure_scale_settings = st.form_submit_button("Apply figure settings")
-
-        if apply_figure_scale_settings:
-            figure_scale_settings = {
-                "map_lon_raw": map_lon_raw_form,
-                "map_lat_raw": map_lat_raw_form,
-                "fig_depth_raw": fig_depth_raw_form,
-                "marker_size": marker_size_form
-            }
-            st.session_state[figure_scale_state_key] = figure_scale_settings
-
-        map_lon_raw = figure_scale_settings["map_lon_raw"]
-        map_lat_raw = figure_scale_settings["map_lat_raw"]
-        fig_depth_min, fig_depth_max = figure_scale_settings["fig_depth_raw"]
-        marker_size = figure_scale_settings["marker_size"]
+        marker_size = st.slider(
+            "Marker size",
+            1,
+            10,
+            3,
+            key=f"{figure_scale_state_key}::marker_size",
+        )
 
         map_x_range = [map_lon_raw[0], map_lon_raw[1]]
         map_y_range = [map_lat_raw[0], map_lat_raw[1]]

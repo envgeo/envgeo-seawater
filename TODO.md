@@ -91,9 +91,9 @@ Testing policy:
 - Keep Plotly Box/Lasso interaction, map tiles, Cartopy rendering, colorbars,
   and downloaded-figure layout in the manual visual checklist where AppTest
   cannot verify browser-rendered behavior reliably.
-- Add GitHub Actions after the first persistent AppTest set is stable. Start
-  with a small verified compatibility matrix and expand it only after the
-  Streamlit/Plotly migration baselines are finalized.
+- Add a minimal GitHub Actions workflow now for the existing pytest suite. Add
+  persistent AppTest cases and a broader compatibility matrix later, after the
+  representative AppTest set and Streamlit/Plotly baselines are stable.
 
 JOSS note:
 - Documentation and tests are two major workstreams, but the resubmission also
@@ -137,7 +137,7 @@ Planned direction:
   integrated visualizer into a reusable XY scatter helper.
 - Move repeated month-range display logic into
   `envgeo_utils.format_month_selection()`.
-- Refactor repeated coastline trace code in `04_3D_4D_Visualizer.py` into a
+- Refactor repeated coastline trace code in `04_[Interactive]_3D_4D_Visualizer.py` into a
   helper such as `add_coastline_traces()`.
 - Revisit dead legacy variables such as `X_Y = 1`, `sheet_num = [2]`, and
   unused color variables page by page, starting with Depth Profile and
@@ -160,6 +160,32 @@ JOSS/package follow-ups from the full-file review:
   package manager is expected.
 - Create `requirements-dev.txt` for pytest-related development dependencies.
 - Revisit strict `==` dependency pins after the Streamlit 1.6x migration test.
+
+### JOSS readiness audit follow-up
+
+Date added: 2026-09-19
+
+An external review identified four critical release items. The review counted
+four test files and about 46 tests, but the current project has five
+`test_*.py` files and 60 tests. `envgeo_utils.py` is currently about 78 KB.
+
+Complete the critical items in dependency order:
+
+1. Add a minimal GitHub Actions workflow that runs the current pytest suite on
+   pushes and pull requests. Do not wait for AppTest expansion before adding
+   basic CI.
+2. Create `CITATION.cff` with the current project metadata and version. Leave
+   the DOI absent or clearly pending until Zenodo issues the final identifier.
+3. Add the canonical repository URL and software version to `paper.md`; complete
+   the Availability wording and research-impact references before release.
+4. Finish the 1.3.1 compatibility checks and create the final tagged GitHub
+   release.
+5. Archive that release with Zenodo, then add the issued DOI consistently to
+   `paper.md`, `CITATION.cff`, README citation guidance, and release records.
+
+Also measure test coverage for planning purposes, but improve tests according
+to scientific and workflow risk rather than pursuing a coverage percentage by
+itself.
 
 ### User-data upload support for individual pages
 

@@ -391,10 +391,10 @@ def main():
             plot_bgcolor="white",
             paper_bgcolor="white",
             
-            # 1. 全体サイズを固定
-            width=850,   # 右側のマージンを考慮して少し広めに設定
+            # Keep the desktop height while allowing the width to follow its container.
+            # PCの高さは維持し、横幅は表示領域に合わせる。
             height=600,
-            autosize=False,
+            autosize=True,
             
             xaxis=dict(
                 title=x_label,
@@ -420,9 +420,9 @@ def main():
                 yanchor='middle'
             ),
             
-            # 3. マージンの設定
-            # 右側(r)を150px程度確保することで、文字が長くても枠サイズに影響を与えない
-            margin=dict(l=80, r=150, t=50, b=80), 
+            # Keep enough room for labels and the colorbar without squeezing
+            # the plot excessively on narrow screens.
+            margin=dict(l=60, r=90, t=50, b=70),
             
             font=dict(size=12)
         )
@@ -583,8 +583,7 @@ def main():
         fig_xy.update_layout(
             hovermode="closest",
             hoverdistance=5,
-            width=800,
-            margin=dict(l=80, r=200, t=50, b=80, autoexpand=False),
+            margin=dict(l=60, r=90, t=50, b=70, autoexpand=False),
             coloraxis_colorbar=dict(x=1.02, xanchor="left", len=0.8),
             xaxis=dict(
                 zeroline=False,
@@ -606,13 +605,14 @@ def main():
             ),
         )
 
-        selected_points = plotly_events(
-            fig_xy,
-            select_event=True,
-            key=f"{key_prefix}_event",
-            override_height=600,
-            override_width=850,
-        )
+        with envgeo_utils.bounded_container(850):
+            selected_points = plotly_events(
+                fig_xy,
+                select_event=True,
+                key=f"{key_prefix}_event",
+                override_height=600,
+                override_width="100%",
+            )
         show_selection_tip()
 
         selected_indices_key = f"{key_prefix}_selected_indices"
@@ -771,9 +771,8 @@ def main():
         fig_fixed_TS.update_layout(
             hovermode='closest', # 近くの点を探し回るのをやめる
             hoverdistance=5,     # 反応する距離を大幅に小さくする（初期値は20程度）
-            width=800, 
             height=600, 
-            margin=dict(l=80, r=200, t=50, b=80, autoexpand=False), 
+            margin=dict(l=60, r=90, t=50, b=70, autoexpand=False),
             coloraxis_colorbar=dict(
                 x=1.02, 
                 xanchor='left',
@@ -792,13 +791,14 @@ def main():
     
 
         # ③ 表示枠（窓枠）の設定
-        selected_points = plotly_events(
-            fig_fixed_TS, 
-            select_event=True, 
-            key="ts_zoom_event",
-            override_height=600, 
-            override_width=850
-        )
+        with envgeo_utils.bounded_container(850):
+            selected_points = plotly_events(
+                fig_fixed_TS,
+                select_event=True,
+                key="ts_zoom_event",
+                override_height=600,
+                override_width="100%",
+            )
         show_selection_tip()
         
         # --- 【選択個数の処理】 ---
@@ -1059,8 +1059,7 @@ def main():
         fig_d18O.update_layout(
             hovermode='closest', # 近くの点を探し回るのをやめる
             hoverdistance=5,     # 反応する距離を大幅に小さくする（初期値は20程度）
-            width=800, 
-            margin=dict(l=80, r=200, t=50, b=80, autoexpand=False), 
+            margin=dict(l=60, r=90, t=50, b=70, autoexpand=False),
             coloraxis_colorbar=dict(x=1.02, xanchor='left', len=0.8),
             xaxis=dict(
                 zeroline=False, zerolinewidth=1, zerolinecolor='grey',
@@ -1076,10 +1075,14 @@ def main():
     
     
     
-        selected_points_d18o = plotly_events(
-            fig_d18O, select_event=True, key="d18o_zoom_event",
-            override_height=600, override_width=850
-        )
+        with envgeo_utils.bounded_container(850):
+            selected_points_d18o = plotly_events(
+                fig_d18O,
+                select_event=True,
+                key="d18o_zoom_event",
+                override_height=600,
+                override_width="100%",
+            )
         show_selection_tip()
     
             

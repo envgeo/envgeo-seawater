@@ -271,6 +271,7 @@ def main():
     # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         
         center_option = st.radio(
             ":blue[Map Center:]",
@@ -362,7 +363,7 @@ def main():
                 map_lon_default = dataset_lon_default
                 map_lat_default = dataset_lat_default
 
-        map_state_key = f"map_display_settings::{ref_data}::{lon_center}::{region_preset}"
+        map_state_key = f"map_display::{ref_data}::{lon_center}::{region_preset}"
 
         color_range_min, color_range_max, color_range_default, color_range_step = (
             get_parameter_color_range_defaults(
@@ -372,99 +373,68 @@ def main():
             )
         )
 
-        if map_state_key not in st.session_state:
-            st.session_state[map_state_key] = {
-                "map_lon_raw": map_lon_default,
-                "map_lat_raw": map_lat_default,
-                "color_ranges": {},
-                "colorbar_thickness": 4,
-                "colorbar_length": 90,
-                "colorbar_font_size": 12,
-            }
-
-        map_settings = st.session_state[map_state_key]
-        color_ranges = map_settings.setdefault("color_ranges", {})
-        current_color_range = color_ranges.get(selected_parameter, color_range_default)
-
-        with st.form(key=f"map_display_form::{ref_data}::{lon_center}"):
-            map_lon_raw_form = st.slider(
-                'Map Longitude ',
-                lon_slider_min,
-                lon_slider_max,
-                map_settings["map_lon_raw"],
-                step=1
-            )
-            map_lat_raw_form = st.slider(
-                'Map Latitude ',
-                lat_slider_min,
-                lat_slider_max,
-                map_settings["map_lat_raw"],
-                step=1
-            )
-        
-            selected_color_range_form = st.slider(
-                label=f'{selected_parameter} range for colorbar',
-                min_value=color_range_min,
-                max_value=color_range_max,
-                value=current_color_range,
-                step=color_range_step
-            )
-            colorbar_thickness_form = st.slider(
-                "Colorbar thickness",
-                min_value=2,
-                max_value=10,
-                value=map_settings.get("colorbar_thickness", 4),
-                step=1,
-                help=(
-                    "Adjust the thickness of the horizontal parameter colorbar "
-                    "in the Matplotlib scatter and contour maps."
-                ),
-            )
-            colorbar_length_form = st.slider(
-                "Colorbar length",
-                min_value=40,
-                max_value=100,
-                value=map_settings.get("colorbar_length", 90),
-                step=5,
-                help=(
-                    "Adjust the displayed length of the horizontal parameter colorbar. "
-                    "100 uses the full available width."
-                ),
-            )
-            colorbar_font_size_form = st.number_input(
-                "Colorbar font size",
-                min_value=8,
-                max_value=20,
-                value=map_settings.get("colorbar_font_size", 12),
-                step=1,
-                help="Adjust the label and tick font size of the parameter colorbar.",
-            )
-            apply_map_settings = st.form_submit_button("Apply map settings")
-
-        if apply_map_settings:
-            map_settings = {
-                "map_lon_raw": map_lon_raw_form,
-                "map_lat_raw": map_lat_raw_form,
-                "color_ranges": {
-                    **map_settings.get("color_ranges", {}),
-                    selected_parameter: selected_color_range_form,
-                },
-                "colorbar_thickness": colorbar_thickness_form,
-                "colorbar_length": colorbar_length_form,
-                "colorbar_font_size": colorbar_font_size_form,
-            }
-            st.session_state[map_state_key] = map_settings
-
-        map_lon_raw = map_settings["map_lon_raw"]
-        map_lat_raw = map_settings["map_lat_raw"]
-        selected_color_range = map_settings.get("color_ranges", {}).get(
-            selected_parameter,
-            current_color_range,
+        map_lon_raw = st.slider(
+            "Map Longitude",
+            lon_slider_min,
+            lon_slider_max,
+            map_lon_default,
+            step=1,
+            key=f"{map_state_key}::longitude",
         )
+        map_lat_raw = st.slider(
+            "Map Latitude",
+            lat_slider_min,
+            lat_slider_max,
+            map_lat_default,
+            step=1,
+            key=f"{map_state_key}::latitude",
+        )
+
+        selected_color_range = st.slider(
+            label=f"{selected_parameter} range for colorbar",
+            min_value=color_range_min,
+            max_value=color_range_max,
+            value=color_range_default,
+            step=color_range_step,
+            key=f"{map_state_key}::color_range::{selected_parameter}",
+        )
+        colorbar_thickness_value = st.slider(
+            "Colorbar thickness",
+            min_value=2,
+            max_value=10,
+            value=4,
+            step=1,
+            key=f"{map_state_key}::colorbar_thickness",
+            help=(
+                "Adjust the thickness of the horizontal parameter colorbar "
+                "in the Matplotlib scatter and contour maps."
+            ),
+        )
+        colorbar_length_value = st.slider(
+            "Colorbar length",
+            min_value=40,
+            max_value=100,
+            value=90,
+            step=5,
+            key=f"{map_state_key}::colorbar_length",
+            help=(
+                "Adjust the displayed length of the horizontal parameter colorbar. "
+                "100 uses the full available width."
+            ),
+        )
+        colorbar_font_size = st.number_input(
+            "Colorbar font size",
+            min_value=8,
+            max_value=20,
+            value=12,
+            step=1,
+            key=f"{map_state_key}::colorbar_font_size",
+            help="Adjust the label and tick font size of the parameter colorbar.",
+        )
+
         parameter_min, parameter_max = selected_color_range
-        colorbar_thickness = map_settings.get("colorbar_thickness", 4) / 100
-        colorbar_length = map_settings.get("colorbar_length", 90) / 100
-        colorbar_font_size = map_settings.get("colorbar_font_size", 12)
+        colorbar_thickness = colorbar_thickness_value / 100
+        colorbar_length = colorbar_length_value / 100
 
         # 内部計算用に0.001のオフセットを適用
         map_lon_min, map_lon_max = map_lon_raw[0] - 0.001, map_lon_raw[1] + 0.001

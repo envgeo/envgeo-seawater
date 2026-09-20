@@ -38,8 +38,8 @@ def test_public_readmes_do_not_mention_submission_status():
 def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
     page_names = {path.name for path in (ROOT / "pages").glob("*.py")}
     public_pages = {
-        "03_2Dplus_Visualizer.py",
-        "04_3D_4D_Visualizer.py",
+        "03_[Interactive]_2Dplus_Visualizer.py",
+        "04_[Interactive]_3D_4D_Visualizer.py",
         "31_Salinity-d18O_Relationship.py",
         "32_Isotope_Hydrographic_Mapping.py",
         "34_T-S_diagram.py",

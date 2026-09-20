@@ -303,6 +303,7 @@ def main():
     
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         
         # st.sidebar.subheader('描画水深の範囲')
         if ref_data == data_source_JAPAN_SEA:

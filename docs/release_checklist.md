@@ -40,8 +40,8 @@ streamlit run home.py
 
 Open each page and perform a light visual check.
 
-- [ ] `03_2Dplus_Visualizer.py`
-- [ ] `04_3D_4D_Visualizer.py`
+- [ ] `03_[Interactive]_2Dplus_Visualizer.py`
+- [ ] `04_[Interactive]_3D_4D_Visualizer.py`
 - [ ] `31_Salinity-d18O_Relationship.py`
 - [ ] `32_Isotope_Hydrographic_Mapping.py`
 - [ ] `34_T-S_diagram.py`

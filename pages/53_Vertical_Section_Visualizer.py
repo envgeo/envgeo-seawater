@@ -926,6 +926,7 @@ def main():
     st.caption("Experimental section-view workflow. Interpolation and display settings are still being refined.")
     st.sidebar.header("Section controls")
     st.sidebar.caption("Vertical Section Visualizer beta")
+    st.sidebar.caption(envgeo_utils.AUTO_APPLY_NOTE)
 
     ref_data_source = st.radio("Select Data Source:", envgeo_utils.DATA_SOURCES)
     try:

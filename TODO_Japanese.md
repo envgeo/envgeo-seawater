@@ -60,7 +60,7 @@ MapLibre移行、全ページへのアップロード展開、ナビゲーショ
 - 通常入力だけでなく、抽出結果0件、必須列不足、不正なCSV/XLSX、NaN、範囲外値、品質警告、ダウンロード操作などの異常系も確認する。
 - 数値計算・科学的処理は通常の単体テストで確認し、AppTestはページ起動、ウィジェット、フォーム、メッセージ、セッション状態の確認に使用する。
 - PlotlyのBox/Lasso操作、地図タイル、Cartopy描画、カラーバー、ダウンロード図のレイアウトなど、AppTestでブラウザ描画を十分に検証できない項目は手動視覚確認に残す。
-- 最初のAppTest群が安定した後にGitHub Actionsへ組み込む。最初は小さな検証済み互換性マトリクスとし、Streamlit・Plotly移行後の基準環境が固まってから範囲を広げる。
+- 現在のpytest群を実行する最小構成のGitHub Actionsを先に追加する。代表的なAppTest群とStreamlit・Plotlyの基準環境が安定した後に、AppTestと互換性マトリクスを拡張する。
 
 JOSS向けの注意:
 
@@ -90,7 +90,7 @@ JOSS向けの注意:
 - 現在 `normalize_lon_to_center()` として重複している経度中心調整処理を、`envgeo_utils.py` の共通関数にする。
 - Integrated Visualizerで重複しているT-S / Salinity-d18O散布図の処理を、再利用可能なXY散布図ヘルパーへ切り出すことを検討する。
 - 月範囲の表示処理を `envgeo_utils.format_month_selection()` にまとめる。
-- `04_3D_4D_Visualizer.py` で繰り返されている海岸線トレース処理を、`add_coastline_traces()` のような共通関数にする。
+- `04_[Interactive]_3D_4D_Visualizer.py` で繰り返されている海岸線トレース処理を、`add_coastline_traces()` のような共通関数にする。
 - `X_Y = 1`、`sheet_num = [2]`、未使用の色変数などの旧変数をページごとに確認する。まずDepth ProfileとSalinity-d18O Relationshipから着手する。
 - `sidebar_filter_and_display()` を段階的に分割する。現在は、UI、フィルタリング、統計表示が混在した大きな関数で、返り値も長いタプルになっている。
 - 長期的には、Integrated Visualizerのアップロードデータ用モンキーパッチを、明示的なローダー差し替えまたはデータオブジェクトの注入方式へ変更し、複数ユーザー利用時の挙動を理解・管理しやすくする。
@@ -103,6 +103,22 @@ JOSS向けの注意:
 - `pyproject.toml`、PyPI、必要に応じてconda-forgeを含むパッケージ公開方針を検討する。パッケージマネージャーからのインストールが求められる場合、JOSS再投稿前に対応が必要となる。
 - pytest関連の開発用依存関係をまとめた `requirements-dev.txt` を作成する。
 - Streamlit 1.6x移行テスト後に、依存関係を厳密な `==` で固定する方針を再検討する。
+
+### JOSS準備状況の外部評価フォローアップ
+
+追加日: 2026-09-19
+
+外部評価で、リリース前のCritical項目が4点示された。評価時点ではテストが4ファイル・約46件と集計されていたが、現在は`test_*.py`が5ファイル、テストが60件である。`envgeo_utils.py`は現在約78 KBである。
+
+Critical項目は、依存関係を考慮して次の順番で進める。
+
+1. pushおよびpull request時に現在のpytest群を実行する、最小構成のGitHub Actionsを追加する。AppTestの拡充を待たず、基本CIを先に導入する。
+2. 現在のプロジェクト情報とバージョンを記載した`CITATION.cff`を作成する。Zenodoから正式な識別子が発行されるまでは、DOIを未記載または明確な保留状態にする。
+3. `paper.md`へ正式なリポジトリURLとソフトウェアバージョンを追加し、リリース前にAvailabilityの記述と研究利用実績の引用を整える。
+4. 1.3.1の互換性確認を完了し、最終版のタグ付きGitHub Releaseを作成する。
+5. そのリリースをZenodoでアーカイブし、発行されたDOIを`paper.md`、`CITATION.cff`、READMEの引用案内、リリース記録へ一貫して追記する。
+
+テストカバレッジは今後の計画資料として測定する。ただし、数値目標だけを追わず、科学的処理と実際のワークフローのリスクに基づいてテストを拡充する。
 
 ### 個別ページへのユーザーデータアップロード対応
 

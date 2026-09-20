@@ -27,8 +27,8 @@ version = "1.3.1"
 BASE_DIR = Path(__file__).resolve().parent
 
 FULL_PAGE_WORKFLOWS = {
-    "Interactive 2D/2.5D Visualizer": "03_2Dplus_Visualizer.py",
-    "Interactive 3D/4D Visualizer": "04_3D_4D_Visualizer.py",
+    "Interactive 2D/2.5D Visualizer": "03_[Interactive]_2Dplus_Visualizer.py",
+    "Interactive 3D/4D Visualizer": "04_[Interactive]_3D_4D_Visualizer.py",
     "Salinity-d18O Relationship": "31_Salinity-d18O_Relationship.py",
     "Isotope & Hydrographic Mapping": "32_Isotope_Hydrographic_Mapping.py",
     "T-S Diagram": "34_T-S_diagram.py",
@@ -183,6 +183,7 @@ def _upload_template_csv():
 
 def render_upload_panel():
     with st.sidebar.expander("Uploaded data overlay", expanded=False):
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         st.caption(
             "Uploaded files are used only in the current Streamlit session and "
             "are not saved to local or server storage."
@@ -225,6 +226,7 @@ def render_uploaded_marker_style_controls():
     アップロードデータを参照データより目立たせるための表示設定です。
     """
     with st.sidebar.expander("Uploaded marker style", expanded=False):
+        st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         st.caption(
             "Applied to Shared-filter beta overlays and Upload-tab plots. "
             "Full existing page mode follows each original page's plotting settings."

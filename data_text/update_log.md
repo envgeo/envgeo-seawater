@@ -16,6 +16,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Adopted a staged Plotly migration policy: move to MapLibre APIs while still using Plotly 5.24, then verify the same code with Plotly 6.7 and 7.1.
 - Confirmed the long-term plan to add memory-only user-data upload and overlay plotting to individual pages through shared utility functions and staged tests.
 - Defined Correlation Overview as an archive display of the original hand-written exploratory workflow; it is excluded from new-feature and upload integration work.
+- Clarified sidebar update behavior with red captions for settings that require an Apply button and blue captions for settings that update automatically.
+- Changed Interactive 3D/4D figure-scale controls and Isotope & Hydrographic Mapping display controls to update automatically, removing mixed manual and automatic behavior within those sections.
+- Added a trial responsive layout to Interactive 2D/2.5D plots: desktop width remains capped at 850 px while the plots shrink to the available width on narrow screens.
+- Renamed the current interactive page files to include `[Interactive]`, making their exploratory Plotly role clear in the Streamlit page list and repository.
 
 ### 2026-09-18
 

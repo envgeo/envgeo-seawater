@@ -41,10 +41,10 @@ EnvGeo-Seawater は、海洋地球化学研究における海水同位体デー�
 
 Streamlit アプリでは、`home.py` が About、データソース、マニュアル、更新履歴、日本語説明のタブを担当します。`pages/` ディレクトリには、主要な可視化ツールに加えて、一部の beta ページやローカル開発用ページも含まれます。
 
-- `pages/03_2Dplus_Visualizer.py`  
+- `pages/03_[Interactive]_2Dplus_Visualizer.py`  
   同位体・水文データの関係と観測地点を確認する 2D/2.5D 可視化ページ。
 
-- `pages/04_3D_4D_Visualizer.py`  
+- `pages/04_[Interactive]_3D_4D_Visualizer.py`  
   経度、緯度、水深、選択変数を扱う 3D/4D 可視化ページ。
 
 - `pages/05_3D4D_Visualizer_Uploader.py`  
