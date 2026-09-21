@@ -32,6 +32,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 import io
 import envgeo_utils  
+import envgeo_user_data
 
 
 
@@ -121,6 +122,30 @@ def main():
         st.warning("No data available for the selected conditions.")
         return
 
+    embedded_in_integrated = (
+        st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
+        == "31_Salinity-d18O_Relationship.py"
+    )
+    if embedded_in_integrated:
+        uploaded_df = envgeo_utils.get_uploaded_data()
+    else:
+        uploaded_df = envgeo_user_data.render_upload_panel(
+            "sal_d18o",
+            "The salinity-d18O overlay requires salinity and d18O columns.",
+        )
+    uploaded_df = envgeo_user_data.render_column_controls(
+        uploaded_df,
+        {
+            "Salinity column": "Salinity",
+            "d18O column": "d18O",
+        },
+        "sal_d18o",
+    )
+    uploaded_style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df,
+        "sal_d18o",
+    )
+
 
 
 
@@ -209,7 +234,20 @@ def main():
         sal_d18o_color_range = None
         if sal_d18o_color_by != "Single color":
             sal_d18o_matplotlib_colormap = envgeo_utils.get_matplotlib_colormap(sal_d18o_color_by)
-            sal_d18o_color_source = pd.to_numeric(df1[sal_d18o_color_by], errors="coerce").dropna()
+            sal_d18o_color_sources = [
+                pd.to_numeric(df1[sal_d18o_color_by], errors="coerce")
+            ]
+            if (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and sal_d18o_color_by in uploaded_df.columns
+            ):
+                sal_d18o_color_sources.append(
+                    pd.to_numeric(uploaded_df[sal_d18o_color_by], errors="coerce")
+                )
+            sal_d18o_color_source = pd.concat(
+                sal_d18o_color_sources,
+                ignore_index=True,
+            ).dropna()
             if not sal_d18o_color_source.empty:
                 sal_d18o_color_min = float(sal_d18o_color_source.min())
                 sal_d18o_color_max = float(sal_d18o_color_source.max())
@@ -340,6 +378,14 @@ def main():
                 help="Adjust the number of major tick marks on the d18O axis.",
             )
 
+        # アップロードデータのうちカラーバー要素が無いポイントの表示切替
+        show_nodata_uploaded = st.checkbox(
+            f"Show uploaded points without {sal_d18o_color_by} values",
+            value=True,
+            key="sal_d18o_show_nodata_uploaded",
+            help="Show or hide uploaded data points that have no value for the selected color parameter.",
+        )
+
 
     ##############################################################################
     # キャッシュクリア
@@ -372,6 +418,34 @@ def main():
     ###############################################################################################
 
     st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
+
+    uploaded_sal_d18o = pd.DataFrame()
+    if not uploaded_df.empty and {"Salinity", "d18O"}.issubset(uploaded_df.columns):
+        uploaded_sal_d18o = uploaded_df.dropna(
+            subset=["Salinity", "d18O"]
+        ).reset_index(drop=True)
+        uploaded_excluded_count = len(uploaded_df) - len(uploaded_sal_d18o)
+        st.caption(
+            f":blue[Uploaded overlay: {len(uploaded_sal_d18o):,} / "
+            f"{len(uploaded_df):,} plotted ({uploaded_excluded_count:,} excluded "
+            "due to missing or invalid salinity/d18O).]"
+        )
+
+    if not uploaded_df.empty:
+        uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
+        with st.expander("Uploaded data quality check", expanded=False):
+            envgeo_utils.render_quality_flag_criteria_note()
+            st.write(
+                f"Quality-flagged rows: {len(uploaded_quality_df):,} / "
+                f"{len(uploaded_df):,}"
+            )
+            if uploaded_quality_df.empty:
+                st.success("No uploaded rows triggered the current quality rules.")
+            else:
+                st.dataframe(
+                    uploaded_quality_df,
+                    **envgeo_utils.stretch_width_kwargs(st.dataframe),
+                )
 
 
 
@@ -508,8 +582,6 @@ def main():
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
         else:
             pass
-            
-            
 
         ax.set_xlim(lim_min_X, lim_max_X) 
         ax.set_ylim(lim_min_Y, lim_max_Y) 
@@ -695,6 +767,60 @@ def main():
             pass
     
         #==========  ここまで，近似直線の計算　============
+
+        # Uploaded data overlay (always drawn last / 常に最前面)
+        if not uploaded_sal_d18o.empty:
+            use_shared_colorbar = (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and sal_d18o_color_by != "Single color"
+                and sal_d18o_color_range is not None
+                and sal_d18o_color_by in uploaded_sal_d18o.columns
+            )
+            uploaded_color_valid = pd.Series(
+                False,
+                index=uploaded_sal_d18o.index,
+            )
+            if use_shared_colorbar:
+                uploaded_color_values = pd.to_numeric(
+                    uploaded_sal_d18o[sal_d18o_color_by],
+                    errors="coerce",
+                )
+                uploaded_color_valid = uploaded_color_values.notna()
+                if uploaded_color_valid.any():
+                    ax.scatter(
+                        uploaded_sal_d18o.loc[uploaded_color_valid, "Salinity"],
+                        uploaded_sal_d18o.loc[uploaded_color_valid, "d18O"],
+                        s=uploaded_style["size"],
+                        c=uploaded_color_values[uploaded_color_valid],
+                        cmap=sal_d18o_matplotlib_colormap,
+                        vmin=sal_d18o_color_range[0],
+                        vmax=sal_d18o_color_range[1],
+                        marker=uploaded_style["marker"],
+                        alpha=uploaded_style["alpha"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        label="Uploaded data",
+                        zorder=20,
+                    )
+
+            fixed_color_rows = ~uploaded_color_valid
+            if fixed_color_rows.any() and (not use_shared_colorbar or show_nodata_uploaded):
+                ax.scatter(
+                    uploaded_sal_d18o.loc[fixed_color_rows, "Salinity"],
+                    uploaded_sal_d18o.loc[fixed_color_rows, "d18O"],
+                    s=uploaded_style["size"],
+                    c=uploaded_style["color"],
+                    marker=uploaded_style["marker"],
+                    alpha=uploaded_style["alpha"],
+                    linewidths=uploaded_style["outline_width"],
+                    edgecolors=uploaded_style["outline_color"],
+                    label=(
+                        f"Uploaded data (no {sal_d18o_color_by})"
+                        if use_shared_colorbar
+                        else "Uploaded data"
+                    ),
+                    zorder=20,
+                )
     
     
 
@@ -799,9 +925,34 @@ def main():
         )
     st.caption(f"Map style: {map_mode}")
 
- # 2. データの範囲から中心座標とズームレベルを計算
-    lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()
-    lon_min, lon_max = df_fig_add["Longitude_degE"].min(), df_fig_add["Longitude_degE"].max()
+    uploaded_map_df = pd.DataFrame(columns=["Longitude_degE", "Latitude_degN"])
+    if not uploaded_df.empty and {
+        "Longitude_degE",
+        "Latitude_degN",
+    }.issubset(uploaded_df.columns):
+        uploaded_map_df = uploaded_df.copy()
+        uploaded_map_df["Longitude_degE"] = pd.to_numeric(
+            uploaded_map_df["Longitude_degE"], errors="coerce"
+        )
+        uploaded_map_df["Latitude_degN"] = pd.to_numeric(
+            uploaded_map_df["Latitude_degN"], errors="coerce"
+        )
+        uploaded_map_df = uploaded_map_df.dropna(
+            subset=["Longitude_degE", "Latitude_degN"]
+        )
+        uploaded_map_df = uploaded_map_df.loc[
+            uploaded_map_df["Latitude_degN"].between(-90, 90)
+        ]
+
+    # 2. データの範囲から中心座標とズームレベルを計算
+    map_extent_sources = [df_fig_add[["Longitude_degE", "Latitude_degN"]]]
+    if not uploaded_map_df.empty:
+        map_extent_sources.append(
+            uploaded_map_df[["Longitude_degE", "Latitude_degN"]]
+        )
+    map_extent_df = pd.concat(map_extent_sources, ignore_index=True)
+    lat_min, lat_max = map_extent_df["Latitude_degN"].min(), map_extent_df["Latitude_degN"].max()
+    lon_min, lon_max = map_extent_df["Longitude_degE"].min(), map_extent_df["Longitude_degE"].max()
 
     # 初期値（日本）の設定
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
@@ -863,25 +1014,79 @@ def main():
         height=500  # 高さはここで固定
     )
 
+    map_d18o_sources = [pd.to_numeric(df_fig_add["d18O"], errors="coerce")]
+    if (
+        uploaded_style["color_mode"] == "Use current colorbar when possible"
+        and "d18O" in uploaded_map_df.columns
+    ):
+        map_d18o_sources.append(
+            pd.to_numeric(uploaded_map_df["d18O"], errors="coerce")
+        )
+    map_d18o_values = pd.concat(map_d18o_sources, ignore_index=True).dropna()
+    map_d18o_range = None
+    if not map_d18o_values.empty:
+        map_d18o_range = (
+            float(map_d18o_values.min()),
+            float(map_d18o_values.max()),
+        )
+        fig_map.update_coloraxes(
+            cmin=map_d18o_range[0],
+            cmax=map_d18o_range[1],
+        )
+
+    fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+        fig_map,
+        uploaded_map_df,
+        uploaded_style,
+        color_column="d18O",
+        colorscale=c_scale_d18o,
+        color_range=map_d18o_range,
+        show_nodata=show_nodata_uploaded,
+    )
+    if not uploaded_df.empty:
+        if uploaded_map_count:
+            st.caption(
+                f":blue[Uploaded locations: {uploaded_map_count:,} / "
+                f"{len(uploaded_df):,} plotted on the map.]"
+            )
+        else:
+            st.caption(
+                ":gray[Uploaded locations are not shown because valid longitude "
+                "and latitude columns are unavailable.]"
+            )
+
     # 4. 背景スタイルの適用
     fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
     
 
 
     # 5. レイアウト設定 (ここが幅を広げる決め手)
+    # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
     fig_map.update_layout(
         mapbox=dict(
             center=dict(lat=center_lat, lon=center_lon),
-            zoom=auto_zoom
+            zoom=auto_zoom,
+            domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
         ),
-        margin=dict(l=0, r=0, t=0, b=0),
-        # widthを指定せず autosize を True にすることで、コンテナいっぱいに広がる
-        autosize=True, 
+        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+        autosize=True,
         coloraxis_colorbar=dict(
             title="δ18O (‰)",
-            x=1.0,           # カラーバーを右端に寄せる
-            xanchor='right'
-        )
+            x=0.98,
+            xanchor='right',
+            bgcolor='rgba(255,255,255,0.75)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
+        ),
+        legend=dict(
+            x=0.01,
+            y=0.01,
+            xanchor='left',
+            yanchor='bottom',
+            bgcolor='rgba(255,255,255,0.85)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
+        ),
     )
 
     # 6. 表示 (st.plotly_chart(fig, width='stretch'))

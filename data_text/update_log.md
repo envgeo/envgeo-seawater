@@ -4,6 +4,37 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased
 
+### 2026-09-21
+
+- Fixed Integrated Visualizer so `uses_native_upload_overlay` recognizes every Full-existing-page workflow that has its own upload panel (Salinity-d18O Relationship, Isotope & Hydrographic Mapping, T-S Diagram, Custom Parameter Plot beta, Depth Profile) instead of only T-S Diagram. Previously, opening any of the other pages through Integrated's Full existing page mode with uploaded data present silently merged the uploaded rows into the reference dataset via the legacy `load_isotope_data` patch (affecting background statistics and, for the Mapping page, the contour interpolation) while also rendering a duplicate native upload panel. Added a regression test asserting `NATIVE_UPLOAD_OVERLAY_PAGES` stays in sync with pages that actually implement `envgeo_user_data.render_upload_panel` and the `INTEGRATED_EMBEDDED_PAGE_KEY` check.
+- Registered Custom Parameter Plot beta in Integrated Visualizer's Full-existing-page workflow list so its already-implemented upload overlay is reachable from Integrated, not only as a standalone page.
+- Fixed Depth Profile so the uploaded-overlay caption is always shown once required columns are assigned, including when every uploaded row is excluded (missing/invalid X parameter or depth); it now reports "0 / N plotted (N excluded due to missing values)" instead of showing nothing, matching the other upload-enabled pages.
+- Added the shared uploaded-location overlay to the Isotope & Hydrographic Mapping page: longitude and latitude columns (the only required roles) are auto-detected or manually assigned, the currently selected parameter (d18O, dD, d-excess, Salinity, Temperature) drives shared-colorbar coloring when available, frontmost outlined markers (zorder=10) appear on both the Scatter Map and the Contour Map without being mixed into the griddata interpolation, the Plotly Sampling Location Map gains an `add_uploaded_map_overlay` overlay, automatic map framing includes uploaded locations, and a quality-check expander is shown when uploaded data is present.
+- Added the shared uploaded-location overlay to the Salinity-d18O Relationship map, including frontmost outlined markers, shared d18O colors or fixed-color fallback, automatic map framing, and an explanation when coordinates are unavailable.
+- Fixed quality flags being cleared when T-S or another individual page reconfirmed automatically recognized upload columns; existing flags are now preserved and merged with any new flags found after manual column assignment.
+- Added uploaded sampling locations to the T-S Diagram map when valid longitude and latitude are available, using frontmost outlined markers, shared d18O map colors when possible, fixed-color fallback, and uploaded locations in automatic map framing.
+- Extracted the shared upload, editable column-assignment, and marker-style sidebar panels into `envgeo_user_data.py`, retaining page-specific plotting in each visualization page.
+- Added uploaded-data support to Salinity-d18O Relationship with automatic/manual Salinity and d18O assignment, shared-colorbar or fixed-color markers, quality reporting, and frontmost Matplotlib overlay rendering.
+- Added a pilot `Uploaded data columns` panel between upload and marker controls in T-S Diagram, with editable automatic assignments and explicit manual selection for unknown temperature and salinity labels.
+- Added a shared manual column-mapping helper that retains original experimental columns and reapplies standard numeric conversion and quality checks.
+- Clarified the final user-data workflow: every supported page registers uploads in shared session state, User Data Validator applies the same core quality rules regardless of upload origin, and Integrated's uploader is retired only after all target-page overlays and equivalent Validator checks are verified.
+- Replaced the active 50m and 110m coastline Excel assets with CSV files and centralized CSV loading in `envgeo_utils.py`.
+- Removed the legacy direct Japan-coastline Excel dependency from the local 3D/4D uploader and moved the superseded 10m, 50m, 110m, and Japan coastline workbooks to the workspace archive.
+- Refined the upload migration strategy: extract Shared-filter beta into an independent User Data Validator, keep individual visualization pages as first-class workflows, and retain Integrated Visualizer as a working migration fallback until it can become a hidden development archive.
+- Added incremental migration rules so each change is limited to one shared component or one page, with the existing workflow retained until its replacement passes tests and screen-level checks.
+- Planned a focused `envgeo_user_data.py` module for shared upload processing and UI instead of continuing to enlarge `envgeo_utils.py`.
+
+### 2026-09-20
+
+- Added shared, memory-only upload state so prepared user data can be reused across Integrated Visualizer and individual pages during the same Streamlit session.
+- Moved CSV/Excel reading, upload preparation, template generation, quality-row extraction, numeric conversion, quality normalization, and d-excess calculation into reusable `envgeo_utils.py` functions.
+- Added initial user-data upload, quality review, marker styling, shared-colorbar coloring, and frontmost overlay plotting to Temperature-Salinity Diagram.
+- Grouped upload and uploaded-marker controls into two collapsed panels at the top of the T-S Diagram sidebar, separate from reference-data filters and figure controls.
+- Prevented duplicate upload controls and double plotting when T-S Diagram is opened inside Integrated Visualizer: Integrated owns file upload, while the native T-S page owns marker styling and overlay rendering.
+- Documented the accepted Integrated Visualizer architecture and migration plan in dedicated English and Japanese strategy files, retaining individual pages as first-class workflows.
+- Added unambiguous Japanese aliases for longitude, latitude, depth, temperature, and salinity upload columns.
+- Expanded upload tests and confirmed 65 passing tests plus successful T-S Diagram AppTest runs with and without shared uploaded data.
+
 ### 2026-09-19
 
 - Updated the development version to 1.3.1 for the Python 3.10-3.12 and Streamlit 1.42-1.63 compatibility cycle.

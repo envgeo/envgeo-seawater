@@ -63,6 +63,7 @@ import inspect
 import math
 import re
 import unicodedata
+from pathlib import Path
 from datetime import datetime
 
 import warnings # for M1/M2 Mac
@@ -209,8 +210,28 @@ STANDARD_UPLOAD_COLUMNS = [
     "dD",
 ]
 
+UPLOADED_DATA_LABEL = "Uploaded data"
+UPLOAD_NUMERIC_COLUMNS = [
+    "Longitude_degE",
+    "Latitude_degN",
+    "Depth_m",
+    "Temperature_degC",
+    "Salinity",
+    "d18O",
+    "dD",
+]
+UPLOAD_SESSION_DATA_KEY = "envgeo_uploaded_data"
+UPLOAD_SESSION_FILENAME_KEY = "envgeo_uploaded_filename"
+INTEGRATED_EMBEDDED_PAGE_KEY = "envgeo_integrated_embedded_page"
+
 
 UPLOAD_COLUMN_ALIASES = {
+    "Month": [
+        "month",
+        "sampling_month",
+        "sample_month",
+        "月",
+    ],
     "Longitude_degE": [
         "longitude_dege",
         "longitude",
@@ -219,6 +240,8 @@ UPLOAD_COLUMN_ALIASES = {
         "x",
         "east_longitude",
         "longitude_e",
+        "経度",
+        "東経",
     ],
     "Latitude_degN": [
         "latitude_degn",
@@ -227,6 +250,8 @@ UPLOAD_COLUMN_ALIASES = {
         "y",
         "north_latitude",
         "latitude_n",
+        "緯度",
+        "北緯",
     ],
     "Depth_m": [
         "depth_m",
@@ -236,6 +261,8 @@ UPLOAD_COLUMN_ALIASES = {
         "sample_depth",
         "sampledepth",
         "depthmeter",
+        "水深",
+        "水深_m",
     ],
     "Temperature_degC": [
         "temperature_degc",
@@ -244,12 +271,15 @@ UPLOAD_COLUMN_ALIASES = {
         "temp_c",
         "temperature_c",
         "t",
+        "水温",
+        "水温_c",
     ],
     "Salinity": [
         "salinity",
         "sal",
         "psu",
         "s",
+        "塩分",
     ],
     "d18O": [
         "d18o",
@@ -324,6 +354,42 @@ def standardize_uploaded_column_names(df):
     df = df.rename(columns=rename_map)
     df.attrs["standardized_column_renames"] = rename_map
     return df
+
+
+def read_uploaded_table(uploaded_file):
+    """Read an uploaded CSV or Excel table without saving it to disk."""
+    suffix = Path(getattr(uploaded_file, "name", "")).suffix.lower()
+    if suffix == ".csv":
+        return pd.read_csv(uploaded_file)
+    if suffix in {".xlsx", ".xls"}:
+        return pd.read_excel(uploaded_file)
+    raise ValueError("Unsupported file type. Upload a CSV, XLSX, or XLS file.")
+
+
+def build_upload_template_csv():
+    """Return a small seawater upload template for spreadsheet applications."""
+    template = pd.DataFrame(
+        [
+            {
+                "Dataset": UPLOADED_DATA_LABEL,
+                "reference": "Your reference",
+                "Cruise": "Cruise ID",
+                "Station": "Station ID",
+                "Year": 2026,
+                "Month": 1,
+                "Day": 1,
+                "Longitude_degE": 135.0,
+                "Latitude_degN": 35.0,
+                "Depth_m": 10.0,
+                "Temperature_degC": 20.0,
+                "Salinity": 34.5,
+                "d18O": 0.0,
+                "dD": 0.0,
+            }
+        ],
+        columns=STANDARD_UPLOAD_COLUMNS,
+    )
+    return template.to_csv(index=False).encode("utf-8-sig")
 
 
 MAP_REGION_AUTO = "Auto from filtered data"
@@ -642,6 +708,132 @@ def add_d_excess(df, output_col="d-excess", d18o_col="d18O", dd_col="dD"):
     return df
 
 
+def prepare_uploaded_data(df, dataset_label=UPLOADED_DATA_LABEL):
+    """Prepare uploaded seawater data for quality review and plotting.
+
+    File reading is generic. This composition deliberately contains the
+    seawater-specific numeric columns, quality rules, and d-excess calculation.
+    """
+    prepared = standardize_uploaded_column_names(df)
+    rename_map = prepared.attrs.get("standardized_column_renames", {}).copy()
+
+    if "Dataset" not in prepared.columns:
+        prepared["Dataset"] = dataset_label
+
+    # Replace '**' placeholders with NaN (same convention as main data loading)
+    # プレースホルダ '**' をNaNへ置換する（メインデータの読み込みと同じ処理）
+    prepared = prepared.mask(prepared.eq('**'), np.nan)
+
+    # Convert Year and Month to nullable integers to prevent Arrow serialization errors
+    # Year・Month を nullable 整数型に変換してArrowシリアライズエラーを防ぐ
+    for col in ('Year', 'Month'):
+        if col in prepared.columns:
+            prepared[col] = pd.to_numeric(prepared[col], errors='coerce').astype('Int64')
+
+    for column in UPLOAD_NUMERIC_COLUMNS:
+        if column in prepared.columns:
+            prepared[column] = pd.to_numeric(prepared[column], errors="coerce")
+
+    prepared = normalize_quality_values(prepared)
+    prepared = add_d_excess(prepared)
+    prepared.attrs["standardized_column_renames"] = rename_map
+    return prepared
+
+
+def apply_uploaded_column_mapping(df, column_mapping):
+    """Copy user-selected source columns into standard roles and revalidate.
+
+    ``column_mapping`` uses standard EnvGeo column names as keys and uploaded
+    source-column names as values. Source columns are retained so experimental
+    parameters remain available for later custom plots.
+    """
+    mapped = df.copy()
+    existing_flags = mapped.get(
+        QUALITY_FLAG_COLUMN,
+        pd.Series("", index=mapped.index, dtype="object"),
+    ).fillna("").astype(str)
+    existing_original_values = mapped.get(
+        QUALITY_ORIGINAL_VALUE_COLUMN,
+        pd.Series("", index=mapped.index, dtype="object"),
+    ).fillna("").astype(str)
+    applied_mapping = {}
+
+    for target_column, source_column in column_mapping.items():
+        if not source_column:
+            continue
+        if source_column not in mapped.columns:
+            raise KeyError(f"Uploaded column not found: {source_column}")
+        if source_column != target_column:
+            mapped[target_column] = mapped[source_column]
+        applied_mapping[target_column] = source_column
+
+    mapped = prepare_uploaded_data(mapped)
+    mapped[QUALITY_FLAG_COLUMN] = [
+        _merge_quality_text(old, new)
+        for old, new in zip(existing_flags, mapped[QUALITY_FLAG_COLUMN])
+    ]
+    mapped[QUALITY_ORIGINAL_VALUE_COLUMN] = [
+        _merge_quality_text(old, new)
+        for old, new in zip(
+            existing_original_values,
+            mapped[QUALITY_ORIGINAL_VALUE_COLUMN],
+        )
+    ]
+    mapped.attrs["manual_column_mapping"] = applied_mapping
+    return mapped
+
+
+def _merge_quality_text(existing, new):
+    """Combine quality messages while avoiding exact repeated content."""
+    existing = str(existing).strip()
+    new = str(new).strip()
+    if not existing:
+        return new
+    if not new or new in existing:
+        return existing
+    if existing in new:
+        return new
+    return f"{existing}; {new}"
+
+
+def get_quality_rows(df):
+    """Return only rows carrying one or more quality flags."""
+    if df is None or df.empty or QUALITY_FLAG_COLUMN not in df.columns:
+        columns = getattr(df, "columns", None)
+        return pd.DataFrame(columns=columns)
+    flags = df[QUALITY_FLAG_COLUMN].fillna("").astype(str).str.strip()
+    return df.loc[flags.ne("")].copy()
+
+
+def store_uploaded_data(df, filename=None, state=None):
+    """Keep prepared upload data in the current Streamlit session only."""
+    state = st.session_state if state is None else state
+    state[UPLOAD_SESSION_DATA_KEY] = df.copy()
+    state[UPLOAD_SESSION_FILENAME_KEY] = filename
+
+
+def get_uploaded_data(state=None):
+    """Return a copy of upload data shared by EnvGeo pages in this session."""
+    state = st.session_state if state is None else state
+    uploaded_df = state.get(UPLOAD_SESSION_DATA_KEY)
+    if not isinstance(uploaded_df, pd.DataFrame):
+        return pd.DataFrame()
+    return uploaded_df.copy()
+
+
+def get_uploaded_filename(state=None):
+    """Return the source filename recorded for the current session upload."""
+    state = st.session_state if state is None else state
+    return state.get(UPLOAD_SESSION_FILENAME_KEY)
+
+
+def clear_uploaded_data(state=None):
+    """Remove shared upload data from the current Streamlit session."""
+    state = st.session_state if state is None else state
+    state.pop(UPLOAD_SESSION_DATA_KEY, None)
+    state.pop(UPLOAD_SESSION_FILENAME_KEY, None)
+
+
 
 # DATA ATTRIBUTION & CITATIONS (For UI Display) / データ出典と引用表示
 
@@ -816,23 +1008,35 @@ def load_isotope_data(ref_data, sheet_num=0):
 ##############################################################################
 """
 @st.cache_data
-def load_coastline_data(ref_data):
-    
-    # 1. Select the source file (currently 50 m for all regions) / 1. 読み込みファイルを選択する（現状は全地域で50m解像度）
-    if ref_data == data_source_GLOBAL:
-        coastline_excel = 'coastline/world_coastline_coordinates_50m.xlsx'
-    else:
-        # Note: Regional settings (e.g., Japan Sea) currently utilize the global file　/ 注: 日本海など地域設定でも現状はグローバル海岸線ファイルを流用している
-        # coastline_excel = 'coastline/japan_coast_line.xlsx'
-        coastline_excel = 'coastline/world_coastline_coordinates_50m.xlsx'
-        
-    
-    # 2. Process data loading / 2. 海岸線データを読み込む
+def load_coastline_data(ref_data, resolution="50m"):
+    """Load shared Natural Earth coastline coordinates from CSV.
+
+    ``ref_data`` remains in the signature for compatibility with existing pages.
+    All regions currently use the same global coastline coordinate file.
+    """
+    _ = ref_data
+    coastline_files = {
+        "50m": "world_coastline_coordinates_50m.csv",
+        "110m": "world_coastline_coordinates_110m.csv",
+    }
+    if resolution not in coastline_files:
+        st.error(
+            f"Unsupported coastline resolution: {resolution}. "
+            "Choose '50m' or '110m'."
+        )
+        return [], []
+
+    coastline_path = (
+        Path(__file__).resolve().parent
+        / "coastline"
+        / coastline_files[resolution]
+    )
+
     try:
-        df_coast = pd.read_excel(coastline_excel)
+        df_coast = pd.read_csv(coastline_path)
         return df_coast['Longitude'].tolist(), df_coast['Latitude'].tolist()
     except Exception as e:
-        st.error(f"Failed to load the file.: {coastline_excel} - {e}")
+        st.error(f"Failed to load the coastline file: {coastline_path.name} - {e}")
         return [], []
     
 

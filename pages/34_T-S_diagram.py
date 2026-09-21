@@ -29,7 +29,7 @@ import math
 import gsw
 import io
 import envgeo_utils  
-
+import envgeo_user_data
 
 def main():
     
@@ -108,6 +108,30 @@ def main():
         st.warning("No data available for the selected conditions.")
         return
 
+    embedded_in_integrated = (
+        st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
+        == "34_T-S_diagram.py"
+    )
+    if embedded_in_integrated:
+        uploaded_df = envgeo_utils.get_uploaded_data()
+    else:
+        uploaded_df = envgeo_user_data.render_upload_panel(
+            "ts",
+            "The T-S overlay requires salinity and temperature columns.",
+        )
+    uploaded_df = envgeo_user_data.render_column_controls(
+        uploaded_df,
+        {
+            "Temperature column": "Temperature_degC",
+            "Salinity column": "Salinity",
+        },
+        "ts",
+    )
+    uploaded_style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df,
+        "ts",
+    )
+
 
 
     ##############################################################################
@@ -127,7 +151,6 @@ def main():
      sld_temp_min, sld_temp_max,
      selected_cruise,
      submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
-
 
     # データが一つだけの時に警告　近似直線を引くなどの必要がある図の場合のみ使用，d18Oなどは適宜変更
     data_found = len(df1["d18O"])
@@ -192,7 +215,15 @@ def main():
         ts_color_range = None
         if ts_color_by != "Single color":
             ts_matplotlib_colormap = envgeo_utils.get_matplotlib_colormap(ts_color_by)
-            ts_color_source = pd.to_numeric(df1[ts_color_by], errors="coerce").dropna()
+            ts_color_sources = [pd.to_numeric(df1[ts_color_by], errors="coerce")]
+            if (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and ts_color_by in uploaded_df.columns
+            ):
+                ts_color_sources.append(
+                    pd.to_numeric(uploaded_df[ts_color_by], errors="coerce")
+                )
+            ts_color_source = pd.concat(ts_color_sources, ignore_index=True).dropna()
             if not ts_color_source.empty:
                 ts_color_min = float(ts_color_source.min())
                 ts_color_max = float(ts_color_source.max())
@@ -343,7 +374,14 @@ def main():
                 key="ts_diagram_y_tick_count",
                 help="Adjust the number of major tick marks on the temperature axis.",
             )
-   
+
+        # アップロードデータのうちカラーバー要素が無いポイントの表示切替
+        show_nodata_uploaded = st.checkbox(
+            f"Show uploaded points without {ts_color_by} values",
+            value=True,
+            key="ts_diagram_show_nodata_uploaded",
+            help="Show or hide uploaded data points that have no value for the T-S color parameter.",
+        )
 
 
     ##############################################################################
@@ -376,6 +414,37 @@ def main():
     ###############################################################################################
     
     st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
+
+    uploaded_ts = pd.DataFrame()
+    if not uploaded_df.empty and {
+        "Salinity",
+        "Temperature_degC",
+    }.issubset(uploaded_df.columns):
+        uploaded_ts = uploaded_df.dropna(
+            subset=["Salinity", "Temperature_degC"]
+        ).reset_index(drop=True)
+        uploaded_excluded_count = len(uploaded_df) - len(uploaded_ts)
+        st.caption(
+            f":blue[Uploaded overlay: {len(uploaded_ts):,} / {len(uploaded_df):,} "
+            f"plotted ({uploaded_excluded_count:,} excluded due to missing or invalid "
+            "salinity/temperature).]"
+        )
+
+    if not uploaded_df.empty:
+        uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
+        with st.expander("Uploaded data quality check", expanded=False):
+            envgeo_utils.render_quality_flag_criteria_note()
+            st.write(
+                f"Quality-flagged rows: {len(uploaded_quality_df):,} / "
+                f"{len(uploaded_df):,}"
+            )
+            if uploaded_quality_df.empty:
+                st.success("No uploaded rows triggered the current quality rules.")
+            else:
+                st.dataframe(
+                    uploaded_quality_df,
+                    **envgeo_utils.stretch_width_kwargs(st.dataframe),
+                )
     
     
     
@@ -545,6 +614,7 @@ def main():
         X_add = df_fig_add[X_data]
 
         
+        colorbar_drawn = False
         if ts_color_by == "Single color":
             ax.scatter(
                 X_add,
@@ -592,6 +662,7 @@ def main():
                 )
                 cbar_ts.set_label(ts_color_by, fontsize=sld_font_size_label)
                 cbar_ts.ax.tick_params(labelsize=sld_font_size_tick)
+                colorbar_drawn = True
 
             if (~color_valid).any():
                 st.caption(
@@ -637,6 +708,86 @@ def main():
 
         
         plt.clabel(cs,fontsize=sld_font_size_tick,inline=True,fmt='%.1f',zorder=0, )
+
+        ##############################################################################
+        # Uploaded data overlay (always drawn last / 常に最前面)
+        ##############################################################################
+
+        if not uploaded_ts.empty:
+            use_shared_colorbar = (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and ts_color_by != "Single color"
+                and ts_color_by in uploaded_ts.columns
+            )
+
+            if use_shared_colorbar:
+                uploaded_color_values = pd.to_numeric(
+                    uploaded_ts[ts_color_by], errors="coerce"
+                )
+                uploaded_color_valid = uploaded_color_values.notna()
+
+                if uploaded_color_valid.any():
+                    uploaded_color_plot = ax.scatter(
+                        uploaded_ts.loc[uploaded_color_valid, "Salinity"],
+                        uploaded_ts.loc[uploaded_color_valid, "Temperature_degC"],
+                        s=uploaded_style["size"],
+                        c=uploaded_color_values[uploaded_color_valid],
+                        cmap=ts_matplotlib_colormap,
+                        vmin=ts_color_range[0] if ts_color_range is not None else None,
+                        vmax=ts_color_range[1] if ts_color_range is not None else None,
+                        marker=uploaded_style["marker"],
+                        alpha=uploaded_style["alpha"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        label="Uploaded data",
+                        zorder=10,
+                    )
+                    if not colorbar_drawn:
+                        cbar_ts = fig.colorbar(
+                            uploaded_color_plot,
+                            ax=ax,
+                            orientation="vertical",
+                            pad=0.02,
+                            fraction=0.04,
+                            extend="neither",
+                        )
+                        cbar_ts.set_label(ts_color_by, fontsize=sld_font_size_label)
+                        cbar_ts.ax.tick_params(labelsize=sld_font_size_tick)
+                        colorbar_drawn = True
+
+                if (~uploaded_color_valid).any() and (not use_shared_colorbar or show_nodata_uploaded):
+                    ax.scatter(
+                        uploaded_ts.loc[~uploaded_color_valid, "Salinity"],
+                        uploaded_ts.loc[~uploaded_color_valid, "Temperature_degC"],
+                        s=uploaded_style["size"],
+                        c=uploaded_style["color"],
+                        marker=uploaded_style["marker"],
+                        alpha=uploaded_style["alpha"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        label=f"Uploaded data (no {ts_color_by})",
+                        zorder=10,
+                    )
+                    st.caption(
+                        f":gray[Uploaded overlay: {(~uploaded_color_valid).sum():,} "
+                        f"samples without {ts_color_by} values use the fixed color.]"
+                    )
+            else:
+                ax.scatter(
+                    uploaded_ts["Salinity"],
+                    uploaded_ts["Temperature_degC"],
+                    s=uploaded_style["size"],
+                    c=uploaded_style["color"],
+                    marker=uploaded_style["marker"],
+                    alpha=uploaded_style["alpha"],
+                    linewidths=uploaded_style["outline_width"],
+                    edgecolors=uploaded_style["outline_color"],
+                    label="Uploaded data",
+                    zorder=10,
+                )
+
+            if show_legend == "Yes":
+                ax.legend(fontsize=sld_font_size_tick)
 
     
     
@@ -760,9 +911,34 @@ def main():
             )
     st.caption(f"Map style: {map_mode}")
 
+    uploaded_map_df = pd.DataFrame(columns=["Longitude_degE", "Latitude_degN"])
+    if not uploaded_df.empty and {
+        "Longitude_degE",
+        "Latitude_degN",
+    }.issubset(uploaded_df.columns):
+        uploaded_map_df = uploaded_df.copy()
+        uploaded_map_df["Longitude_degE"] = pd.to_numeric(
+            uploaded_map_df["Longitude_degE"], errors="coerce"
+        )
+        uploaded_map_df["Latitude_degN"] = pd.to_numeric(
+            uploaded_map_df["Latitude_degN"], errors="coerce"
+        )
+        uploaded_map_df = uploaded_map_df.dropna(
+            subset=["Longitude_degE", "Latitude_degN"]
+        )
+        uploaded_map_df = uploaded_map_df.loc[
+            uploaded_map_df["Latitude_degN"].between(-90, 90)
+        ]
+
     # 2. データの範囲から中心座標とズームレベルを計算
-    lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()
-    lon_min, lon_max = df_fig_add["Longitude_degE"].min(), df_fig_add["Longitude_degE"].max()
+    map_extent_sources = [df_fig_add[["Longitude_degE", "Latitude_degN"]]]
+    if not uploaded_map_df.empty:
+        map_extent_sources.append(
+            uploaded_map_df[["Longitude_degE", "Latitude_degN"]]
+        )
+    map_extent_df = pd.concat(map_extent_sources, ignore_index=True)
+    lat_min, lat_max = map_extent_df["Latitude_degN"].min(), map_extent_df["Latitude_degN"].max()
+    lon_min, lon_max = map_extent_df["Longitude_degE"].min(), map_extent_df["Longitude_degE"].max()
 
     # 初期値（日本）の設定
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
@@ -824,6 +1000,47 @@ def main():
         height=500  # 高さはここで固定
     )
 
+    map_d18o_sources = [pd.to_numeric(df_fig_add["d18O"], errors="coerce")]
+    if (
+        uploaded_style["color_mode"] == "Use current colorbar when possible"
+        and "d18O" in uploaded_map_df.columns
+    ):
+        map_d18o_sources.append(
+            pd.to_numeric(uploaded_map_df["d18O"], errors="coerce")
+        )
+    map_d18o_values = pd.concat(map_d18o_sources, ignore_index=True).dropna()
+    map_d18o_range = None
+    if not map_d18o_values.empty:
+        map_d18o_range = (
+            float(map_d18o_values.min()),
+            float(map_d18o_values.max()),
+        )
+        fig_map.update_coloraxes(
+            cmin=map_d18o_range[0],
+            cmax=map_d18o_range[1],
+        )
+
+    fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+        fig_map,
+        uploaded_map_df,
+        uploaded_style,
+        color_column="d18O",
+        colorscale=c_scale_d18o,
+        color_range=map_d18o_range,
+        show_nodata=show_nodata_uploaded,
+    )
+    if not uploaded_df.empty:
+        if uploaded_map_count:
+            st.caption(
+                f":blue[Uploaded locations: {uploaded_map_count:,} / "
+                f"{len(uploaded_df):,} plotted on the map.]"
+            )
+        else:
+            st.caption(
+                ":gray[Uploaded locations are not shown because valid longitude "
+                "and latitude columns are unavailable.]"
+            )
+
     # 4. 背景スタイルの適用
     fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
     
@@ -832,19 +1049,32 @@ def main():
     
 
     # 5. レイアウト設定 (ここが幅を広げる決め手)
+    # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
     fig_map.update_layout(
         mapbox=dict(
             center=dict(lat=center_lat, lon=center_lon),
-            zoom=auto_zoom
+            zoom=auto_zoom,
+            domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
         ),
-        margin=dict(l=0, r=0, t=0, b=0),
-        # widthを指定せず autosize を True にすることで、コンテナいっぱいに広がる
-        autosize=True, 
+        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+        autosize=True,
         coloraxis_colorbar=dict(
             title="δ18O (‰)",
-            x=1.0,           # カラーバーを右端に寄せる
-            xanchor='right'
-        )
+            x=0.98,
+            xanchor='right',
+            bgcolor='rgba(255,255,255,0.75)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
+        ),
+        legend=dict(
+            x=0.01,
+            y=0.01,
+            xanchor='left',
+            yanchor='bottom',
+            bgcolor='rgba(255,255,255,0.85)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
+        ),
     )
 
     # 6. 表示 (use_container_width=True を確実に使う)

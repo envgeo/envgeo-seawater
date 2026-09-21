@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+import envgeo_user_data
 import envgeo_utils
 
 
@@ -50,19 +51,66 @@ DEFAULT_PARAMETERS = [
 ]
 
 
-def numeric_parameter_options(df):
+def numeric_parameter_options(*dataframes):
     """
     Return numeric columns suitable for plotting.
 
     描画に使いやすい数値列だけを候補として返します。
     """
-    options = []
-    for column in DEFAULT_PARAMETERS:
-        if column in df.columns:
+    excluded = {
+        envgeo_utils.QUALITY_FLAG_COLUMN,
+        envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
+    }
+    available = {}
+    for df in dataframes:
+        if df is None or df.empty:
+            continue
+        for column in df.columns:
+            if column in excluded:
+                continue
             values = pd.to_numeric(df[column], errors="coerce")
             if values.notna().any():
-                options.append(column)
-    return options
+                available.setdefault(column, True)
+
+    known = [column for column in DEFAULT_PARAMETERS if column in available]
+    experimental = sorted(column for column in available if column not in known)
+    return known + experimental
+
+
+def combined_numeric_values(column, *dataframes):
+    """Return valid numeric values for one column across available datasets."""
+    values = []
+    for df in dataframes:
+        if df is not None and not df.empty and column in df.columns:
+            numeric = pd.to_numeric(df[column], errors="coerce").dropna()
+            if not numeric.empty:
+                values.append(numeric)
+    if not values:
+        return pd.Series(dtype="float64")
+    return pd.concat(values, ignore_index=True)
+
+
+def prepare_plot_rows(df, required_columns):
+    """Return numeric plot rows only when all selected columns are available."""
+    if df is None or df.empty or not set(required_columns).issubset(df.columns):
+        return pd.DataFrame(columns=required_columns)
+    result = df.copy()
+    for column in required_columns:
+        result[column] = pd.to_numeric(result[column], errors="coerce")
+    return result.dropna(subset=required_columns).copy()
+
+
+def scaled_marker_sizes(df, size_by, base_size, size_contrast):
+    """Calculate marker areas for fixed or parameter-scaled plotting."""
+    if size_by == "Fixed size":
+        return base_size
+    values = pd.to_numeric(df[size_by], errors="coerce")
+    value_min = float(values.min())
+    value_max = float(values.max())
+    if value_min == value_max:
+        return np.full(len(df), base_size)
+    scaled = (values - value_min) / (value_max - value_min)
+    return base_size * (0.15 + scaled * (size_contrast - 0.15))
 
 
 def default_axis_range(series):
@@ -141,6 +189,36 @@ def main():
         st.warning("No data available for the selected conditions.")
         return
 
+    embedded_in_integrated = (
+        st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
+        == "35_Custom_Parameter_Plot_beta.py"
+    )
+    if embedded_in_integrated:
+        uploaded_df = envgeo_utils.get_uploaded_data()
+    else:
+        uploaded_df = envgeo_user_data.render_upload_panel(
+            "custom_plot",
+            "Choose any two numeric columns for the X and Y axes.",
+        )
+    uploaded_df = envgeo_user_data.render_column_controls(
+        uploaded_df,
+        {},
+        "custom_plot",
+        optional_roles={
+            "Longitude column (optional)": "Longitude_degE",
+            "Latitude column (optional)": "Latitude_degN",
+            "Depth column (optional)": "Depth_m",
+            "Temperature column (optional)": "Temperature_degC",
+            "Salinity column (optional)": "Salinity",
+            "d18O column (optional)": "d18O",
+            "dD column (optional)": "dD",
+        },
+    )
+    uploaded_style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df,
+        "custom_plot",
+    )
+
     (
         df_filtered,
         sld_year_min, sld_year_max,
@@ -160,7 +238,7 @@ def main():
         data_source_around_japan,
     )
 
-    options = numeric_parameter_options(df_filtered)
+    options = numeric_parameter_options(df_filtered, uploaded_df)
     if len(options) < 2:
         st.warning("At least two numeric parameters are required for this plot.")
         return
@@ -257,8 +335,10 @@ def main():
             help=getattr(envgeo_utils, "REGRESSION_HELP_TEXT", "Add a simple least-squares regression line for quick visual reference."),
         )
 
-        x_default_min, x_default_max = default_axis_range(df_filtered[x_axis])
-        y_default_min, y_default_max = default_axis_range(df_filtered[y_axis])
+        x_values_all = combined_numeric_values(x_axis, df_filtered, uploaded_df)
+        y_values_all = combined_numeric_values(y_axis, df_filtered, uploaded_df)
+        x_default_min, x_default_max = default_axis_range(x_values_all)
+        y_default_min, y_default_max = default_axis_range(y_values_all)
         x_min, x_max = numeric_input_pair(
             "X axis range",
             x_default_min,
@@ -285,7 +365,12 @@ def main():
                 key=f"custom_plot_colormap::{color_by}",
                 help="Choose the colormap used for the Custom Parameter Plot colorbar.",
             )
-            color_default_min, color_default_max = default_axis_range(df_filtered[color_by])
+            color_values_all = combined_numeric_values(
+                color_by,
+                df_filtered,
+                uploaded_df,
+            )
+            color_default_min, color_default_max = default_axis_range(color_values_all)
             color_range = numeric_input_pair(
                 "Color range",
                 color_default_min,
@@ -293,12 +378,35 @@ def main():
                 f"custom_plot_color_range::{ref_data}::{color_by}",
             )
 
-        fig_width = st.number_input("Fig width (x)", min_value=4, max_value=24, value=12, step=1)
-        fig_height = st.number_input("Fig height (y)", min_value=4, max_value=24, value=9, step=1)
-        tick_font_size = st.number_input("Tick font size", min_value=6, max_value=32, value=15, step=1)
-        label_font_size = st.number_input("Label font size", min_value=6, max_value=32, value=16, step=1)
-        x_tick_count = st.number_input("X tick count", min_value=3, max_value=30, value=9, step=1)
-        y_tick_count = st.number_input("Y tick count", min_value=3, max_value=30, value=9, step=1)
+        size_col1, size_col2 = st.columns(2)
+        with size_col1:
+            fig_width = st.number_input(
+                "Fig width (x)", min_value=4, max_value=24, value=12, step=1
+            )
+        with size_col2:
+            fig_height = st.number_input(
+                "Fig height (y)", min_value=4, max_value=24, value=9, step=1
+            )
+
+        font_col1, font_col2 = st.columns(2)
+        with font_col1:
+            tick_font_size = st.number_input(
+                "Tick font size", min_value=6, max_value=32, value=15, step=1
+            )
+        with font_col2:
+            label_font_size = st.number_input(
+                "Label font size", min_value=6, max_value=32, value=16, step=1
+            )
+
+        tick_col1, tick_col2 = st.columns(2)
+        with tick_col1:
+            x_tick_count = st.number_input(
+                "X tick count", min_value=3, max_value=30, value=9, step=1
+            )
+        with tick_col2:
+            y_tick_count = st.number_input(
+                "Y tick count", min_value=3, max_value=30, value=9, step=1
+            )
 
     required_columns = [x_axis, y_axis]
     if color_by != "Single color":
@@ -306,19 +414,45 @@ def main():
     if size_by != "Fixed size":
         required_columns.append(size_by)
 
-    df_plot = df_filtered.dropna(subset=required_columns).copy()
-    excluded_count = len(df_filtered) - len(df_plot)
-    if excluded_count > 0:
+    df_plot = prepare_plot_rows(df_filtered, required_columns)
+    uploaded_required_columns = [x_axis, y_axis]
+    if size_by != "Fixed size":
+        uploaded_required_columns.append(size_by)
+    uploaded_plot = prepare_plot_rows(uploaded_df, uploaded_required_columns)
+    excluded_count = len(df_filtered) - len(df_plot) if set(required_columns).issubset(df_filtered.columns) else len(df_filtered)
+    uploaded_excluded_count = len(uploaded_df) - len(uploaded_plot)
+    if excluded_count > 0 and set(required_columns).issubset(df_filtered.columns):
         st.caption(
             f":blue[Custom plot: {len(df_plot):,} samples plotted and "
             f"{excluded_count:,} excluded due to missing selected parameter values.]"
         )
 
-    if df_plot.empty:
+    if not uploaded_df.empty:
+        st.caption(
+            f":blue[Uploaded overlay: {len(uploaded_plot):,} / {len(uploaded_df):,} "
+            f"plotted ({uploaded_excluded_count:,} excluded due to missing or invalid "
+            "selected parameter values).]"
+        )
+        uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
+        with st.expander("Uploaded data quality check", expanded=False):
+            envgeo_utils.render_quality_flag_criteria_note()
+            st.write(
+                f"Quality-flagged rows: {len(uploaded_quality_df):,} / "
+                f"{len(uploaded_df):,}"
+            )
+            if uploaded_quality_df.empty:
+                st.success("No uploaded rows triggered the current quality rules.")
+            else:
+                st.dataframe(
+                    uploaded_quality_df,
+                    **envgeo_utils.stretch_width_kwargs(st.dataframe),
+                )
+
+    if df_plot.empty and uploaded_plot.empty:
         st.warning("No valid data are available for the selected plot settings.")
         return
 
-    df_background = df_original.dropna(subset=[x_axis, y_axis]).copy()
+    df_background = prepare_plot_rows(df_original, [x_axis, y_axis])
 
     x_label = PARAMETER_LABELS.get(x_axis, x_axis)
     y_label = PARAMETER_LABELS.get(y_axis, y_axis)
@@ -335,19 +469,10 @@ def main():
             label="All data",
         )
 
-    if size_by == "Fixed size":
-        point_sizes = marker_size
-    else:
-        size_values = pd.to_numeric(df_plot[size_by], errors="coerce")
-        size_min = float(size_values.min())
-        size_max = float(size_values.max())
-        if size_min == size_max:
-            point_sizes = np.full(len(df_plot), marker_size)
-        else:
-            scaled = (size_values - size_min) / (size_max - size_min)
-            point_sizes = marker_size * (0.15 + scaled * (size_contrast - 0.15))
+    point_sizes = scaled_marker_sizes(df_plot, size_by, marker_size, size_contrast)
 
-    if color_by == "Single color":
+    scatter = None
+    if color_by == "Single color" and not df_plot.empty:
         ax.scatter(
             df_plot[x_axis],
             df_plot[y_axis],
@@ -358,7 +483,7 @@ def main():
             linewidths=0.5,
             label="Filtered data",
         )
-    else:
+    elif color_by != "Single color" and not df_plot.empty:
         color_values = pd.to_numeric(df_plot[color_by], errors="coerce")
         scatter = ax.scatter(
             df_plot[x_axis],
@@ -377,7 +502,93 @@ def main():
         cbar.set_label(PARAMETER_LABELS.get(color_by, color_by), fontsize=label_font_size)
         cbar.ax.tick_params(labelsize=tick_font_size)
 
-    if add_regression_line == "Yes":
+    if not uploaded_plot.empty:
+        uploaded_sizes = scaled_marker_sizes(
+            uploaded_plot,
+            size_by,
+            uploaded_style["size"],
+            size_contrast,
+        )
+        use_shared_colorbar = (
+            uploaded_style["color_mode"] == "Use current colorbar when possible"
+            and color_by != "Single color"
+            and color_by in uploaded_plot.columns
+        )
+        if use_shared_colorbar:
+            uploaded_color_values = pd.to_numeric(
+                uploaded_plot[color_by],
+                errors="coerce",
+            )
+            uploaded_color_valid = uploaded_color_values.notna()
+            uploaded_scatter = None
+            if uploaded_color_valid.any():
+                valid_sizes = (
+                    uploaded_sizes[uploaded_color_valid]
+                    if not np.isscalar(uploaded_sizes)
+                    else uploaded_sizes
+                )
+                uploaded_scatter = ax.scatter(
+                    uploaded_plot.loc[uploaded_color_valid, x_axis],
+                    uploaded_plot.loc[uploaded_color_valid, y_axis],
+                    s=valid_sizes,
+                    c=uploaded_color_values[uploaded_color_valid],
+                    cmap=envgeo_utils.get_matplotlib_colormap(color_by, colormap_label),
+                    vmin=color_range[0] if color_range is not None else None,
+                    vmax=color_range[1] if color_range is not None else None,
+                    marker=uploaded_style["marker"],
+                    alpha=uploaded_style["alpha"],
+                    edgecolors=uploaded_style["outline_color"],
+                    linewidths=uploaded_style["outline_width"],
+                    label="Uploaded data",
+                    zorder=10,
+                )
+            missing_color = ~uploaded_color_valid
+            if missing_color.any():
+                missing_sizes = (
+                    uploaded_sizes[missing_color]
+                    if not np.isscalar(uploaded_sizes)
+                    else uploaded_sizes
+                )
+                ax.scatter(
+                    uploaded_plot.loc[missing_color, x_axis],
+                    uploaded_plot.loc[missing_color, y_axis],
+                    s=missing_sizes,
+                    c=uploaded_style["color"],
+                    marker=uploaded_style["marker"],
+                    alpha=uploaded_style["alpha"],
+                    edgecolors=uploaded_style["outline_color"],
+                    linewidths=uploaded_style["outline_width"],
+                    label=f"Uploaded data (no {color_by})",
+                    zorder=10,
+                )
+            if scatter is None and uploaded_scatter is not None:
+                cbar = fig.colorbar(
+                    uploaded_scatter,
+                    ax=ax,
+                    orientation="vertical",
+                    pad=0.02,
+                    fraction=0.04,
+                )
+                cbar.set_label(
+                    PARAMETER_LABELS.get(color_by, color_by),
+                    fontsize=label_font_size,
+                )
+                cbar.ax.tick_params(labelsize=tick_font_size)
+        else:
+            ax.scatter(
+                uploaded_plot[x_axis],
+                uploaded_plot[y_axis],
+                s=uploaded_sizes,
+                c=uploaded_style["color"],
+                marker=uploaded_style["marker"],
+                alpha=uploaded_style["alpha"],
+                edgecolors=uploaded_style["outline_color"],
+                linewidths=uploaded_style["outline_width"],
+                label="Uploaded data",
+                zorder=10,
+            )
+
+    if add_regression_line == "Yes" and not df_plot.empty:
         x_values = pd.to_numeric(df_plot[x_axis], errors="coerce")
         y_values = pd.to_numeric(df_plot[y_axis], errors="coerce")
         regression_df = pd.DataFrame({"x": x_values, "y": y_values}).dropna()
@@ -469,8 +680,18 @@ def main():
             "dD",
             "d-excess",
         ]
-        df_table = df_plot[[column for column in table_columns if column in df_plot.columns]].copy()
+        selected_table_columns = list(dict.fromkeys(table_columns + required_columns))
+        df_table = df_plot[
+            [column for column in selected_table_columns if column in df_plot.columns]
+        ].copy()
         st.dataframe(df_table.astype(str))
+
+    if not uploaded_plot.empty:
+        with st.expander("Uploaded plotted dataset (CSV)", expanded=False):
+            st.dataframe(
+                uploaded_plot.astype(str),
+                **envgeo_utils.stretch_width_kwargs(st.dataframe),
+            )
 
 
 if __name__ == "__main__":

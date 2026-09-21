@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import math
 import envgeo_utils
+import envgeo_user_data
 from scipy.interpolate import griddata # コンターマップ用
 import cartopy.feature as cfeature  # 陸地塗りつぶし用
 import io # ファイル処理用
@@ -204,6 +205,34 @@ def main():
     if df1.empty:
         st.warning("No data available for the selected conditions.")
         return
+
+    ##############################################################################
+    # アップロードデータUI（Integrated埋め込み時はファイルアップロードを省略）
+    ##############################################################################
+    embedded_in_integrated = (
+        st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
+        == "32_Isotope_Hydrographic_Mapping.py"
+    )
+    if embedded_in_integrated:
+        uploaded_df = envgeo_utils.get_uploaded_data()
+    else:
+        uploaded_df = envgeo_user_data.render_upload_panel(
+            "iso_map",
+            "Longitude and latitude columns are required to plot uploaded "
+            "locations on the map. The currently selected map parameter "
+            "(d18O, dD, etc.) is used for color when available.",
+        )
+    uploaded_df = envgeo_user_data.render_column_controls(
+        uploaded_df,
+        {
+            "Longitude column": "Longitude_degE",
+            "Latitude column": "Latitude_degN",
+        },
+        "iso_map",
+    )
+    uploaded_style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df, "iso_map"
+    )
 
     ##############################################################################
     # サイドバーここから　　df1フィルタリング　も一括で
@@ -432,6 +461,14 @@ def main():
             help="Adjust the label and tick font size of the parameter colorbar.",
         )
 
+        # アップロードデータのうちカラーバー要素が無いポイントの表示切替
+        show_nodata_uploaded = st.checkbox(
+            f"Show uploaded points without {selected_parameter} values",
+            value=True,
+            key=f"{map_state_key}::show_nodata_uploaded",
+            help="Show or hide uploaded map points that have no value for the mapped parameter.",
+        )
+
         parameter_min, parameter_max = selected_color_range
         colorbar_thickness = colorbar_thickness_value / 100
         colorbar_length = colorbar_length_value / 100
@@ -546,6 +583,68 @@ def main():
     ###############################################################################################
 
 
+    ##############################################################################
+    # アップロードデータ前処理と品質チェック
+    ##############################################################################
+    uploaded_map_valid = pd.DataFrame()
+    if not uploaded_df.empty:
+        _has_position = {
+            "Longitude_degE", "Latitude_degN"
+        }.issubset(uploaded_df.columns)
+        if _has_position:
+            _udf = uploaded_df.copy()
+            _udf["Longitude_degE"] = pd.to_numeric(
+                _udf["Longitude_degE"], errors="coerce"
+            )
+            _udf["Latitude_degN"] = pd.to_numeric(
+                _udf["Latitude_degN"], errors="coerce"
+            )
+            uploaded_map_valid = (
+                _udf.dropna(subset=["Longitude_degE", "Latitude_degN"])
+                .loc[lambda d: d["Latitude_degN"].between(-90, 90)]
+                .copy()
+            )
+        _u_total = len(uploaded_df)
+        _u_plotted = len(uploaded_map_valid)
+        if (
+            _has_position
+            and uploaded_style["color_mode"] == "Use current colorbar when possible"
+            and selected_parameter in uploaded_map_valid.columns
+            and not show_nodata_uploaded
+        ):
+            _u_plotted = int(
+                pd.to_numeric(
+                    uploaded_map_valid[selected_parameter], errors="coerce"
+                ).notna().sum()
+            )
+        _u_excluded = _u_total - _u_plotted
+        if _has_position:
+            st.caption(
+                f":blue[Uploaded overlay: {_u_plotted:,} / {_u_total:,} samples "
+                f"plotted ({_u_excluded:,} excluded due to missing or invalid "
+                "longitude/latitude).]"
+            )
+        else:
+            st.info(
+                "Uploaded data is not shown because longitude and latitude "
+                "columns are not assigned. "
+                "Use \"Uploaded data columns\" in the sidebar."
+            )
+        _uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
+        with st.expander("Uploaded data quality check", expanded=False):
+            envgeo_utils.render_quality_flag_criteria_note()
+            st.write(
+                f"Quality-flagged rows: {len(_uploaded_quality_df):,} / "
+                f"{_u_total:,}"
+            )
+            if _uploaded_quality_df.empty:
+                st.success("No uploaded rows triggered the current quality rules.")
+            else:
+                st.dataframe(
+                    _uploaded_quality_df,
+                    **envgeo_utils.stretch_width_kwargs(st.dataframe),
+                )
+
     plt.rcParams["font.size"] = 15
 
     # Keep the requested extent inside the current longitude domain.
@@ -615,7 +714,64 @@ def main():
         )
         cbar_scatter.set_label(parameter_label, fontsize=colorbar_font_size)
         cbar_scatter.ax.tick_params(labelsize=colorbar_font_size)
-        
+
+        # --- Uploaded data overlay (Scatter Map / 最前面) ---
+        if not uploaded_map_valid.empty:
+            _lon_up_sc = normalize_lon_to_center(
+                uploaded_map_valid["Longitude_degE"].values, lon_center
+            )
+            _use_color_sc = (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and selected_parameter in uploaded_map_valid.columns
+            )
+            if _use_color_sc:
+                _up_cv_sc = pd.to_numeric(
+                    uploaded_map_valid[selected_parameter], errors="coerce"
+                )
+                _up_valid_sc = _up_cv_sc.notna()
+                if _up_valid_sc.any():
+                    ax.scatter(
+                        _lon_up_sc[_up_valid_sc.values],
+                        uploaded_map_valid.loc[_up_valid_sc, "Latitude_degN"],
+                        c=_up_cv_sc[_up_valid_sc],
+                        cmap=map_matplotlib_colormap,
+                        s=uploaded_style["size"],
+                        alpha=uploaded_style["alpha"],
+                        vmin=parameter_min,
+                        vmax=parameter_max,
+                        marker=uploaded_style["marker"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        transform=ccrs.PlateCarree(),
+                        zorder=10,
+                    )
+                if (~_up_valid_sc).any() and show_nodata_uploaded:
+                    ax.scatter(
+                        _lon_up_sc[~_up_valid_sc.values],
+                        uploaded_map_valid.loc[~_up_valid_sc, "Latitude_degN"],
+                        c=uploaded_style["color"],
+                        s=uploaded_style["size"],
+                        alpha=uploaded_style["alpha"],
+                        marker=uploaded_style["marker"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        transform=ccrs.PlateCarree(),
+                        zorder=10,
+                    )
+            else:
+                ax.scatter(
+                    _lon_up_sc,
+                    uploaded_map_valid["Latitude_degN"],
+                    c=uploaded_style["color"],
+                    s=uploaded_style["size"],
+                    alpha=uploaded_style["alpha"],
+                    marker=uploaded_style["marker"],
+                    linewidths=uploaded_style["outline_width"],
+                    edgecolors=uploaded_style["outline_color"],
+                    transform=ccrs.PlateCarree(),
+                    zorder=10,
+                )
+
         ax.set_title(title_head2,fontsize=15)
         
         # PNG保存（Scatter）
@@ -725,7 +881,64 @@ def main():
         cbar.ax.set_xticklabels([f"{t:.1f}" for t in fixed_ticks])
         cbar.set_label(parameter_label, fontsize=colorbar_font_size)
         cbar.ax.tick_params(labelsize=colorbar_font_size)
-        
+
+        # --- Uploaded data overlay (Contour Map / 最前面) ---
+        if not uploaded_map_valid.empty:
+            _lon_up_ct = normalize_lon_to_center(
+                uploaded_map_valid["Longitude_degE"].values, lon_center
+            )
+            _use_color_ct = (
+                uploaded_style["color_mode"] == "Use current colorbar when possible"
+                and selected_parameter in uploaded_map_valid.columns
+            )
+            if _use_color_ct:
+                _up_cv_ct = pd.to_numeric(
+                    uploaded_map_valid[selected_parameter], errors="coerce"
+                )
+                _up_valid_ct = _up_cv_ct.notna()
+                if _up_valid_ct.any():
+                    ax2.scatter(
+                        _lon_up_ct[_up_valid_ct.values],
+                        uploaded_map_valid.loc[_up_valid_ct, "Latitude_degN"],
+                        c=_up_cv_ct[_up_valid_ct],
+                        cmap=map_matplotlib_colormap,
+                        s=uploaded_style["size"],
+                        alpha=uploaded_style["alpha"],
+                        vmin=parameter_min,
+                        vmax=parameter_max,
+                        marker=uploaded_style["marker"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        transform=ccrs.PlateCarree(),
+                        zorder=10,
+                    )
+                if (~_up_valid_ct).any() and show_nodata_uploaded:
+                    ax2.scatter(
+                        _lon_up_ct[~_up_valid_ct.values],
+                        uploaded_map_valid.loc[~_up_valid_ct, "Latitude_degN"],
+                        c=uploaded_style["color"],
+                        s=uploaded_style["size"],
+                        alpha=uploaded_style["alpha"],
+                        marker=uploaded_style["marker"],
+                        linewidths=uploaded_style["outline_width"],
+                        edgecolors=uploaded_style["outline_color"],
+                        transform=ccrs.PlateCarree(),
+                        zorder=10,
+                    )
+            else:
+                ax2.scatter(
+                    _lon_up_ct,
+                    uploaded_map_valid["Latitude_degN"],
+                    c=uploaded_style["color"],
+                    s=uploaded_style["size"],
+                    alpha=uploaded_style["alpha"],
+                    marker=uploaded_style["marker"],
+                    linewidths=uploaded_style["outline_width"],
+                    edgecolors=uploaded_style["outline_color"],
+                    transform=ccrs.PlateCarree(),
+                    zorder=10,
+                )
+
         img_contour = io.BytesIO()
         fig_contour.savefig(img_contour, format="png", dpi=300, bbox_inches="tight")
         img_contour.seek(0)
@@ -777,9 +990,21 @@ def main():
         )
     st.caption(f"Map style: {map_mode}")
 
-    # 2. データの範囲から中心座標とズームレベルを計算
-    lat_min, lat_max = df1["Latitude_degN"].min(), df1["Latitude_degN"].max()
-    lon_min, lon_max = df1["Longitude_degE"].min(), df1["Longitude_degE"].max()
+    # 2. データの範囲から中心座標とズームレベルを計算（アップロード地点を含む）
+    _map_extent_srcs = [df1[["Longitude_degE", "Latitude_degN"]]]
+    if not uploaded_map_valid.empty:
+        _map_extent_srcs.append(
+            uploaded_map_valid[["Longitude_degE", "Latitude_degN"]]
+        )
+    _map_extent_df = pd.concat(_map_extent_srcs, ignore_index=True)
+    lat_min, lat_max = (
+        _map_extent_df["Latitude_degN"].min(),
+        _map_extent_df["Latitude_degN"].max(),
+    )
+    lon_min, lon_max = (
+        _map_extent_df["Longitude_degE"].min(),
+        _map_extent_df["Longitude_degE"].max(),
+    )
 
     # 初期値（日本）の設定
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
@@ -845,28 +1070,67 @@ def main():
 
     # 4. 背景スタイルの適用
     fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
-    
-    
 
-    
+    # --- Uploaded overlay (Plotly Sampling Location Map) ---
+    _plotly_color_range = (
+        (parameter_min, parameter_max)
+        if parameter_min < parameter_max
+        else None
+    )
+    fig_map, _uploaded_plotly_count = envgeo_user_data.add_uploaded_map_overlay(
+        fig_map,
+        uploaded_map_valid,
+        uploaded_style,
+        color_column=selected_parameter,
+        colorscale=map_plotly_colorscale,
+        color_range=_plotly_color_range,
+        show_nodata=show_nodata_uploaded,
+    )
+    if not uploaded_df.empty:
+        if _uploaded_plotly_count:
+            st.caption(
+                f":blue[Uploaded locations: {_uploaded_plotly_count:,} / "
+                f"{len(uploaded_df):,} plotted on the sampling location map.]"
+            )
+        else:
+            st.caption(
+                ":gray[Uploaded locations are not shown on the sampling location "
+                "map because valid longitude and latitude columns are unavailable.]"
+            )
 
     # 5. レイアウト設定 (ここが幅を広げる決め手)
+    # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
+    # x=1.0 は Plotly が余白を自動追加して地図を圧縮するため使わない。
+    # autoexpand=False で凡例による余白自動拡張を抑制し、
+    # mapbox.domain で地図がフル幅を使うよう明示する。
     fig_map.update_layout(
         mapbox=dict(
             center=dict(lat=center_lat, lon=center_lon),
-            zoom=auto_zoom
+            zoom=auto_zoom,
+            domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
         ),
-        margin=dict(l=0, r=0, t=0, b=0),
-        # widthを指定せず autosize を True にすることで、コンテナいっぱいに広がる
+        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
         autosize=True,
         coloraxis_colorbar=dict(
             title=parameter_plotly_label,
-            x=1.0,           # カラーバーを右端に寄せる
+            x=0.98,          # 地図内右端にオーバーレイ（1.0 にすると外側扱いで余白が生じる）
             xanchor='right',
+            bgcolor='rgba(255,255,255,0.75)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
         ),
-        # --- ここで初期値を設定 ---
-        coloraxis_cmin=parameter_min, # 最小値
-        coloraxis_cmax=parameter_max   # 最大値
+        # 凡例をツールバー（右上）と重ならないよう左下に配置
+        legend=dict(
+            x=0.01,
+            y=0.01,
+            xanchor='left',
+            yanchor='bottom',
+            bgcolor='rgba(255,255,255,0.85)',
+            bordercolor='rgba(150,150,150,0.5)',
+            borderwidth=1,
+        ),
+        coloraxis_cmin=parameter_min,
+        coloraxis_cmax=parameter_max,
     )
     
 

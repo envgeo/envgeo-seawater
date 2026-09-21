@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 from pathlib import Path
@@ -326,6 +327,7 @@ def test_standardize_uploaded_column_names_maps_common_aliases():
         {
             "lon": [135.0],
             "lat": [35.0],
+            "sampling_month": [4],
             "Depth": [10.0],
             "Temp": [20.0],
             "S": [34.5],
@@ -339,6 +341,7 @@ def test_standardize_uploaded_column_names_maps_common_aliases():
     for column in [
         "Longitude_degE",
         "Latitude_degN",
+        "Month",
         "Depth_m",
         "Temperature_degC",
         "Salinity",
@@ -368,6 +371,188 @@ def test_standardize_uploaded_column_names_preserves_existing_standard_columns()
     assert "lon" not in out.attrs["standardized_column_renames"]
 
 
+# Verifies that unambiguous Japanese labels are recognized without guessing unknown labels.
+# 明確な日本語列名のみを標準列名へ変換できることを確認する。
+def test_standardize_uploaded_column_names_maps_japanese_aliases():
+    df = pd.DataFrame(
+        {"経度": [135.0], "緯度": [35.0], "月": [4], "水深": [10], "水温": [20], "塩分": [34.5]}
+    )
+
+    out = envgeo_utils.standardize_uploaded_column_names(df)
+
+    assert {
+        "Longitude_degE",
+        "Latitude_degN",
+        "Month",
+        "Depth_m",
+        "Temperature_degC",
+        "Salinity",
+    }.issubset(out.columns)
+
+
+class NamedBytesIO(io.BytesIO):
+    """In-memory upload stand-in carrying the filename used by Streamlit."""
+
+    def __init__(self, content, name):
+        super().__init__(content)
+        self.name = name
+
+
+# Verifies that CSV uploads are read directly from memory.
+# CSVアップロードをファイル保存なしで読み込めることを確認する。
+def test_read_uploaded_table_reads_csv_from_memory():
+    uploaded_file = NamedBytesIO(b"Salinity,Temperature_degC\n34.5,20.0\n", "sample.csv")
+
+    out = envgeo_utils.read_uploaded_table(uploaded_file)
+
+    assert out.to_dict("records") == [{"Salinity": 34.5, "Temperature_degC": 20.0}]
+
+
+# Verifies the complete upload preparation contract used by app pages.
+# 数値化、品質判定、d-excess計算の一連の前処理を確認する。
+def test_prepare_uploaded_data_applies_numeric_quality_and_d_excess():
+    df = pd.DataFrame(
+        {
+            "Depth": ["10", "-1"],
+            "Temp": ["20", "46"],
+            "S": ["34.5", "55"],
+            "delta18o": ["0.5", "1.0"],
+            "d2h": ["4", "10"],
+        }
+    )
+
+    out = envgeo_utils.prepare_uploaded_data(df)
+
+    assert out["Dataset"].tolist() == ["Uploaded data", "Uploaded data"]
+    assert out.loc[0, "d-excess"] == 0.0
+    assert pd.isna(out.loc[1, "Depth_m"])
+    assert pd.isna(out.loc[1, "Temperature_degC"])
+    assert pd.isna(out.loc[1, "Salinity"])
+    assert "Depth_m outside valid range" in out.loc[1, envgeo_utils.QUALITY_FLAG_COLUMN]
+    assert "Temperature_degC outside valid range" in out.loc[1, envgeo_utils.QUALITY_FLAG_COLUMN]
+    assert "Salinity outside valid range" in out.loc[1, envgeo_utils.QUALITY_FLAG_COLUMN]
+
+
+# Verifies that d-excess remains unknown when dD is not supplied.
+# dDが無い場合にd-excessを推測せずNaNとすることを確認する。
+def test_prepare_uploaded_data_keeps_d_excess_nan_without_dd():
+    out = envgeo_utils.prepare_uploaded_data(
+        pd.DataFrame({"Salinity": [34.5], "Temperature_degC": [20], "d18O": [0.5]})
+    )
+
+    assert out["d-excess"].isna().all()
+
+
+# Verifies that unknown labels can be assigned manually without losing source columns.
+# 未知の列名を手動対応させても、元の列を残したまま品質判定できることを確認する。
+def test_apply_uploaded_column_mapping_copies_and_validates_selected_columns():
+    source = pd.DataFrame(
+        {
+            "Water property A": [20.0, 50.0],
+            "Water property B": [34.5, 60.0],
+            "New element": [1.2, 1.5],
+        }
+    )
+
+    out = envgeo_utils.apply_uploaded_column_mapping(
+        source,
+        {
+            "Temperature_degC": "Water property A",
+            "Salinity": "Water property B",
+        },
+    )
+
+    assert out.loc[0, "Temperature_degC"] == 20.0
+    assert out.loc[0, "Salinity"] == 34.5
+    assert pd.isna(out.loc[1, "Temperature_degC"])
+    assert pd.isna(out.loc[1, "Salinity"])
+    assert out["New element"].tolist() == [1.2, 1.5]
+    assert out.attrs["manual_column_mapping"] == {
+        "Temperature_degC": "Water property A",
+        "Salinity": "Water property B",
+    }
+
+
+# Verifies that a stale manual mapping cannot silently select a missing column.
+# 古い手動対応で存在しない列を黙って採用しないことを確認する。
+def test_apply_uploaded_column_mapping_rejects_missing_source_column():
+    source = pd.DataFrame({"Unknown temperature": [20.0]})
+
+    try:
+        envgeo_utils.apply_uploaded_column_mapping(
+            source,
+            {"Temperature_degC": "Missing column"},
+        )
+    except KeyError as exc:
+        assert "Missing column" in str(exc)
+    else:
+        raise AssertionError("Missing source column should raise KeyError")
+
+
+# Verifies that automatic column confirmation does not erase existing quality flags.
+# 自動認識済み列の確認で、既存の品質フラグが消えないことを確認する。
+def test_apply_uploaded_column_mapping_preserves_existing_quality_flags():
+    prepared = envgeo_utils.prepare_uploaded_data(
+        pd.DataFrame({"Temperature_degC": [50.0], "Salinity": [34.5]})
+    )
+
+    mapped = envgeo_utils.apply_uploaded_column_mapping(
+        prepared,
+        {
+            "Temperature_degC": "Temperature_degC",
+            "Salinity": "Salinity",
+        },
+    )
+
+    quality_rows = envgeo_utils.get_quality_rows(mapped)
+    assert len(quality_rows) == 1
+    assert "Temperature_degC outside valid range" in quality_rows.iloc[0][
+        envgeo_utils.QUALITY_FLAG_COLUMN
+    ]
+    assert "original=50.0" in quality_rows.iloc[0][
+        envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN
+    ]
+
+
+# Verifies that manual assignments add new flags without removing earlier ones.
+# 手動列対応で新しい品質フラグを追加しても、以前のフラグを保持することを確認する。
+def test_apply_uploaded_column_mapping_merges_existing_and_new_quality_flags():
+    prepared = envgeo_utils.prepare_uploaded_data(
+        pd.DataFrame({"Depth_m": [-1.0], "Unknown temperature": [50.0], "S": [34.5]})
+    )
+
+    mapped = envgeo_utils.apply_uploaded_column_mapping(
+        prepared,
+        {
+            "Temperature_degC": "Unknown temperature",
+            "Salinity": "Salinity",
+        },
+    )
+
+    flag = mapped.loc[0, envgeo_utils.QUALITY_FLAG_COLUMN]
+    assert "Depth_m outside valid range" in flag
+    assert "Temperature_degC outside valid range" in flag
+
+
+# Verifies that shared page state is memory-only and can be cleared explicitly.
+# ページ間で共有するメモリ上のデータを保持・取得・消去できることを確認する。
+def test_uploaded_data_session_helpers_round_trip_and_clear():
+    state = {}
+    source = pd.DataFrame({"Salinity": [34.5]})
+
+    envgeo_utils.store_uploaded_data(source, "sample.csv", state=state)
+    loaded = envgeo_utils.get_uploaded_data(state=state)
+
+    assert loaded.equals(source)
+    assert envgeo_utils.get_uploaded_filename(state=state) == "sample.csv"
+    loaded.loc[0, "Salinity"] = 0
+    assert envgeo_utils.get_uploaded_data(state=state).loc[0, "Salinity"] == 34.5
+
+    envgeo_utils.clear_uploaded_data(state=state)
+    assert envgeo_utils.get_uploaded_data(state=state).empty
+    assert envgeo_utils.get_uploaded_filename(state=state) is None
+
+
 # Verifies that coastline loading returns valid longitude and latitude lists of equal length.
 # 海岸線データ読み込み結果として、有効な経度・緯度リストが同じ長さで返ることを確認する。
 def test_load_coastline_data_returns_same_length_coordinate_lists():
@@ -376,6 +561,22 @@ def test_load_coastline_data_returns_same_length_coordinate_lists():
     assert isinstance(lat, list)
     assert len(lon) > 0
     assert len(lon) == len(lat)
+
+
+# Verifies that the smaller Natural Earth CSV can be selected explicitly.
+# 軽量なNatural Earth 110m版をCSVから明示的に読み込めることを確認する。
+def test_load_coastline_data_supports_110m_csv():
+    lon_50m, lat_50m = envgeo_utils.load_coastline_data(
+        envgeo_utils.data_source_GLOBAL,
+        resolution="50m",
+    )
+    lon_110m, lat_110m = envgeo_utils.load_coastline_data(
+        envgeo_utils.data_source_GLOBAL,
+        resolution="110m",
+    )
+
+    assert len(lon_110m) == len(lat_110m)
+    assert 0 < len(lon_110m) < len(lon_50m)
 
 
 # Verifies that the public dataset choices remain available for app pages.

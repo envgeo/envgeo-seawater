@@ -149,7 +149,12 @@ def test_integrated_beta_page_includes_upload_overlay_workflow():
     assert "_select_plotly_colormap" in page_text
     assert "get_plotly_colormap_options" in page_text
     assert "recommended_plotly_colormap_label" in page_text
-    assert "standardize_uploaded_column_names" in page_text
+    assert "prepare_uploaded_data" in page_text
+    assert "read_uploaded_table" in page_text
+    assert "store_uploaded_data" in page_text
+    assert "get_uploaded_data" in page_text
+    assert "INTEGRATED_EMBEDDED_PAGE_KEY" in page_text
+    assert "uses_native_upload_overlay" in page_text
     assert "Standardized column names" in page_text
     assert "Uploaded Data Quality Check" in page_text
     assert "Uploaded quality flags" in page_text
@@ -303,6 +308,64 @@ def test_integrated_beta_excludes_standalone_uploader_from_full_page_workflows()
 
     assert "05_3D4D_Visualizer_Uploader.py" not in workflow_block
     assert "3D/4D Uploader" not in workflow_block
+
+
+# NATIVE_UPLOAD_OVERLAY_PAGES must match, page for page, which FULL_PAGE_WORKFLOWS pages
+# actually implement their own upload panel and Integrated-embedding check. A page missing
+# from this set falls back to Integrated's legacy load_isotope_data() merge, which silently
+# mixes uploaded rows into the reference dataset and duplicates the upload UI once that page
+# also renders its own overlay.
+# NATIVE_UPLOAD_OVERLAY_PAGESは、独自のアップロードパネルとIntegrated埋め込み判定を
+# 実際に持つFULL_PAGE_WORKFLOWSページと過不足なく一致していなければならない。ここから
+# 漏れると、Integrated側の旧結合フォールバックがアップロードデータを参照データへ無断で
+# 混入させ、そのページが独自実装を持つ場合はアップロードUIも二重表示される。
+def test_native_upload_overlay_pages_match_actual_page_implementations():
+    integrated_text = (ROOT / "pages" / "90_Integrated_Visualizer_beta.py").read_text(
+        encoding="utf-8"
+    )
+    workflow_block = integrated_text.split("FULL_PAGE_WORKFLOWS = {", 1)[1].split(
+        "}", 1
+    )[0]
+    full_page_files = set(re.findall(r'"([^"]+\.py)"', workflow_block))
+
+    native_block = integrated_text.split("NATIVE_UPLOAD_OVERLAY_PAGES = {", 1)[1].split(
+        "}", 1
+    )[0]
+    declared_native_pages = set(re.findall(r'"([^"]+\.py)"', native_block))
+
+    assert declared_native_pages.issubset(full_page_files), (
+        "NATIVE_UPLOAD_OVERLAY_PAGES lists a page outside FULL_PAGE_WORKFLOWS"
+    )
+    assert (
+        "uses_native_upload_overlay = page_path.name in NATIVE_UPLOAD_OVERLAY_PAGES"
+        in integrated_text
+    ), (
+        "render_full_existing_page() must decide uses_native_upload_overlay from "
+        "NATIVE_UPLOAD_OVERLAY_PAGES, not a hardcoded single-page comparison."
+    )
+
+    for filename in sorted(full_page_files):
+        page_path = ROOT / "pages" / filename
+        if not page_path.exists():
+            continue
+        page_text = page_path.read_text(encoding="utf-8")
+        implements_native_overlay = (
+            "envgeo_user_data.render_upload_panel" in page_text
+            and "INTEGRATED_EMBEDDED_PAGE_KEY" in page_text
+        )
+        if implements_native_overlay:
+            assert filename in declared_native_pages, (
+                f"{filename} implements its own upload overlay but is missing from "
+                "NATIVE_UPLOAD_OVERLAY_PAGES, so Integrated Visualizer would still merge "
+                "uploaded rows into the reference dataset via the legacy fallback and "
+                "duplicate the upload UI."
+            )
+        else:
+            assert filename not in declared_native_pages, (
+                f"{filename} is listed in NATIVE_UPLOAD_OVERLAY_PAGES but does not "
+                "implement envgeo_user_data.render_upload_panel / "
+                "INTEGRATED_EMBEDDED_PAGE_KEY yet."
+            )
 
 
 # Uploaded user files should stay in memory during the Streamlit session.

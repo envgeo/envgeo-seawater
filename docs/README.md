@@ -13,6 +13,9 @@ This directory collects project documents that are too detailed for the top-leve
 - `streamlit_migration.md` / `streamlit_migration_Japanese.md`
   Local migration log for Python 3.12, Streamlit 1.63, Plotly compatibility, environment comparisons, and visual checks.
 
+- `integrated_visualizer_strategy.md` / `integrated_visualizer_strategy_Japanese.md`
+  Accepted architecture and migration policy for individual pages, shared user-data upload, and Integrated Visualizer.
+
 - `manual/` / `manual_Japanese/`  
   Page-by-page user manual skeletons for GitHub documentation, JOSS-related documentation, and laboratory website reuse.
 

@@ -4,6 +4,37 @@
 
 ## 未リリース
 
+### 2026-09-21
+
+- 修正: Integrated Visualizerの`uses_native_upload_overlay`判定が、T-S Diagramだけでなく、独自のアップロードパネルを持つ全ページ（Salinity-d18O Relationship、Isotope & Hydrographic Mapping、T-S Diagram、Custom Parameter Plot beta、Depth Profile）を正しく認識するように修正。修正前は、これら他ページをIntegratedの「Full existing page」モードで開くと、アップロード済みデータが旧`load_isotope_data`差し替え経由で参照データへ無断で混入し（Mappingページではコンター補間にも影響）、さらにページ側の独自アップロードパネルが二重表示されていた。`NATIVE_UPLOAD_OVERLAY_PAGES`が実際に`envgeo_user_data.render_upload_panel`と`INTEGRATED_EMBEDDED_PAGE_KEY`判定を持つページと一致し続けることを確認する回帰テストを追加。
+- 追加: Custom Parameter Plot betaをIntegrated VisualizerのFull-existing-pageワークフロー一覧へ登録。実装済みのアップロードオーバーレイが単独ページだけでなくIntegrated経由でも利用できるようにした。
+- 修正: Depth Profileで、必須列が対応済みであればアップロードオーバーレイの件数キャプションを常に表示するようにした。アップロード行が全て除外される場合（Xパラメーターまたは水深が欠損・不正）でも、何も表示しないのではなく「0 / N plotted (N excluded due to missing values)」と表示し、他のアップロード対応ページと挙動を揃えた。
+- 追加: Isotope & Hydrographic Mapping（ページ32）に共通アップロード位置オーバーレイを追加。経度・緯度列（唯一の必須ロール）を自動認識または手動対応し、現在選択中のパラメーター（d18O・dD・d-excess・Salinity・Temperature）が利用できる場合は既存カラーバーで色付け、なければ固定色でフォールバック。Scatter MapとContour Mapの両方に最前面（zorder=10）の輪郭付きマーカーを描画し、griddata補間には混入しない。Plotly Sampling Location MapにはScattermapboxオーバーレイを追加し、自動表示範囲にアップロード地点を含める。アップロードデータがある場合は品質確認エクスパンダーを表示。
+- 追加: Salinity-d18O Relationshipの採水地点地図にも共通アップロード位置オーバーレイを追加。最前面の輪郭付きマーカー、d18O共有色または固定色、地図範囲への反映、位置情報がない場合の説明に対応。
+- 修正: T-Sなどの個別ページで自動認識済みアップロード列を再確認した際、既存の品質フラグが消去される問題を修正。既存フラグを保持し、手動列対応後に新しく見つかったフラグと統合するよう変更。
+- 追加: 有効な経度・緯度がある場合、T-S Diagramの採水地点地図にもアップロード点を最前面で表示。輪郭付きマーカー、可能な場合のd18O地図カラースケール共有、固定色へのフォールバック、自動表示範囲へのアップロード地点反映に対応。
+- 共通化: アップロード、変更可能な列対応、マーカー設定のサイドバーパネルを `envgeo_user_data.py` へ切り出し、各可視化ページにはページ固有の描画処理を残す構成へ移行。
+- 追加: Salinity-d18O Relationshipに、Salinity・d18O列の自動/手動対応、既存カラーバー共有または固定色マーカー、品質確認、Matplotlib図の最前面重ね描画を追加。
+- 試験: T-S Diagramのアップロードとマーカー設定の間に `Uploaded data columns` パネルを追加。自動認識結果を変更でき、未知の水温・塩分列はユーザーが明示的に選択できる構成にした。
+- 追加: 元の試験的パラメーター列を残したまま標準列へ手動対応し、共通の数値化・品質判定を再適用する関数を追加。
+- 方針: 各対象ページのアップロードを共通セッションへ登録し、アップロード元にかかわらずUser Data Validatorで同じ共通品質基準を確認できる構成を採用。全対象ページの重ね描画とValidatorの同等機能を確認した後にのみ、Integratedのアップローダーを廃止する。
+- 変更: 稼働中の50m・110m海岸線データをExcelからCSVへ置き換え、`envgeo_utils.py` の共通ローダーから読み込む構成に統一。
+- 整理: ローカル3D/4Dアップローダーの旧日本海岸線Excel直接読み込みを廃止し、10m・50m・110m・日本海岸線の旧Excelを作業領域の過去パーツへ退避。
+- 方針: Shared-filter betaを独立したUser Data Validatorへ移し、個別可視化ページを正式ワークフローとして残す構成に整理。Integrated Visualizerは移行中の代替経路として維持し、移行完了後に非公開の開発アーカイブとする。
+- 方針: 1回の変更を共通部品1つまたは個別ページ1つに限定し、代替実装のテストと画面確認が完了するまで現行機能を残す段階的移行原則を追加。
+- 設計: `envgeo_utils.py` の巨大化を避け、共通アップロード処理とUIを仮称 `envgeo_user_data.py` へ切り出す方針を記録。
+
+### 2026-09-20
+
+- 追加: 前処理済みのユーザーデータを、同じStreamlitセッション内でIntegrated Visualizerと個別ページ間に共有できるメモリ内限定の保持機能を追加。
+- 改善: CSV/Excel読み込み、アップロード前処理、テンプレート生成、品質フラグ行抽出、数値化、品質正規化、d-excess計算を `envgeo_utils.py` の再利用可能な関数へ集約。
+- 試験: Temperature-Salinity Diagramに、ユーザーデータのアップロード、品質確認、マーカー調整、既存カラーバーを使う色分け、最前面への重ね描画を試験導入。
+- 改善: T-S Diagramのアップロードとアップロード点の表示設定を、参照データのフィルター・図設定と分け、サイドバー最上部の2つの折りたたみに集約。
+- 修正: Integrated Visualizer内でT-S Diagramを開いたときのアップロードUI重複と二重描画を防止。ファイル読み込みはIntegrated側、マーカー設定と重ね描画はT-S側が担当する構成に整理。
+- 文書: 個別ページを正式ワークフローとして残すIntegrated Visualizerの設計と移行手順を、英語・日本語の専用方針文書に記録。
+- 追加: 経度、緯度、水深、水温、塩分の明確な日本語列名を自動認識候補に追加。
+- 確認: アップロード関連テストを拡充し、pytest 65件の合格と、共有アップロードデータの有無両条件でT-S DiagramのAppTest成功を確認。
+
 ### 2026-09-19
 
 - 変更: Python 3.10〜3.12、Streamlit 1.42〜1.63の互換性改善サイクルとして、開発バージョンを1.3.1へ更新。

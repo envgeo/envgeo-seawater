@@ -189,7 +189,7 @@ itself.
 
 ### User-data upload support for individual pages
 
-Date added: 2026-09-13; direction confirmed: 2026-09-19
+Date added: 2026-09-13; architecture confirmed: 2026-09-20
 
 Current status:
 - Keep the existing implementation in `90_Integrated_Visualizer_beta.py` as the
@@ -198,14 +198,15 @@ Current status:
   plotting on the individual visualization pages.
 - Complete the shared loader and schema workflow before adding separate upload
   implementations to every page.
-- A possible final publication style is to expose mainly the Integrated
-  Visualizer, while it internally calls selected individual-page workflows.
-  Individual pages can remain available for development, checking, and advanced
-  maintenance.
+- Keep individual visualization pages as first-class public workflows. Move
+  validation and reference-data comparison to an independent User Data
+  Validator. Keep Integrated Visualizer during migration, then retain it only
+  as a hidden development archive. See `docs/integrated_visualizer_strategy.md`.
 
 Planned direction:
-- Move the common upload workflow into `envgeo_utils.py` before expanding it to
-  individual pages.
+- Move the common upload workflow into a focused module such as
+  `envgeo_user_data.py` before expanding it to individual pages. Reuse existing
+  `envgeo_utils.py` functions without continuing to enlarge that module.
 - Treat user-data upload support as a core EnvGeo utility, not only as a
   seawater-specific feature. The same foundation should eventually support other
   EnvGeo applications, such as earthquake and other geoscience visualizers.
@@ -214,6 +215,10 @@ Planned direction:
   calculation, quality flags, source labels, and session-only memory handling.
 - Use consistent overlay controls for marker size, color or shared colorbar,
   symbol, outline, opacity, and foreground order.
+- Extract Shared-filter beta into an independent User Data Validator and keep
+  the existing Integrated workflow until equivalent checks are verified.
+- Make one shared-component or one-page change at a time; keep the application
+  usable and tested at the end of every migration step.
 - Roll out and test the shared workflow in stages:
   - Temperature-Salinity Diagram
   - Salinity-d18O Relationship

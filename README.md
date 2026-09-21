@@ -271,7 +271,7 @@ Project checklists and longer development notes are kept under `docs/`.
   Figures and example outputs used in README and documentation.
 
 - `coastline/`  
-  Local coastline coordinate files for map and 3D reference overlays.
+  Local 50m and 110m coastline coordinate CSV files for map and 3D reference overlays.
 
 - `test/`  
   Basic pytest tests for imports, dataset loading, numeric conversion, gap-row
