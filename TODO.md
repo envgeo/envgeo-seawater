@@ -22,7 +22,7 @@ Work in this order to avoid repeating page-level changes.
    - Check Plotly selection, Cartopy maps, forms, uploads/downloads, Vertical
      Section, and Earthquake Simple/Advanced interactions.
    - Fix only reproducible compatibility problems and add focused tests.
-   - Release Seawater 1.3.1 and Earthquake 0.3.1 when the checks are complete.
+   - Treat Seawater 1.3.2 and Earthquake 0.3.2 as the current local release boundary; complete the remaining visual checks before any public release/tag.
 2. Migrate maps from Mapbox to MapLibre.
    - Inventory shared and page-specific Mapbox usage.
    - Convert one representative page while still using Plotly 5.24.
@@ -178,7 +178,7 @@ Complete the critical items in dependency order:
    the DOI absent or clearly pending until Zenodo issues the final identifier.
 3. Add the canonical repository URL and software version to `paper.md`; complete
    the Availability wording and research-impact references before release.
-4. Finish the 1.3.1 compatibility checks and create the final tagged GitHub
+4. Finish the 1.3.2 compatibility checks and create the final tagged GitHub
    release.
 5. Archive that release with Zenodo, then add the issued DOI consistently to
    `paper.md`, `CITATION.cff`, README citation guidance, and release records.
@@ -232,10 +232,16 @@ Planned direction:
 - Add tests for CSV/XLSX parsing, alias and Japanese-label recognition, manual
   mapping, validation failures, quality flags, and memory-only handling before
   completing the rollout.
-- Treat `3D/4D Visualizer Uploader` as a likely private/development-only page
-  unless its purpose is redesigned. Its original role as a generic uploaded-data
-  3D visualizer is becoming less central as uploaded-data support moves toward
-  the Integrated Visualizer and shared `envgeo_utils.py` core functions.
+- Maintain `User Data Check & Quick Visualizer` as the public upload-first
+  route for quality review and simple arbitrary-column 2D--4D exploration.
+  Keep its session-only data model, shared Data filtering, and clear division
+  of responsibility from the specialist analysis pages while page 90 remains
+  available during the migration.
+- Retire `dataset/91_USER_UPLOAD_UNPUB.xlsx` only after auditing and removing
+  its live `envgeo_utils.py` loader path, its `Unpublished dataset` inclusion,
+  any test/sample dependency, and obsolete documentation. Browser CSV/XLSX
+  upload is now the normal user-data workflow; do not delete the workbook
+  before this reference audit is complete.
 
 Notes:
 - Uploaded user data should remain in memory only and should not be saved to the

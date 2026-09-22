@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 22 17:15:03 2023
-@author: Toyoho Ishimura @Kyoto-U
-2026/02/10 update 
+Depth-profile visualizer for EnvGeo-Seawater data.
+
+Created: 2023-04-22
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 
 # --- Version info ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 
 # ToDo
 
@@ -274,6 +276,9 @@ def main():
         uploaded_df,
         "depth_profile",
         include_line=True,
+        marker_size_default=10,
+        marker_size_min=1,
+        marker_size_step=1,
     )
 
 
@@ -296,12 +301,26 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(
+         envgeo_utils.combine_reference_and_uploaded_for_filtering(
+             df1, uploaded_df
+         ),
+         ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN,
+         uploaded_df=uploaded_df, uploaded_filter_key="depth_profile",
+         uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+     )
+    filtered_profile_df = df1.copy()
+    df1, uploaded_df = envgeo_utils.split_uploaded_rows(
+        filtered_profile_df, envgeo_utils.UPLOADED_DATA_LABEL
+    )
 
 
     # データが一つだけの時に警告。
     # dD / d-excessは欠損が多いため、対象列と水深が両方ある点だけを数える。
-    data_found = len(df1.dropna(subset=[X_data, "Depth_m"]))
+    # The selected Dataset list can contain only Uploaded data.  Use the
+    # complete filtered input here; df1 below remains reference-only so the
+    # existing foreground uploaded trace stays visually distinct.
+    data_found = len(filtered_profile_df.dropna(subset=[X_data, "Depth_m"]))
     if data_found == 1:
         st.warning('Only one data point was found. A depth profile could not be meaningfully generated.')
         st.stop()
@@ -793,7 +812,7 @@ def main():
                 lw_up = float(uploaded_style["line_width"])
                 ls_up = uploaded_style["line_style"]
                 alpha_up = float(uploaded_style["alpha"])
-                marker_size_up = max(4.0, math.sqrt(float(uploaded_style["size"])))
+                marker_size_up = max(1.0, math.sqrt(float(uploaded_style["size"])))
                 marker_kwargs_up = {
                     "marker": uploaded_style["marker"],
                     "markersize": marker_size_up,
@@ -809,7 +828,10 @@ def main():
                 site_cols_up = [c for c in ['Latitude_degN', 'Longitude_degE'] if c in uploaded_depth.columns]
                 if site_cols_up:
                     uploaded_depth['_site_key'] = (
-                        uploaded_depth[site_cols_up].round(4).astype(str).agg('_'.join, axis=1)
+                        uploaded_depth[site_cols_up].round(4).apply(
+                            lambda row: '_'.join(str(value) for value in row),
+                            axis=1,
+                        )
                     )
                 else:
                     uploaded_depth['_site_key'] = 'all'

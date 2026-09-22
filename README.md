@@ -8,7 +8,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Current development version:** 1.3.1
+**Current development version:** 1.3.2 (2026-09-22)
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -51,8 +51,8 @@ main visualization tools, along with selected beta and local-development pages:
 - `pages/04_[Interactive]_3D_4D_Visualizer.py`  
   Interactive 3D/4D seawater visualizer for longitude, latitude, depth, and selected variables.
 
-- `pages/05_3D4D_Visualizer_Uploader.py`  
-  Development-oriented 3D/4D uploader for Excel-based custom datasets. This page is likely to remain an advanced or private workflow unless its role is redesigned.
+- `pages/05_User_Data_Check_Quick_Visualizer.py`
+  User Data Check & Quick Visualizer for reference and CSV/XLSX upload data. It combines shared filtering, missing-value and quality review, 2D Map, Salinity-d18O, Temperature-Salinity, arbitrary 2D/3D/4D, geographic 3D, and filtered CSV export.
 
 - `pages/31_Salinity-d18O_Relationship.py`  
   Salinity-δ18O relationship plots with optional regression lines.
@@ -103,20 +103,21 @@ from public deployment if the public app should only show visualization pages.
 
 ## User Data Integration
 
-`91_USER_UPLOAD_UNPUB.xlsx` is provided as a template for user-defined comparison data.
+Use the browser upload controls in the visualization pages to load CSV or XLSX
+measurements for the current Streamlit session. The `Data Check & Quick
+Visualizer` is the upload-first entry point for quality review and simple
+2D--4D exploration; supported specialist pages also expose `Uploaded data` in
+their shared Data filtering controls.
 
-- Replace the sample rows with your own measurements  
-- Keep the same column structure  
-- Run the app locally to integrate your dataset  
-
-This allows direct comparison between user datasets and curated reference
-datasets in selected workflows. User-data support is currently most actively
-tested in the integrated beta workflow and will be expanded through shared
-utility functions.
+`dataset/91_USER_UPLOAD_UNPUB.xlsx` remains temporarily as a legacy local
+sample/reference input. It is a planned removal candidate: keep it only until
+the live loader reference, tests, and documentation have been audited and
+replaced where necessary. New user data should be uploaded through the browser
+rather than copied into that workbook.
 
 Uploaded files are intended to be handled in memory during the current
-Streamlit session only. The integrated beta workflow does not save uploaded
-files or merged user/reference datasets to local or server storage.
+Streamlit session only. The app does not save uploaded files or merged
+user/reference datasets to local or server storage.
 
 ---
 

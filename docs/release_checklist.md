@@ -24,7 +24,7 @@ streamlit run home.py
 ```
 
 - [ ] Confirm `home.py` opens successfully.
-- [ ] Confirm the app version is shown as `1.3.1`.
+- [ ] Confirm the app version is shown as `1.3.2 (2026-09-22)`.
 - [ ] Confirm the Home tabs load: Main, About, Data Sources, Manual, Update History, and Japanese information where applicable.
 
 ## 3. Sidebar And Filtering
@@ -76,12 +76,12 @@ For each page:
 - [ ] Confirm uploaded data remain session-only and are not saved to disk or server storage.
 - [ ] Confirm common column aliases are standardized where supported.
 - [ ] Confirm uploaded-data quality summaries are visible where supported.
-- [ ] Confirm the standalone `3D/4D Visualizer Uploader` is treated as development-oriented unless intentionally published.
+- [ ] Confirm the User Data Check & Quick Visualizer accepts CSV/XLSX uploads and keeps them session-only.
 
 ## 7. Local-Only And Development Pages
 
 - [ ] Decide whether `pages/99_Environment_Check.py` should be included in the current deployment.
-- [ ] Decide whether `pages/05_3D4D_Visualizer_Uploader.py` should be shown publicly.
+- [x] `pages/05_User_Data_Check_Quick_Visualizer.py` is the public User Data Check & Quick Visualizer for upload-first quality review and 2D/3D/4D exploration.
 - [ ] Decide whether beta pages should be shown publicly, hidden, or documented as experimental.
 - [ ] Confirm no private notes, restricted data, or unpublished datasets are included in public deployment files.
 

@@ -2,7 +2,48 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
-## 未リリース
+## 1.3.2 - 2026-09-22
+
+### リリース概要
+
+- アクティブな個別ページと新しい公開ページ`User Data Check & Quick Visualizer`に、共通のブラウザアップロード運用を展開。
+- Data filteringで選択した`Uploaded data`を、対応する描画・計算へ統合し、アップロード点は最前面表示を維持。
+- Vertical Sectionのアップロード処理とカラーバー操作を改善。補間結果は引き続き科学的検証が必要な実験的ワークフローとして扱う。
+- Streamlit 1.63でタブ表示を統一し、旧ローカルユーザーデータブックを将来の削除候補として記録。
+- Streamlit 1.63／Plotly 5.24環境で1.3.2の整理後にpytestを実行し、108件合格を確認。
+
+### 詳細作業記録
+
+### 2026-09-22
+
+- 変更: ページ05の名称を`User Data Check & Quick Visualizer`、ソースファイル名を`05_User_Data_Check_Quick_Visualizer.py`へ変更。公開するユーザーデータ入口として役割が固まったため、beta表記を外した。
+- 方針: `dataset/91_USER_UPLOAD_UNPUB.xlsx` を条件付きの削除候補として記録。ブラウザからのCSV/XLSXアップロードを通常のユーザーデータ運用とし、旧ブックと`envgeo_utils.py`内の`Unpublished dataset`ローダーは、稼働中参照・テスト・サンプル・文書の監査と置換が完了するまで残す。
+- 変更: ページ05をアップロード単独の`User Data Quick Visualizer`から、`User Data Check & Quick Visualizer`へ拡張。アップロード操作の後に参照＋アップロード共通のData filteringを置き、選択された統合DataFrameをOverview & Quality、任意2D、Salinity-d18O、Temperature-Salinity、任意3D/4D、2D Map、Geographic 3D、フィルタ済みCSV出力へ共通利用する。Integrated Visualizerに分かれていたSummary／Upload preview／Data table／Quality checkを利用者向けの入口へ統合し、ページ90は移行期間中は残す。
+- 改善: ページ05に共通海域プリセット、Atlantic／Pacific中心のGeographic 3D、共通カラーパレット、04ページ準拠の深度地図表現、上限付きの詳細hover、混在する測点IDにも対応するArrow安全なプレビューを追加。2D MapとGeographic 3Dは同じ統合フィルタ後DataFrameを使用する。
+- 改善: Home、Integrated Visualizer beta、User Data Quick Visualizer、Vertical Section Visualizer内の全タブを、Earthquake Advancedと同じ青系カード型の選択表示へ統一。明暗テーマと狭い画面に対応し、Vertical SectionのColor／Lineタブにも用途アイコンを追加した。
+- 変更: 旧3D/4D Visualizer Uploaderを、公開する`User Data Quick Visualizer`として再設計。共有セッションのCSV/XLSXアップロード、列名の自動認識と任意修正、品質確認、任意数値列による2D・3D/4D散布図、経緯度・水深を使う地理3D、必要時だけの参照データコンテキスト、描画行数上限、インタラクティブHTML書き出しを追加した。アップロード4Dの専用入口として維持する。
+- 整理: 全Pythonソース、補助ツール、テストの先頭ヘッダーを統一。既存のモジュール説明を保持した上で、実行可能なPython 3指定、UTF-8指定、既知の作成日・著者、または作成情報が未記録の場合の保守担当者、最終更新日を明示する形式へ整えた。
+- 変更: Salinity-d18O RelationshipとCustom Parameter Plot betaの選択データ用近似直線、Isotope & Hydrographic MappingのScatter／Contour計算を、Data filteringで選択された参照＋`Uploaded data`のローカル統合DataFrameから作成するよう変更。アップロード点だけを選んだ場合も計算対象となる。MappingのContourは、3点未満または共線・重複地点で線形補間できない場合、最近傍補間へ安全に切り替えてエラーを防ぐ。アップロード点の最前面再描画は維持する。
+- 改善: Vertical Section Visualizerを以前のIntegrated方式へ復帰。Data filtering → Select sub-datasetに`Uploaded data`を表示し、ここで選択された場合は、有効なアップロード行を共通フィルターに通した上で既存データとローカル統合し、断面投影・補間・等値線・観測最深値による海底フォールバックへ反映する。選択解除すると断面計算・表示の両方から外れる。最大有効行数の安全制限は統合後の断面入力に適用する。
+- 修正: Vertical Section Visualizerで`Uploaded data`だけを選択した場合に、実データがあっても「no data found」になる問題を修正。共通フィルターへ参照＋アップロードのローカルDataFrameを渡すようにし、アップロードに任意列がない場合も安全な既定範囲でフィルターを初期化する。断面描画には引き続き有効な経度・緯度・水深・対象値が必要。
+- 改善: Vertical Section Visualizerで`data found`総数の横に、共通フィルター通過後の`Uploaded data`件数を括弧書きで表示するようにした。
+- 改善: Salinity-d18O Relationship、Isotope & Hydrographic Mapping、T-S Diagram、Custom Parameter Plot beta、Depth Profileにも、参照＋アップロードのローカルDataFrameによる共通Data filteringを展開。各ページのSelect sub-datasetに`Uploaded data`を表示し、選択されたアップロード行へ共通フィルターを適用する。元ファイルは変更しない。Mappingのコンター補間は、計算された分布面を意図せず変えないよう、アップロード行を引き続き含めない。
+- 改善: アップロード対応の全図で、ユーザーアップロード行を常に最前面へ描画するよう統一。特にVertical Sectionでは、補間入力へ統合した場合も、断面点を最後の輪郭付きトレースとして再描画する。
+- 改善: Depth Profileのアップロードマーカー既定値を140から10へ縮小し、最小値を1に設定。密なアップロードプロファイルも控えめな点サイズから開始し、サイドバーでの手動調整は維持する。
+- 修正: Depth Profileでアップロードデータだけを選択した場合、参照行が0件でも有効なアップロード行があればプロファイル描画へ進むようにした。31・32・34・35・37・53の全ページでアップロード単独選択AppTestを追加し、Salinity-d18O Relationshipでも参照行がない場合は選択参照データ用の回帰を安全にスキップするよう修正。
+- 追加: ネイティブオーバーレイ対応の全ページ（31、32、34、35、37、53）の共通Data filteringフォーム内に`Uploaded data`項目を追加。重ね描きの表示オン／オフと、年・月・位置・水深・塩分・同位体・水温の共通範囲をアップロード側だけへ任意適用できるようにした。アップロード行を参照データへ混ぜない方針は維持する。Vertical Sectionでは、この抽出後のアップロード行だけをA-B選択地図へ渡してから既存の最大3,000点制限を適用する。
+- 追加: Vertical Section Visualizerで、選択中のtarget parameterについて有効値と欠損・不正値による除外件数を表示。既存の断面描画可能行数と合わせて確認できるようにした。A-B線を描くFolium選択地図にもアップロード地点を重ね、選択地図・Section Mapの両方で座標有効件数と除外件数を表示。
+- 追加: Vertical Section Visualizerの色設定に、他ページと共通のEnvGeoカラーマップ選択、水平カラーバーの太さ・長さ・文字サイズ・目盛数の調整を追加。目盛は密集した斜めの小数表示ではなく、読みやすい丸めた数値を水平に表示するよう変更。
+- 改善: Vertical Section Visualizerのデータソース選択を他ページと揃え、3つの選択肢を横並びの1行表示へ変更。
+- 改善: Vertical Section Visualizerのサイドバーを他の可視化ページと統一。共通のユーザーデータアップロード3パネルを最上部へ移し、その次にDataset／Transect選択、Monthセグメント、海域プリセット、各範囲スライダー、上下Apply、抽出データ概要を備えた共通Data filteringフォームを配置。断面固有設定、海底地形、表示設定はその後へ整理。
+- 追加: Vertical Section Visualizer beta（ページ53）を共通アップロードオーバーレイに対応。アップロードした経度・緯度・水深・選択中パラメーターを、現在のA-B測線corridorまたはAxis-based座標へ投影し、断面図と位置図の最前面に識別可能なマーカーで表示。参照データのフィルター、断面補間、海底推定には混入しない。Integrated Visualizerでページ53をネイティブ対応ページに登録し、単独・埋め込みAppTestを追加。
+- 確認: ページ53対応、サイドバー統一、カラーバー設定追加後、Streamlit 1.42基準環境でpytest 87件、Streamlit 1.63環境で対象アップロードAppTest 12件の合格を確認。
+- 改善: アップロード地点の地図hoverで、Year、Month、Cruise、Stationや任意の実験列を含む利用可能なメタデータを表示するよう拡張。品質確認用の内部列は表示せず、極端に横長な表で地図が重くならないようhover内容には上限を設けた。
+- 追加: `month`、`sampling_month`、`sample_month`、`月`をMonth列の自動認識候補へ追加。Depth Profileにも変更可能なMonth列対応を加え、列名が異なるアップロードデータでも月別色分けを維持できるようにした。
+- 追加: 共通のアップロードマーカー設定に、必要なページだけ表示できる線設定を追加し、Depth Profileで有効化。既存の点線・太さ2.0を初期値として維持したまま、線幅とDotted/Dashed/Solid/Dash-dotを変更できるようにした。
+- 追加: Depth Profileにアップロードデータ品質確認エクスパンダーを追加し、他のアップロード対応ページと同様にプロファイル図の上へ配置。
+- 改善: Custom Parameter Plot betaで、アップロードデータだけに含まれる数値列を軸に選べるようにした。選択した共有色分け列が欠損する行は除外せず固定色で表示し、図サイズ・フォントサイズ・目盛数の設定を見渡しやすい2列レイアウトへ整理。
+- 確認: 5つのアップロード対応ページ、Integrated内の所有権、Depth Profileの線設定、アップロードのみのCustom Parameter Plot軸を対象にAppTestを拡充。Streamlit 1.42基準環境でpytest 83件、Streamlit 1.63環境で対象AppTest 8件の合格を確認。
 
 ### 2026-09-21
 

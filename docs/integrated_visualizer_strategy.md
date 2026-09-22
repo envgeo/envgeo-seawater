@@ -1,13 +1,26 @@
 # Integrated Visualizer Strategy
 
 Decision date: 2026-09-20  
-Last updated: 2026-09-21
+Last updated: 2026-09-22
+
+## 1.3.2 Implementation Update
+
+The planned independent User Data Validator is now implemented as the public
+**User Data Check & Quick Visualizer** (page 05). It provides the upload-first
+quality review, missing-value checks, reference comparison, shared Data
+filtering, simple 2D--4D plots, maps, and filtered CSV export. Page 90 remains
+a transitional integration/development page; do not move new public workflow
+features back into it.
+
+The active specialist pages 31, 32, 34, 35, 37, and 53 expose `Uploaded data`
+in common Data filtering. Page 53 uses selected valid uploaded rows in its
+local section calculation. Pages 03 and 04 remain outside the upload rollout.
 
 ## Decision
 
 Individual visualization pages remain first-class EnvGeo-Seawater workflows.
-Uploaded-data validation and comparison will move to an independent User Data
-Validator page. Integrated Visualizer remains a transitional beta test bed and
+Uploaded-data validation and comparison are provided by the public User Data
+Check & Quick Visualizer. Integrated Visualizer remains a transitional beta test bed and
 will become a hidden development archive after its useful workflows have moved
 to the validator, shared core, and individual pages.
 
@@ -140,7 +153,7 @@ not be presented as the normal public workflow after migration.
 1. Extract upload processing, shared upload UI, session state, quality reporting, required-column profiles, and the marker-style model into a focused core module.
 2. Replace the T-S Diagram's local upload controls with that shared component and verify the pilot again. Completed on 2026-09-21.
 3. Extract Shared-filter beta into an independent User Data Validator page.
-4. Apply the shared component to Salinity-d18O Relationship, Mapping, Depth Profile, Custom Parameter Plot, Interactive 2D/3D/4D pages, and Vertical Section. Salinity-d18O Relationship completed on 2026-09-21; remaining pages are pending.
+4. Apply the shared component to Salinity-d18O Relationship, Mapping, Depth Profile, Custom Parameter Plot, Interactive 2D/3D/4D pages, and Vertical Section. Pages 31, 32, 34, 35, and 37 are complete; Vertical Section (page 53) was completed on 2026-09-22. Interactive pages 03 and 04 remain pending.
 5. Remove each workflow from Integrated's temporary loader-replacement path after its native overlay is verified.
 6. Hide Integrated Visualizer from the normal public page list after Validator and individual-page migration are complete.
 

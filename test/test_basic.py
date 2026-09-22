@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Basic import and version tests for EnvGeo-Seawater.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 import sys
 import os
 

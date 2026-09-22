@@ -5,6 +5,9 @@ Custom Parameter Plot beta for EnvGeo-Seawater.
 
 任意の数値パラメーターをX軸、Y軸、色、サイズとして選び、
 海水同位体・水文データの関係を試験的に確認するページです。
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 import io
@@ -19,7 +22,7 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.1"
+version = "1.3.2"
 fig_title = "envgeo-seawater-database"
 
 
@@ -232,10 +235,22 @@ def main():
         selected_cruise,
         submitted,
     ) = envgeo_utils.sidebar_filter_and_display(
-        df_original.copy(),
+        envgeo_utils.combine_reference_and_uploaded_for_filtering(
+            df_original, uploaded_df
+        ),
         ref_data,
         data_source_japan_sea,
         data_source_around_japan,
+        uploaded_df=uploaded_df,
+        uploaded_filter_key="custom_plot",
+        uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+    )
+    # Plot styling keeps uploaded rows separate so they can be redrawn in the
+    # foreground.  Statistical calculations use the full sidebar-selected
+    # reference-plus-upload table.
+    filtered_integrated_df = df_filtered.copy()
+    df_filtered, uploaded_df = envgeo_utils.split_uploaded_rows(
+        filtered_integrated_df, envgeo_utils.UPLOADED_DATA_LABEL
     )
 
     options = numeric_parameter_options(df_filtered, uploaded_df)
@@ -588,9 +603,15 @@ def main():
                 zorder=10,
             )
 
-    if add_regression_line == "Yes" and not df_plot.empty:
-        x_values = pd.to_numeric(df_plot[x_axis], errors="coerce")
-        y_values = pd.to_numeric(df_plot[y_axis], errors="coerce")
+    if add_regression_line == "Yes":
+        # Regression deliberately uses only the two axis columns.  It should
+        # not discard otherwise valid points merely because a styling column
+        # (colour or marker size) is missing.
+        regression_source = prepare_plot_rows(
+            filtered_integrated_df, [x_axis, y_axis]
+        )
+        x_values = pd.to_numeric(regression_source[x_axis], errors="coerce")
+        y_values = pd.to_numeric(regression_source[y_axis], errors="coerce")
         regression_df = pd.DataFrame({"x": x_values, "y": y_values}).dropna()
 
         if len(regression_df) >= 2 and regression_df["x"].nunique() > 1:

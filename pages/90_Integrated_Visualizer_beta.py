@@ -8,6 +8,9 @@ then multiple plot/table views switched by tabs.
 
 EnvGeo-Seawater 統合可視化ページの試作版です。
 共通フィルタで抽出した同じデータを、タブで複数の表示に切り替えます。
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 import math
@@ -22,7 +25,7 @@ import streamlit as st
 import envgeo_utils
 
 
-version = "1.3.1"
+version = "1.3.2"
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -51,6 +54,7 @@ NATIVE_UPLOAD_OVERLAY_PAGES = {
     "34_T-S_diagram.py",
     "35_Custom_Parameter_Plot_beta.py",
     "37_Depth_Profile.py",
+    "53_Vertical_Section_Visualizer.py",
 }
 
 
@@ -82,10 +86,10 @@ def render_tab_style():
             color: inherit;
         }
         div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-            background: linear-gradient(180deg, #e6f7fb 0%, #d7eef5 100%);
-            border-color: #2f8da8;
-            color: #075064;
-            box-shadow: inset 0 0 0 1px rgba(47, 141, 168, 0.34);
+            background: linear-gradient(180deg, #e8f2ff 0%, #ddeaff 100%);
+            border-color: #4a90e2;
+            color: #0b3e75;
+            box-shadow: inset 0 0 0 1px rgba(74, 144, 226, 0.35);
         }
         html[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"],
         body[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"] {
@@ -95,10 +99,10 @@ def render_tab_style():
         }
         html[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
         body[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-            background: linear-gradient(180deg, #17485a 0%, #123645 100%);
-            color: #e9fbff;
-            border-color: #68c3dc;
-            box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+            background: linear-gradient(180deg, #204061 0%, #1a314a 100%);
+            color: #e9f2ff;
+            border-color: #76adff;
+            box-shadow: inset 0 0 0 1px rgba(118, 173, 255, 0.42);
         }
         @media (prefers-color-scheme: dark) {
             div[data-baseweb="tab-list"] button[role="tab"] {
@@ -107,10 +111,10 @@ def render_tab_style():
                 border-color: rgba(240, 244, 250, 0.26);
             }
             div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-                background: linear-gradient(180deg, #17485a 0%, #123645 100%);
-                color: #e9fbff;
-                border-color: #68c3dc;
-                box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+                background: linear-gradient(180deg, #204061 0%, #1a314a 100%);
+                color: #e9f2ff;
+                border-color: #76adff;
+                box-shadow: inset 0 0 0 1px rgba(118, 173, 255, 0.42);
             }
         }
         @media (max-width: 900px) {
@@ -1141,6 +1145,7 @@ def main():
     uploaded_quality_df = _quality_rows(uploaded_df)
 
     render_tab_style()
+    envgeo_utils.render_earthquake_tab_style()
     st.caption("Select a tab to switch visualization views.")
     tab_summary, tab_map, tab_ts, tab_sal_d18o, tab_upload, tab_data, tab_quality = st.tabs(
         [

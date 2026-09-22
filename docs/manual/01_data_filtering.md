@@ -13,6 +13,19 @@ Most EnvGeo-Seawater pages use a shared sidebar filter to select the data shown 
 5. Adjust depth, salinity, d18O, and temperature ranges.
 6. Click **Apply settings** to update the figures.
 
+## Uploaded Data
+
+On supported pages, browser-uploaded rows appear as **Uploaded data** in
+**Select sub-dataset**. Select it alone to plot only the uploaded rows, or
+select it with reference datasets to use the same filters for both. The page
+reports the uploaded-row count where relevant. Uploaded markers are drawn in
+the foreground.
+
+Vertical Section uses the selected uploaded rows together with selected
+reference rows for compatible section calculations. Other pages may retain a
+dedicated overlay path where a calculation must intentionally exclude uploads;
+follow the page-specific note.
+
 ## Main Controls
 
 - **Area filter preset**  
@@ -39,4 +52,3 @@ Most EnvGeo-Seawater pages use a shared sidebar filter to select the data shown 
 - Changing filters does not update figures until **Apply settings** is clicked.
 - Area presets initialize the filter range; users can still fine-tune sliders afterward.
 - Missing values may be retained in some filters to avoid accidentally removing metadata-only rows.
-

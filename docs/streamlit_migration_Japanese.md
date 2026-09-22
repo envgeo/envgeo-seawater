@@ -46,7 +46,7 @@ Interactive 2D/2.5D VisualizerのBox/Lasso連動には `streamlit-plotly-events=
 - 最初のStreamlit移行確認中は、各ページをPlotly 7向けに個別修正しない。
 - `envgeo_st163_py312_plotly5` を使い、既存のPlotly 5の挙動を保った状態でStreamlit 1.63を確認する。
 - `envgeo_st163_py312_plotly7` は、Plotly 7、Pandas 3、NumPy 2を含む将来構成の試験環境として残す。
-- 1.3.1テストサイトでは `requirements.txt` のStreamlit対応範囲を1.42〜1.63とする。新規デプロイでは1.63を選択し、1.42基準環境はローカル回帰確認用として維持する。
+- 1.3.2テストサイトでは `requirements.txt` のStreamlit対応範囲を1.42〜1.63とする。新規デプロイでは1.63を選択し、1.42基準環境はローカル回帰確認用として維持する。
 - 移行試験中はPlotly 5.24を現在のリリース基準として維持する。
 - 実行環境をPlotly 7へ変更する前に、Plotly 5.24で導入済みのMapLibre API（`scatter_map`、`Scattermap`、`layout.map`、`map_style`）へコードを移行する。
 - 同じMapLibreコードをPlotly 5.24、6.7、7.1で検証する。問題がなければ、バージョン別地図コードを持たず、Plotly `>=5.24,<8`で共通実装することを目標とする。
@@ -56,7 +56,7 @@ Interactive 2D/2.5D VisualizerのBox/Lasso連動には `streamlit-plotly-events=
 
 ## バージョン更新計画
 
-- EnvGeo-Seawater 1.3.1: Plotly 5.24を検証基準として維持しながら、Python 3.10〜3.12、Streamlit 1.42〜1.63への互換性を改善する。
+- EnvGeo-Seawater 1.3.2: Plotly 5.24を検証基準として維持しながら、Python 3.10〜3.12、Streamlit 1.42〜1.63互換を整理する。Streamlit 1.63で変化したタブDOMへの対応も含む。
 - その後のマイナー更新: MapLibre地図をPlotly 5.24、6.7、7.1で検証する。
 
 ## ローカル比較

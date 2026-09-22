@@ -1,17 +1,16 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 21 16:00:21 2023
+Interactive 2D/2.5D visualizer for EnvGeo-Seawater data.
 
-@author: Toyoho Ishimura @Kyoto-U
-
-2026/02/10 update 
+Created: 2023-05-21
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 
 # --- Version info ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 
 # ToDo
 

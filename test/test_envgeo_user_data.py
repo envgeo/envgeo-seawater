@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Tests for shared uploaded-data controls and map overlays.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 import sys
 from pathlib import Path
 
@@ -8,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import envgeo_user_data
+import envgeo_utils
 
 
 def test_add_uploaded_map_overlay_adds_outline_shared_color_and_fallback_traces():
@@ -104,3 +114,25 @@ def test_add_uploaded_map_overlay_reports_only_rows_actually_drawn():
         "Uploaded data outline",
         "Uploaded data",
     ]
+
+
+def test_uploaded_map_hover_includes_metadata_and_arbitrary_columns():
+    uploaded = pd.DataFrame(
+        {
+            "Longitude_degE": [135.0],
+            "Latitude_degN": [35.0],
+            "Year": [2026],
+            "Month": [4],
+            "Cruise": ["TEST-01"],
+            "NovelElement": [1.25],
+            envgeo_utils.QUALITY_FLAG_COLUMN: ["internal flag"],
+        }
+    )
+
+    hover_text = envgeo_user_data.uploaded_map_hover_text(uploaded)[0]
+
+    assert "Year: 2026" in hover_text
+    assert "Month: 4" in hover_text
+    assert "Cruise: TEST-01" in hover_text
+    assert "NovelElement: 1.25" in hover_text
+    assert envgeo_utils.QUALITY_FLAG_COLUMN not in hover_text

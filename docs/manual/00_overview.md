@@ -15,8 +15,10 @@ It supports maps, temperature-salinity diagrams, salinity-d18O relationships, de
 
 ## Basic Workflow
 
-1. Select a dataset.
-2. Apply data filters.
+1. Upload a CSV/XLSX file in **User Data Check & Quick Visualizer** when you
+   want to examine your own data, or choose a specialist page for a focused
+   figure.
+2. Select a dataset, including `Uploaded data` where it is available.
 3. Choose a visualization page.
 4. Adjust figure settings.
 5. Inspect maps, plots, tables, and quality flags.
@@ -37,5 +39,8 @@ It supports maps, temperature-salinity diagrams, salinity-d18O relationships, de
 
 - Some pages are labeled beta because their workflow or scientific design is still being refined.
 - Very large global selections may make 3D/4D visualizations slow.
-- User-upload workflows are currently most actively tested in the Integrated Visualizer beta.
-
+- Browser-uploaded data remain in memory for the current Streamlit session and
+  are not saved by the app. The public **User Data Check & Quick Visualizer**
+  provides upload-first quality review and simple 2D--4D exploration.
+- Vertical Section interpolation remains experimental; inspect observed points,
+  settings, and data coverage before using a section as an analysis result.

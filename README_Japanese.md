@@ -6,7 +6,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**現在の開発バージョン:** 1.3.1
+**現在の開発バージョン:** 1.3.2（2026-09-22）
 
 **海水同位体・水文データを、地図・断面・T-S図・3D/4D表示で探索する研究用Webアプリです。**
 
@@ -47,8 +47,8 @@ Streamlit アプリでは、`home.py` が About、データソース、マニュ
 - `pages/04_[Interactive]_3D_4D_Visualizer.py`  
   経度、緯度、水深、選択変数を扱う 3D/4D 可視化ページ。
 
-- `pages/05_3D4D_Visualizer_Uploader.py`  
-  Excel形式のユーザーデータを扱う開発・高度利用向けの 3D/4D uploader ページ。今後の役割を再設計しない限り、公開メインページではなく、開発用または非公開寄りのワークフローとして扱う予定です。
+- `pages/05_User_Data_Check_Quick_Visualizer.py`
+  参照・CSV/XLSXアップロードデータを扱う User Data Check & Quick Visualizer。共通フィルタ、欠損・品質確認、2D Map、Salinity-d18O、Temperature-Salinity、任意2D/3D/4D、地理3D、フィルタ済みCSV出力を一つの入口へまとめます。
 
 - `pages/31_Salinity-d18O_Relationship.py`  
   塩分-δ18O 関係を表示し、必要に応じて回帰線を加えるページ。
@@ -95,17 +95,17 @@ streamlit run tools/env_check_streamlit.py
 
 ## ユーザーデータの利用
 
-`91_USER_UPLOAD_UNPUB.xlsx` は、ユーザー独自データを比較表示するためのテンプレートです。
+可視化ページのブラウザアップロードから、CSV/XLSX の測定データを現在の
+Streamlit セッションへ読み込みます。`User Data Check & Quick Visualizer` は、
+品質確認と簡易2D--4D可視化のためのアップロード起点ページです。対応する個別
+ページでも、共通の Data filtering 内に `Uploaded data` が表示されます。
 
-- サンプル行を自分の測定値に置き換える
-- 列構造はそのまま維持する
-- ローカル環境でアプリを実行する
+`dataset/91_USER_UPLOAD_UNPUB.xlsx` は、当面だけ残す旧来のローカル
+サンプル／参照入力です。稼働中ローダーの参照、テスト、文書を確認して必要な
+置換を終えた後に削除する候補として扱います。新しいユーザーデータは、この
+ブックではなくブラウザからアップロードしてください。
 
-これにより、選択されたワークフロー内で、ユーザーデータを既存の参照データセットと比較できます。現在は統合 beta ワークフローを中心に試験しており、今後は共通ユーティリティとして整理しながら対応ページを広げていく予定です。
-
-アップロードファイルは、現在の Streamlit セッション中のメモリ上でのみ扱う方針です。統合 beta ワークフローでは、アップロードファイルや、参照データと一時結合したデータをローカル/サーバーへ保存しません。
-
-現在のユーザーデータ機能は Excel テンプレート中心です。今後、CSV/XLSXを直接読み込み、必須列を検証する `load_user_data()` のような仕組みに整理していく予定です。
+アップロードファイルは、現在の Streamlit セッション中のメモリ上でのみ扱う方針です。アプリは、アップロードファイルや参照データと一時結合したデータをローカル／サーバーへ保存しません。
 
 ---
 

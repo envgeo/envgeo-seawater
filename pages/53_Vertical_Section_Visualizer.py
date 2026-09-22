@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 17 17:00:10 2026
+Vertical-section visualizer for EnvGeo-Seawater data.
 
-@author: Toyoho Ishimura @Kyoto-U
+Created: 2026-03-17
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 
-2026/03/30 update
-
-This file was developed with support from CODEX.
-このファイルのみ CODEX の支援を受けて作成・改良してみました。
-すごいですね，びっくりしました。。。
+Developed and improved with assistance from Codex.
+Codexの支援を受けて作成・改良しています。
 
 This file uses a lightweight bathymetry grid derived from the GEBCO 2025 Grid.
 このファイルでは GEBCO 2025 Grid をもとに軽量化した海底地形グリッドを使用しています。
@@ -26,6 +25,7 @@ from scipy.ndimage import gaussian_filter
 from scipy.io import netcdf_file
 
 import envgeo_utils
+import envgeo_user_data
 
 
 
@@ -41,6 +41,14 @@ GEBCO_ATTRIBUTION = (
     "The GEBCO Grid should not be used for navigation or any purpose involving safety at sea."
 )
 MAP_MODE_OPTIONS = envgeo_utils.MAP_MODE_OPTIONS
+PLOTLY_MARKER_SYMBOLS = {
+    "D": "diamond",
+    "o": "circle",
+    "s": "square",
+    "^": "triangle-up",
+    "*": "star",
+    "X": "x",
+}
 
 
 def sample_points_for_map(df_points, max_points=MAX_MAP_POINTS):
@@ -282,7 +290,7 @@ def extract_section_vertices_from_draw_result(draw_result):
     return None
 
 
-def render_ab_selector_map(df_points, map_mode):
+def render_ab_selector_map(df_points, map_mode, uploaded_df=None, uploaded_style=None):
     try:
         import folium
         from folium.plugins import Draw
@@ -334,6 +342,49 @@ def render_ab_selector_map(df_points, map_mode):
             fill=True,
             fill_opacity=0.5,
         ).add_to(fmap)
+
+    # Show uploaded locations here too, so they can inform the A-B line choice.
+    if uploaded_df is not None and not uploaded_df.empty:
+        required_coordinates = {"Latitude_degN", "Longitude_degE"}
+        if required_coordinates.issubset(uploaded_df.columns):
+            uploaded_map_points = uploaded_df.copy()
+            for column in required_coordinates:
+                uploaded_map_points[column] = pd.to_numeric(
+                    uploaded_map_points[column], errors="coerce"
+                )
+            uploaded_map_points = uploaded_map_points.dropna(
+                subset=list(required_coordinates)
+            )
+            uploaded_map_points = uploaded_map_points[
+                uploaded_map_points["Latitude_degN"].between(-90, 90)
+            ]
+            uploaded_map_points = sample_points_for_map(
+                uploaded_map_points,
+                max_points=3000,
+            )
+            marker_color = (
+                uploaded_style["color"] if uploaded_style else "#D4D4D4"
+            )
+            outline_color = (
+                uploaded_style["outline_color"] if uploaded_style else "#111111"
+            )
+            marker_opacity = (
+                float(uploaded_style["alpha"]) if uploaded_style else 0.95
+            )
+            for _, row in uploaded_map_points.iterrows():
+                folium.CircleMarker(
+                    location=[
+                        float(row["Latitude_degN"]),
+                        float(row["Longitude_degE"]),
+                    ],
+                    radius=6,
+                    color=outline_color,
+                    weight=2,
+                    fill=True,
+                    fill_color=marker_color,
+                    fill_opacity=marker_opacity,
+                    tooltip="Uploaded data",
+                ).add_to(fmap)
 
     # ユーザーには polyline だけ描かせ、断面線以外の図形は無効化する
     # Allow only polyline drawing so the user defines just a section line.
@@ -669,6 +720,81 @@ def interpolate_section_grid(df_section, target_col, x_grid, y_grid):
     return z_grid
 
 
+def build_neat_colorbar_ticks(value_min, value_max, requested_count):
+    """Return evenly spaced, human-readable tick values and labels."""
+    value_min = float(value_min)
+    value_max = float(value_max)
+    if (
+        not np.isfinite(value_min)
+        or not np.isfinite(value_max)
+        or value_max <= value_min
+    ):
+        return [], []
+
+    requested_count = max(2, int(requested_count))
+    raw_step = (value_max - value_min) / (requested_count - 1)
+    magnitude = 10 ** np.floor(np.log10(raw_step))
+    normalized_step = raw_step / magnitude
+    nice_factor = next(
+        factor
+        for factor in (1.0, 2.0, 2.5, 5.0, 10.0)
+        if normalized_step <= factor
+    )
+    step = nice_factor * magnitude
+    start = np.ceil(value_min / step - 1.0e-10) * step
+    end = np.floor(value_max / step + 1.0e-10) * step
+    values = np.arange(start, end + step * 0.1, step)
+    values = values[
+        (values >= value_min - step * 1.0e-8)
+        & (values <= value_max + step * 1.0e-8)
+    ]
+    if len(values) < 2:
+        values = np.array([value_min, value_max])
+
+    decimals = max(0, int(np.ceil(-np.log10(step))) + 1)
+    decimals = min(decimals, 4)
+    clean_values = [
+        0.0 if abs(value) < 0.5 * 10 ** (-decimals) else float(value)
+        for value in values
+    ]
+    labels = [f"{value:.{decimals}f}" for value in clean_values]
+    return clean_values, labels
+
+
+def build_section_colorbar(
+    target_col,
+    z_min,
+    z_max,
+    length_percent,
+    thickness_px,
+    font_size,
+    tick_count,
+):
+    """Build a compact horizontal colorbar with horizontal, neat tick labels."""
+    tickvals, ticktext = build_neat_colorbar_ticks(z_min, z_max, tick_count)
+    return {
+        "title": {
+            "text": target_col,
+            "side": "top",
+            "font": {"size": int(font_size)},
+        },
+        "orientation": "h",
+        "y": -0.28,
+        "x": 0.5,
+        "xanchor": "center",
+        "len": float(length_percent) / 100.0,
+        "thickness": int(thickness_px),
+        "thicknessmode": "pixels",
+        "tickmode": "array",
+        "tickvals": tickvals,
+        "ticktext": ticktext,
+        "tickangle": 0,
+        "tickfont": {"size": int(font_size)},
+        "ticks": "outside",
+        "ticklen": 4,
+    }
+
+
 def create_section_plot(
     z_grid,
     xi,
@@ -682,6 +808,10 @@ def create_section_plot(
     display_depth_max=None,
     xaxis_title="Distance along A-B (km)",
     hover_mode="ab",
+    uploaded_points=None,
+    uploaded_style=None,
+    colorscale="Blues",
+    colorbar_settings=None,
 ):
     # 断面のコンター図と測点、必要に応じて海底線・海底塗りつぶしを重ねる
     # Draw the section contours, sample markers, and optionally the seafloor line/fill.
@@ -694,14 +824,15 @@ def create_section_plot(
         zmin=z_min,
         zmax=z_max,
         connectgaps=False,
-        colorbar=dict(
-            title=target_col,
-            orientation="h",
-            y=-0.30,
-            x=0.5,
-            xanchor="center",
-            len=0.7,
-            tickformat=".2f",
+        colorbar=colorbar_settings
+        or build_section_colorbar(
+            target_col,
+            z_min,
+            z_max,
+            length_percent=70,
+            thickness_px=20,
+            font_size=11,
+            tick_count=5,
         ),
     )
 
@@ -711,7 +842,7 @@ def create_section_plot(
         fig.add_trace(
             go.Contour(
                 **contour_kwargs,
-                colorscale="Blues",
+                colorscale=colorscale,
                 contours=dict(showlabels=True, coloring="heatmap", start=z_min, end=z_max),
                 line_width=0,
             )
@@ -722,6 +853,7 @@ def create_section_plot(
         fig.add_trace(
             go.Contour(
                 **contour_kwargs,
+                colorscale=colorscale,
                 contours=dict(
                     coloring="none",
                     showlabels=True,
@@ -754,6 +886,60 @@ def create_section_plot(
             ),
         )
     )
+
+    uploaded_trace = None
+    if uploaded_points is not None and not uploaded_points.empty and uploaded_style:
+        marker_size = max(6.0, np.sqrt(float(uploaded_style["size"])))
+        marker = {
+            "size": marker_size,
+            "symbol": PLOTLY_MARKER_SYMBOLS.get(
+                uploaded_style["marker"], "diamond"
+            ),
+            "opacity": float(uploaded_style["alpha"]),
+            "line": {
+                "color": uploaded_style["outline_color"],
+                "width": float(uploaded_style["outline_width"]),
+            },
+        }
+        if uploaded_style["color_mode"] == "Use current colorbar when possible":
+            marker.update(
+                color=uploaded_points[target_col],
+                colorscale=colorscale,
+                cmin=z_min,
+                cmax=z_max,
+                showscale=False,
+            )
+        else:
+            marker["color"] = uploaded_style["color"]
+
+        uploaded_trace = go.Scatter(
+            x=uploaded_points["SectionDistance_km"],
+            y=uploaded_points["Depth_m"],
+            mode="markers",
+            marker=marker,
+            name="Uploaded data",
+            customdata=np.column_stack([
+                uploaded_points["Longitude_degE"],
+                uploaded_points["Latitude_degN"],
+                uploaded_points.get(
+                    "CrossTrack_km",
+                    pd.Series(np.zeros(len(uploaded_points))),
+                ),
+            ]),
+            hovertemplate=(
+                "Uploaded data<br>"
+                "Along: %{x:.2f}<br>"
+                "Depth: %{y:.1f} m<br>"
+                "Lon: %{customdata[0]:.4f}<br>"
+                "Lat: %{customdata[1]:.4f}<br>"
+                + (
+                    "Offset: %{customdata[2]:.2f} km<br>"
+                    if hover_mode == "ab"
+                    else ""
+                )
+                + "<extra></extra>"
+            ),
+        )
 
     # 海面付近を 0 m に合わせ、必要に応じて海底塗りつぶし分だけ描画下端を伸ばす
     # Anchor the top near 0 m and extend the lower limit when a seafloor fill is drawn.
@@ -795,6 +981,9 @@ def create_section_plot(
                 showlegend=False,
             )
         )
+
+    if uploaded_trace is not None:
+        fig.add_trace(uploaded_trace)
 
     fig.update_layout(
         xaxis_title=xaxis_title,
@@ -893,16 +1082,21 @@ def create_station_map(
     return envgeo_utils.apply_map_style(fig, map_mode)
 
 
-def prepare_axis_section(df_f, target_col, x_axis_option):
+def prepare_axis_section(df_f, target_col, x_axis_option, distance_origin_df=None):
     # 元コード互換の Axis-based モード用に、選択軸を断面の x 軸へ整形する
     # Prepare the original axis-based section mode by turning the selected axis into the section x-axis.
     df_axis = df_f.copy()
     if x_axis_option == "Distance_km" and not df_axis.empty:
         # 元コード同様、左下側の基準点から近似距離を計算する
-        # As in the original code, compute approximate distance from the sorted reference point.
-        df_axis = df_axis.sort_values(["Latitude_degN", "Longitude_degE"]).copy()
-        b_lat = df_axis.iloc[0]["Latitude_degN"]
-        b_lon = df_axis.iloc[0]["Longitude_degE"]
+        # Keep the reference-data origin when uploaded rows are included.
+        origin_df = distance_origin_df if distance_origin_df is not None else df_axis
+        origin_df = origin_df.dropna(
+            subset=["Latitude_degN", "Longitude_degE"]
+        ).sort_values(["Latitude_degN", "Longitude_degE"])
+        if origin_df.empty:
+            return pd.DataFrame(), 0.0
+        b_lat = origin_df.iloc[0]["Latitude_degN"]
+        b_lon = origin_df.iloc[0]["Longitude_degE"]
         df_axis["Distance_km"] = np.sqrt(
             ((df_axis["Latitude_degN"] - b_lat) * 111.1) ** 2
             + ((df_axis["Longitude_degE"] - b_lon) * 111.1 * np.cos(np.radians(b_lat))) ** 2
@@ -918,85 +1112,167 @@ def prepare_axis_section(df_f, target_col, x_axis_option):
     return df_plot, length
 
 
+def prepare_uploaded_axis_section(
+    uploaded_df,
+    target_col,
+    x_axis_option,
+    reference_df,
+):
+    """Place uploaded samples on the same axis coordinates as reference data."""
+    required = {"Longitude_degE", "Latitude_degN", "Depth_m", target_col}
+    if uploaded_df.empty or not required.issubset(uploaded_df.columns):
+        return pd.DataFrame()
+
+    uploaded_axis = uploaded_df.copy()
+    numeric_columns = list(required)
+    for column in numeric_columns:
+        uploaded_axis[column] = pd.to_numeric(
+            uploaded_axis[column], errors="coerce"
+        )
+    uploaded_axis = uploaded_axis.dropna(subset=numeric_columns)
+    if uploaded_axis.empty:
+        return uploaded_axis
+
+    if x_axis_option == "Distance_km":
+        reference_coords = reference_df.dropna(
+            subset=["Longitude_degE", "Latitude_degN"]
+        ).sort_values(["Latitude_degN", "Longitude_degE"])
+        if reference_coords.empty:
+            return pd.DataFrame()
+        origin = reference_coords.iloc[0]
+        origin_lat = float(origin["Latitude_degN"])
+        origin_lon = float(origin["Longitude_degE"])
+        uploaded_axis["Distance_km"] = np.sqrt(
+            ((uploaded_axis["Latitude_degN"] - origin_lat) * 111.1) ** 2
+            + (
+                (uploaded_axis["Longitude_degE"] - origin_lon)
+                * 111.1
+                * np.cos(np.radians(origin_lat))
+            )
+            ** 2
+        )
+
+    uploaded_axis["SectionDistance_km"] = uploaded_axis[x_axis_option].astype(
+        float
+    )
+    uploaded_axis["CrossTrack_km"] = 0.0
+    return uploaded_axis
+
+
 def main():
     # アプリ本体。フィルタ、断面条件、補間、地図表示を順にまとめる
     # Main app body: filters, section settings, interpolation, and map visualization.
     version = envgeo_utils.APP_VERSION
     st.header(f"Vertical Section Visualizer beta ({version})")
     st.caption("Experimental section-view workflow. Interpolation and display settings are still being refined.")
-    st.sidebar.header("Section controls")
-    st.sidebar.caption("Vertical Section Visualizer beta")
-    st.sidebar.caption(envgeo_utils.AUTO_APPLY_NOTE)
 
-    ref_data_source = st.radio("Select Data Source:", envgeo_utils.DATA_SOURCES)
+    ref_data_source = st.radio(
+        "Select Data Source:",
+        envgeo_utils.DATA_SOURCES,
+        horizontal=True,
+    )
     try:
         df_raw = envgeo_utils.load_isotope_data(ref_data_source)
     except Exception as exc:
         st.error(f"Data loading error: {exc}")
         return
 
-    with st.sidebar.expander(getattr(envgeo_utils, "DATA_FILTERING_LABEL", "Data filtering"), expanded=True):
-        # 元コードのデータ絞り込み操作はできるだけ維持する
-        # Preserve the original dataset filtering workflow as much as possible.
-        df_f = df_raw.copy()
+    target_state_key = "vertical_section_target_parameter"
+    target_col = st.session_state.get(target_state_key, "d18O")
+    embedded_in_integrated = (
+        st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
+        == "53_Vertical_Section_Visualizer.py"
+    )
+    if embedded_in_integrated:
+        uploaded_df = envgeo_utils.get_uploaded_data()
+    else:
+        uploaded_df = envgeo_user_data.render_upload_panel(
+            "vertical_section",
+            "The vertical-section overlay requires longitude, latitude, depth, "
+            f"and the selected target parameter ({target_col}).",
+        )
+    uploaded_df = envgeo_user_data.render_column_controls(
+        uploaded_df,
+        {
+            "Longitude (Longitude_degE)": "Longitude_degE",
+            "Latitude (Latitude_degN)": "Latitude_degN",
+            "Depth (Depth_m)": "Depth_m",
+            f"Target parameter ({target_col})": target_col,
+        },
+        "vertical_section",
+    )
+    uploaded_style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df,
+        "vertical_section",
+    )
 
-        if "Dataset" in df_f.columns:
-            dataset_list = sorted(df_f["Dataset"].dropna().unique().tolist())
-            if dataset_list:
-                selected_datasets = st.multiselect("Dataset", dataset_list, default=dataset_list)
-                df_f = df_f[df_f["Dataset"].isin(selected_datasets)]
-
-        if "Transect" in df_f.columns:
-            transect_list = sorted(df_f["Transect"].dropna().unique().tolist())
-            if transect_list:
-                selected_transects = st.multiselect("Transect Line", transect_list, default=transect_list)
-                df_f = df_f[df_f["Transect"].isin(selected_transects)]
-
-        if "reference" in df_f.columns:
-            ref_list = sorted(df_f["reference"].dropna().unique().tolist())
-            if ref_list:
-                selected_refs = st.multiselect("Reference", ref_list, default=ref_list)
-                df_f = df_f[df_f["reference"].isin(selected_refs)]
-
-        if "Year" in df_f.columns:
-            years = sorted(df_f["Year"].dropna().unique().astype(int).tolist())
-            if years:
-                sel_years = st.multiselect("Year", years, default=years)
-                df_f = df_f[df_f["Year"].isin(sel_years)]
-
-        if "Month" in df_f.columns:
-            months = sorted(df_f["Month"].dropna().unique().astype(int).tolist())
-            if months:
-                sel_months = st.multiselect("Month", months, default=months)
-                df_f = df_f[df_f["Month"].isin(sel_months)]
-
-        if not df_f.empty:
-            lat_min = float(df_f["Latitude_degN"].min())
-            lat_max = float(df_f["Latitude_degN"].max())
-            lon_min = float(df_f["Longitude_degE"].min())
-            lon_max = float(df_f["Longitude_degE"].max())
-
-            sel_lat = st.slider("Latitude Range", lat_min, lat_max, (lat_min, lat_max))
-            sel_lon = st.slider("Longitude Range", lon_min, lon_max, (lon_min, lon_max))
-
-            df_f = df_f[
-                df_f["Latitude_degN"].between(sel_lat[0], sel_lat[1])
-                & df_f["Longitude_degE"].between(sel_lon[0], sel_lon[1])
-            ]
+    # Use the same filtering form, selection widgets, and summary layout as the
+    # other main visualization pages.
+    # 他の主要可視化ページと同じフォーム・選択UI・統計表示を使う。
+    filter_source_df = pd.concat(
+        [df_raw.copy(), uploaded_df.copy()],
+        ignore_index=True,
+        sort=False,
+    )
+    filter_result = envgeo_utils.sidebar_filter_and_display(
+        filter_source_df,
+        ref_data_source,
+        envgeo_utils.data_source_JAPAN_SEA,
+        envgeo_utils.data_source_AROUND_JAPAN,
+        uploaded_df=uploaded_df,
+        uploaded_filter_key="vertical_section",
+        uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+    )
+    df_f = filter_result[0]
+    uploaded_rows = df_f["Dataset"].eq(envgeo_utils.UPLOADED_DATA_LABEL)
+    reference_df_f = df_f.loc[~uploaded_rows].copy()
+    uploaded_df = df_f.loc[uploaded_rows].copy()
+    # The shared form has already applied every selected filter to these rows.
+    uploaded_section_input_df = uploaded_df.copy()
+    include_uploaded_in_section = envgeo_utils.uploaded_dataset_selected(
+        "vertical_section"
+    )
 
     with st.sidebar.expander("Section settings", expanded=True):
-        target_col = st.radio("Target parameter", ["d18O", "Salinity", "Temperature_degC", "dD"])
-        section_mode = st.radio("Section mode", ["Axis-based", "A-B section"], index=1)
+        target_col = st.radio(
+            "Target parameter",
+            ["d18O", "Salinity", "Temperature_degC", "dD"],
+            key=target_state_key,
+        )
+        section_mode = st.radio(
+            "Section mode",
+            ["Axis-based", "A-B section"],
+            index=1,
+        )
         x_axis_option = None
         if section_mode == "Axis-based":
-            x_axis_option = st.selectbox("X-axis for section", ["Longitude_degE", "Latitude_degN", "Distance_km"])
+            x_axis_option = st.selectbox(
+                "X-axis for section",
+                ["Longitude_degE", "Latitude_degN", "Distance_km"],
+            )
         if ref_data_source == envgeo_utils.data_source_JAPAN_SEA:
             corridor_default = 30.0
         elif ref_data_source == envgeo_utils.data_source_AROUND_JAPAN:
             corridor_default = 100.0
         else:
             corridor_default = 150.0
-        corridor_km = st.slider("Half-width of section corridor (km)", 1.0, 300.0, corridor_default, 1.0)
+        corridor_km = st.slider(
+            "Half-width of section corridor (km)",
+            1.0,
+            300.0,
+            corridor_default,
+            1.0,
+        )
+        if include_uploaded_in_section:
+            st.caption(
+                "Uploaded data is selected in Data filtering and will be "
+                "included in the section calculation."
+            )
+        else:
+            st.caption(
+                "Select ‘Uploaded data’ in Data filtering → Select "
+                "sub-dataset to include it in the section calculation."
+            )
 
     with st.sidebar.expander("Seafloor / bathymetry", expanded=True):
         show_seafloor = st.checkbox("Show seafloor", value=True)
@@ -1038,9 +1314,37 @@ def main():
         st.warning("No data remain after filtering.")
         return
 
+    # Prepare valid uploaded rows once.  These remain an overlay by default,
+    # but can be explicitly included in the local section calculation below.
+    required_section_columns = [
+        "Longitude_degE", "Latitude_degN", "Depth_m", target_col,
+    ]
+    uploaded_section_source = pd.DataFrame()
+    if set(required_section_columns).issubset(uploaded_section_input_df.columns):
+        uploaded_section_source = uploaded_section_input_df.copy()
+        for column in required_section_columns:
+            uploaded_section_source[column] = pd.to_numeric(
+                uploaded_section_source[column], errors="coerce"
+            )
+        uploaded_section_source = uploaded_section_source.dropna(
+            subset=required_section_columns
+        )
+        uploaded_section_source["SectionDataSource"] = "Uploaded"
+
     # 初期フィルタ後の有効データ件数が多すぎる場合は、Cloud での極端な重さを避ける
     # Avoid extremely heavy section rendering on Streamlit Cloud when too many valid rows remain.
-    df_section_source = df_f.dropna(subset=["Longitude_degE", "Latitude_degN", "Depth_m", target_col]).copy()
+    reference_section_source = reference_df_f.dropna(
+        subset=required_section_columns
+    ).copy()
+    reference_section_source["SectionDataSource"] = "Reference"
+    if include_uploaded_in_section and not uploaded_section_source.empty:
+        df_section_source = pd.concat(
+            [reference_section_source, uploaded_section_source],
+            ignore_index=True,
+            sort=False,
+        )
+    else:
+        df_section_source = reference_section_source
     section_plot_allowed = len(df_section_source) <= max_rows_for_section_plot
     section_plot_blocked_message = (
         f"Section plotting is disabled while more than {max_rows_for_section_plot} valid rows remain "
@@ -1048,10 +1352,15 @@ def main():
         f"Please narrow Dataset / Transect / Year / Month / Lat-Lon filters."
     )
 
-    suggested_vertices = suggest_default_section_vertices(df_f)
+    section_geometry_df = reference_df_f if not reference_df_f.empty else df_f
+    suggested_vertices = suggest_default_section_vertices(section_geometry_df)
     if suggested_vertices is None:
-        default_a = df_f.sort_values(["Longitude_degE", "Latitude_degN"]).iloc[0]
-        default_b = df_f.sort_values(["Longitude_degE", "Latitude_degN"]).iloc[-1]
+        default_a = section_geometry_df.sort_values(
+            ["Longitude_degE", "Latitude_degN"]
+        ).iloc[0]
+        default_b = section_geometry_df.sort_values(
+            ["Longitude_degE", "Latitude_degN"]
+        ).iloc[-1]
     else:
         default_a = pd.Series(
             {
@@ -1091,7 +1400,12 @@ def main():
             if section_plot_allowed:
                 st.caption("Draw a single line on the map below. The first point becomes A and the last point becomes B.")
                 try:
-                    draw_result = render_ab_selector_map(df_f, map_mode)
+                    draw_result = render_ab_selector_map(
+                        df_f,
+                        map_mode,
+                        uploaded_df=uploaded_df,
+                        uploaded_style=uploaded_style,
+                    )
                     drawn_vertices = extract_section_vertices_from_draw_result(draw_result)
                     if drawn_vertices is not None:
                         st.caption(
@@ -1149,10 +1463,52 @@ def main():
     else:
         # 従来の axis-based 断面をそのまま選べるようにしておく
         # Keep the legacy axis-based section workflow available.
-        df_section, section_length_km = prepare_axis_section(df_f, target_col, x_axis_option)
+        df_section, section_length_km = prepare_axis_section(
+            df_section_source,
+            target_col,
+            x_axis_option,
+            distance_origin_df=df_f,
+        )
         status_label = "Samples used for axis section"
         xaxis_title = x_axis_option
         hover_mode = "axis"
+
+    if section_mode == "A-B section":
+        if section_ready_for_plot and not uploaded_section_source.empty:
+            uploaded_section, _, _ = project_points_to_polyline(
+                uploaded_section_source,
+                section_vertices,
+                corridor_km,
+            )
+        else:
+            uploaded_section = pd.DataFrame()
+    else:
+        uploaded_section = prepare_uploaded_axis_section(
+            uploaded_df,
+            target_col,
+            x_axis_option,
+            df_f,
+        )
+
+    # Draw uploaded rows again as the final outlined trace.  They may also be
+    # part of df_section for interpolation, but this foreground trace keeps
+    # their origin visible above contours, reference markers, and seafloor.
+    uploaded_overlay_section = uploaded_section
+
+    target_values = pd.to_numeric(df_f[target_col], errors="coerce")
+    target_available_count = int(target_values.notna().sum())
+    target_missing_count = len(df_f) - target_available_count
+    if target_missing_count:
+        st.caption(
+            f":red[Selected {target_col}: {target_available_count:,} / "
+            f"{len(df_f):,} samples available ({target_missing_count:,} excluded "
+            f"due to missing or invalid {target_col} values).]"
+        )
+    else:
+        st.caption(
+            f":blue[Selected {target_col}: all {target_available_count:,} "
+            "filtered samples have valid values.]"
+        )
 
     st.write(f"Filtered Data: `{len(df_f)}` rows")
     st.write(f"Valid rows for section plotting: `{len(df_section_source)}` rows")
@@ -1160,6 +1516,48 @@ def main():
     st.write(f"Map background points: `{len(df_f.dropna(subset=['Longitude_degE', 'Latitude_degN']))}` rows")
     if section_mode == "A-B section":
         st.write(f"Section length: `{section_length_km:.2f} km`")
+    if not uploaded_df.empty:
+        if include_uploaded_in_section:
+            st.markdown(
+                f":green[Uploaded section input: {len(uploaded_section_source):,} / "
+                f"{len(uploaded_section_input_df):,} filtered uploaded rows are included in "
+                "section projection and interpolation.]"
+            )
+        if section_mode == "A-B section" and not section_ready_for_plot:
+            st.info(
+                "Uploaded overlay is ready. Apply a drawn A-B line to project "
+                "the uploaded rows into the section."
+            )
+        else:
+            uploaded_section_excluded = len(uploaded_df) - len(uploaded_section)
+            st.markdown(
+                f":blue[Uploaded overlay: {len(uploaded_section):,} / "
+                f"{len(uploaded_df):,} plotted in the section"
+                + (
+                    f" ({uploaded_section_excluded:,} excluded due to missing "
+                    "or invalid required values, or because they are outside "
+                    "the A-B corridor)."
+                    if uploaded_section_excluded
+                    else "."
+                )
+                + (
+                    " Uploaded rows are included in the section calculation.]"
+                    if include_uploaded_in_section
+                    else " Uploaded rows are not used for interpolation or "
+                    "seafloor estimation.]"
+                )
+            )
+        uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
+        with st.expander("Uploaded data quality check", expanded=False):
+            envgeo_utils.render_quality_flag_criteria_note()
+            st.write(
+                f"Quality-flagged rows: {len(uploaded_quality_df):,} / "
+                f"{len(uploaded_df):,}"
+            )
+            if uploaded_quality_df.empty:
+                st.success("No uploaded rows triggered the current quality rules.")
+            else:
+                st.dataframe(uploaded_quality_df.astype(str))
 
     if not section_plot_allowed:
         st.warning(section_plot_blocked_message)
@@ -1203,6 +1601,8 @@ def main():
         st.error("A and B are identical. Please change the endpoints.")
         return
 
+    section_colorscale = envgeo_utils.get_plotly_colormap(target_col)
+    section_colorbar_settings = None
     if len(df_section) > 5:
         # 測線方向距離 x 深度 の2次元格子を作って、そこへ観測値を補間する
         # Create a 2D grid of along-section distance and depth, then interpolate observations onto it.
@@ -1296,8 +1696,81 @@ def main():
                     scale_max,
                     (value_min, value_max),
                 )
+                colormap_options = envgeo_utils.get_plotly_colormap_options(
+                    target_col
+                )
+                colormap_labels = list(colormap_options)
+                recommended_colormap = (
+                    envgeo_utils.recommended_plotly_colormap_label(target_col)
+                )
+                selected_colormap_label = st.selectbox(
+                    "Colormap",
+                    colormap_labels,
+                    index=colormap_labels.index(recommended_colormap),
+                    key=f"vertical_section_colormap::{target_col}",
+                    help=(
+                        "Choose the palette used for the section contour and "
+                        "its matching uploaded-data markers."
+                    ),
+                )
+                section_colorscale = envgeo_utils.get_plotly_colormap(
+                    target_col,
+                    selected_colormap_label,
+                )
+                colorbar_col1, colorbar_col2 = st.columns(2)
+                with colorbar_col1:
+                    colorbar_thickness = st.slider(
+                        "Colorbar thickness",
+                        min_value=10,
+                        max_value=40,
+                        value=20,
+                        step=2,
+                        key="vertical_section_colorbar_thickness",
+                        help="Adjust the thickness of the horizontal colorbar.",
+                    )
+                    colorbar_font_size = st.number_input(
+                        "Colorbar font size",
+                        min_value=8,
+                        max_value=20,
+                        value=11,
+                        step=1,
+                        key="vertical_section_colorbar_font_size",
+                    )
+                with colorbar_col2:
+                    colorbar_length = st.slider(
+                        "Colorbar length",
+                        min_value=40,
+                        max_value=100,
+                        value=70,
+                        step=5,
+                        key="vertical_section_colorbar_length",
+                        help=(
+                            "Adjust the displayed width of the horizontal "
+                            "colorbar. 100 uses the full available width."
+                        ),
+                    )
+                    colorbar_tick_count = st.select_slider(
+                        "Colorbar tick count",
+                        options=[3, 4, 5, 6, 7, 8],
+                        value=5,
+                        key="vertical_section_colorbar_tick_count",
+                        help=(
+                            "Choose an approximate number of horizontal, "
+                            "easy-to-read numeric tick labels."
+                        ),
+                    )
+                section_colorbar_settings = build_section_colorbar(
+                    target_col,
+                    z_min,
+                    z_max,
+                    colorbar_length,
+                    colorbar_thickness,
+                    colorbar_font_size,
+                    colorbar_tick_count,
+                )
 
-            tab_color, tab_line = st.tabs(["Color", "Line"])
+            envgeo_utils.render_earthquake_tab_style()
+            tab_color, tab_line = st.tabs(["🎨 Color", "📈 Line"])
             with tab_color:
                 st.plotly_chart(
                     create_section_plot(
@@ -1313,6 +1786,10 @@ def main():
                         plot_depth_max,
                         xaxis_title,
                         hover_mode,
+                        uploaded_overlay_section,
+                        uploaded_style,
+                        colorscale=section_colorscale,
+                        colorbar_settings=section_colorbar_settings,
                     ),
                     **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
@@ -1331,6 +1808,10 @@ def main():
                         plot_depth_max,
                         xaxis_title,
                         hover_mode,
+                        uploaded_overlay_section,
+                        uploaded_style,
+                        colorscale=section_colorscale,
+                        colorbar_settings=section_colorbar_settings,
                     ),
                     **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
@@ -1351,7 +1832,9 @@ def main():
 
     st.markdown("---")
     st.subheader("Section Map")
-    df_map_background = df_f.dropna(subset=["Longitude_degE", "Latitude_degN"]).copy()
+    df_map_background = reference_df_f.dropna(
+        subset=["Longitude_degE", "Latitude_degN"]
+    ).copy()
     if section_mode == "A-B section":
         map_fig = create_station_map(
             df_section,
@@ -1385,11 +1868,36 @@ def main():
             map_mode=map_mode,
         )
 
+    map_color_range = None
+    if "z_min" in locals() and "z_max" in locals() and z_min < z_max:
+        map_color_range = (z_min, z_max)
+    map_fig, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+        map_fig,
+        uploaded_df,
+        uploaded_style,
+        color_column=target_col,
+        colorscale=section_colorscale,
+        color_range=map_color_range,
+        show_nodata=True,
+    )
+
     st.plotly_chart(
         map_fig,
         config={"scrollZoom": True},
         **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
+    if not uploaded_df.empty:
+        uploaded_map_excluded = len(uploaded_df) - uploaded_map_count
+        st.caption(
+            f"Uploaded map overlay: {uploaded_map_count:,} / "
+            f"{len(uploaded_df):,} rows with valid coordinates"
+            + (
+                f" ({uploaded_map_excluded:,} excluded due to missing or "
+                "invalid longitude/latitude)."
+                if uploaded_map_excluded
+                else "."
+            )
+        )
 
     with st.expander("Section dataset (CSV)", expanded=False):
         # 断面描画に実際に使ったデータだけを、見やすい列順で表示する

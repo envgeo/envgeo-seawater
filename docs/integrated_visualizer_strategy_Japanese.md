@@ -1,12 +1,20 @@
 # Integrated Visualizer 運用・移行方針
 
 方針確定日: 2026-09-20  
-最終更新日: 2026-09-21
+最終更新日: 2026-09-22
+
+## 1.3.2 実装状況
+
+独立したUser Data Validatorとして計画していた役割は、公開ページ
+**User Data Check & Quick Visualizer**（ページ05）へ実装しました。アップロード起点の
+品質・欠損確認、参照データとの比較、共通Data filtering、簡易2D--4D、地図、フィルター後CSV出力を担当します。ページ90は移行・開発用として残し、新しい公開ワークフローを戻さない方針です。
+
+アクティブな個別ページ31、32、34、35、37、53は、共通Data filteringで`Uploaded data`を選択できます。ページ53は有効な選択済みアップロード行をローカルの断面計算に使用します。ページ03・04はアップロード展開の対象外として保留しています。
 
 ## 決定事項
 
 各個別可視化ページは、EnvGeo-Seawaterの正式な主要ワークフローとして残します。
-アップロードデータの検証と既存データとの比較は、独立したUser Data Validatorページへ移します。
+アップロードデータの検証と既存データとの比較は、公開ページUser Data Check & Quick Visualizerが担当します。
 Integrated Visualizerは移行中のbeta試験基盤とし、必要な機能の移行完了後は非公開の開発アーカイブにします。
 
 アップロード機能の実装は1つに共通化します。共通処理とUIは、
@@ -103,7 +111,7 @@ Integrated Visualizerのソースは開発アーカイブとして残すこと�
 1. アップロード処理、共通UI、セッション保持、品質レポート、必須列プロファイル、マーカー設定モデルを専用コアモジュールへ切り出す。
 2. T-S Diagramのページ内UIを共通部品で置き換え、再テストする。2026-09-21完了。
 3. Shared-filter betaを独立したUser Data Validatorページへ移す。
-4. Salinity-d18O Relationship、Mapping、Depth Profile、Custom Parameter Plot、Interactive 2D/3D/4D、Vertical Sectionへ小さな単位で展開する。Salinity-d18O Relationshipは2026-09-21完了、その他は未実装。
+4. Salinity-d18O Relationship、Mapping、Depth Profile、Custom Parameter Plot、Interactive 2D/3D/4D、Vertical Sectionへ小さな単位で展開する。ページ31、32、34、35、37は完了済み。Vertical Section（ページ53）は2026-09-22完了。Interactiveページ03・04は保留中。
 5. 個別ページの重ね描画確認後、そのページをIntegratedの一時ローダー差し替え対象から外す。
 6. Validatorと個別ページへの移行完了後、Integrated Visualizerを通常の公開ページ一覧から外す。
 

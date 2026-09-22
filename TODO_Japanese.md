@@ -18,7 +18,7 @@
    - Python 3.10 / Streamlit 1.42 / Plotly 5.24と、Python 3.12 / Streamlit 1.63 / Plotly 5.24で手動確認を完了する。
    - Plotly選択、Cartopy地図、フォーム、アップロード・ダウンロード、Vertical Section、Earthquake Simple / Advancedの操作を確認する。
    - 再現できる互換性問題だけを修正し、必要なpytestを追加する。
-   - 確認完了後、Seawater 1.3.1とEarthquake 0.3.1をリリースする。
+   - Seawater 1.3.2とEarthquake 0.3.2を現在のローカル版の区切りとし、公開・タグ付け前に残りの画面確認を完了する。
 2. 地図をMapboxからMapLibreへ移行する。
    - 共通処理と各ページに残るMapbox使用箇所を一覧化する。
    - Plotly 5.24のまま、代表ページ1つを先にMapLibre化する。
@@ -115,7 +115,7 @@ Critical項目は、依存関係を考慮して次の順番で進める。
 1. pushおよびpull request時に現在のpytest群を実行する、最小構成のGitHub Actionsを追加する。AppTestの拡充を待たず、基本CIを先に導入する。
 2. 現在のプロジェクト情報とバージョンを記載した`CITATION.cff`を作成する。Zenodoから正式な識別子が発行されるまでは、DOIを未記載または明確な保留状態にする。
 3. `paper.md`へ正式なリポジトリURLとソフトウェアバージョンを追加し、リリース前にAvailabilityの記述と研究利用実績の引用を整える。
-4. 1.3.1の互換性確認を完了し、最終版のタグ付きGitHub Releaseを作成する。
+4. 1.3.2の互換性確認を完了し、最終版のタグ付きGitHub Releaseを作成する。
 5. そのリリースをZenodoでアーカイブし、発行されたDOIを`paper.md`、`CITATION.cff`、READMEの引用案内、リリース記録へ一貫して追記する。
 
 テストカバレッジは今後の計画資料として測定する。ただし、数値目標だけを追わず、科学的処理と実際のワークフローのリスクに基づいてテストを拡充する。
@@ -149,7 +149,8 @@ Critical項目は、依存関係を考慮して次の順番で進める。
   - Vertical Section beta
 - Correlation Overviewは開発過程を残すアーカイブページであるため、アップロード機能の展開対象から外す。
 - 全ページ展開前に、CSV/XLSX読込、別名・日本語ラベル認識、手動列対応、検証エラー、品質フラグ、メモリ内限定処理のpytestを追加する。
-- `3D/4D Visualizer Uploader` は、目的を再設計しない限り、非公開または開発専用ページとする方向で検討する。Integrated Visualizerと共通 `envgeo_utils.py` へアップロード機能を集約するにつれて、汎用アップロードデータ3D可視化ページとしての当初の役割は薄くなっている。
+- `User Data Check & Quick Visualizer` を、品質確認と任意列の簡易2D--4D可視化を行う公開のアップロード起点ページとして維持する。セッション内限定のデータ管理と共通Data filteringを保ち、ページ90を移行期間中は残しつつ、専門的な個別解析ページとの役割を明確にする。
+- `dataset/91_USER_UPLOAD_UNPUB.xlsx` は、`envgeo_utils.py` の稼働中ローダー参照、`Unpublished dataset` への統合、テスト／サンプル依存、古い文書を監査して置換・削除できることを確認した後にのみ廃止する。ブラウザからのCSV/XLSXアップロードを通常のユーザーデータ運用とし、監査完了前にこのブックを削除しない。
 
 注意事項:
 

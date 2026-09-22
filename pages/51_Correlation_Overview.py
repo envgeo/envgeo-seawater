@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 22 17:15:03 2023
-@author: Toyoho Ishimura @Kyoto-U
-2026/02/10 update 
+Correlation overview page for EnvGeo-Seawater data.
+
+Created: 2023-04-22
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 # --- バージョン管理の設定 ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 

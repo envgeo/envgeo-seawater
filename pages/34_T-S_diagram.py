@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 22 17:15:03 2023
-@author: Toyoho Ishimura @Kyoto-U
-2026/02/10 update 
+Temperature–salinity diagram visualizer for EnvGeo-Seawater data.
+
+Created: 2023-04-22
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 
 # --- Version info ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 
 # ToDo
 
@@ -150,7 +152,17 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(
+         envgeo_utils.combine_reference_and_uploaded_for_filtering(
+             df1, uploaded_df
+         ),
+         ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN,
+         uploaded_df=uploaded_df, uploaded_filter_key="ts_diagram",
+         uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+     )
+    df1, uploaded_df = envgeo_utils.split_uploaded_rows(
+        df1, envgeo_utils.UPLOADED_DATA_LABEL
+    )
 
     # データが一つだけの時に警告　近似直線を引くなどの必要がある図の場合のみ使用，d18Oなどは適宜変更
     data_found = len(df1["d18O"])

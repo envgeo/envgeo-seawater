@@ -1,4 +1,11 @@
-"""Shared Streamlit controls for memory-only uploaded user data."""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Shared Streamlit controls for memory-only uploaded user data.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
 
 import math
 
@@ -24,6 +31,8 @@ LINE_STYLE_OPTIONS = {
     "Solid": "-",
     "Dash-dot": "-.",
 }
+MAX_MAP_HOVER_COLUMNS = 30
+MAX_MAP_HOVER_VALUE_LENGTH = 120
 
 
 def render_upload_panel(page_key, requirement_text):
@@ -189,7 +198,50 @@ def _without_required_roles(uploaded_df, required_columns):
     )
 
 
-def render_marker_style_controls(uploaded_df, page_key, include_line=False):
+def uploaded_map_hover_text(uploaded_df):
+    """Build bounded hover text while retaining arbitrary uploaded fields."""
+    excluded_columns = {
+        envgeo_utils.QUALITY_FLAG_COLUMN,
+        envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
+    }
+    coordinate_columns = {"Longitude_degE", "Latitude_degN"}
+    hover_columns = [
+        column
+        for column in uploaded_df.columns
+        if column not in excluded_columns and column not in coordinate_columns
+    ]
+    shown_columns = hover_columns[:MAX_MAP_HOVER_COLUMNS]
+    omitted_count = len(hover_columns) - len(shown_columns)
+    hover_text = []
+
+    for _, row in uploaded_df.iterrows():
+        lines = [
+            "Uploaded data",
+            f"Longitude: {row['Longitude_degE']:g}",
+            f"Latitude: {row['Latitude_degN']:g}",
+        ]
+        for column in shown_columns:
+            value = row[column]
+            if pd.isna(value):
+                continue
+            value_text = str(value)
+            if len(value_text) > MAX_MAP_HOVER_VALUE_LENGTH:
+                value_text = value_text[: MAX_MAP_HOVER_VALUE_LENGTH - 3] + "..."
+            lines.append(f"{column}: {value_text}")
+        if omitted_count:
+            lines.append(f"({omitted_count} additional columns not shown)")
+        hover_text.append("<br>".join(lines))
+    return hover_text
+
+
+def render_marker_style_controls(
+    uploaded_df,
+    page_key,
+    include_line=False,
+    marker_size_default=140,
+    marker_size_min=10,
+    marker_size_step=10,
+):
     """Render common uploaded-marker controls and optional line controls."""
     controls_disabled = uploaded_df.empty
     with st.sidebar.expander("Uploaded marker style", expanded=False):
@@ -225,10 +277,10 @@ def render_marker_style_controls(uploaded_df, page_key, include_line=False):
         with marker_col1:
             marker_size = st.number_input(
                 "Marker size",
-                min_value=10,
+                min_value=marker_size_min,
                 max_value=600,
-                value=140,
-                step=10,
+                value=marker_size_default,
+                step=marker_size_step,
                 key=f"{page_key}_uploaded_marker_size",
                 disabled=controls_disabled,
             )
@@ -324,17 +376,7 @@ def add_uploaded_map_overlay(
 
     marker_size = max(6.0, math.sqrt(float(style["size"])))
     outline_size = marker_size + 2.0 * float(style["outline_width"])
-    hover_text = []
-    for _, row in map_df.iterrows():
-        lines = [
-            "Uploaded data",
-            f"Longitude: {row['Longitude_degE']:g}",
-            f"Latitude: {row['Latitude_degN']:g}",
-        ]
-        for column in ["Depth_m", "Temperature_degC", "Salinity", "d18O", "dD"]:
-            if column in map_df.columns and pd.notna(row[column]):
-                lines.append(f"{column}: {row[column]}")
-        hover_text.append("<br>".join(lines))
+    hover_text = uploaded_map_hover_text(map_df)
 
     # --- カラーバー共有の判定（アウトライン前に確定させる）---
     use_shared_color = (

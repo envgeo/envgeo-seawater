@@ -67,7 +67,7 @@ for Box/Lasso-linked selection in the Interactive 2D/2.5D Visualizer.
   existing Plotly 5 behavior.
 - Keep `envgeo_st163_py312_plotly7` as a future-stack test environment for Plotly 7,
   Pandas 3, and NumPy 2 compatibility.
-- For the 1.3.1 test site, allow Streamlit 1.42-1.63 in `requirements.txt`; a
+- For the 1.3.2 test site, allow Streamlit 1.42-1.63 in `requirements.txt`; a
   fresh deployment resolves to Streamlit 1.63 while the 1.42 baseline remains
   available for local regression checks.
 - Keep Plotly 5.24 as the current release baseline while migration tests are in
@@ -87,8 +87,9 @@ for Box/Lasso-linked selection in the Interactive 2D/2.5D Visualizer.
 
 ## Planned Version Sequence
 
-- EnvGeo-Seawater 1.3.1: Python 3.10-3.12 and Streamlit 1.42-1.63
-  compatibility update, retaining Plotly 5.24 as the verified baseline.
+- EnvGeo-Seawater 1.3.2: Python 3.10-3.12 and Streamlit 1.42-1.63
+  compatibility consolidation, including the Streamlit 1.63 tab-DOM update,
+  while retaining Plotly 5.24 as the verified baseline.
 - A later minor release: MapLibre-based maps verified across Plotly 5.24, 6.7,
   and 7.1.
 

@@ -37,7 +37,7 @@
 - このページは将来の統合構想の主な試験場です。
 - アップロードデータは Streamlit セッション中のメモリ上のみで扱う方針です。
 - 一部のワークフローは、互換性のため既存ページファイルを呼び出します。
-- 個別可視化ページは正式な主要ワークフローとして残し、データ検証と既存データとの比較は独立したUser Data Validatorへ移します。
+- 個別可視化ページは正式な主要ワークフローとして残します。以前に独立User Data Validatorへ移す予定だったアップロード起点の検証、既存データとの比較、簡易診断は、公開ページ **User Data Check & Quick Visualizer** が担当します。
 - Full existing page互換モードは移行中の一時機能であり、対象ページのアップロード重ね描画完了後に廃止します。
 - Integrated Visualizerは移行中は利用可能な状態を保ち、移行完了後は非公開の開発アーカイブとして残すことができます。
 - 決定済みの設計と移行手順は [Integrated Visualizer運用・移行方針](../integrated_visualizer_strategy_Japanese.md) を参照してください。

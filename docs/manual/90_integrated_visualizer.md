@@ -37,7 +37,10 @@ This beta page tests integrated workflows that combine existing visualization pa
 - This page is the main test bed for future integration.
 - Uploaded data are intended to remain in memory only during the Streamlit session.
 - Some workflows call existing page files for compatibility.
-- Individual visualization pages will remain first-class workflows. Validation and reference-data comparison will move to an independent User Data Validator page.
+- Individual visualization pages remain first-class workflows. The public
+  **User Data Check & Quick Visualizer** now provides the upload-first
+  validation, reference comparison, and simple diagnostic role formerly
+  planned as an independent User Data Validator.
 - Full existing page compatibility mode is transitional and will be retired after supported pages have native upload overlays.
 - Integrated Visualizer will remain available during migration and may then be kept as a hidden development archive.
 - See the [Integrated Visualizer strategy](../integrated_visualizer_strategy.md) for the accepted architecture and migration plan.

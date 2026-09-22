@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Apr 22 17:15:03 2023
-@author: Toyoho Ishimura @Kyoto-U
-2026/02/10 update
+Isotope and hydrographic mapping visualizer for EnvGeo-Seawater data.
+
+Created: 2023-04-22
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 
 
 
 # --- Version info ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 
 # ToDo
 # このバージョンは補完計算の調整が必要
@@ -252,7 +254,22 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(
+         envgeo_utils.combine_reference_and_uploaded_for_filtering(
+             df1, uploaded_df
+         ),
+         ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN,
+         uploaded_df=uploaded_df, uploaded_filter_key="isotope_mapping",
+         uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+     )
+    # Use the selected, integrated table for both scatter and contour
+    # calculations.  Keep a separate uploaded subset only to redraw it above
+    # the calculated layer with the user-selected marker style.
+    filtered_integrated_df = df1.copy()
+    _, uploaded_df = envgeo_utils.split_uploaded_rows(
+        filtered_integrated_df, envgeo_utils.UPLOADED_DATA_LABEL
+    )
+    df1 = filtered_integrated_df
 
     map_parameter_candidates = [
         "d18O",
@@ -795,27 +812,61 @@ def main():
         #############################################################
         # Contour Map
         #############################################################
-        lon_original = df1["Longitude_degE"].values
+        # ``linear`` interpolation needs at least three non-collinear points.
+        # Uploaded-only selections can legitimately contain fewer points, so
+        # fall back to nearest-neighbour interpolation rather than erroring.
+        contour_df = df1.loc[:, [
+            "Longitude_degE", "Latitude_degN", selected_parameter
+        ]].copy()
+        for _column in contour_df.columns:
+            contour_df[_column] = pd.to_numeric(
+                contour_df[_column], errors="coerce"
+            )
+        contour_df = contour_df.dropna().loc[
+            lambda data: data["Latitude_degN"].between(-90, 90)
+        ]
+        if contour_df.empty:
+            st.warning(
+                f"No valid longitude, latitude, and {selected_parameter} values "
+                "are available for the contour map."
+            )
+            return
+
+        lon_original = contour_df["Longitude_degE"].values
         # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
         # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
         lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
         # Build the interpolation grid in the same longitude domain as the slider and set_extent.
         # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
         grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
-        lat_vals     = df1["Latitude_degN"].values
-        val          = df1[selected_parameter].values
+        lat_vals     = contour_df["Latitude_degN"].values
+        val          = contour_df[selected_parameter].values
         
         # ---- グリッド ----
         grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
         X, Y = np.meshgrid(grid_lon, grid_lat)
         
         # ---- 補間 ----
-        Z = griddata(
-            (lon_for_interp, lat_vals),
-            val,
-            (X, Y),
-            method="linear"
-        )
+        Z = None
+        if len(contour_df) >= 3:
+            try:
+                Z = griddata(
+                    (lon_for_interp, lat_vals), val, (X, Y), method="linear"
+                )
+            except Exception:
+                # Collinear or duplicate locations are valid uploads but are
+                # not a valid Delaunay triangulation for linear interpolation.
+                Z = None
+        if Z is None or not np.isfinite(Z).any():
+            try:
+                Z = griddata(
+                    (lon_for_interp, lat_vals), val, (X, Y), method="nearest"
+                )
+            except Exception:
+                st.warning(
+                    "The selected locations could not be interpolated for the contour map."
+                )
+                return
         Z_plot = np.ma.masked_invalid(Z)
         lon_plot = grid_lon
         

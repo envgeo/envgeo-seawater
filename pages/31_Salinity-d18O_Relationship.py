@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 21 16:00:21 2023
+Salinity–δ18O relationship visualizer for EnvGeo-Seawater data.
 
-@author: Toyoho Ishimura @Kyoto-U
-
-2026/03/18 update
+Created: 2023-05-21
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 
 
 # --- Version info ---
-version = "1.3.1"  # 2026-09-19
+version = "1.3.2"  # 2026-09-22
 
 # ToDo
 
@@ -167,11 +167,24 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df_original, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(
+         envgeo_utils.combine_reference_and_uploaded_for_filtering(
+             df_original, uploaded_df
+         ),
+         ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN,
+         uploaded_df=uploaded_df, uploaded_filter_key="sal_d18o",
+         uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
+     )
+    # Keep the sidebar-filtered integrated table for calculations.  The split
+    # copy is only for drawing the uploaded rows again in the foreground.
+    filtered_integrated_df = df1.copy()
+    df1, uploaded_df = envgeo_utils.split_uploaded_rows(
+        filtered_integrated_df, envgeo_utils.UPLOADED_DATA_LABEL
+    )
 
 
     # データが一つだけの時に警告　近似直線を引くなどの必要がある図の場合のみ使用，d18Oなどは適宜変更
-    data_found = len(df1["d18O"])
+    data_found = len(filtered_integrated_df["d18O"])
     if data_found == 1:
         st.warning('Only one data point was found. Regression analysis could not be performed.')
         st.stop()
@@ -219,7 +232,7 @@ def main():
         ]
         sal_d18o_color_options = [
             item for item in sal_d18o_color_candidates
-            if item == "Single color" or item in df1.columns
+            if item == "Single color" or item in filtered_integrated_df.columns
         ]
         sal_d18o_color_by = st.selectbox(
             "Color parameter",
@@ -234,19 +247,8 @@ def main():
         sal_d18o_color_range = None
         if sal_d18o_color_by != "Single color":
             sal_d18o_matplotlib_colormap = envgeo_utils.get_matplotlib_colormap(sal_d18o_color_by)
-            sal_d18o_color_sources = [
-                pd.to_numeric(df1[sal_d18o_color_by], errors="coerce")
-            ]
-            if (
-                uploaded_style["color_mode"] == "Use current colorbar when possible"
-                and sal_d18o_color_by in uploaded_df.columns
-            ):
-                sal_d18o_color_sources.append(
-                    pd.to_numeric(uploaded_df[sal_d18o_color_by], errors="coerce")
-                )
-            sal_d18o_color_source = pd.concat(
-                sal_d18o_color_sources,
-                ignore_index=True,
+            sal_d18o_color_source = pd.to_numeric(
+                filtered_integrated_df[sal_d18o_color_by], errors="coerce"
             ).dropna()
             if not sal_d18o_color_source.empty:
                 sal_d18o_color_min = float(sal_d18o_color_source.min())
@@ -634,6 +636,7 @@ def main():
         # フィルターしたデータを重ね書き
         ##############################################################################
 
+        selected_regression_available = False
         if X_Y_add2 == 1:
         
             if X_Y_C_add_each == 1:     
@@ -647,15 +650,19 @@ def main():
                 filtered_required_columns = ["Salinity", "d18O"]
                 if sal_d18o_color_by != "Single color":
                     filtered_required_columns.append(sal_d18o_color_by)
-                df_fig_add = df1.dropna(subset=filtered_required_columns).reset_index(drop=True)
+                # The selected regression is calculated from the same
+                # reference-plus-upload table that the sidebar has filtered.
+                df_fig_add = filtered_integrated_df.dropna(
+                    subset=filtered_required_columns
+                ).reset_index(drop=True)
 
                 # 排除したサンプル数を計算（オプション：前述の英語メッセージなどで使う用）
-                excluded_count_add = len(df1) - len(df_fig_add)
+                excluded_count_add = len(filtered_integrated_df) - len(df_fig_add)
                 if excluded_count_add > 0:
                     missing_label = "d18O/salinity"
                     if sal_d18o_color_by != "Single color":
                         missing_label = f"d18O/salinity/{sal_d18o_color_by}"
-                    st.caption(f":blue[Filtered plot: {len(df_fig_add):,} / {len(df1):,} plotted ({excluded_count_add:,} excluded due to missing {missing_label}).]")
+                    st.caption(f":blue[Filtered plot: {len(df_fig_add):,} / {len(filtered_integrated_df):,} plotted ({excluded_count_add:,} excluded due to missing {missing_label}).]")
                         
 
                 
@@ -669,7 +676,7 @@ def main():
                 
                 #列の要素を表示
                 d_select_add2 = df_fig_add[selected_row].value_counts().to_dict()
-                d_select_add2_sum = df1[selected_row].count().sum()
+                d_select_add2_sum = filtered_integrated_df[selected_row].count().sum()
 
                 
                 if sal_d18o_color_by != "Single color" and sal_d18o_color_range is not None:
@@ -696,7 +703,11 @@ def main():
 
 
                 
-                if plot_reg_lines == "Yes":
+                if (
+                    plot_reg_lines == "Yes"
+                    and len(X_add) >= 2
+                    and X_add.nunique() > 1
+                ):
                 # 一次関数で多項式近似を行う
                 #近似式の係数
                     coef_add = np.polyfit(X_add, Y_add, 1)
@@ -707,14 +718,18 @@ def main():
                 
                     reg_line_add = sheet_names_add2 + ':  y' + ' = ' + '{:.2f}'.format(coef_add[0]) + 'x ' +' + (' + '{:.2f}'.format(coef_add[1]) 
                     line_r_add = np.corrcoef(X_add, Y_add)
+                    selected_regression_available = True
                 
                     ax.text(0.99, 0.05*3+0.01, reg_line_add + ")   (R=" + '{:.2f}'.format(line_r_add[0,1])+', N=' + str(d_select_add2_sum)+')', horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3))
                     # ax.text(0.99, 0.01, line_r, horizontalalignment='right', transform=ax.transAxes)
                 
                 
        
-                else:
-                    pass
+                elif plot_reg_lines == "Yes":
+                    st.caption(
+                        ":gray[Regression line was skipped because fewer than "
+                        "two valid selected data points are available.]"
+                    )
                 
             else:
                 pass
@@ -738,9 +753,9 @@ def main():
         #==========  以下，近似直線の計算　============
         if plot_reg_lines == "Yes": 
         
-            if plot_all_data == "Yes":
+            if plot_all_data == "Yes" and "coef" in locals():
                 Y_all_pred = coef[0]*Xa + coef[1]
-      
+
                 MSE_all = mean_squared_error(Ya, Y_all_pred)
                 RMES_all = np.sqrt(mean_squared_error(Ya, Y_all_pred))
 
@@ -753,15 +768,16 @@ def main():
                 
             
             
-            Y_add_pred = coef_add[0]*X_add + coef_add[1]
-  
-            MSE_add = mean_squared_error(Y_add, Y_add_pred)
-            RMES_add = np.sqrt(mean_squared_error(Y_add, Y_add_pred))
-            
-            #　R2の計算
-            R2_add =  r2_score(Y_add, Y_add_pred)  
-            
-            ax.text(0.99, 0.05*2+0.01, 'RMSE_add: ' + '{:.3f}'.format(RMES_add)+', R$^{2}$_add: ' + '{:.2f}'.format(R2_add), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='blue')
+            if selected_regression_available:
+                Y_add_pred = coef_add[0]*X_add + coef_add[1]
+
+                MSE_add = mean_squared_error(Y_add, Y_add_pred)
+                RMES_add = np.sqrt(mean_squared_error(Y_add, Y_add_pred))
+
+                #　R2の計算
+                R2_add =  r2_score(Y_add, Y_add_pred)
+
+                ax.text(0.99, 0.05*2+0.01, 'RMSE_add: ' + '{:.3f}'.format(RMES_add)+', R$^{2}$_add: ' + '{:.2f}'.format(R2_add), horizontalalignment='right', transform=ax.transAxes, fontsize=max(8, sld_font_size_tick - 3), c='blue')
         
         else:
             pass

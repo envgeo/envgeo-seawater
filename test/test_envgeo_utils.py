@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Tests for EnvGeo-Seawater shared utility functions.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 import io
 import os
 import sys
@@ -25,8 +34,8 @@ REQUIRED_COLUMNS = {
 # Verifies that app version metadata is kept in one reusable place.
 # アプリのバージョン情報が、使い回せる共通定数として管理されていることを確認する。
 def test_app_version_metadata_is_available():
-    assert envgeo_utils.APP_VERSION == "1.3.1"
-    assert envgeo_utils.APP_VERSION_DATE == "2026-09-19"
+    assert envgeo_utils.APP_VERSION == "1.3.2"
+    assert envgeo_utils.APP_VERSION_DATE == "2026-09-22"
     assert envgeo_utils.APP_VERSION in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.APP_VERSION_DATE in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.version == envgeo_utils.APP_VERSION
@@ -441,6 +450,56 @@ def test_prepare_uploaded_data_keeps_d_excess_nan_without_dd():
     )
 
     assert out["d-excess"].isna().all()
+
+
+def test_arrow_display_dataframe_coerces_mixed_identifier_columns_to_strings():
+    """Mixed spreadsheet identifiers must not trigger Streamlit Arrow errors."""
+    source = pd.DataFrame({"Station": [14, "14_5", None], "Salinity": [34.1, 34.2, 34.3]})
+
+    displayed = envgeo_utils.arrow_display_dataframe(source)
+
+    assert str(displayed["Station"].dtype) == "string"
+    assert displayed["Station"].tolist() == ["14", "14_5", pd.NA]
+    assert source["Station"].tolist() == [14, "14_5", None]
+
+
+def test_filter_uploaded_data_for_sidebar_keeps_overlay_separate_and_filterable():
+    uploaded = pd.DataFrame(
+        {
+            "Year": [2020, 2021, 2021],
+            "Month": [1, 2, 3],
+            "Longitude_degE": [135.0, 140.0, 145.0],
+            "Latitude_degN": [35.0, 36.0, 37.0],
+            "Depth_m": [10.0, 20.0, 30.0],
+            "Salinity": [34.0, 35.0, 36.0],
+        }
+    )
+    state = {
+        envgeo_utils._uploaded_filter_state_key("test"): {
+            "show": True,
+            "apply_reference_filters": True,
+            "selected_dataset": [],
+            "selected_cruise": [],
+            "selected_months": [2, 3],
+            "year_range": (2021, 2021),
+            "longitude_range": (139, 146),
+            "latitude_range": (0, 90),
+            "depth_range": (0, 100),
+            "salinity_range": (0, 100),
+            "d18o_range": (-10, 10),
+            "temperature_range": (0, 40),
+        }
+    }
+
+    filtered = envgeo_utils.filter_uploaded_data_for_sidebar(
+        uploaded, "test", state=state
+    )
+
+    assert filtered.index.tolist() == [1, 2]
+    state[envgeo_utils._uploaded_filter_state_key("test")]["show"] = False
+    assert envgeo_utils.filter_uploaded_data_for_sidebar(
+        uploaded, "test", state=state
+    ).empty
 
 
 # Verifies that unknown labels can be assigned manually without losing source columns.

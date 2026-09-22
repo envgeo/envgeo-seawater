@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Data-integrity tests for the EnvGeo-Seawater reference datasets.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 import sys
 from pathlib import Path
 

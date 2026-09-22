@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Redirect users to the dedicated EnvGeo-Earthquake application."""
+"""
+Redirect users to the dedicated EnvGeo-Earthquake application.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
 
 import streamlit as st
 

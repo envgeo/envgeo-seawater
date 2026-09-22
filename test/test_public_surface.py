@@ -1,7 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Tests for the public-facing documentation surface.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_home_keeps_the_public_landing_identity_and_version_display():
+    """Protect the title and introduction shown on the public landing page."""
+    home_text = (ROOT / "home.py").read_text(encoding="utf-8")
+
+    assert "st.title('EnvGeo Seawater')" in home_text
+    assert "An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data" in home_text
+    assert "Interactive 3D/4D Seawater Isotope and Hydrographic Database" in home_text
+    assert "Seawater d18O, dD, temperature, salinity, d-excess" in home_text
+    assert "Version {envgeo_utils.APP_VERSION_LABEL}" in home_text
 
 
 # These terms should stay out of public-facing README/app update text for now.
@@ -45,15 +65,13 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
         "34_T-S_diagram.py",
         "35_Custom_Parameter_Plot_beta.py",
         "37_Depth_Profile.py",
+        "05_User_Data_Check_Quick_Visualizer.py",
         "51_Correlation_Overview.py",
         "53_Vertical_Section_Visualizer.py",
         "90_Integrated_Visualizer_beta.py",
         "91_EnvGeo_Earthquake.py",
     }
-    local_only_pages = {
-        "05_3D4D_Visualizer_Uploader.py",
-        "99_Environment_Check.py",
-    }
+    local_only_pages = {"99_Environment_Check.py"}
 
     assert public_pages <= page_names
     assert page_names <= public_pages | local_only_pages

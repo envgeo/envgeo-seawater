@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Repository health and source-structure tests.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
+"""
+
 import ast
 import py_compile
 import re
@@ -298,16 +307,16 @@ def test_parameter_mapping_uses_shared_colormap_helpers():
     assert "cmocean palettes are designed for oceanographic data" in page_text
 
 
-# The standalone uploader has its own upload-first workflow and should not be loaded as a full-page workflow.
-# 独立アップロードページは共通フィルタと流れが異なるため、統合betaの既存ページ選択肢には含めない。
-def test_integrated_beta_excludes_standalone_uploader_from_full_page_workflows():
+# The public user-data entry page has its own workflow and is not a page-90 full-page target.
+# 公開ユーザーデータ入口は独自の流れを持つため、統合betaの既存ページ選択肢には含めない。
+def test_integrated_beta_excludes_user_data_quick_visualizer_from_full_page_workflows():
     page_text = (ROOT / "pages" / "90_Integrated_Visualizer_beta.py").read_text(
         encoding="utf-8"
     )
     workflow_block = page_text.split("FULL_PAGE_WORKFLOWS = {", 1)[1].split("}", 1)[0]
 
-    assert "05_3D4D_Visualizer_Uploader.py" not in workflow_block
-    assert "3D/4D Uploader" not in workflow_block
+    assert "05_User_Data_Check_Quick_Visualizer.py" not in workflow_block
+    assert "User Data Check & Quick Visualizer" not in workflow_block
 
 
 # NATIVE_UPLOAD_OVERLAY_PAGES must match, page for page, which FULL_PAGE_WORKFLOWS pages

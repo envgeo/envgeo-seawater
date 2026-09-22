@@ -1,12 +1,11 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 21 16:00:21 2023
+EnvGeo-Seawater home page and application overview.
 
-@author: Toyoho Ishimura @Kyoto-U
-
-2026/04/03 update
+Created: 2023-05-21
+Author: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 """
 
 import streamlit as st
@@ -127,11 +126,11 @@ def render_tab_style() -> None:
             color: inherit;
         }
         div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-            background: linear-gradient(180deg, #e6f7fb 0%, #d7eef5 100%);
-            border-color: #2f8da8;
-            border-bottom-color: #d7eef5;
-            color: #075064;
-            box-shadow: inset 0 0 0 1px rgba(47, 141, 168, 0.34);
+            background: linear-gradient(180deg, #e8f2ff 0%, #ddeaff 100%);
+            border-color: #4a90e2;
+            border-bottom-color: #ddeaff;
+            color: #0b3e75;
+            box-shadow: inset 0 0 0 1px rgba(74, 144, 226, 0.35);
         }
         html[data-theme="dark"] div[data-baseweb="tab-list"] {
             border-bottom-color: rgba(240, 244, 250, 0.18);
@@ -144,10 +143,10 @@ def render_tab_style() -> None:
         }
         html[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"],
         body[data-theme="dark"] div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-            background: linear-gradient(180deg, #17485a 0%, #123645 100%);
-            color: #e9fbff;
-            border-color: #68c3dc;
-            box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+            background: linear-gradient(180deg, #204061 0%, #1a314a 100%);
+            color: #e9f2ff;
+            border-color: #76adff;
+            box-shadow: inset 0 0 0 1px rgba(118, 173, 255, 0.42);
         }
         @media (prefers-color-scheme: dark) {
             div[data-baseweb="tab-list"] {
@@ -159,10 +158,10 @@ def render_tab_style() -> None:
                 border-color: rgba(240, 244, 250, 0.26);
             }
             div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
-                background: linear-gradient(180deg, #17485a 0%, #123645 100%);
-                color: #e9fbff;
-                border-color: #68c3dc;
-                box-shadow: inset 0 0 0 1px rgba(104, 195, 220, 0.42);
+                background: linear-gradient(180deg, #204061 0%, #1a314a 100%);
+                color: #e9f2ff;
+                border-color: #76adff;
+                box-shadow: inset 0 0 0 1px rgba(118, 173, 255, 0.42);
             }
         }
         @media (max-width: 900px) {
@@ -180,11 +179,19 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
-### Version 1.3.1 (Unreleased, updated 2026-09-19)
+### Version 1.3.2 (2026-09-22)
+
+- Added shared, in-memory CSV/XLSX user-data upload and filtering to the active specialist pages. `Uploaded data` can be selected in Data filtering; selected uploads are used in compatible plotting and calculation workflows and are drawn in the foreground.
+- Added `User Data Check & Quick Visualizer` as the public upload-first page for quality review, missing-value checks, shared filtering, 2D/3D/4D exploration, 2D maps, geographic 3D, and filtered CSV export.
+- Improved Vertical Section Visualizer with shared upload filtering, uploaded-data section inputs, target-parameter availability summaries, and configurable readable colorbars. Its interpolation outputs remain experimental.
+- Updated tab styling for Streamlit 1.63, kept the Plotly 5.24 baseline, and expanded targeted regression and AppTest coverage.
+- Recorded `dataset/91_USER_UPLOAD_UNPUB.xlsx` as a legacy-input removal candidate; browser upload is now the normal user-data workflow.
+
+### Version 1.3.1 (2026-09-19)
 
 - Added compatibility handling for Python 3.10-3.12 and Streamlit 1.42-1.63 migration testing.
 - Preserved the Plotly 5.24 baseline while preparing a staged Mapbox-to-MapLibre migration for Plotly 7.
-- Continued planning shared, memory-only user-data upload support for individual visualization pages.
+- Began the shared, memory-only user-data upload rollout for individual visualization pages.
 
 ### Version 1.3.0 (2026-09-11)
 
@@ -225,6 +232,7 @@ def main():
 
 
     render_tab_style()
+    envgeo_utils.render_earthquake_tab_style()
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
         ["Main", "About", "Data Sources", "Manual", "Updates", "Japanese"]
     )
