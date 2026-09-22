@@ -295,6 +295,28 @@ def test_uploaded_only_subdataset_does_not_raise(page_name, data):
     assert not app.exception
 
 
+def test_integrated_views_skip_upload_overlays_when_required_columns_are_absent():
+    """Arbitrary uploaded columns must not stop the Map, T-S, or Salinity-d18O tabs.
+
+    任意項目のみのアップロードでも、90ページの各既存データ図がKeyErrorで停止しない。
+    """
+    app = _run_page(
+        "90_Integrated_Visualizer_beta.py",
+        {"NovelParameter": [1.0, 2.0], "SampleID": ["A", "B"]},
+    )
+    workflow_selector = next(
+        item for item in app.radio if item.label == "Workflow mode"
+    )
+    workflow_selector.set_value("Shared-filter beta")
+    app.run(timeout=60)
+
+    assert not app.exception
+    assert any(
+        "Uploaded data are not overlaid in T-S Diagram" in value
+        for value in _visible_text(app)
+    )
+
+
 def test_depth_profile_embedded_mode_uses_integrated_upload_owner():
     app = _app_test().from_file(str(ROOT / "pages" / "37_Depth_Profile.py"))
     app.session_state[envgeo_utils.UPLOAD_SESSION_DATA_KEY] = (

@@ -527,6 +527,24 @@ def _plotly_color_scale_args(df, color_column, colormap_label=None):
     return {}
 
 
+def _uploaded_rows_for_view(uploaded_df, required_columns, view_label):
+    """Return upload rows usable in one view without assuming mapped columns.
+
+    任意形式のアップロード表では、各ビューに必要な標準列が未対応の場合がある。
+    その場合も参照データの図を止めず、当該ビューのアップロード重ね描きだけを省略する。
+    """
+    missing_columns = [
+        column for column in required_columns if column not in uploaded_df.columns
+    ]
+    if missing_columns:
+        st.caption(
+            "Uploaded data are not overlaid in "
+            f"{view_label}: missing {', '.join(missing_columns)}."
+        )
+        return pd.DataFrame(columns=required_columns)
+    return uploaded_df.dropna(subset=required_columns).copy()
+
+
 def render_summary(df, quality_df, uploaded_quality_df=None):
     st.subheader("Filtered Dataset")
     if uploaded_quality_df is None:
@@ -627,9 +645,13 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
     )
 
     if uploaded_df is not None and not uploaded_df.empty:
-        uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
-        uploaded_clean = uploaded_df.dropna(subset=["Latitude_degN", "Longitude_degE"]).copy()
+        uploaded_clean = _uploaded_rows_for_view(
+            uploaded_df,
+            ["Latitude_degN", "Longitude_degE"],
+            "Map",
+        )
         if not uploaded_clean.empty:
+            uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
             use_colorbar = _can_use_current_colorbar(
                 uploaded_style, uploaded_clean, color_column
             )
@@ -726,9 +748,13 @@ def render_ts_diagram(df, uploaded_df=None, uploaded_style=None):
     )
 
     if uploaded_df is not None and not uploaded_df.empty:
-        uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
-        uploaded_clean = uploaded_df.dropna(subset=["Salinity", "Temperature_degC"]).copy()
+        uploaded_clean = _uploaded_rows_for_view(
+            uploaded_df,
+            ["Salinity", "Temperature_degC"],
+            "T-S Diagram",
+        )
         if not uploaded_clean.empty:
+            uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
             use_colorbar = _can_use_current_colorbar(
                 uploaded_style, uploaded_clean, color_column
             )
@@ -821,9 +847,13 @@ def render_salinity_d18o(df, uploaded_df=None, uploaded_style=None):
     )
 
     if uploaded_df is not None and not uploaded_df.empty:
-        uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
-        uploaded_clean = uploaded_df.dropna(subset=["Salinity", "d18O"]).copy()
+        uploaded_clean = _uploaded_rows_for_view(
+            uploaded_df,
+            ["Salinity", "d18O"],
+            "Salinity-d18O",
+        )
         if not uploaded_clean.empty:
+            uploaded_style = uploaded_style or render_uploaded_marker_style_controls()
             use_colorbar = _can_use_current_colorbar(
                 uploaded_style, uploaded_clean, color_column
             )
