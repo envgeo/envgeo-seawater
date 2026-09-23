@@ -252,7 +252,7 @@ Documentation policy:
   core (`envgeo4d` / `envgeo_utils`), especially data loading, validation,
   quality flags, d-excess, region presets, and export helpers. Do not attempt to
   document every page script as a public API.
-- Keep `51_Correlation_Overview.py` documented as an intentionally preserved
+- Keep `80_Correlation_Overview.py` documented as an intentionally preserved
   exploratory/archive workflow, not as a target for API cleanup.
 
 Testing policy:
@@ -304,7 +304,7 @@ Current status:
     Profile pages to the file-level import area.
   - Removed a no-op `colorscale=None if use_colorbar else None` line from the
     integrated visualizer upload-map trace.
-- `51_Correlation_Overview.py` is an intentional archive of the original
+- `80_Correlation_Overview.py` is an intentional archive of the original
   hand-written exploratory workflow. No new features, upload integration, or
   structural refactoring are planned.
 - This is intentional preservation, not simple neglect. The page documents the
@@ -483,7 +483,7 @@ Current status:
 - The current local/test environment uses Streamlit 1.42.0.
 - In this version, `st.form_submit_button()` does not support the `key`
   argument.
-- `51_Correlation_Overview.py` therefore uses two different labels,
+- `80_Correlation_Overview.py` therefore uses two different labels,
   `Apply settings` and `Apply settings!`, for the top and bottom submit buttons
   inside the same form.
 

@@ -216,13 +216,13 @@ def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
     assert 'config={"scrollZoom": True, "displayModeBar": True}' in page_text
 
 
-def test_quick_visualizer_filter_result_precedes_marker_style():
+def test_quick_visualizer_marker_style_precedes_data_filtering():
     page_text = (
         ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
     ).read_text(encoding="utf-8")
 
-    assert page_text.index("filter_result = envgeo_utils.sidebar_filter_and_display") < page_text.index(
-        "style = envgeo_user_data.render_marker_style_controls"
+    assert page_text.index("style = envgeo_user_data.render_marker_style_controls") < page_text.index(
+        "filter_result = envgeo_utils.sidebar_filter_and_display"
     )
 
 

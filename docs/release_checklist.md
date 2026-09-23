@@ -55,7 +55,7 @@ Open each page and perform a light visual check.
 - [ ] `34_T-S_diagram.py`
 - [ ] `35_Custom_Parameter_Plot_beta.py`
 - [ ] `37_Depth_Profile.py`
-- [ ] `51_Correlation_Overview.py`
+- [ ] `80_Correlation_Overview.py`
 - [ ] `53_Vertical_Section_Visualizer.py`
 - [ ] `90_Integrated_Visualizer_beta.py`
 

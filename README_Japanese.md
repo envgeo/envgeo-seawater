@@ -65,7 +65,7 @@ Streamlit アプリでは、`home.py` が About、データソース、マニュ
 - `pages/35_Custom_Parameter_Plot_beta.py`  
   X軸、Y軸、色、マーカーサイズを任意の数値パラメーターから選ぶ試験的な2Dプロットページ。
 
-- `pages/51_Correlation_Overview.py`  
+- `pages/80_Correlation_Overview.py`  
   手書きで開発してきた元の探索ワークフローを保存するアーカイブ表示ページです。開発記録として残し、新機能は追加しません。
 
 - `pages/53_Vertical_Section_Visualizer.py`  

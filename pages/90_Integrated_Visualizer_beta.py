@@ -38,7 +38,7 @@ FULL_PAGE_WORKFLOWS = {
     "T-S Diagram": "34_T-S_diagram.py",
     "Custom Parameter Plot beta": "35_Custom_Parameter_Plot_beta.py",
     "Depth Profile": "37_Depth_Profile.py",
-    "Correlation Overview": "51_Correlation_Overview.py",
+    "Correlation Overview": "80_Correlation_Overview.py",
     "Vertical Section beta": "53_Vertical_Section_Visualizer.py",
 }
 

@@ -69,7 +69,7 @@ main visualization tools, along with selected beta and local-development pages:
 - `pages/35_Custom_Parameter_Plot_beta.py`  
   Experimental custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
 
-- `pages/51_Correlation_Overview.py`
+- `pages/80_Correlation_Overview.py`
 Archive display of the original hand-written exploratory workflow used during development. It is retained as a development record; no new features are planned.
 
 - `pages/53_Vertical_Section_Visualizer.py`  

@@ -37,7 +37,7 @@ def test_matplotlib_cartopy_pages_use_explicit_figure_and_axes():
     page31_text = (ROOT / "pages" / "31_Salinity-d18O_Relationship.py").read_text(
         encoding="utf-8"
     )
-    page51_text = (ROOT / "pages" / "51_Correlation_Overview.py").read_text(
+    page80_text = (ROOT / "pages" / "80_Correlation_Overview.py").read_text(
         encoding="utf-8"
     )
 
@@ -45,18 +45,18 @@ def test_matplotlib_cartopy_pages_use_explicit_figure_and_axes():
         return [line.strip() for line in text.splitlines() if not line.lstrip().startswith("#")]
 
     assert all("plt.savefig(" not in line for line in active_lines(page31_text))
-    assert all("plt.savefig(" not in line for line in active_lines(page51_text))
+    assert all("plt.savefig(" not in line for line in active_lines(page80_text))
     assert "fig.savefig(img, format='png')" in page31_text
-    assert "fig.savefig(img, format='png')" in page51_text
-    assert "ax.scatter(df_depth_all" in page51_text
+    assert "fig.savefig(img, format='png')" in page80_text
+    assert "ax.scatter(df_depth_all" in page80_text
     assert "plt.close(fig)" in page31_text
-    assert "plt.close(fig)" in page51_text
+    assert "plt.close(fig)" in page80_text
 
 
 # Correlation Overview should not flood the Streamlit server log with debug output.
 # Correlation Overviewの調査用出力を、Streamlitサーバーログへ流さない。
 def test_correlation_overview_has_no_active_print_calls():
-    page_path = ROOT / "pages" / "51_Correlation_Overview.py"
+    page_path = ROOT / "pages" / "80_Correlation_Overview.py"
     tree = ast.parse(page_path.read_text(encoding="utf-8"))
 
     print_calls = [

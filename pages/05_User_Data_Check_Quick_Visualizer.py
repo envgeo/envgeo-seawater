@@ -532,6 +532,16 @@ def main():
     uploaded_df = envgeo_user_data.render_upload_panel("quick_visualizer", "Any numeric columns can be used for 2D/3D axes. Assign longitude, latitude, and depth below to enable the geographic 3D view.")
     uploaded_df = envgeo_user_data.render_column_controls(uploaded_df, {}, "quick_visualizer", optional_roles={"Longitude column (optional)": "Longitude_degE", "Latitude column (optional)": "Latitude_degN", "Depth column (optional)": "Depth_m"})
 
+    # Keep uploaded-marker controls independent of the current data filter.
+    # アップロード用マーカー設定は、現在のData filteringとは独立して表示する。
+    style = envgeo_user_data.render_marker_style_controls(
+        uploaded_df,
+        "quick_visualizer",
+        marker_size_default=64,
+        marker_size_min=4,
+        marker_size_step=4,
+    )
+
     # Optional comparison data / 比較用の参照データは必要な場合だけ選択する。
     ref_data = st.radio(
         "Comparison data source (optional):",
@@ -584,9 +594,6 @@ def main():
         _, _sel_upl = envgeo_utils.split_uploaded_rows(filtered_df)
         _uploaded_count = len(_sel_upl)
 
-    # Marker controls and variables apply to every quick-look figure.
-    # マーカー設定と変数選択は、すべての簡易可視化で共通に使う。
-    style = envgeo_user_data.render_marker_style_controls(filtered_df, "quick_visualizer", marker_size_default=64, marker_size_min=4, marker_size_step=4)
     numeric_options = numeric_columns(filtered_df)
     if len(numeric_options) < 2:
         st.warning("At least two numeric columns are required after filtering.")
