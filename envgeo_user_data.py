@@ -33,6 +33,17 @@ LINE_STYLE_OPTIONS = {
 }
 MAX_MAP_HOVER_COLUMNS = 30
 MAX_MAP_HOVER_VALUE_LENGTH = 120
+UPLOAD_COORDINATE_NOTE = (
+    "Coordinates: enter latitude and longitude as decimal degrees "
+    "(e.g., Latitude 35.6812, Longitude 139.7671), not degrees–minutes–seconds "
+    "(e.g., 35°40′52″). Latitude: −90.000 to +90.000; Longitude: −180.000 to +180.000."
+)
+BROWSER_UPLOAD_NOTE = (
+    "Browser uploads are used only in this Streamlit session and are not saved "
+    "to local or server storage. `User Excel data` "
+    "is a separate always-loaded local table.  \n"
+    "See Home → Show README → User Data Integration for details."
+)
 
 
 def render_upload_panel(page_key, requirement_text):
@@ -41,10 +52,7 @@ def render_upload_panel(page_key, requirement_text):
 
     with st.sidebar.expander("Uploaded data overlay", expanded=False):
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
-        st.caption(
-            "Uploaded files remain in memory for this Streamlit session only. "
-            "They are not saved to local or server storage."
-        )
+        st.caption(BROWSER_UPLOAD_NOTE)
         st.download_button(
             "Download CSV template",
             data=envgeo_utils.build_upload_template_csv(),
@@ -55,7 +63,9 @@ def render_upload_panel(page_key, requirement_text):
 
         if not uploaded_df.empty:
             filename = envgeo_utils.get_uploaded_filename() or "current session"
-            st.success(f"Using {len(uploaded_df):,} shared rows from {filename}.")
+            st.success(
+                f"Browser upload: using {len(uploaded_df):,} shared rows from {filename}."
+            )
             if st.button(
                 "Clear shared uploaded data",
                 key=f"{page_key}_clear_uploaded_data",
@@ -81,6 +91,7 @@ def render_upload_panel(page_key, requirement_text):
                 + " Common English and unambiguous Japanese column names are recognized."
             ),
         )
+        st.caption(UPLOAD_COORDINATE_NOTE)
         if uploaded_file is not None:
             try:
                 uploaded_df = envgeo_utils.prepare_uploaded_data(

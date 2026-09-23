@@ -9,7 +9,7 @@ Last updated: 2026-09-22
 """
 
 # --- バージョン管理の設定 ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 
@@ -1116,7 +1116,7 @@ def main():
     ax = fig.add_subplot(3, 2, 1, projection=ccrs.PlateCarree())
     
     ax.set_global()
-    ax.coastlines()
+    envgeo_utils.plot_bundled_coastline(ax, transform=ccrs.PlateCarree())
     # ax.set_extent([120-0.001, 145+0.001, 20-0.001, 45+0.001], crs=ccrs.PlateCarree())
     # ax.set_extent([map_lon_min, map_lon_max, map_lat_min, map_lat_max], crs=ccrs.PlateCarree())
     
@@ -1232,7 +1232,7 @@ def main():
     # ax = fig.add_subplot(grid[0, 0])
     
     ax.set_global()
-    ax.coastlines()
+    envgeo_utils.plot_bundled_coastline(ax, transform=ccrs.PlateCarree())
     # ax.set_extent([120-0.001, 145+0.001, 20-0.001, 45+0.001], crs=ccrs.PlateCarree())
     # ax.set_extent([map_lon_min, map_lon_max, map_lat_min, map_lat_max], crs=ccrs.PlateCarree()) #これがあるとstreamlit cloud動かない？
         

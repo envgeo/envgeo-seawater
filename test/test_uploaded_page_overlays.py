@@ -208,6 +208,24 @@ def test_quick_visualizer_supports_shared_uploaded_4d_data():
     assert len(app.get("plotly_chart")) == 4
 
 
+def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
+    page_text = (
+        ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'config={"scrollZoom": True, "displayModeBar": True}' in page_text
+
+
+def test_quick_visualizer_filter_result_precedes_marker_style():
+    page_text = (
+        ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+    ).read_text(encoding="utf-8")
+
+    assert page_text.index("filter_result = envgeo_utils.sidebar_filter_and_display") < page_text.index(
+        "style = envgeo_user_data.render_marker_style_controls"
+    )
+
+
 def test_quick_visualizer_geographic_scene_has_page04_style_projection(monkeypatch):
     page_path = ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
     spec = importlib.util.spec_from_file_location("quick_visualizer", page_path)
@@ -645,3 +663,150 @@ def test_vertical_section_embedded_mode_uses_integrated_upload_owner():
         item for item in app.sidebar.multiselect if item.label == "Choose datasets"
     )
     assert "Uploaded data" in dataset_selector.value
+
+
+def test_bering_sea_area_preset_filters_by_or_condition_end_to_end():
+    # Regression test for the Bering Sea Data-filtering bug: selecting the
+    # "Bering Sea" area preset used to leave the Longitude slider at the
+    # full data range (a single range slider cannot express a span
+    # crossing the antimeridian), so North Atlantic points at the same
+    # latitude leaked through. Two Bering Sea points (one on each arm of
+    # the dateline) must survive; a same-latitude North America point and
+    # a same-latitude North Atlantic point must not.
+    app = _run_page(
+        "53_Vertical_Section_Visualizer.py",
+        {
+            "Longitude_degE": [170.0, -170.0, -150.0, -30.0],
+            "Latitude_degN": [55.0, 55.1, 55.2, 55.3],
+            "Depth_m": [10.0, 10.0, 10.0, 10.0],
+            "d18O": [0.1, 0.1, 0.1, 0.1],
+        },
+    )
+    next(
+        item for item in app.sidebar.multiselect if item.label == "Choose datasets"
+    ).set_value(["Uploaded data"])
+    next(
+        item for item in app.sidebar.selectbox if item.label == "Area filter preset"
+    ).set_value("Bering Sea")
+    app.run(timeout=60)
+
+    assert not app.exception
+    visible = [str(item.value) for item in app.markdown]
+    assert any("2 data found" in text for text in visible), visible
+
+
+# ---------------------------------------------------------------------------
+# Tests for the robust _valid_coords_df coordinate guard (pages 31, 34, 37)
+# ---------------------------------------------------------------------------
+_MAP_PAGES = [
+    "31_Salinity-d18O_Relationship.py",
+    "34_T-S_diagram.py",
+    "37_Depth_Profile.py",
+]
+_MAP_PAGE_IDS = ["p31", "p34", "p37"]
+
+_INFO_MSG = (
+    "Map view is unavailable because the selected data contain no valid "
+    "latitude/longitude coordinates."
+)
+
+
+def _base_row():
+    """Minimal row with required columns so non-map analyses run."""
+    return {
+        "Salinity": [35.0],
+        "d18O": [-0.5],
+        "Temperature_degC": [10.0],
+        "Depth_m": [100.0],
+    }
+
+
+def _run_page_uploaded_only(page_name, data, timeout=60):
+    """Run a page with uploaded data only (Kodama reference data excluded)."""
+    app = _run_page(page_name, data)
+    try:
+        next(
+            item for item in app.sidebar.multiselect
+            if item.label == "Choose datasets"
+        ).set_value(["Uploaded data"])
+    except StopIteration:
+        pass  # page may not have this widget; proceed as-is
+    app.run(timeout=timeout)
+    return app
+
+
+@pytest.mark.parametrize("page_name", _MAP_PAGES, ids=_MAP_PAGE_IDS)
+def test_map_degrades_when_only_latitude_present(page_name):
+    """Lat-only (no lon): page must not raise an exception.
+
+    The map info message is not required because some pages (e.g. p31, p37)
+    may degrade and call st.stop() before reaching the map section when the
+    uploaded data lacks a required column, so the info message may never be
+    rendered.
+    """
+    data = _base_row()
+    data["Latitude_degN"] = [35.0]
+    # Longitude_degE intentionally absent
+    app = _run_page_uploaded_only(page_name, data)
+    assert not app.exception
+
+
+@pytest.mark.parametrize("page_name", _MAP_PAGES, ids=_MAP_PAGE_IDS)
+def test_map_degrades_when_only_longitude_present(page_name):
+    """Lon-only (no lat): page must not raise an exception.
+
+    Same caveat as test_map_degrades_when_only_latitude_present — info
+    message is not required because the page may stop before the map section.
+    """
+    data = _base_row()
+    data["Longitude_degE"] = [135.0]
+    # Latitude_degN intentionally absent
+    app = _run_page_uploaded_only(page_name, data)
+    assert not app.exception
+
+
+@pytest.mark.parametrize("page_name", _MAP_PAGES, ids=_MAP_PAGE_IDS)
+def test_map_degrades_when_coords_are_non_numeric_strings(page_name):
+    """Non-numeric lat/lon: page must not raise an exception.
+
+    pd.to_numeric coerces the strings to NaN so the guard correctly treats
+    them as invalid, but the info message is not required (page may stop
+    earlier for unrelated reasons).
+    """
+    data = _base_row()
+    data["Latitude_degN"] = ["north"]
+    data["Longitude_degE"] = ["east"]
+    app = _run_page_uploaded_only(page_name, data)
+    assert not app.exception
+
+
+@pytest.mark.parametrize("page_name", _MAP_PAGES, ids=_MAP_PAGE_IDS)
+def test_map_degrades_when_all_coords_out_of_range(page_name):
+    """Out-of-range coords only (lat=999, lon=999): page must not raise an exception.
+
+    Info message is not required — the page may stop before the map section.
+    """
+    data = _base_row()
+    data["Latitude_degN"] = [999.0]
+    data["Longitude_degE"] = [999.0]
+    app = _run_page_uploaded_only(page_name, data)
+    assert not app.exception
+
+
+@pytest.mark.parametrize("page_name", _MAP_PAGES, ids=_MAP_PAGE_IDS)
+def test_map_renders_when_one_valid_row_exists(page_name):
+    """One valid row + one NaN row + one out-of-range row: map must render."""
+    data = {
+        "Latitude_degN": [35.0, None, 999.0],
+        "Longitude_degE": [135.0, None, 999.0],
+        "Salinity": [35.0, 34.5, 33.0],
+        "d18O": [-0.5, -0.3, -0.1],
+        "Temperature_degC": [10.0, 12.0, 15.0],
+        "Depth_m": [100.0, 50.0, 10.0],
+    }
+    app = _run_page_uploaded_only(page_name, data)
+    assert not app.exception
+    # The info message must NOT appear when a valid row exists
+    assert not any(_INFO_MSG in t for t in _visible_text(app)), _visible_text(app)
+    # At least one Plotly map figure must have been rendered
+    assert len(app.get("plotly_chart")) >= 1, "Expected at least one plotly_chart"

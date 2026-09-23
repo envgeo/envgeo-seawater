@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
+import plotly.graph_objects as go
 from pandas.api.types import is_numeric_dtype
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,11 +36,23 @@ REQUIRED_COLUMNS = {
 # Verifies that app version metadata is kept in one reusable place.
 # アプリのバージョン情報が、使い回せる共通定数として管理されていることを確認する。
 def test_app_version_metadata_is_available():
-    assert envgeo_utils.APP_VERSION == "1.3.2"
-    assert envgeo_utils.APP_VERSION_DATE == "2026-09-22"
+    assert envgeo_utils.APP_VERSION == "1.3.3"
+    assert envgeo_utils.APP_VERSION_DATE == "2026-09-23"
     assert envgeo_utils.APP_VERSION in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.APP_VERSION_DATE in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.version == envgeo_utils.APP_VERSION
+
+
+def test_apply_standard_map_layout_keeps_map_and_legend_inside_full_figure():
+    fig = envgeo_utils.apply_standard_map_layout(go.Figure(), height=480)
+
+    assert tuple(fig.layout.mapbox.domain.x) == (0.0, 1.0)
+    assert tuple(fig.layout.mapbox.domain.y) == (0.0, 1.0)
+    assert fig.layout.height == 480
+    assert fig.layout.margin.autoexpand is False
+    assert fig.layout.legend.x == 0.01
+    assert fig.layout.legend.y == 0.01
+    assert fig.layout.legend.bgcolor == "rgba(255,255,255,0.85)"
 
 
 # Verifies that quality rules document both machine-readable ranges and Japanese explanations.
@@ -138,6 +152,73 @@ def test_area_filter_bounds_manual_keeps_full_data_extent():
         10,
         60,
     ) == (110.0, 150.0, 10.0, 60.0)
+
+
+# Verifies the shared longitude-normalization helper, regardless of
+# whether the input already uses -180..180 or 0..360.
+# -180..180 と 0..360 のどちらの表記でも、共通ヘルパーが同じ正準値に
+# 正規化することを確認する。
+def test_normalize_longitude_deg_handles_both_conventions():
+    assert envgeo_utils.normalize_longitude_deg(-162.0) == pytest.approx(-162.0)
+    assert envgeo_utils.normalize_longitude_deg(198.0) == pytest.approx(-162.0)
+    assert envgeo_utils.normalize_longitude_deg(179.0) == pytest.approx(179.0)
+    assert envgeo_utils.normalize_longitude_deg(-179.0) == pytest.approx(-179.0)
+    assert envgeo_utils.normalize_longitude_deg(181.0) == pytest.approx(-179.0)
+
+    series_360 = pd.Series([160.0, 200.0, 330.0])
+    normalized = envgeo_utils.normalize_longitude_deg(series_360)
+    assert list(normalized.round(1)) == [160.0, -160.0, -30.0]
+
+
+# Verifies which area-filter presets are flagged as antimeridian-crossing.
+# どのエリアプリセットが日付変更線をまたぐと判定されるかを確認する。
+def test_region_preset_crosses_dateline_flags_only_wrap_around_presets():
+    assert envgeo_utils.region_preset_crosses_dateline("Bering Sea") is True
+    assert envgeo_utils.region_preset_crosses_dateline("North Pacific") is True
+    assert envgeo_utils.region_preset_crosses_dateline("Mediterranean Sea") is False
+    assert envgeo_utils.region_preset_crosses_dateline("Sea of Japan") is False
+    assert envgeo_utils.region_preset_crosses_dateline(envgeo_utils.AREA_FILTER_MANUAL) is False
+
+
+# Regression test for the Bering Sea Data-filtering bug: a single
+# Longitude range slider cannot express a range crossing the antimeridian,
+# so the old area_filter_bounds()-based slider silently fell back to the
+# full data longitude range and let unrelated basins (e.g. the North
+# Atlantic) through on latitude alone. The OR-based mask must keep points
+# on either arm of the Bering Sea and reject points east of it (mainland
+# North America) or on the wrong ocean (North Atlantic) at the same
+# latitude — and must do so identically whether longitude is expressed as
+# -180..180 or 0..360.
+# Bering Sea の Data filtering 不具合の回帰テスト: 単一の Longitude range
+# スライダーでは日付変更線をまたぐ範囲を表現できず、従来の
+# area_filter_bounds() ベースのスライダーはデータの全経度範囲へ静かに
+# フォールバックし、緯度だけで北大西洋のような無関係な海域まで通してし
+# まっていた。OR条件のマスクは、ベーリング海の両端（東経160度以東・
+# 西経162度以西）の点を残し、その東側（北米大陸）や別の海域（北大西洋）
+# の同緯度の点を除外しなければならず、経度が -180..180 と 0..360 の
+# どちらの表記でも同じ結果になる必要がある。
+@pytest.mark.parametrize(
+    ("lon_included", "lon_excluded"),
+    [
+        # -180..180 convention.
+        ((160.0, 179.0, -179.0, -162.0), (-150.0, -30.0)),
+        # 0..360 convention for the same real-world points.
+        ((160.0, 179.0, 181.0, 198.0), (210.0, 330.0)),
+    ],
+)
+def test_bering_sea_longitude_mask_uses_or_condition_across_conventions(
+    lon_included, lon_excluded
+):
+    lon_values = pd.Series(list(lon_included) + list(lon_excluded))
+    mask = envgeo_utils.region_preset_longitude_mask(lon_values, "Bering Sea")
+
+    assert mask.iloc[: len(lon_included)].all(), (
+        "Points on either arm of the Bering Sea (160E.. / ..162W) must be kept."
+    )
+    assert not mask.iloc[len(lon_included):].any(), (
+        "Points east of the Bering Sea (mainland North America) or in an "
+        "unrelated basin (North Atlantic) at the same latitude must be excluded."
+    )
 
 
 # Verifies that the Japan Sea dataset can be loaded successfully and is not empty.
@@ -442,6 +523,27 @@ def test_prepare_uploaded_data_applies_numeric_quality_and_d_excess():
     assert "Salinity outside valid range" in out.loc[1, envgeo_utils.QUALITY_FLAG_COLUMN]
 
 
+def test_spreadsheet_numeric_values_accept_invisible_unicode_spaces():
+    values = pd.Series(["34.620\u00a0", " 141.103 ", "\u22120.30", None])
+
+    converted = envgeo_utils.coerce_numeric_values(values)
+
+    assert converted.iloc[:3].tolist() == [34.62, 141.103, -0.3]
+    assert pd.isna(converted.iloc[3])
+
+
+def test_spreadsheet_numeric_values_accept_pyarrow_strings():
+    pytest.importorskip("pyarrow")
+    values = pd.Series(
+        ["34.620\u00a0", "\u3000141.103", "\u22120.30"],
+        dtype="string[pyarrow]",
+    )
+
+    converted = envgeo_utils.coerce_numeric_values(values)
+
+    assert converted.tolist() == [34.62, 141.103, -0.3]
+
+
 # Verifies that d-excess remains unknown when dD is not supplied.
 # dDが無い場合にd-excessを推測せずNaNとすることを確認する。
 def test_prepare_uploaded_data_keeps_d_excess_nan_without_dd():
@@ -612,6 +714,48 @@ def test_uploaded_data_session_helpers_round_trip_and_clear():
     assert envgeo_utils.get_uploaded_filename(state=state) is None
 
 
+def test_local_user_data_is_labeled_as_user_excel_data(tmp_path):
+    local_file = tmp_path / "researcher_data.csv"
+    local_file.write_text(
+        "Longitude,Latitude,Depth,delta18o\n135.0,35.0,10,0.5\n",
+        encoding="utf-8",
+    )
+    loaded = envgeo_utils.load_local_user_data(local_file)
+
+    assert loaded["Dataset"].tolist() == ["User Excel data"]
+    assert loaded["Longitude_degE"].tolist() == [135.0]
+
+
+def test_missing_local_user_data_file_reports_clear_error(tmp_path):
+    missing_file = tmp_path / "missing.xlsx"
+
+    with pytest.raises(FileNotFoundError, match="not found"):
+        envgeo_utils.load_local_user_data(missing_file)
+
+
+def test_reference_loader_merges_configured_user_excel_data(tmp_path, monkeypatch):
+    local_file = tmp_path / "user_data.xlsx"
+    pd.DataFrame(
+        {
+            "Longitude_degE": [135.0],
+            "Latitude_degN": [35.0],
+            "Depth_m": [10.0],
+            "d18O": [0.5],
+        }
+    ).to_excel(local_file, index=False)
+    monkeypatch.delenv(envgeo_utils.LOCAL_USER_DATA_DISABLE_ENV, raising=False)
+    monkeypatch.setenv(envgeo_utils.LOCAL_USER_DATA_PATH_ENV, str(local_file))
+    envgeo_utils.load_isotope_data.clear()
+
+    try:
+        loaded = envgeo_utils.load_isotope_data(envgeo_utils.data_source_GLOBAL)
+        user_rows = loaded.loc[loaded["Dataset"] == envgeo_utils.USER_EXCEL_DATA_LABEL]
+        assert len(user_rows) == 1
+        assert user_rows.iloc[0]["d18O"] == 0.5
+    finally:
+        envgeo_utils.load_isotope_data.clear()
+
+
 # Verifies that coastline loading returns valid longitude and latitude lists of equal length.
 # 海岸線データ読み込み結果として、有効な経度・緯度リストが同じ長さで返ることを確認する。
 def test_load_coastline_data_returns_same_length_coordinate_lists():
@@ -636,6 +780,32 @@ def test_load_coastline_data_supports_110m_csv():
 
     assert len(lon_110m) == len(lat_110m)
     assert 0 < len(lon_110m) < len(lon_50m)
+
+
+def test_plot_bundled_coastline_uses_csv_without_cartopy_downloader(monkeypatch):
+    """The Matplotlib helper must plot bundled coordinates without Cartopy I/O."""
+    calls = []
+
+    class DummyAxes:
+        def plot(self, lon, lat, **kwargs):
+            calls.append((lon, lat, kwargs))
+
+    marker_transform = object()
+    monkeypatch.setattr(
+        envgeo_utils,
+        "load_coastline_data",
+        lambda ref_data, resolution="50m": ([130.0, 131.0, None], [35.0, 36.0, None]),
+    )
+
+    assert envgeo_utils.plot_bundled_coastline(
+        DummyAxes(), transform=marker_transform, zorder=7
+    )
+    assert len(calls) == 1
+    lon, lat, kwargs = calls[0]
+    assert lon == [130.0, 131.0, None]
+    assert lat == [35.0, 36.0, None]
+    assert kwargs["transform"] is marker_transform
+    assert kwargs["zorder"] == 7
 
 
 # Verifies that the public dataset choices remain available for app pages.

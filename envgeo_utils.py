@@ -16,8 +16,8 @@ Last updated: 2026-09-22
 """
 
 # --- App version / バージョン情報 ---
-APP_VERSION = "1.3.2"
-APP_VERSION_DATE = "2026-09-22"
+APP_VERSION = "1.3.3"
+APP_VERSION_DATE = "2026-09-23"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 
 # Backward-compatible alias used by older pages.
@@ -58,6 +58,11 @@ REGRESSION_HELP_TEXT = (
 )
 
 
+
+import os
+import socket
+import time
+from functools import lru_cache
 
 import pandas as pd
 import streamlit as st
@@ -404,6 +409,7 @@ STANDARD_UPLOAD_COLUMNS = [
 ]
 
 UPLOADED_DATA_LABEL = "Uploaded data"
+USER_EXCEL_DATA_LABEL = "User Excel data"
 UPLOAD_NUMERIC_COLUMNS = [
     "Longitude_degE",
     "Latitude_degN",
@@ -415,6 +421,9 @@ UPLOAD_NUMERIC_COLUMNS = [
 ]
 UPLOAD_SESSION_DATA_KEY = "envgeo_uploaded_data"
 UPLOAD_SESSION_FILENAME_KEY = "envgeo_uploaded_filename"
+LOCAL_USER_DATA_PATH_ENV = "ENVGEO_LOCAL_USER_DATA_PATH"
+LOCAL_USER_DATA_DISABLE_ENV = "ENVGEO_DISABLE_LOCAL_USER_DATA"
+DEFAULT_LOCAL_USER_DATA_PATH = Path(__file__).resolve().parent / "local_data" / "user_data.xlsx"
 INTEGRATED_EMBEDDED_PAGE_KEY = "envgeo_integrated_embedded_page"
 
 
@@ -559,6 +568,47 @@ def read_uploaded_table(uploaded_file):
     raise ValueError("Unsupported file type. Upload a CSV, XLSX, or XLS file.")
 
 
+def resolve_local_user_data_path(environ=None, default_path=None):
+    """Return the configured optional local user-data path.
+
+    ``ENVGEO_LOCAL_USER_DATA_PATH`` may point to a CSV, XLSX, or XLS file. If
+    it is unset, ``local_data/user_data.xlsx`` is used only when that file
+    exists. Relative environment paths are resolved from the application root.
+    """
+    environ = os.environ if environ is None else environ
+    disabled = str(environ.get(LOCAL_USER_DATA_DISABLE_ENV, "")).strip().lower()
+    if disabled in {"1", "true", "yes", "on"}:
+        return None
+    app_root = Path(__file__).resolve().parent
+    configured = str(environ.get(LOCAL_USER_DATA_PATH_ENV, "")).strip()
+    if configured:
+        path = Path(configured).expanduser()
+        return path if path.is_absolute() else app_root / path
+
+    path = Path(default_path) if default_path is not None else DEFAULT_LOCAL_USER_DATA_PATH
+    return path if path.exists() else None
+
+
+def read_local_user_table(path):
+    """Read an optional local CSV or Excel table without modifying it."""
+    path = Path(path).expanduser()
+    if not path.is_file():
+        raise FileNotFoundError(f"Local user-data file not found: {path}")
+    suffix = path.suffix.lower()
+    if suffix == ".csv":
+        return pd.read_csv(path)
+    if suffix in {".xlsx", ".xls"}:
+        return pd.read_excel(path)
+    raise ValueError("Local user data must be a CSV, XLSX, or XLS file.")
+
+
+def load_local_user_data(path, dataset_label=USER_EXCEL_DATA_LABEL):
+    """Load local user data and assign its dataset category explicitly."""
+    prepared = prepare_uploaded_data(read_local_user_table(path))
+    prepared["Dataset"] = dataset_label
+    return prepared
+
+
 def build_upload_template_csv():
     """Return a small seawater upload template for spreadsheet applications."""
     template = pd.DataFrame(
@@ -616,8 +666,15 @@ MAP_REGION_PRESETS = {
         "description_ja": "オホーツク海周辺を表示します。",
     },
     "Bering Sea": {
-        "bounds": (160.0, 205.0, 50.0, 67.0),
-        "description_ja": "ベーリング海周辺を表示します。",
+        # 198.0 は -180..180 表記での -162.0 (162W) を 0..360 側に伸ばした
+        # 表現。実際の抽出は (lon >= 160E) OR (lon <= -162W) の OR 条件で
+        # 行うため、北大西洋など無関係な海域が緯度だけで混入しない。
+        # 198.0 is -162.0 (162W) expressed on the 0..360 side. The actual
+        # row filter applies an OR condition — (lon >= 160E) OR
+        # (lon <= -162W) — so unrelated basins like the North Atlantic are
+        # not swept in by latitude alone.
+        "bounds": (160.0, 198.0, 51.0, 66.0),
+        "description_ja": "ベーリング海周辺（東経160度以東または西経162度以西、北緯51-66度）を表示します。",
     },
     "North Pacific": {
         "bounds": (120.0, 240.0, 0.0, 65.0),
@@ -784,6 +841,76 @@ def area_filter_bounds(region_label, lon_min, lon_max, lat_min, lat_max):
     return selected_lon_min, selected_lon_max, selected_lat_min, selected_lat_max
 
 
+def normalize_longitude_deg(lon):
+    """
+    経度を -180..180 と 0..360 のどちらの表記で受け取っても、
+    (-180, 180] の正準表現へ正規化する共通ヘルパー。
+
+    Normalize longitude value(s) into the canonical (-180, 180] range,
+    regardless of whether the input uses the -180..180 or 0..360
+    convention. Works with a plain number, a numpy array, or a pandas
+    Series (preserving its index), so the same helper can normalize both
+    an area-filter preset's scalar bounds and a DataFrame's
+    Longitude_degE column before comparing them.
+    """
+    lon_numeric = lon.astype(float) if hasattr(lon, "astype") else float(lon)
+    return ((lon_numeric + 180.0) % 360.0) - 180.0
+
+
+def region_preset_crosses_dateline(region_label):
+    """
+    指定したエリアプリセットの経度範囲が日付変更線(180度/-180度)を
+    またぐかどうかを返す。
+
+    Return whether a named MAP_REGION_PRESETS entry's longitude span
+    crosses the antimeridian. Such presets are stored with lon_max > 180
+    (e.g. Bering Sea's 198.0 stands for -162.0) to signal that their real
+    extent wraps past 180/-180, and must be matched with an OR condition
+    rather than a simple min/max range.
+    """
+    if region_label not in MAP_REGION_PRESETS:
+        return False
+    _, lon_max, _, _ = MAP_REGION_PRESETS[region_label]["bounds"]
+    return lon_max > 180.0
+
+
+def region_preset_longitude_mask(lon_values, region_label):
+    """
+    エリアプリセットの経度範囲に基づく行マスクを返す。
+
+    日付変更線をまたぐプリセット（例: Bering Sea）は、単一の
+    Longitude range スライダーでは表現できないため、東側の弧
+    (経度 >= 東端) OR 西側の弧 (経度 <= 西端) の OR 条件で判定する。
+    normalize_longitude_deg() で正規化してから比較するため、データが
+    -180..180 と 0..360 のどちらの表記でも正しく同じ海域を抽出できる。
+    日付変更線をまたがない通常のプリセットは、単純な範囲判定のまま
+    (既存のスライダー挙動を変えない)。
+
+    Return a boolean mask selecting rows inside an area-filter preset's
+    longitude span. Presets that cross the antimeridian (e.g. Bering Sea)
+    cannot be expressed by a single Longitude range slider, so they are
+    matched with an OR condition — the eastern arm (lon >= east bound) OR
+    the western arm (lon <= west bound) — after normalizing both the data
+    and the preset bounds with normalize_longitude_deg(), so the same
+    real-world sea area is extracted whether the data uses -180..180 or
+    0..360 longitude. Ordinary (non-crossing) presets keep the simple
+    min/max range check, matching the existing slider-based behavior.
+    """
+    lon_norm = normalize_longitude_deg(pd.to_numeric(lon_values, errors="coerce"))
+
+    if region_label not in MAP_REGION_PRESETS:
+        return pd.Series(True, index=lon_norm.index) if hasattr(lon_norm, "index") else np.ones_like(lon_norm, dtype=bool)
+
+    lon_min, lon_max, _, _ = MAP_REGION_PRESETS[region_label]["bounds"]
+
+    if region_preset_crosses_dateline(region_label):
+        east_bound = normalize_longitude_deg(lon_min)
+        west_bound = normalize_longitude_deg(lon_max)
+        return (lon_norm >= east_bound) | (lon_norm <= west_bound)
+
+    return (lon_norm >= normalize_longitude_deg(lon_min)) & (lon_norm <= normalize_longitude_deg(lon_max))
+
+
 QUALITY_FLAG_COLUMN = "Quality_Flags"
 QUALITY_ORIGINAL_VALUE_COLUMN = "Quality_Original_Values"
 
@@ -895,10 +1022,30 @@ def add_d_excess(df, output_col="d-excess", d18o_col="d18O", dd_col="dD"):
         df[output_col] = np.nan
         return df
 
-    d18o = pd.to_numeric(df[d18o_col], errors="coerce")
-    dd = pd.to_numeric(df[dd_col], errors="coerce")
+    d18o = coerce_numeric_values(df[d18o_col])
+    dd = coerce_numeric_values(df[dd_col])
     df[output_col] = dd - 8 * d18o
     return df
+
+
+def coerce_numeric_values(values):
+    """Convert spreadsheet values after removing invisible Unicode spaces.
+
+    Excel cells copied from formatted sources can contain non-breaking spaces
+    such as U+00A0. They look numeric in the sheet but ``pd.to_numeric`` would
+    otherwise coerce them to NaN.
+    """
+    if not isinstance(values, pd.Series):
+        values = pd.Series(values)
+    if pd.api.types.is_numeric_dtype(values.dtype):
+        return pd.to_numeric(values, errors="coerce")
+    cleaned = values.astype("string")
+    # Use literal replacements instead of ``\u`` escapes in a regex. Pandas
+    # may store strings with PyArrow, whose regex engine rejects those escapes.
+    for whitespace in (" ", "\t", "\r", "\n", "\u00A0", "\u202F", "\u3000"):
+        cleaned = cleaned.str.replace(whitespace, "", regex=False)
+    cleaned = cleaned.str.replace("\u2212", "-", regex=False)
+    return pd.to_numeric(cleaned, errors="coerce")
 
 
 def prepare_uploaded_data(df, dataset_label=UPLOADED_DATA_LABEL):
@@ -921,11 +1068,11 @@ def prepare_uploaded_data(df, dataset_label=UPLOADED_DATA_LABEL):
     # Year・Month を nullable 整数型に変換してArrowシリアライズエラーを防ぐ
     for col in ('Year', 'Month'):
         if col in prepared.columns:
-            prepared[col] = pd.to_numeric(prepared[col], errors='coerce').astype('Int64')
+            prepared[col] = coerce_numeric_values(prepared[col]).astype('Int64')
 
     for column in UPLOAD_NUMERIC_COLUMNS:
         if column in prepared.columns:
-            prepared[column] = pd.to_numeric(prepared[column], errors="coerce")
+            prepared[column] = coerce_numeric_values(prepared[column])
 
     prepared = normalize_quality_values(prepared)
     prepared = add_d_excess(prepared)
@@ -1080,12 +1227,10 @@ def load_isotope_data(ref_data, sheet_num=0):
     file_03 = 'dataset/71_GLOBA_NASA_20260226.xlsx'
     file_04 = 'dataset/71_GLOBAL_Atwood_et_al_2026.xlsx' 
     file_05 = 'dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx'
-    
-    # Reserved for unpublished user data / 未公表ユーザーデータ用
-    file_unpub_91 = 'dataset/91_USER_UPLOAD_UNPUB.xlsx'
-    # file_unpub_91 = 'dataset/91_AROUND_JAPAN_UNPUB_20260228.xlsx'
-    # file_unpub_91 = 'dataset/91_AROUND_JAPAN_UNPUB_20260314_SGW.xlsx'
-    
+
+    # Optional always-loaded user table for local operation.
+    # ローカル実行時に常時読み込む任意のユーザー表
+    file_user_excel = resolve_local_user_data_path()
     
     #########################################################################
     # DATA INGESTION & CATEGORIZATION
@@ -1106,48 +1251,33 @@ def load_isotope_data(ref_data, sheet_num=0):
     
     df5 = pd.read_excel(file_05)
     df5['Dataset'] = 'Global (other reports)'
-    
-    df_unpub_91 = pd.read_excel(file_unpub_91)
-    df_unpub_91['Dataset'] = 'Unpublished dataset'
 
+    df_user_excel = pd.DataFrame()
+    if file_user_excel is not None:
+        try:
+            # Match the former local-workbook structure: read the table beside
+            # the bundled sources, assign its Dataset category, concatenate it
+            # below, then apply the shared cleaning pipeline to the full frame.
+            df_user_excel = read_local_user_table(file_user_excel)
+            df_user_excel['Dataset'] = USER_EXCEL_DATA_LABEL
+        except Exception as exc:
+            # A local configuration error must not prevent public data loading.
+            st.warning(f"Local user Excel data could not be loaded: {exc}")
 
-
-
-    #########################################################################
-    # DATA SOURCE INTEGRATION: Toggle Public DB vs. User Data inclusion
-    # This section manages the merging of standardized datasets with custom 
-    # user inputs via manual configuration.
-    #########################################################################
-
-    """ public """
-
-    # if ref_data == data_source_JAPAN_SEA:  
-    #     df =  pd.concat([df1], ignore_index=True)
-        
-    # elif ref_data == data_source_AROUND_JAPAN:  
-    #     df = pd.concat([df1, df2], ignore_index=True)
-        
-        
-    # elif ref_data == data_source_GLOBAL:  
-    #     df = pd.concat([df1, df2,df3,df4, df5], ignore_index=True)
-        
-    # else:
-    #     return pd.DataFrame() # Return empty DF as fallback
-  
-
-
-    
-    """  including user dataset """
-    
+    # Browser uploads remain session-only. The optional local user table is an
+    # always-loaded dataset, matching the former local-workbook workflow.
     if ref_data == data_source_JAPAN_SEA:  
-        df =  pd.concat([df1,df_unpub_91], ignore_index=True)
+        df = pd.concat([df1, df_user_excel], ignore_index=True)
         
     elif ref_data == data_source_AROUND_JAPAN:  
-        df = pd.concat([df1, df2, df_unpub_91], ignore_index=True)
+        df = pd.concat([df1, df2, df_user_excel], ignore_index=True)
 
         
     elif ref_data == data_source_GLOBAL: 
-        df = pd.concat([df1, df2,df3,df4, df5, df_unpub_91], ignore_index=True)
+        df = pd.concat(
+            [df1, df2, df3, df4, df5, df_user_excel],
+            ignore_index=True,
+        )
         
     else:
         return pd.DataFrame()  # Return empty DF as fallback
@@ -1172,8 +1302,8 @@ def load_isotope_data(ref_data, sheet_num=0):
         
         for col in target_cols:
             if col in df.columns:
-                # Use errors='coerce' to turn non-numeric values (e.g., whitespace) into NaN
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+                # Remove invisible spreadsheet spaces before numeric conversion.
+                df[col] = coerce_numeric_values(df[col])
 
         df = normalize_quality_values(df)
         df = add_d_excess(df)
@@ -1473,74 +1603,354 @@ def get_matplotlib_colormap(selected_item=None, colormap_label=None):
 ##############################################################################
 """
 
-MAP_MODE_OPTIONS = ["Standard", "Satellite", "Bathymetry (Sea)", "Contour (GSI)"]
+# Offline mode is listed first; pages must pass index=MAP_MODE_DEFAULT_INDEX to the widget.
+# オフラインを先頭に置きつつ、既定値は "Standard" を維持する。
+MAP_MODE_OPTIONS = [
+    "Coastline (offline)",
+    "Standard",
+    "Satellite",
+    "Bathymetry (Sea)",
+    "Contour (GSI)",
+]
+MAP_MODE_DEFAULT = "Standard"
+MAP_MODE_DEFAULT_INDEX = MAP_MODE_OPTIONS.index(MAP_MODE_DEFAULT)  # = 1
+
 MAP_MODE_DESCRIPTIONS_JA = {
+    "Coastline (offline)": (
+        "同梱50m海岸線CSVと緯経線のみで表示します。通信不要です。 / "
+        "Offline: bundled 50 m coastline CSV only, no external tiles."
+    ),
     "Standard": "APIキー不要のOpenStreetMap背景です。",
     "Satellite": "USGSの衛星画像タイルを使います。",
     "Bathymetry (Sea)": "Esri World Ocean Baseの海底地形背景を使います。",
     "Contour (GSI)": "国土地理院の標準地図タイルを使います。",
 }
 
+# --- Connectivity check and offline fallback ---
+# 通信確認とオフライン縮退
+
+_CONNECTIVITY_CACHE_INTERVAL_S = 60  # re-check at most once per minute / 1分以内に重複確認しない
+_CONNECTIVITY_TIMEOUT_S = 3
+
+# Per-mode tile hosts used for connectivity checks.
+# モードごとの接続確認先ホスト（モードに対応するタイルサーバー）。
+_MODE_TILE_HOSTS: dict = {
+    "Standard":          ("tile.openstreetmap.org",                  443),
+    "Satellite":         ("basemap.nationalmap.gov",                 443),
+    "Bathymetry (Sea)":  ("services.arcgisonline.com",               443),
+    "Contour (GSI)":     ("cyberjapandata.gsi.go.jp",                443),
+}
+_DEFAULT_TILE_HOST = ("tile.openstreetmap.org", 443)
+
+
+@lru_cache(maxsize=64)
+def _check_connectivity_cached(bucket: int, host: str, port: int) -> bool:
+    """Inner check keyed to (time-bucket, host, port). Use check_online_connectivity() instead.
+    (時間バケット, ホスト, ポート)をキーにキャッシュ。直接呼ばず check_online_connectivity() を使うこと。
+    Sockets are closed immediately after the connection test.
+    接続確認後にソケットを即座にクローズする。
+    """
+    try:
+        conn = socket.create_connection((host, port), timeout=_CONNECTIVITY_TIMEOUT_S)
+        conn.close()
+        return True
+    except OSError:
+        return False
+
+
+def check_online_connectivity(mode: str = "Standard") -> bool:
+    """Return True if the tile server for *mode* is reachable. Result cached for ~60 s.
+
+    Uses the mode-specific tile host (e.g. Satellite → basemap.nationalmap.gov).
+    Falls back to the OSM host for unknown modes.
+
+    モードに対応するタイルサーバーに接続できる場合 True を返す。
+    約60秒キャッシュ。未知のモードはOSMホストで代替確認する。
+    """
+    host, port = _MODE_TILE_HOSTS.get(mode, _DEFAULT_TILE_HOST)
+    bucket = int(time.time()) // _CONNECTIVITY_CACHE_INTERVAL_S
+    return _check_connectivity_cached(bucket, host, port)
+
+
+def resolve_map_mode(map_mode: str):
+    """Resolve effective map mode, falling back to offline if needed.
+
+    Returns (effective_mode, fell_back). fell_back=True means an online mode
+    was requested but connectivity to *that mode's* tile server is unavailable;
+    pages should show OFFLINE_FALLBACK_WARNING to the user in that case.
+
+    オンラインモードが選ばれたが、そのモードのタイルサーバーに通信できない場合、
+    ("Coastline (offline)", True) を返す。ページ側で警告を表示すること。
+    """
+    if map_mode == "Coastline (offline)":
+        return map_mode, False
+    if not check_online_connectivity(map_mode):
+        return "Coastline (offline)", True
+    return map_mode, False
+
+
+# Warning message displayed when falling back to offline mode.
+# オフライン縮退時に表示する警告文。
+OFFLINE_FALLBACK_WARNING = (
+    "⚠️ Online map tiles are unavailable. Showing the local coastline map."
+)
+
+
+def add_coastline_overlay(fig) -> bool:
+    """Overlay the bundled 50 m coastline CSV as a Scattermapbox trace.
+
+    Idempotent: if a trace named ``_coastline_overlay`` already exists on
+    *fig*, the function returns True without adding a duplicate.
+    冪等: すでに _coastline_overlay トレースが存在する場合は追加せず True を返す。
+
+    Applied to all map modes so that coastlines and observation points remain
+    visible even when tile loading fails in the browser.
+    全地図モードに重ね、タイル取得がブラウザ側で失敗しても海岸線が残るようにする。
+
+    Returns True if the overlay is present (added now or already existed),
+    False if coastline data is unavailable.
+    データが利用できなかった場合は False を返す（例外は発生しない）。
+    """
+    import plotly.graph_objects as go  # avoid circular import at module load time
+
+    # Idempotency guard — do not add a second trace if one already exists.
+    if any(getattr(t, "name", None) == "_coastline_overlay" for t in fig.data):
+        return True
+
+    lon, lat = load_coastline_data(None, resolution="50m")
+    if not lon:
+        return False
+    fig.add_trace(
+        go.Scattermapbox(
+            lon=lon,
+            lat=lat,
+            mode="lines",
+            line=dict(width=0.8, color="rgba(70,70,70,0.55)"),
+            showlegend=False,
+            hoverinfo="none",
+            name="_coastline_overlay",
+        )
+    )
+    return True
+
+
+def plot_bundled_coastline(ax, *, transform=None, zorder=None, resolution="50m", **kwargs):
+    """Plot the bundled coastline CSV onto a Cartopy Axes (or any Axes-like object).
+
+    Retrieves coordinate data via :func:`load_coastline_data` and calls
+    ``ax.plot(lon, lat, ...)`` with the supplied keyword arguments.
+    Does **not** invoke Cartopy's shapefile downloader.
+    バンドル済み海岸線CSVをMatplotlib/Cartopy Axesに描画する。
+    Cartopyのダウンローダーは呼び出さない。
+
+    Parameters
+    ----------
+    ax:
+        Matplotlib/Cartopy Axes (or any duck-typed object with a ``plot`` method).
+    transform:
+        Cartopy coordinate reference system (e.g. ``ccrs.PlateCarree()``).
+    zorder:
+        Drawing order passed to ``ax.plot``.
+    resolution:
+        Coastline CSV resolution tag forwarded to :func:`load_coastline_data`.
+    **kwargs:
+        Any additional keyword arguments forwarded to ``ax.plot``.
+
+    Returns
+    -------
+    bool
+        True if the coastline was plotted, False if no data was available.
+    """
+    lon, lat = load_coastline_data(None, resolution=resolution)
+    if not lon:
+        return False
+    plot_kwargs = dict(kwargs)
+    if transform is not None:
+        plot_kwargs["transform"] = transform
+    if zorder is not None:
+        plot_kwargs["zorder"] = zorder
+    ax.plot(lon, lat, **plot_kwargs)
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Self-contained Plotly HTML export
+# ---------------------------------------------------------------------------
+
+_PLOTLY_HTML_CONFIG = {
+    "scrollZoom": True,
+    "displayModeBar": True,
+    "responsive": True,
+}
+
+
+def figure_to_self_contained_html(fig) -> bytes:
+    """Return self-contained HTML bytes for *fig* with Plotly.js embedded inline.
+
+    Uses ``include_plotlyjs=True`` so the saved file works offline without a CDN.
+    The Plotly toolbar and scroll-zoom are always enabled in the saved file.
+
+    Plotly.jsを埋め込んだ自己完結HTML（バイト列）を返す。
+    保存後もCDN不要でオフライン閲覧・操作が可能。
+
+    Parameters
+    ----------
+    fig:
+        A Plotly figure object (``plotly.graph_objects.Figure`` or compatible).
+
+    Returns
+    -------
+    bytes
+        UTF-8-encoded HTML with Plotly.js inlined (~4–5 MB).
+    """
+    html_str = fig.to_html(
+        include_plotlyjs=True,
+        full_html=True,
+        config=_PLOTLY_HTML_CONFIG,
+    )
+    return html_str.encode("utf-8")
+
+
+def add_graticule_overlay(fig, lat_step: int = 30, lon_step: int = 30) -> None:
+    """Add lat/lon graticule lines to the Plotly Mapbox figure.
+
+    Intended for offline (white-bg) mode where no tile background is present.
+    Each parallel and meridian is drawn as an independent line segment group,
+    using None separators, to avoid artefacts across the antimeridian.
+
+    オフライン地図（白背景）用の経緯線オーバーレイ。
+    日付変更線をまたぐ描画アーティファクトを避けるため、
+    None区切りで各線を独立した線分として描く。
+    """
+    import plotly.graph_objects as go  # avoid circular import at module load time
+
+    lons_g: list = []
+    lats_g: list = []
+
+    # Parallels — horizontal lines at each lat_step degree
+    for lat in range(-90, 91, lat_step):
+        for lon in range(-180, 181):
+            lons_g.append(float(lon))
+            lats_g.append(float(lat))
+        lons_g.append(None)
+        lats_g.append(None)
+
+    # Meridians — vertical lines at each lon_step degree
+    # Split at the poles to keep each meridian as a tidy segment.
+    for lon in range(-180, 181, lon_step):
+        for lat in range(-90, 91):
+            lons_g.append(float(lon))
+            lats_g.append(float(lat))
+        lons_g.append(None)
+        lats_g.append(None)
+
+    fig.add_trace(
+        go.Scattermapbox(
+            lon=lons_g,
+            lat=lats_g,
+            mode="lines",
+            line=dict(width=0.4, color="rgba(150,150,150,0.35)"),
+            showlegend=False,
+            hoverinfo="none",
+            name="_graticule_overlay",
+        )
+    )
+
 
 def apply_map_style(fig, map_mode):
-    """
-    Apply the selected background tile layer to the Mapbox figure.
-    All tile sources have been verified for web-use licensing.
+    """Apply the selected background tile layer to the Mapbox figure.
 
-    Note:
-        CARTO Positron previously worked without a key, but CARTO basemaps now
-        require an API key. The Standard mode therefore uses OpenStreetMap.
+    Handles offline fallback internally via resolve_map_mode().  Pages should
+    call resolve_map_mode() first and show OFFLINE_FALLBACK_WARNING when
+    fell_back is True.  All tile sources have been verified for web-use
+    licensing.  Note: CARTO basemaps now require an API key; Standard uses OSM.
+
+    resolve_map_mode() でオフライン縮退を処理する。ページ側は先に
+    resolve_map_mode() を呼び、fell_back=True なら警告を表示すること。
     """
-    
-    if map_mode == "Standard":
+    effective_mode, _ = resolve_map_mode(map_mode)
+
+    if effective_mode == "Coastline (offline)":
+        # Offline: white background only — no external tile URL at all.
+        # オフライン: 白背景のみ。外部タイルURLは一切設定しない。
+        fig.update_layout(mapbox_style="white-bg")
+
+    elif effective_mode == "Standard":
         fig.update_layout(mapbox_style="open-street-map")
-        
-    
-    elif map_mode == "Satellite":
-        fig.update_layout(
-            mapbox_style="white-bg",
-            mapbox_layers=[{
-                "below": 'traces',
-                "sourcetype": "raster",
-                "source": [
-                    # USGS
-                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
-                "sourceattribution": "USGS"
-            }]
-        )
-        
-    elif map_mode == "Bathymetry (Sea)":
+
+    elif effective_mode == "Satellite":
         fig.update_layout(
             mapbox_style="white-bg",
             mapbox_layers=[{
                 "below": "traces",
                 "sourcetype": "raster",
                 "source": [
-                    # Esri World Ocean Base 
-                    "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
-                ],
-                "sourceattribution": "Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri"
+                    # USGS
+                    "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"],
+                "sourceattribution": "USGS",
             }]
         )
-        
-    elif map_mode == "Contour (GSI)":
+
+    elif effective_mode == "Bathymetry (Sea)":
         fig.update_layout(
             mapbox_style="white-bg",
             mapbox_layers=[{
-                "below": 'traces',
+                "below": "traces",
                 "sourcetype": "raster",
                 "source": [
-                    # Geospatial Information Authority of Japan (GSI) tiles: 
-                    # High-detail topographic data that scales dynamically.
-                    "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png"],
-                "sourceattribution": "国土地理院 (GSI)"
+                    # Esri World Ocean Base
+                    "https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+                ],
+                "sourceattribution": "Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri",
             }]
         )
-        
-    
+
+    elif effective_mode == "Contour (GSI)":
+        fig.update_layout(
+            mapbox_style="white-bg",
+            mapbox_layers=[{
+                "below": "traces",
+                "sourcetype": "raster",
+                "source": [
+                    # Geospatial Information Authority of Japan (GSI) tiles
+                    "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png"],
+                "sourceattribution": "国土地理院 (GSI)",
+            }]
+        )
+
     # Unified layout settings for maximum map area
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-    
+
+    # Always overlay the bundled coastline so position reference is visible even
+    # when online tile fetching fails in the browser.  Idempotent — safe to call
+    # even if the page already added the overlay.
+    add_coastline_overlay(fig)
+
+    return fig
+
+
+def apply_standard_map_layout(fig, height=480):
+    """Apply the reusable full-width Plotly Mapbox layout used by map pages.
+
+    Keep the legend inside the map so it remains readable without causing
+    Plotly to reserve an external margin and shrink the geographic viewport.
+    凡例を地図内に重ね、外側余白による地図領域の縮小を防ぐ。
+    """
+    fig.update_layout(
+        mapbox=dict(domain=dict(x=[0.0, 1.0], y=[0.0, 1.0])),
+        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+        autosize=True,
+        height=height,
+        legend=dict(
+            x=0.01,
+            y=0.01,
+            xanchor="left",
+            yanchor="bottom",
+            bgcolor="rgba(255,255,255,0.85)",
+            bordercolor="rgba(150,150,150,0.5)",
+            borderwidth=1,
+        ),
+    )
     return fig
 
 
@@ -2034,6 +2444,14 @@ def sidebar_filter_and_display(
             # print(Transect_list,"<<< Dataset list")
             
             selected_dataset = st.multiselect('Choose datasets', Transect_list,default=Transect_list)
+            user_excel_count = int(
+                df1["Dataset"].eq(USER_EXCEL_DATA_LABEL).sum()
+            )
+            if user_excel_count:
+                st.caption(
+                    f"{USER_EXCEL_DATA_LABEL}: {user_excel_count:,} rows loaded "
+                    "from the always-loaded local table."
+                )
 
             
         # datasetのフィルタリング　2026/03/09追加
@@ -2203,6 +2621,12 @@ def sidebar_filter_and_display(
             max_df_lat = int(math.ceil(lat_values.max()))
             min_df_lat = int(math.floor(lat_values.min()))
 
+        # Prevent st.slider crash when all values share the same coordinate
+        if min_df_lon == max_df_lon:
+            max_df_lon += 1
+        if min_df_lat == max_df_lat:
+            max_df_lat += 1
+
         area_filter_preset = st.selectbox(
             "Area filter preset",
             [AREA_FILTER_MANUAL] + list(MAP_REGION_PRESETS),
@@ -2237,10 +2661,30 @@ def sidebar_filter_and_display(
         )
 
         # --- 経度(Longitude)の範囲 --- 修正済み
-        df1 = df1[
-            ((df1['Longitude_degE'] >= sld_lon_min) & (df1['Longitude_degE'] <= sld_lon_max))
-            | df1['Longitude_degE'].isna()
-        ]
+        if region_preset_crosses_dateline(area_filter_preset):
+            # 単一の Longitude range スライダーでは日付変更線をまたぐ範囲を
+            # 表現できないため、このプリセットではスライダー値ではなく
+            # プリセット自身の経度範囲を OR 条件で直接適用する
+            # (緯度は下のスライダーで通常通り絞り込む)。
+            # A single Longitude range slider cannot express a span that
+            # crosses the antimeridian, so for these presets longitude is
+            # matched by the preset's own east/west arms (OR condition)
+            # instead of the slider values above; latitude still narrows
+            # normally via its own slider below.
+            st.caption(
+                f"'{area_filter_preset}' spans the antimeridian (dateline); "
+                "longitude is matched by the preset's own east/west arms "
+                "rather than the slider above."
+            )
+            df1 = df1[
+                region_preset_longitude_mask(df1['Longitude_degE'], area_filter_preset)
+                | df1['Longitude_degE'].isna()
+            ]
+        else:
+            df1 = df1[
+                ((df1['Longitude_degE'] >= sld_lon_min) & (df1['Longitude_degE'] <= sld_lon_max))
+                | df1['Longitude_degE'].isna()
+            ]
     
 
         if df1.empty:

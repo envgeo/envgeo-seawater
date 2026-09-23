@@ -17,8 +17,13 @@ This directory collects project documents that are too detailed for the top-leve
   Accepted architecture and migration policy for individual pages, shared user-data upload, and Integrated Visualizer.
 
 - `development_notes.md` / `development_notes_Japanese.md`
-  Internal 1.3.2 handoff notes: current user-data architecture, deferred work,
-  and safe cleanup conditions.
+  Internal 1.3.3 release-preparation notes: offline-map design, user-data
+  architecture, bundled geospatial assets, deferred work, and safe cleanup
+  conditions.
+
+- `offline_operation_log.md` / `offline_operation_log_Japanese.md`
+  Current offline/degraded-network map behavior, self-contained HTML exports,
+  known limitations, and verification scope.
 
 - `manual/` / `manual_Japanese/`  
   Page-by-page user manual skeletons for GitHub documentation, JOSS-related documentation, and laboratory website reuse.

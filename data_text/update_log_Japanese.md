@@ -2,10 +2,54 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
+## 1.3.3 - 2026-09-23
+
+### リリース概要
+
+- 低速・通信不能環境での地図表示を強化。Plotly地図は同梱海岸線を重ね、`Coastline (offline)` はタイルを使わないローカル地図として利用できる。
+- ページ32の静的Cartopy地図にNatural Earth 50m陸域ポリゴンを同梱し、初回の外部ダウンロードなしで正しい陸域マスクを描画できるようにした。
+- ページ03・04・05の主要Plotly図で自己完結HTMLを出力可能にした。保存図にはPlotly.js、ズーム、モードバー、画面サイズ追従を含む。オンライン背景タイルは引き続き外部資産である。
+- ブラウザアップロードをセッション限定のまま維持しつつ、常時読み込みのローカル`User Excel data`運用を完成し、Quick Visualizerでデータ出所を明確化した。
+- Vertical Sectionは、科学的制約とオフライン入力制約を明記したbetaワークフローとして維持した。
+- ページ31・34・37のUploaded data-onlyワークフローを安全化した。単一座標値の
+  フィルターでクラッシュせず、無効座標は安全に縮退し、参照データがなくても有効な
+  アップロード地点を地図に描画できる。
+- 対応環境（Python 3.12 / Streamlit 1.63 / Plotly 5.24）で全テストを確認し、
+  **302 passed**。pytestの将来のfixture書式に関する警告1件は記録したが、
+  アプリの失敗ではない。
+
+### 詳細作業記録
+
+- 変更: 従来の固定ローカルブックを、Git管理対象外の常時読み込み用
+  `local_data/user_data.xlsx` へ置き換えた。全行に `User Excel data` という
+  データセット名を付け、日本海・日本周辺・全球の各参照データ選択に結合する。
+  ブラウザの `Uploaded data` は引き続き別のセッション限定データとする。
+- 変更: 旧ローカルブックと同じ「ローカル表の読み込み→Dataset名の付与→
+  選択中の参照データへ結合→結合後の共通クリーニング・品質検査」の順序に統一。
+- 修正: Excelへのコピー＆ペースト等で数値に通常空白、ノーブレークスペース、
+  狭いノーブレークスペース、全角空白が混入した場合、数値変換前に除去するようにした。
+  Unicodeマイナスも通常のマイナスへ正規化する。PandasのPython文字列型とPyArrow文字列型の
+  両方で動作するよう、正規表現ではなく文字単位の置換を使用する。
+- 改善: Salinity-d18O Relationshipで常時読み込み表の行数、フィルターによる除外、
+  必須軸の欠損による描画除外を明示。Filtered dataset表はプロット可能行だけでなく、
+  Data filteringを通過した全行を表示するようにした。
+- 改善: Custom Parameter PlotでX/Yが有効で色分け項目だけが欠損する行を、
+  固定色のフォールバックで描画するようにした。
+- 確認: 不可視空白付き数値、PyArrow文字列、設定したローカル表の結合、
+  ローカル表が存在しない場合の安全な動作に回帰テストを追加。
+- 追加: ブラウザアップロード操作の下に、度分秒ではなく10進法で緯度・経度を
+  入力することと、入力範囲・10進法の具体例を示す英語注記を追加。Integrated Visualizerにも同じ注記を表示。
+- 改善: ブラウザアップロードはセッション限定であり、`User Excel data`は別の常時読み込みローカル表であることを明記。詳しい流れは Home → Show README → User Data Integration へ案内し、アップロード欄の案内文は英語のみに統一。
+- 修正: Home内の日本語READMEの相対MarkdownリンクがブラウザURLとして解釈されるため、`localhost` 側の誤ったパスを開く問題を修正。Home内に専用の「日本語版 README」展開表示を追加。
+- 修正: `User Data Check & Quick Visualizer` の2D地図でマウスホイールズームが動かず、ページスクロールになる問題を修正。Plotly地図の`scrollZoom`を有効化し、設定を守る回帰テストを追加。
+- 改善: Quick Visualizerのサイドバーで、`Uploaded marker style`をData filteringの前へ移動し、他のアップロード対応ページと順序を統一。現在のフィルターでアップロード行が0件になっても、マーカー設定を利用できるようにした。
+- 改善: Quick Visualizerでデータがない場合の案内に、サイドバーからCSV/XLSXをアップロードするか、比較データを選ぶことを明記。
+
 ## 1.3.2 - 2026-09-22
 
 ### リリース概要
 
+- 準備: バージョン1.3以降、コードレビュー、実装草案の作成、リファクタリング、テスト、バグ調査、文書整備にAIコーディング支援ツール（OpenAI Codex、Anthropic Claude Code）を本格的に活用する方針を採用。採用したすべての変更は人間の著者がレビュー・編集・検証する。方針の詳細は`docs/development_notes_Japanese.md`とREADMEを参照。
 - アクティブな個別ページと新しい公開ページ`User Data Check & Quick Visualizer`に、共通のブラウザアップロード運用を展開。
 - Data filteringで選択した`Uploaded data`を、対応する描画・計算へ統合し、アップロード点は最前面表示を維持。
 - Vertical Sectionのアップロード処理とカラーバー操作を改善。補間結果は引き続き科学的検証が必要な実験的ワークフローとして扱う。
@@ -17,7 +61,7 @@
 ### 2026-09-22
 
 - 変更: ページ05の名称を`User Data Check & Quick Visualizer`、ソースファイル名を`05_User_Data_Check_Quick_Visualizer.py`へ変更。公開するユーザーデータ入口として役割が固まったため、beta表記を外した。
-- 方針: `dataset/91_USER_UPLOAD_UNPUB.xlsx` を条件付きの削除候補として記録。ブラウザからのCSV/XLSXアップロードを通常のユーザーデータ運用とし、旧ブックと`envgeo_utils.py`内の`Unpublished dataset`ローダーは、稼働中参照・テスト・サンプル・文書の監査と置換が完了するまで残す。
+- 変更: 固定された旧ローカルブックを、設定可能な常時読み込み用表に置き換えた。研究者自身のCSV/XLSX/XLSにブラウザアップロードと同じ前処理を適用し、`User Excel data` というデータセット名を付けて、選択中の各参照データに結合する。ブラウザアップロードは別のセッション限定データとする。
 - 変更: ページ05をアップロード単独の`User Data Quick Visualizer`から、`User Data Check & Quick Visualizer`へ拡張。アップロード操作の後に参照＋アップロード共通のData filteringを置き、選択された統合DataFrameをOverview & Quality、任意2D、Salinity-d18O、Temperature-Salinity、任意3D/4D、2D Map、Geographic 3D、フィルタ済みCSV出力へ共通利用する。Integrated Visualizerに分かれていたSummary／Upload preview／Data table／Quality checkを利用者向けの入口へ統合し、ページ90は移行期間中は残す。
 - 改善: ページ05に共通海域プリセット、Atlantic／Pacific中心のGeographic 3D、共通カラーパレット、04ページ準拠の深度地図表現、上限付きの詳細hover、混在する測点IDにも対応するArrow安全なプレビューを追加。2D MapとGeographic 3Dは同じ統合フィルタ後DataFrameを使用する。
 - 改善: Home、Integrated Visualizer beta、User Data Quick Visualizer、Vertical Section Visualizer内の全タブを、Earthquake Advancedと同じ青系カード型の選択表示へ統一。明暗テーマと狭い画面に対応し、Vertical SectionのColor／Lineタブにも用途アイコンを追加した。

@@ -2,10 +2,75 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## 1.3.3 - 2026-09-23
+
+### Release summary
+
+- Added safe degraded-network map behaviour: Plotly maps retain a bundled
+  coastline overlay, and `Coastline (offline)` provides a tile-free local map.
+- Bundled Natural Earth 50m land polygons for page 32 static Cartopy maps so
+  correct land masking does not require a first-run external download.
+- Made interactive HTML downloads self-contained on pages 03, 04, and 05.
+  Saved figures embed Plotly.js and retain zoom, the mode bar, and responsive
+  sizing; online basemap tiles remain external assets.
+- Completed the persistent local `User Excel data` workflow, while browser
+  uploads remain session-only, and clarified data origin in Quick Visualizer.
+- Retained Vertical Section as a beta workflow with its scientific and
+  offline-input limitations documented separately.
+- Hardened uploaded-data-only workflows in pages 31, 34, and 37: single-value
+  coordinate filters no longer crash, invalid coordinates degrade safely, and
+  a valid uploaded location can render a map without reference rows.
+- Verified the full suite in the supported Python 3.12 / Streamlit 1.63 /
+  Plotly 5.24 environment: **302 passed**. One pytest deprecation warning is
+  recorded for future fixture cleanup; it does not indicate an app failure.
+
+### Detailed development log
+
+- Replaced the former fixed local workbook with the Git-ignored, always-loaded
+  `local_data/user_data.xlsx` workflow. Its rows receive the `User Excel data`
+  dataset label and are appended to the Japan Sea, Around Japan, and Global
+  reference selections. Browser `Uploaded data` remain session-only and
+  independent.
+- Matched the former workbook ingestion order: read the local table, assign its
+  dataset category, concatenate it with the selected reference source, and then
+  apply the shared cleaning and quality pipeline.
+- Fixed spreadsheet numbers copied with invisible Unicode whitespace. Regular,
+  non-breaking, narrow non-breaking, and full-width spaces are removed before
+  numeric conversion; Unicode minus signs are normalized. Literal replacement
+  is used for compatibility with both Python- and PyArrow-backed Pandas strings.
+- Improved Salinity-d18O diagnostics. The sub-dataset panel reports the number
+  of always-loaded local rows, plotting reports local rows excluded by filters
+  or missing required axes, and the Filtered dataset table now retains every
+  row that passed Data filtering rather than showing only plot-ready rows.
+- Changed Custom Parameter Plot so valid X/Y rows remain visible with a fixed
+  fallback color when the selected color parameter is missing.
+- Added regression coverage for invisible spreadsheet spaces, PyArrow strings,
+  configured local-table merging, and non-fatal missing local files.
+- Added a shared English coordinate-entry note below browser upload controls:
+  use decimal degrees rather than degrees–minutes–seconds, with valid latitude
+  and longitude ranges and concrete decimal-degree examples. The same note
+  appears in Integrated Visualizer.
+- Clarified that browser uploads are session-only and that `User Excel data`
+  is a separate always-loaded local table. The upload panel directs users to
+  Home → Show README → User Data Integration for the full workflow; the
+  compact upload-panel guidance is English-only.
+- Fixed the Home-page Japanese README link. Streamlit rendered the relative
+  Markdown link as a browser URL, so Home now provides a dedicated
+  `日本語版 README` expander instead.
+- Fixed mouse-wheel zoom in the `User Data Check & Quick Visualizer` 2-D map.
+  The Plotly map now enables `scrollZoom`; a regression test protects this
+  setting.
+- Reordered the Quick Visualizer sidebar so `Uploaded marker style` appears
+  before Data filtering, matching the other upload-enabled pages. Marker
+  controls now remain available even when current filters exclude all uploads.
+- Clarified the Quick Visualizer empty-state message: users should use the
+  sidebar to upload a file or select comparison data.
+
 ## 1.3.2 - 2026-09-22
 
 ### Release summary
 
+- From version 1.3 onward, development has substantially adopted AI coding assistants (OpenAI Codex, Anthropic Claude Code) for code review, implementation drafting, refactoring, tests, bug investigation, and documentation; every adopted change is reviewed, edited, and verified by the human author. See `docs/development_notes.md` and the project README for the full policy.
 - Established the shared browser-upload workflow across the active specialist pages and the new public `User Data Check & Quick Visualizer`.
 - Made selected `Uploaded data` available through common Data filtering and integrated it into compatible calculations while preserving foreground marker rendering.
 - Improved Vertical Section upload handling and colorbar controls; its interpolation remains an experimental workflow requiring scientific validation.
@@ -17,7 +82,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 ### 2026-09-22
 
 - Renamed page 05 to `User Data Check & Quick Visualizer` and its source file to `05_User_Data_Check_Quick_Visualizer.py`; removed the beta label because the page is now the public user-data entry point.
-- Planned the conditional retirement of `dataset/91_USER_UPLOAD_UNPUB.xlsx`. Browser CSV/XLSX upload is now the normal user-data workflow; the legacy workbook and its `envgeo_utils.py` `Unpublished dataset` loader stay in place until live references, tests, samples, and documentation have been audited and replaced.
+- Replaced the fixed legacy workbook with a configurable always-loaded local user table. Researcher-owned CSV/XLSX/XLS files use the same preparation path as browser uploads, receive the `User Excel data` dataset label, and are appended to each selected reference source; browser uploads remain a separate session-only category.
 - Changed page 05 from upload-only `User Data Quick Visualizer` into `User Data Check & Quick Visualizer`. It now places the shared reference-plus-upload Data filtering workflow after the upload controls and applies the selected combined dataframe to Overview & Quality, arbitrary 2D, Salinity-d18O, Temperature-Salinity, arbitrary 3D/4D, 2D Map, Geographic 3D, and filtered CSV export. Summary, upload preview, data table, and quality checks formerly separated across Integrated Visualizer tabs are consolidated into this user-facing entry page; page 90 remains available during migration.
 - Improved page 05 with shared ocean-region presets, Atlantic/Pacific-centred Geographic 3D, common color-palette selection, page-04-style depth-map presentation, bounded rich hover metadata, and Arrow-safe mixed identifier previews. The map and geographic 3D view use the same filtered integrated dataframe.
 - Improved: unified all tab interfaces in Home, Integrated Visualizer beta, User Data Quick Visualizer, and Vertical Section Visualizer with the blue card-style selected-tab treatment from Earthquake Advanced. The styling supports light/dark themes and narrow screens; Vertical Section Color/Line tabs now also include purpose icons.

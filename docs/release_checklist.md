@@ -4,6 +4,14 @@ Use this checklist before uploading a test site, updating GitHub, creating a rel
 
 ## 1. Local Environment
 
+### Verified for the 1.3.3 release candidate (2026-09-23)
+
+- [x] Python 3.12 / Streamlit 1.63 / Plotly 5.24 environment used for the
+  final test run.
+- [x] `python -m pytest -q test` completed: **302 passed, 1 warning**.
+  The warning is Pytest's future deprecation notice for a class-scoped fixture;
+  it is not an application test failure and remains a maintenance follow-up.
+
 - [ ] Confirm the intended Python environment is active.
 - [ ] Confirm one of the tested baselines is active: Python 3.10.15 / Streamlit 1.42 or Python 3.12.14 / Streamlit 1.63, both with Plotly 5.24.
 - [ ] Confirm `requirements.txt` matches the tested environment.
@@ -24,7 +32,7 @@ streamlit run home.py
 ```
 
 - [ ] Confirm `home.py` opens successfully.
-- [ ] Confirm the app version is shown as `1.3.2 (2026-09-22)`.
+- [ ] Confirm the app version is shown as `1.3.3 (2026-09-23)`.
 - [ ] Confirm the Home tabs load: Main, About, Data Sources, Manual, Update History, and Japanese information where applicable.
 
 ## 3. Sidebar And Filtering
@@ -71,6 +79,11 @@ For each page:
 
 ## 6. User Data Upload
 
+- [ ] Confirm an optional `local_data/user_data.xlsx` is labeled `User Excel data`
+      and appended once to each reference source without entering browser-upload
+      session state.
+- [ ] Confirm a deployment without a local user table loads bundled reference
+      data normally.
 - [ ] Confirm the integrated beta upload workflow still works.
 - [ ] Confirm uploaded data are visually distinguishable from reference data.
 - [ ] Confirm uploaded data remain session-only and are not saved to disk or server storage.

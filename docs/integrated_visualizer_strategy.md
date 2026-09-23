@@ -187,6 +187,33 @@ domain rules and plotting:
 - `envgeo4d/earthquake` and future domains: their own schemas and quality rules
   while reusing the common upload framework.
 
+### Shared map and offline-asset direction
+
+Map controls, map layout, and offline geographic assets are also shared-core
+concerns, but they must remain separate layers rather than becoming one large
+map function. The common layer should provide: (1) a reusable Streamlit map
+controls component with page-specific widget keys, (2) Plotly/Folium layout
+helpers, (3) path-safe loading and caching of bundled coastline CSV/GeoJSON
+assets, (4) online/offline capability and asset-availability checks, and (5)
+generic construction of online-tile or local-coastline layers. The current
+`apply_map_style()` and `apply_standard_map_layout()` are small transitional
+helpers in that direction; the `Map controls` widget itself is still copied
+per page and is a future extraction candidate.
+
+The common layer must not contain scientific interpretation of its data.
+GEBCO sampling, seafloor interpolation, and oceanographic fallback policy
+remain in `envgeo4d/seawater`; earthquake catalog acquisition, plate-boundary
+semantics, and magnitude/depth rules remain in `envgeo4d/earthquake`. External
+services do not argue against common code: their configuration, capability
+status, attribution hooks, and safe local fallback belong in the common layer,
+while each domain decides which sources are scientifically appropriate.
+
+Start the migration with bundled 50 m/110 m coastline assets and their loader,
+cache, resolution selection, licence/attribution metadata, and tests. Then
+extract map controls and layout, followed by longitude/extent helpers. Adopt
+one component in one page at a time; retain each app's local implementation
+until both Seawater and Earthquake have been visually checked and tested.
+
 Unknown column names must never be accepted solely through speculative matching.
 Automatic recognition should be followed by a visible mapping report and, when
 needed, explicit user correction.

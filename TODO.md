@@ -12,7 +12,7 @@ English and Japanese. Keep this file aligned with `TODO_Japanese.md`.
 
 ## Priority Roadmap
 
-Updated: 2026-09-19
+Updated: 2026-09-23
 
 Work in this order to avoid repeating page-level changes.
 
@@ -46,9 +46,189 @@ Work in this order to avoid repeating page-level changes.
      public, advanced, beta, local-only, or retired.
    - Complete English/Japanese UI review, help text, manuals, screenshots,
      installation documentation, packaging, and the JOSS resubmission checklist.
+6. Apply final source-code polish after the features and public structure are stable.
+   - Review `envgeo_utils.py` section by section without changing scientific or
+     user-visible behavior.
+   - Standardize section headings, spacing, function ordering, and comment style.
+   - Add short English/Japanese explanations where they help future maintenance,
+     using the existing concise, researcher-written tone rather than long formal
+     docstrings.
+   - Remove obsolete or duplicated comments and code only after confirming that
+     they are unused.
+   - Keep the cleanup in reviewable changes and run the full regression suite
+     before and after it.
 
 Do not combine MapLibre migration, all-page upload rollout, navigation changes,
 and broad refactoring in one release.
+
+### Scientific validity follow-up before publication claims
+
+Keep these as separate, reviewed work packages after v1.3.3; do not combine
+them with UI or distribution changes.
+
+1. Audit T-S density contours against source-column semantics. Where pressure
+   and location support it, calculate and test TEOS-10 Absolute Salinity and
+   Conservative Temperature; otherwise disclose the contours as approximate.
+2. Define dataset-level scientific QC and machine-readable provenance:
+   missing-value codes, isotope uncertainty and standard scale, coordinates,
+   dates, source identifiers, and duplicate-versus-repeat-observation rules.
+3. Treat interpolation, regression, d-excess patterns, and water-mass labels
+   as exploratory until uncertainty and clustered sampling are assessed with
+   suitable domain-reviewed methods.
+4. Extract scientific calculations into pure functions with reference-value
+   tests before relying on them in reproducible analysis or paper claims.
+5. Before JOSS: finish supported-environment test evidence, packaging, CI,
+   `CITATION.cff`, tagged release, archival DOI, and stable dataset provenance.
+
+### Path to reproducible distribution and public release
+
+After the vertical-section safety work and compatibility checks, prioritize
+offline operation for shipboard use. Then make the project a reproducibly
+installable, citable research application rather than only a source checkout.
+Use this sequence as the default.
+
+1. **Complete offline operation.** Provide local coastlines and tile-free maps,
+   reduce Cartopy external-download dependencies, retain manual A-B entry when
+   Folium Draw is unavailable, offer self-contained Plotly HTML, and test with
+   network access disabled.
+2. **Build an installable application foundation.** Add `pyproject.toml`, package
+   data declarations, location-independent access to bundled assets, and, when
+   appropriate, an `envgeo-seawater` launch command. The target is a clear,
+   supported `pip install git+https://...` installation path. Design an explicit
+   offline launch setting (for example, `ENVGEO_OFFLINE=1`) as part of this
+   distribution work, not as a separate near-term requirement: it should avoid
+   connectivity probes and external-service attempts from startup for closed or
+   shipboard networks.
+3. **Distribute reproducible environments.** Decide the supported Python /
+   Streamlit / Plotly matrix; maintain reviewed `requirements.txt`,
+   `requirements-dev.txt`, and an `environment.yml` that covers geospatial
+   dependencies. Incorporate the MapLibre baseline only after its implementation
+   and visual/interaction checks are complete for the supported versions.
+4. **Establish continuous verification and releases.** Run pytest on every push
+   and pull request with GitHub Actions, then add `CITATION.cff`, tagged GitHub
+   Releases, Zenodo archives, and consistent DOI references.
+5. **Finish JOSS and user-facing release material.** Complete the URL, version,
+   research-impact citations, ODV comparison, figures, installation,
+   contribution, and support material in `paper.md` and user documentation.
+   Assess PyPI / conda-forge only after the package and environment are stable.
+
+Do not try to complete this distribution work and a large shared-core split
+(coastline assets, loading, quality checks, and longitude handling) in the same
+change. First stabilize an application distribution path; then extract shared
+core pieces in small, independently verified steps.
+
+### Seawater / Earthquake shared-core extraction
+
+Long term, do not merge the two applications into one large application.
+Instead, extract only shared capabilities incrementally into `envgeo4d` (or an
+equivalent standalone package), while retaining specialist screens, datasets,
+and scientific calculations in each application.
+
+- `envgeo4d/common`: location-independent bundled-asset loading, file input,
+  session state, column mapping, validation results, shared UI models,
+  longitude normalization, map-extent/coastline helpers, reusable Map controls,
+  map layout, online/offline capability checks, and generic online-tile/local-
+  coastline layer construction.
+- `envgeo4d/seawater`: seawater aliases, valid ranges, d-excess, and
+  oceanographic figure requirements and quality rules.
+- `envgeo4d/earthquake`: catalog schemas, depth/magnitude rules, USGS or other
+  acquisition, and earthquake-specific quality rules.
+
+Start with the 50 m / 110 m coastline CSV assets and their loading, caching,
+resolution validation, licence/attribution metadata, and tests. Then extract
+Map controls/layout and shared longitude/map helpers, followed by a generic
+upload/validation model. The common layer owns external-service configuration
+and safe local fallbacks, not domain-specific scientific interpretation. Do not
+remove an application's existing local assets or functions until both
+applications have migrated and passed screen-level checks. Never accept an
+unknown column name solely through speculative matching: display the mapping
+and allow explicit user correction.
+`docs/integrated_visualizer_strategy.md` remains the detailed source of truth
+for responsibility boundaries.
+
+## Important Policy: Offline Operation
+
+Date adopted: 2026-09-22
+
+Treat offline operation as a long-term core requirement for EnvGeo-Seawater.
+After the required Python dependencies and data have been installed locally,
+users should be able to perform the principal data search, filtering, analysis,
+and visualization workflows without an internet connection. EnvGeo-Earthquake
+may continue to require internet access for USGS catalog retrieval, but the
+Seawater core must not depend on the availability of external services.
+
+A representative use case is immediate shipboard quality control and
+exploration. Research vessels may have limited, unstable, or unavailable
+satellite connectivity. Researchers should be able to load newly collected CSV
+or Excel data and inspect data quality, sampling positions, depth profiles, T–S
+relationships, and isotope–hydrographic relationships while still at sea.
+Detecting outliers, coordinate errors, missing values, or unexpected profiles
+during the cruise can inform re-sampling, remeasurement, and adjustments to the
+remaining observation plan. After offline support is verified, present this
+field-use advantage explicitly in the README, manual, and the JOSS paper's
+Example Use Case or Research Impact section.
+
+Known external dependencies and planned work:
+
+- Keep `Standard` as the normal Seawater map default. Retain the local-coastline
+  map, consisting of the bundled coastline, latitude/longitude grid, and sample
+  locations, as an explicit user choice and the automatic no-connectivity
+  fallback. It is sufficient for shipboard data checks and requires no
+  connection. Retain satellite imagery, bathymetry tiles, and GSI tiles as
+  optional, user-selected enhancements when connectivity is available.
+- Browser tile requests are asynchronous, so Python cannot reliably detect a
+  tile failure before rendering a replacement. Overlay every map with local
+  coastline CSV line traces so that sample locations and coastlines remain on a
+  white background if tiles silently fail. An explicit offline setting should
+  select `white-bg` and local coastlines from the outset. Browser-side
+  `tileerror`-driven automatic switching is an optional future enhancement, not
+  a core requirement.
+- **Completed (2026-09-23):** Page 32 no longer uses `ax.coastlines()` or
+  `cfeature.LAND`. The Natural Earth 50m land polygon shapefile is bundled in
+  `coastline/natural_earth_50m_land/` and is loaded via
+  `cartopy.io.shapereader.Reader(local_path)` — no download is performed.
+  Coastline outlines are drawn via `envgeo_utils.plot_bundled_coastline()`,
+  which reads the CSV files already bundled with EnvGeo-Seawater.
+  **Do not adopt the alternative of filling land from the coastline CSV alone**
+  (CSV coordinates describe line segments, not closed filled polygons, and
+  cannot reliably mask contours). The correct approach — bundled NE land
+  shapefile read with a local Reader — is already in place and tested.
+- The Vertical Section Folium map depends on CDN-hosted Leaflet/Draw assets and
+  web tiles. The current offline mode intentionally uses manual A–B coordinates
+  and a local Plotly coastline preview; it must not invoke Folium. **Future
+  enhancement, not part of the basic offline release:** evaluate a small,
+  tested Streamlit/Plotly component that returns two arbitrary map clicks as A
+  and B, or bundle and maintain the Leaflet/Draw JavaScript, CSS, and icons
+  locally. Do not claim mouse-drawn offline A–B lines until one route is
+  packaged, licence-reviewed, and tested without network access.
+- The Home manual video uses an external URL, but it is supplementary and is
+  not an offline-operation requirement. The main application must remain usable
+  when the video cannot be played.
+- **Completed (2026-09-23):** Pages 03, 04, and 05 now offer a
+  **"Download interactive HTML"** button that embeds Plotly.js inline
+  (`include_plotlyjs=True`). The saved file works offline in any modern browser.
+  Implemented via `envgeo_utils.figure_to_self_contained_html()`. ~~Quick
+  Visualizer HTML exports currently use `include_plotlyjs="cdn"`. Offer a
+  self-contained export with Plotly.js embedded.~~
+- **Future distribution/closed-network enhancement, not a v1.3.3 blocking
+  requirement:** add an explicit offline launch setting, such as an environment
+  variable or launch configuration. It should bypass connectivity probes and
+  external-service attempts from startup. The current automatic fallback to the
+  local coastline map is sufficient for ordinary local offline use.
+- Install and verify Python and all dependencies before boarding. Offline
+  support concerns eliminating runtime external communication from an already
+  installed environment, not first-time installation aboard the vessel.
+
+Completion criteria:
+
+- With an empty browser cache and network access blocked, Home and the principal
+  Seawater pages start without timeouts or unhandled exceptions.
+- Filtering, core calculations, principal 2D/3D/4D figures, and CSV/Excel export
+  work for bundled and uploaded data.
+- Local coastlines and sample locations remain visible without basemap tiles.
+- Self-contained figure exports open on a separate offline computer.
+- README, manual, and JOSS-paper claims about offline use match the verified
+  scope and clearly state the prerequisite installation requirements.
 
 ## Documentation and Test Strategy for JOSS
 
@@ -100,6 +280,12 @@ JOSS note:
   needs packaging/installability, CI evidence, contribution/support guidance,
   research-impact references, public development history, tagged releases, and
   an appropriate disclosure of AI-assisted development.
+- Keep `Vertical Section Visualizer beta` in the application as an advanced,
+  experimental workflow, but do not make it a central JOSS claim, representative
+  figure, or validation example until its scientific scope and offline input
+  workflow are mature. The JOSS narrative should instead centre on the stable
+  seawater isotope/hydrographic data, filtering, quality review, upload, and
+  visualization workflows.
 
 ## High Priority
 
@@ -237,11 +423,11 @@ Planned direction:
   Keep its session-only data model, shared Data filtering, and clear division
   of responsibility from the specialist analysis pages while page 90 remains
   available during the migration.
-- Retire `dataset/91_USER_UPLOAD_UNPUB.xlsx` only after auditing and removing
-  its live `envgeo_utils.py` loader path, its `Unpublished dataset` inclusion,
-  any test/sample dependency, and obsolete documentation. Browser CSV/XLSX
-  upload is now the normal user-data workflow; do not delete the workbook
-  before this reference audit is complete.
+- [x] Replace the fixed legacy workbook with a configurable always-loaded local
+  user table. CSV/XLSX/XLS data from the Git-ignored
+  `local_data/user_data.xlsx` path or `ENVGEO_LOCAL_USER_DATA_PATH` are labeled
+  `User Excel data` and appended to every selected reference source. Browser
+  `Uploaded data` remain a separate session-only category.
 
 Notes:
 - Uploaded user data should remain in memory only and should not be saved to the
@@ -360,3 +546,44 @@ Planned direction:
 - Before public release, explain the role of `beta` pages clearly. Some beta
   pages are active research/development tools, while others may become advanced
   or private workflows.
+
+---
+
+## Future Packaging: Asset Directory Reorganization
+
+Added: 2026-09-23 (Natural Earth 50m land shapefile bundled in coastline/)
+
+When the project moves to a proper Python package (pyproject.toml / package data),
+the geographic and scientific assets should be reorganized into a cleaner structure.
+This is not an immediate priority; do it only after a package-data loader with backward
+compatibility has been designed and tested.
+
+### Candidate future layout
+
+```
+assets/
+  geospatial/       ← coastline CSVs + Natural Earth land shapefile
+  bathymetry/       ← GEBCO data (currently under data_beta/)
+  metadata/         ← source records, licences, checksums for bundled assets
+```
+
+### Current state (do not reorganize yet)
+
+- `coastline/` — 50m and 110m coastline CSV files + `natural_earth_50m_land/`
+  (land mask for static Cartopy maps on page 32; bundled 2026-09-23)
+- `data_beta/` — GEBCO bathymetry (used by Vertical Section page 53)
+
+Keep Natural Earth land (static map land mask) and GEBCO (bathymetry / section
+analysis) separated and in their current locations until the asset loader and
+package-data migration plan are ready.
+
+### Migration notes
+
+- The asset loader must resolve paths relative to the installed package, not
+  `__file__` of individual page scripts.
+- Add a backward-compatible fallback so existing local checkouts without a
+  package install still work.
+- Move `LICENSE_OR_SOURCE.md` files for each asset into `assets/metadata/` when
+  the reorganization happens.
+- Verify that Streamlit Cloud and the local Conda environment both find the
+  bundled files after migration.

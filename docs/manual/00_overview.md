@@ -15,10 +15,11 @@ It supports maps, temperature-salinity diagrams, salinity-d18O relationships, de
 
 ## Basic Workflow
 
-1. Upload a CSV/XLSX file in **User Data Check & Quick Visualizer** when you
-   want to examine your own data, or choose a specialist page for a focused
-   figure.
-2. Select a dataset, including `Uploaded data` where it is available.
+1. For an always-loaded local table, place the file at
+   `local_data/user_data.xlsx` before starting the app. For one-time data,
+   upload a CSV/XLSX file in **User Data Check & Quick Visualizer**.
+2. Select a dataset. The local table appears as `User Excel data`; browser
+   uploads appear as `Uploaded data`.
 3. Choose a visualization page.
 4. Adjust figure settings.
 5. Inspect maps, plots, tables, and quality flags.
@@ -42,5 +43,8 @@ It supports maps, temperature-salinity diagrams, salinity-d18O relationships, de
 - Browser-uploaded data remain in memory for the current Streamlit session and
   are not saved by the app. The public **User Data Check & Quick Visualizer**
   provides upload-first quality review and simple 2D--4D exploration.
+- `User Excel data` is the optional, always-loaded local dataset. It is read
+  from the Git-ignored local path at startup and appended to each reference
+  source. It is not the same as session-only `Uploaded data`.
 - Vertical Section interpolation remains experimental; inspect observed points,
   settings, and data coverage before using a section as an analysis result.

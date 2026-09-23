@@ -6,6 +6,10 @@ Note: Mobile or tablet displays may have limited features or layout constraints.
 
 Suggested starting points:
 
+- For a workbook that should always be available during local use, place it at
+  `local_data/user_data.xlsx` before starting the app. It appears in Data
+  filtering as `User Excel data` and is combined with the selected reference
+  source. Use `ENVGEO_LOCAL_USER_DATA_PATH` for another CSV/XLSX/XLS path.
 - Use **User Data Check & Quick Visualizer** to upload CSV/XLSX data, check
   missing values and quality flags, select `Uploaded data` through Data
   filtering, and make simple 2D--4D figures before moving to a specialist page.

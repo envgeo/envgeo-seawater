@@ -6,6 +6,10 @@ __pycache__/
 Thumbs.db
 .streamlit/secrets.toml
 
+# Optional researcher-owned local data (never commit measurement data)
+local_data/*
+!local_data/README.md
+
 # C extensions
 *.so
 

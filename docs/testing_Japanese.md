@@ -39,6 +39,8 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 - 共通海域プリセットと Data filtering 用のエリアプリセット範囲。
 - Japan Sea、Around Japan、Global のデータ読み込み。
 - 必須列の存在と、主要列の数値変換。
+- 表計算ソフト由来の不可視空白を除去した数値変換と、pandasのPyArrow文字列での動作。
+- 常時読み込み用ローカル表の結合、別パス指定、ファイルがない場合の安全な動作。
 - Depth Profile 用の gap row 挿入処理。
 - EnvGeo / cmocean カラーマップ共通ヘルパー。
 - アップロードデータ列名の自動標準化。
@@ -96,6 +98,7 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 
 - import とバージョン情報。
 - データ読み込みと数値変換。
+- ローカルユーザー表の統合と、表計算データの不可視空白の正規化。
 - データ品質ルール。
 - 共通ユーティリティ関数。
 - カラーマップ、保存ファイル名、海域プリセット、海岸線読み込みなどの作図支援。

@@ -26,6 +26,23 @@ reference rows for compatible section calculations. Other pages may retain a
 dedicated overlay path where a calculation must intentionally exclude uploads;
 follow the page-specific note.
 
+## Always-loaded User Excel Data
+
+For repeated local analysis, `local_data/user_data.xlsx` is read at app startup
+and assigned the dataset name **User Excel data**. The loader appends it to the
+selected Japan Sea, Around Japan, or Global reference source, so it is available
+in the dataset selector without a browser upload. The file is ignored by Git.
+Use `ENVGEO_LOCAL_USER_DATA_PATH` to select a different CSV/XLSX/XLS file.
+
+**User Excel data** and browser **Uploaded data** are independent categories.
+Selecting both includes both; the browser upload does not replace or rewrite
+the always-loaded workbook.
+
+Numeric cells copied from another spreadsheet may contain invisible whitespace,
+including non-breaking or full-width spaces. The shared loader removes these
+characters before numeric conversion. Values that still cannot be interpreted
+as numbers remain missing and are handled by the normal quality checks.
+
 ## Main Controls
 
 - **Area filter preset**  
@@ -52,3 +69,6 @@ follow the page-specific note.
 - Changing filters does not update figures until **Apply settings** is clicked.
 - Area presets initialize the filter range; users can still fine-tune sliders afterward.
 - Missing values may be retained in some filters to avoid accidentally removing metadata-only rows.
+- **Filtered dataset** contains every row that passes the sidebar filters. A plot
+  may show fewer rows when its required axes, such as Salinity and d18O, are
+  missing; the page reports this excluded count separately.

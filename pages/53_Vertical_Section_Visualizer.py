@@ -32,6 +32,21 @@ import envgeo_user_data
 DEFAULT_GEBCO_PATH = "data_beta/GEBCO_2025_6min.nc"
 MAX_MAP_POINTS = 50000
 DEFAULT_MAX_ROWS_FOR_SECTION_PLOT = 3000
+# grid_res の最大値(180)では対象グリッドが 180x180=32,400 点になる。
+# ローカル計測では corridor 投影後 50,000 点の cubic+linear+nearest 補間
+# でも1秒未満だったが、Streamlit Community Cloud の共有・低性能な環境
+# ではウィジェット操作ごとにスクリプト全体が再実行されるため、同程度の
+# 計算を繰り返すコストは無視できない。ユーザーが「Max valid rows for
+# section plotting」を上げても解除できない、より現実的な内部ハード
+# 上限としてこの値を選んだ（既定の3,000件はそのまま維持する）。
+# At grid_res's maximum (180) the target grid is 180x180 = 32,400 nodes.
+# Local benchmarking showed even 50,000 post-corridor points stayed under
+# 1 second for cubic+linear+nearest combined, but Streamlit Community
+# Cloud's shared, weaker containers re-run the whole script on every widget
+# interaction, so repeating that cost adds up. This is a more realistic,
+# internal hard ceiling that raising "Max valid rows for section plotting"
+# cannot override (the default of 3,000 rows is unchanged).
+MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP = 8000
 BATHY_SOURCE_OBSERVED = "Observed deepest samples"
 BATHY_SOURCE_GEBCO = "Built-in GEBCO"
 BATHY_SOURCE_UPLOAD = "Upload bathymetry CSV/Excel"
@@ -57,6 +72,17 @@ def sample_points_for_map(df_points, max_points=MAX_MAP_POINTS):
     if df_points.empty or len(df_points) <= max_points:
         return df_points
     return df_points.sample(max_points, random_state=42).sort_index()
+
+
+def resolve_section_row_limit(user_value, hard_cap=MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP):
+    # ユーザー設定値とハード上限の小さい方を使う。ハード上限はUIの許可
+    # 最大値そのものにも使うため、通常はuser_valueがこれを超えること
+    # はないが、念のため計算前にも二重で確認する。
+    # Use whichever is smaller: the user's setting or the hard cap. The
+    # hard cap also serves as the UI widget's own max_value, so user_value
+    # should rarely exceed it, but this keeps the actual gate safe
+    # regardless of how that value was produced.
+    return min(int(user_value), int(hard_cap))
 
 
 def maybe_sample_points(df_points, max_points=None):
@@ -135,6 +161,28 @@ def section_vertices_from_ab(a_lat, a_lon, b_lat, b_lon):
     # 直線測線も内部的には2点の折れ線として扱う
     # Treat a straight A-B section as a two-vertex polyline internally.
     return [[float(a_lat), float(a_lon)], [float(b_lat), float(b_lon)]]
+
+
+def section_crosses_antimeridian(section_vertices):
+    # 連続する頂点の生の経度差が180度を超えていれば、その線分は日付変更
+    # 線を直接横断しているとみなす。断面計算(project_points_to_polyline
+    # / build_section_polyline)は単一の接平面近似のままであり、このよう
+    # な線ではその近似自体が歪むため、科学的な検証対象外である。
+    # Flag a polyline segment as crossing the antimeridian directly when
+    # consecutive vertices' raw longitude difference exceeds 180 degrees.
+    # The section math (project_points_to_polyline / build_section_polyline)
+    # still uses a single flat-tangent-plane approximation, which itself
+    # becomes distorted for such a line, so this case is not scientifically
+    # validated.
+    if not section_vertices:
+        return False
+    vertices = normalize_section_vertices(section_vertices)
+    for i in range(len(vertices) - 1):
+        lon_a = vertices[i][1]
+        lon_b = vertices[i + 1][1]
+        if abs(lon_a - lon_b) > 180.0:
+            return True
+    return False
 
 
 def suggest_default_section_vertices(df):
@@ -230,9 +278,19 @@ def project_points_to_polyline(df, section_vertices, corridor_km):
     projected["CrossTrack_km"] = best_cross
     projected["DistanceFromA_km"] = best_along
 
+    # corridor 判定は「線分(A-B)への実際の最近接距離」best_dist で行う。
+    # 無限直線への垂線距離(best_cross)だけで判定すると、A/B の外側延長線
+    # 上にある点は垂線距離が小さく見えてしまい、corridor 幅の外にある
+    # にもかかわらず誤って混入する。
+    # Gate the corridor on the true nearest-point distance to the finite
+    # segment (best_dist), not the perpendicular distance to the infinite
+    # line (best_cross) alone. Points beyond A or B on the line's
+    # extension can have a small infinite-line perpendicular distance
+    # while actually sitting far outside the intended corridor.
+    within_corridor = best_dist <= corridor_km
     projected = projected[
         projected["SectionDistance_km"].between(0.0, polyline["length_km"])
-        & (projected["CrossTrack_km"].abs() <= corridor_km)
+        & within_corridor
     ].copy()
 
     return projected, polyline["length_km"], polyline
@@ -251,9 +309,140 @@ def densify_section_line(section_vertices, n_points=200):
     sample_x = np.interp(target_dist, cum, xy[:, 0])
     sample_y = np.interp(target_dist, cum, xy[:, 1])
 
-    lon = polyline["origin_lon"] + sample_x / (111.32 * np.cos(np.radians(polyline["lat_ref"])))
+    # 極付近では cos(lat) が0に近づき経度換算が発散するため下限を設ける
+    # Guard against cos(lat) collapsing to 0 near the poles, which would
+    # otherwise blow up the longitude conversion below.
+    cos_lat = np.cos(np.radians(polyline["lat_ref"]))
+    if abs(cos_lat) < 1.0e-9:
+        cos_lat = 1.0e-9
+    lon = polyline["origin_lon"] + sample_x / (111.32 * cos_lat)
     lat = polyline["origin_lat"] + sample_y / 111.32 # 緯度一度当たりの距離（km）
     return lon, lat
+
+
+def build_corridor_capsule_local_km(p0, p1, corridor_km, cap_points=16):
+    # 線分 p0-p1 から距離 corridor_km 以内の領域（カプセル/スタジアム形）を
+    # ローカルkm座標で返す。project_points_to_polyline() の best_dist
+    # （有限線分への最近接距離）判定とちょうど一致する形状で、A/B端は
+    # 半円キャップで閉じるため無限に延長されない。
+    # Return the capsule/stadium-shaped region within corridor_km of the
+    # finite segment p0-p1, in local km coordinates. This matches exactly
+    # the best_dist (nearest distance to the finite segment) test used by
+    # project_points_to_polyline(); the semicircular end caps at p0/p1 keep
+    # the band finite instead of extending forever past A/B.
+    p0 = np.asarray(p0, dtype=float)
+    p1 = np.asarray(p1, dtype=float)
+    seg = p1 - p0
+    length = float(np.hypot(seg[0], seg[1]))
+    if length < 1.0e-9 or corridor_km <= 0:
+        return None
+
+    u = seg / length
+    n = np.array([-u[1], u[0]])
+    angle_n = float(np.degrees(np.arctan2(n[1], n[0])))
+
+    left0 = p0 + n * corridor_km
+
+    cap_p1_angles = np.linspace(angle_n, angle_n - 180.0, cap_points)
+    cap_p0_angles = np.linspace(angle_n + 180.0, angle_n, cap_points)
+    cap_p1 = p1 + corridor_km * np.column_stack(
+        [np.cos(np.radians(cap_p1_angles)), np.sin(np.radians(cap_p1_angles))]
+    )
+    cap_p0 = p0 + corridor_km * np.column_stack(
+        [np.cos(np.radians(cap_p0_angles)), np.sin(np.radians(cap_p0_angles))]
+    )
+
+    return np.vstack([left0[np.newaxis, :], cap_p1, cap_p0])
+
+
+def polygon_has_dateline_seam(lons, threshold_deg=180.0):
+    # 閉多角形の頂点を辺に沿って辿り、経度が180度を超えて飛ぶ辺が
+    # あれば日付変更線の「縫い目」とみなす。通常のカプセル形状は
+    # せいぜい数度しか経度が動かないため、これより大きな飛びは
+    # normalize_longitude_deg() によるラップの副作用であり、その
+    # ポリゴンは描画しない方が安全。
+    # Walk a closed polygon's edges (including the closing edge) and flag
+    # any edge whose longitude jumps more than threshold_deg. A normal
+    # capsule spans at most a few degrees of longitude, so a larger jump
+    # signals a dateline-wrap artifact from normalize_longitude_deg()
+    # rather than a real edge — such a polygon is safer left undrawn.
+    lons = np.asarray(lons, dtype=float)
+    if lons.size < 2:
+        return False
+    closed = np.concatenate([lons, lons[:1]])
+    return bool(np.any(np.abs(np.diff(closed)) > threshold_deg))
+
+
+def build_corridor_band_polygons(section_vertices, corridor_km, cap_points=16):
+    # 折れ線測線の各線分ごとにカプセル形の帯を作り、経緯度へ変換する。
+    # 複数線分がある場合は線分ごとに別々のポリゴンとして返す（自己交差
+    # などの複雑な結合形状は作らず、各線分の帯を単純に重ねて描く）。
+    # 日付変更線をまたいで経度が大きく飛ぶポリゴンは描画対象から除く。
+    # Build one capsule-shaped band per polyline segment and convert it to
+    # lon/lat. Multi-segment lines get one polygon per segment (no complex
+    # boolean union — overlapping bands at a bend are just drawn on top of
+    # each other, which stays visually correct and avoids any risk from
+    # self-intersecting geometry). Polygons whose longitude jumps across
+    # the antimeridian are dropped rather than drawn.
+    polyline = build_section_polyline(section_vertices)
+    if polyline is None or corridor_km is None or corridor_km <= 0:
+        return []
+
+    cos_lat = np.cos(np.radians(polyline["lat_ref"]))
+    if abs(cos_lat) < 1.0e-9:
+        cos_lat = 1.0e-9
+
+    xy = polyline["xy_km"]
+    polygons = []
+    for i in range(len(xy) - 1):
+        local_polygon = build_corridor_capsule_local_km(
+            xy[i], xy[i + 1], corridor_km, cap_points=cap_points
+        )
+        if local_polygon is None:
+            continue
+
+        lon_points = polyline["origin_lon"] + local_polygon[:, 0] / (111.32 * cos_lat)
+        lat_points = polyline["origin_lat"] + local_polygon[:, 1] / 111.32
+        lon_points = np.asarray(envgeo_utils.normalize_longitude_deg(lon_points), dtype=float)
+
+        if polygon_has_dateline_seam(lon_points):
+            continue
+
+        polygons.append(list(zip(lon_points.tolist(), lat_points.tolist())))
+
+    return polygons
+
+
+def build_corridor_band_trace(section_vertices, corridor_km, cap_points=16):
+    # 帯ポリゴンを None 区切りの単一トレースにまとめ、鉛直プロファイル線
+    # と同じ「軽量な単一トレース」方針を地図側でも保つ。
+    # Combine the band polygons into a single None-separated trace, keeping
+    # the same lightweight "one trace" approach used for the vertical
+    # profile lines, but for the map.
+    polygons = build_corridor_band_polygons(section_vertices, corridor_km, cap_points=cap_points)
+    if not polygons:
+        return None
+
+    lons, lats = [], []
+    for polygon in polygons:
+        for lon, lat in polygon:
+            lons.append(lon)
+            lats.append(lat)
+        lons.append(polygon[0][0])
+        lats.append(polygon[0][1])
+        lons.append(None)
+        lats.append(None)
+
+    return go.Scattermapbox(
+        lon=lons,
+        lat=lats,
+        mode="lines",
+        fill="toself",
+        fillcolor="rgba(66,135,245,0.18)",
+        line=dict(color="rgba(30,90,200,0.65)", width=1),
+        hoverinfo="skip",
+        name=f"Section corridor (±{corridor_km:.0f} km)",
+    )
 
 
 def extract_section_vertices_from_draw_result(draw_result):
@@ -329,6 +518,10 @@ def render_ab_selector_map(df_points, map_mode, uploaded_df=None, uploaded_style
             attr="国土地理院 (GSI)",
             name="Contour (GSI)",
         ).add_to(fmap)
+    # "Coastline (offline)" またはその他の未知モード: tiles=None のまま（白背景）
+    # Folium にオフラインタイルは存在しないため、外部 URL は一切設定しない。
+    # "Coastline (offline)" or unknown mode: keep tiles=None (white background).
+    # Folium has no offline tile support — do not set any external tile URL.
 
     # 既存の測点を薄い青点で表示し、線を引く目安にする
     # Show observation points as faint blue markers to help the user place the section line.
@@ -511,7 +704,13 @@ def sample_netcdf_bathymetry_along_section(nc_path, section_vertices, xi):
 
     sample_lon, sample_lat = densify_section_line(section_vertices, len(xi))
     values = interp(np.column_stack([sample_lat, sample_lon]))
-    return np.where(np.isnan(values), np.nan, np.where(values < 0, -values, 0.0))
+    # 標高が0以上（陸地）の場所は深度0mではなく NaN とする。0m を返すと、
+    # 島や海岸線を跨ぐ断面でその位置の海底が海面直下に来てしまい、実際の
+    # 観測データまでマスクで消えてしまう。
+    # Land cells (height >= 0) become NaN, not 0 m depth. Returning 0 m
+    # would place the "seafloor" right at the surface wherever the section
+    # grazes land, masking real observations at that along-track position.
+    return np.where(values < 0, -values, np.nan)
 
 
 def sample_bathymetry_along_section(df_bathy, section_vertices, xi, corridor_km):
@@ -526,8 +725,26 @@ def sample_bathymetry_along_section(df_bathy, section_vertices, xi, corridor_km)
 
     points = (bathy_projected["SectionDistance_km"], bathy_projected["CrossTrack_km"])
     target = (xi, np.zeros_like(xi))
-    z_linear = griddata(points, bathy_projected["Bathymetry_m"], target, method="linear")
-    z_nearest = griddata(points, bathy_projected["Bathymetry_m"], target, method="nearest")
+    try:
+        z_nearest = griddata(points, bathy_projected["Bathymetry_m"], target, method="nearest")
+    except Exception:
+        # 点配置が退化（共線など）していると nearest すら失敗しうるため、
+        # 海底線を諦めて呼び出し側のフォールバック（観測最深点など）に任せる。
+        # Even "nearest" can fail on pathological (e.g. collinear) point
+        # layouts; give up on this bathymetry source and let the caller
+        # fall back (observed deepest samples) instead of raising.
+        return None
+
+    try:
+        # 共線・退化した点配置では linear の三角測量 (Qhull) が失敗する
+        # ことがあるため、その場合は nearest だけの結果へ安全に後退する。
+        # Linear interpolation's Delaunay triangulation (Qhull) can raise
+        # on collinear/degenerate point layouts; fall back to nearest-only
+        # instead of letting the exception crash the page.
+        z_linear = griddata(points, bathy_projected["Bathymetry_m"], target, method="linear")
+    except Exception:
+        return z_nearest
+
     return np.where(np.isnan(z_linear), z_nearest, z_linear)
 
 
@@ -685,6 +902,13 @@ def extend_section_toward_bottom(z_grid, yi, bottom_profile, max_fill_gap_m=250.
 def interpolate_section_grid(df_section, target_col, x_grid, y_grid):
     # 補間点が退化している場合に備え、cubic 失敗時は linear / nearest へ安全にフォールバックする
     # Safely fall back to linear/nearest when cubic interpolation fails on degenerate point geometry.
+    #
+    # 戻り値は (z_grid, extrapolated_mask) の2つ。extrapolated_mask は
+    # cubic/linear のどちらも値を持たず nearest だけで埋めた、信頼度の
+    # 低い（純粋な外挿の）セルを示す。
+    # Returns (z_grid, extrapolated_mask). extrapolated_mask flags cells
+    # where neither cubic nor linear produced a value and nearest-neighbor
+    # extrapolation filled the gap instead — the lowest-confidence cells.
     x_vals = df_section["SectionDistance_km"].to_numpy(dtype=float)
     y_vals = df_section["Depth_m"].to_numpy(dtype=float)
     z_vals = df_section[target_col].to_numpy(dtype=float)
@@ -713,11 +937,38 @@ def interpolate_section_grid(df_section, target_col, x_grid, y_grid):
         z_grid = np.where(np.isnan(z_grid), z_linear, z_grid)
 
     if z_grid is None:
+        extrapolated_mask = np.ones(np.shape(x_grid), dtype=bool)
         z_grid = z_nearest
     else:
-        z_grid = np.where(np.isnan(z_grid), z_nearest, z_grid)
+        extrapolated_mask = np.isnan(z_grid)
+        z_grid = np.where(extrapolated_mask, z_nearest, z_grid)
 
-    return z_grid
+    return z_grid, extrapolated_mask
+
+
+def smooth_with_nan_gaps(z_grid, sigma):
+    # NaN（海底下や描画範囲外）を平滑化の重みから除外する正規化畳み込み。
+    # 通常の gaussian_filter はNaNが周囲へにじみ出し、海底付近の有効な
+    # データまでNaNにしてしまう。
+    # Normalized convolution that excludes NaN cells from the smoothing
+    # weights. A plain gaussian_filter call lets NaNs (below the seafloor,
+    # outside the plotted range) bleed into and erase nearby valid data.
+    if sigma is None or sigma <= 0:
+        return z_grid
+
+    nan_mask = ~np.isfinite(z_grid)
+    if not np.any(nan_mask):
+        return gaussian_filter(z_grid, sigma=sigma)
+
+    filled = np.where(nan_mask, 0.0, z_grid)
+    weights = np.where(nan_mask, 0.0, 1.0)
+    smoothed_values = gaussian_filter(filled, sigma=sigma)
+    smoothed_weights = gaussian_filter(weights, sigma=sigma)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        result = smoothed_values / smoothed_weights
+    result[smoothed_weights < 1.0e-6] = np.nan
+    return result
 
 
 def build_neat_colorbar_ticks(value_min, value_max, requested_count):
@@ -795,6 +1046,133 @@ def build_section_colorbar(
     }
 
 
+# 経度緯度だけでは、参照データとUploaded dataを統合した場合や、別航海・
+# 別日時の再観測が同じ経緯度になった場合に、別キャストを誤って同じ
+# プロファイル線で結んでしまう。ただし Dataset や Year のような単独では
+# 弱い列だけでは「同一キャストだ」と判断できない（同じDataset・同じYear
+# ・同座標の別キャストが誤接続されうる）。Station は単独で十分な識別子
+# として扱うが、それが無い場合は Cruise/Transect と Date(またはYear+
+# Month)の意味のある組合せを要求する。列が存在していても値が欠損して
+# いる行は、識別できたことにはしない。
+# Longitude/latitude alone cannot tell two casts apart when reference and
+# uploaded data are combined, or when a different cruise/date happens to
+# revisit the same coordinates. However, weak columns such as Dataset or
+# Year alone are not sufficient evidence of "same cast" either (a
+# same-Dataset, same-Year revisit at the same coordinates could still be
+# a different cast). Station alone is treated as a sufficient identifier;
+# otherwise a genuine combination of Cruise/Transect with a date (or
+# Year+Month) is required. A column being present in the frame does not
+# make a row identifiable if that row's own value is missing.
+STATION_PROFILE_SOLO_ID_COLUMNS = ["Station"]
+STATION_PROFILE_COMBO_ID_COLUMN_GROUPS = [
+    ("Cruise", "Date"),
+    ("Cruise", "Year", "Month"),
+    ("Transect", "Date"),
+    ("Transect", "Year", "Month"),
+]
+# 単独では不十分だが、識別できた行のキーをさらに細かくするために加える
+# 補助列。これら単独では identifiable() を True にしない。
+# Supplementary columns folded into the key for extra safety once a row is
+# already identifiable by the rule above; on their own they never make a
+# row identifiable.
+STATION_PROFILE_SUPPLEMENTARY_ID_COLUMNS = ["Dataset", "Year", "Month", "Day"]
+
+
+def _station_profile_column_present_mask(series):
+    # 数値・日時型はNaN/NaTのみ欠損とみなす。文字列型は空文字や
+    # 前後空白のみの値も欠損として扱う。
+    # Numeric/datetime columns treat only NaN/NaT as missing. String
+    # columns also treat an empty (or whitespace-only) value as missing.
+    if pd.api.types.is_numeric_dtype(series) or pd.api.types.is_datetime64_any_dtype(series):
+        return series.notna()
+    return series.notna() & series.astype(str).str.strip().ne("")
+
+
+def _station_profile_identifiable_mask(df_points):
+    # Station が非欠損な行、または Cruise/Transect と Date(もしくは
+    # Year+Month)の組合せが両方(全部)非欠損な行だけを True とする。
+    # True only for rows where Station is present, or where every column
+    # in at least one Cruise/Transect + Date (or Year+Month) combination
+    # is present for that row.
+    mask = pd.Series(False, index=df_points.index)
+    for column in STATION_PROFILE_SOLO_ID_COLUMNS:
+        if column in df_points.columns:
+            mask = mask | _station_profile_column_present_mask(df_points[column])
+
+    for group in STATION_PROFILE_COMBO_ID_COLUMN_GROUPS:
+        if not all(column in df_points.columns for column in group):
+            continue
+        group_mask = pd.Series(True, index=df_points.index)
+        for column in group:
+            group_mask = group_mask & _station_profile_column_present_mask(df_points[column])
+        mask = mask | group_mask
+
+    return mask
+
+
+def build_station_profile_trace(df_points):
+    # 経度・緯度と、行ごとに十分な識別情報がある場合のみそのキャストID
+    # (Station、またはCruise/Transect+Date系の組合せ、加えて分かる範囲
+    # のDataset/Year/Month/Day)を合わせて同一キャストと判断し、深度で
+    # ソートして結ぶ。十分な識別情報がない行は、別キャストを誤接続する
+    # 危険があるため、安全側として線の対象から外す。
+    # 測点ごとに別トレースにすると測点数分トレースが増えて重くなるため、
+    # None区切りで1本のトレースにまとめる。
+    # Identify a cast by longitude/latitude plus, only for rows that carry
+    # enough identifying information (Station, or a Cruise/Transect+Date
+    # style combination, plus whatever Dataset/Year/Month/Day is known),
+    # then connect same-cast rows sorted by depth. Rows without enough
+    # identifying information are excluded from any line — without it,
+    # distinct casts could be wrongly joined. Using None-separated
+    # segments keeps this a single trace instead of one per station,
+    # which stays cheap even with many stations.
+    required = {"Longitude_degE", "Latitude_degN", "SectionDistance_km", "Depth_m"}
+    if df_points.empty or not required.issubset(df_points.columns):
+        return None
+
+    identifiable = _station_profile_identifiable_mask(df_points)
+    if not identifiable.any():
+        return None
+    df_points = df_points.loc[identifiable]
+
+    station_key = (
+        df_points["Longitude_degE"].round(6).astype(str)
+        + "_"
+        + df_points["Latitude_degN"].round(6).astype(str)
+    )
+    key_columns = list(dict.fromkeys(
+        STATION_PROFILE_SOLO_ID_COLUMNS
+        + [column for group in STATION_PROFILE_COMBO_ID_COLUMN_GROUPS for column in group]
+        + STATION_PROFILE_SUPPLEMENTARY_ID_COLUMNS
+    ))
+    for column in key_columns:
+        if column in df_points.columns:
+            station_key = station_key + "_" + df_points[column].astype(str)
+
+    xs, ys = [], []
+    for _, group in df_points.groupby(station_key):
+        if len(group) < 2:
+            continue
+        ordered = group.sort_values("Depth_m")
+        xs.extend(ordered["SectionDistance_km"].tolist())
+        xs.append(None)
+        ys.extend(ordered["Depth_m"].tolist())
+        ys.append(None)
+
+    if not xs:
+        return None
+
+    return go.Scatter(
+        x=xs,
+        y=ys,
+        mode="lines",
+        line=dict(color="rgba(60,60,60,0.35)", width=1),
+        hoverinfo="skip",
+        showlegend=False,
+        name="Station profile",
+    )
+
+
 def create_section_plot(
     z_grid,
     xi,
@@ -812,6 +1190,7 @@ def create_section_plot(
     uploaded_style=None,
     colorscale="Blues",
     colorbar_settings=None,
+    extrapolated_mask=None,
 ):
     # 断面のコンター図と測点、必要に応じて海底線・海底塗りつぶしを重ねる
     # Draw the section contours, sample markers, and optionally the seafloor line/fill.
@@ -863,6 +1242,36 @@ def create_section_plot(
                 ),
             )
         )
+
+    if extrapolated_mask is not None and np.any(extrapolated_mask):
+        # cubic/linear が値を持たず nearest だけで埋めた（＝純粋な外挿の）
+        # セルを薄い白でかぶせて、信頼度が低い領域だと分かるようにする。
+        # Wash a thin translucent white layer over cells that only
+        # nearest-neighbor extrapolation filled, so viewers can see where
+        # the interpolation is least trustworthy.
+        overlay_z = np.where(np.asarray(extrapolated_mask), 1.0, np.nan)
+        fig.add_trace(
+            go.Heatmap(
+                z=overlay_z,
+                x=xi,
+                y=yi,
+                zmin=0,
+                zmax=1,
+                colorscale=[[0, "rgba(255,255,255,0.55)"], [1, "rgba(255,255,255,0.55)"]],
+                showscale=False,
+                hoverinfo="skip",
+                name="Extrapolated (low confidence)",
+            )
+        )
+
+    # 同一測点（同じ経度・緯度）を結ぶ薄い鉛直線を1トレースにまとめて追加し、
+    # 実際のCTDキャスト等のプロファイル形状を見やすくする。
+    # Add thin vertical lines connecting samples from the same station
+    # (same lon/lat) as a single combined trace, so the underlying cast
+    # profiles remain visible without adding one trace per station.
+    profile_trace = build_station_profile_trace(df_points)
+    if profile_trace is not None:
+        fig.add_trace(profile_trace)
 
     fig.add_trace(
         go.Scatter(
@@ -1006,6 +1415,8 @@ def create_station_map(
     max_background_points=None,
     max_foreground_points=None,
     map_mode="Standard",
+    show_corridor=False,
+    corridor_km=None,
 ):
     # 測点と A-B 線を同じ地図上に描き、どの観測点が断面に使われたか確認できるようにする
     # Plot samples and the A-B line together so the user can verify which points feed the section.
@@ -1023,6 +1434,16 @@ def create_station_map(
                 name=background_name,
             )
         )
+
+    if show_corridor and corridor_km is not None:
+        # 描画順: 背景測点 → corridor帯 → corridor内測点 → 赤い測線 → A/Bマーカー。
+        # 帯を先に描くことで、後から描く測点・測線を覆い隠さない。
+        # Draw order: background points -> corridor band -> in-corridor
+        # points -> red section line -> A/B markers, so the band never
+        # covers the points or line drawn after it.
+        corridor_trace = build_corridor_band_trace(section_vertices, corridor_km)
+        if corridor_trace is not None:
+            fig.add_trace(corridor_trace)
 
     if not df_points.empty:
         map_points = maybe_sample_points(df_points, max_foreground_points)
@@ -1074,12 +1495,18 @@ def create_station_map(
             center=dict(lat=center_lat, lon=center_lon),
             zoom=zoom,
         ),
-        margin=dict(r=0, t=0, l=0, b=0),
-        height=520,
         showlegend=True,
         dragmode="pan",
     )
-    return envgeo_utils.apply_map_style(fig, map_mode)
+    # 共通地図レイアウトを使い、他ページと同じ全幅・凡例表示にそろえる。
+    # Use the shared layout so this map matches the other full-width map pages.
+    fig = envgeo_utils.apply_standard_map_layout(fig, height=480)
+    fig = envgeo_utils.apply_map_style(fig, map_mode)
+    envgeo_utils.add_coastline_overlay(fig)
+    _eff_53_fn, _ = envgeo_utils.resolve_map_mode(map_mode)
+    if _eff_53_fn == "Coastline (offline)":
+        envgeo_utils.add_graticule_overlay(fig)
+    return fig
 
 
 def prepare_axis_section(df_f, target_col, x_axis_option, distance_origin_df=None):
@@ -1179,6 +1606,20 @@ def main():
 
     target_state_key = "vertical_section_target_parameter"
     target_col = st.session_state.get(target_state_key, "d18O")
+    # Early reads for sidebar ordering: A-B endpoints must appear before Section settings
+    # in sidebar code order, so section_mode and map-style effective mode are read from
+    # session state here — the actual widgets render later.
+    section_mode_key = "vertical_section_section_mode"
+    section_mode = st.session_state.get(section_mode_key, "A-B section")
+    _max_rows_key = "vertical_section_max_rows"
+    _eff_53_early, _ = envgeo_utils.resolve_map_mode(
+        st.session_state.get(
+            "vertical_section_map_style",
+            MAP_MODE_OPTIONS[envgeo_utils.MAP_MODE_DEFAULT_INDEX],
+        )
+    )
+    # map_mode is set by the shared Map controls widget below (before the A-B selector).
+    # A-B 入力前に配置した共通 Map controls widget が map_mode を設定する。
     embedded_in_integrated = (
         st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
         == "53_Vertical_Section_Visualizer.py"
@@ -1233,16 +1674,78 @@ def main():
         "vertical_section"
     )
 
+    # ── Pre-sidebar computations (safe with empty df_f) ────────────────────
+    # Default A-B vertices: computed from data when available, otherwise use
+    # a geographic fallback so the sidebar A-B endpoints expander can render
+    # even before data is loaded (sidebar widgets must render for tests and
+    # for the page to show a "No data" warning with the sidebars visible).
+    required_section_columns = [
+        "Longitude_degE", "Latitude_degN", "Depth_m", target_col,
+    ]
+    if not df_f.empty:
+        section_geometry_df = reference_df_f if not reference_df_f.empty else df_f
+        suggested_vertices = suggest_default_section_vertices(section_geometry_df)
+        if suggested_vertices is None:
+            default_a = section_geometry_df.sort_values(
+                ["Longitude_degE", "Latitude_degN"]
+            ).iloc[0]
+            default_b = section_geometry_df.sort_values(
+                ["Longitude_degE", "Latitude_degN"]
+            ).iloc[-1]
+        else:
+            default_a = pd.Series(
+                {
+                    "Latitude_degN": float(suggested_vertices[0][0]),
+                    "Longitude_degE": float(suggested_vertices[0][1]),
+                }
+            )
+            default_b = pd.Series(
+                {
+                    "Latitude_degN": float(suggested_vertices[-1][0]),
+                    "Longitude_degE": float(suggested_vertices[-1][1]),
+                }
+            )
+    else:
+        # Geographic fallback — used only to provide number_input defaults
+        # before any data has loaded.  The early return below prevents the
+        # section from ever being plotted in this state.
+        default_a = pd.Series({"Latitude_degN": 35.0, "Longitude_degE": 130.0})
+        default_b = pd.Series({"Latitude_degN": 40.0, "Longitude_degE": 140.0})
+    section_vertices = None
+    submitted_vertices_key = "v003_submitted_section_vertices"
+    a_lat = a_lon = b_lat = b_lon = None
+    section_ready_for_plot = True
+    endpoint_mode = "Manual"  # default; overridden below for A-B section
+
+    # ── Sidebar: A-B endpoints (A-B section only, before Section settings) ──
+    if section_mode == "A-B section":
+        with st.sidebar.expander("A-B endpoints", expanded=True):
+            if _eff_53_early == "Coastline (offline)":
+                # オフライン時は Draw を無効化し、英語メッセージを表示する
+                # Disable Draw in offline mode and show an English-only notice.
+                endpoint_mode = "Manual"
+                st.info(
+                    "Drawing an A–B line on the map is unavailable offline. "
+                    "Enter A and B coordinates manually."
+                )
+            else:
+                endpoint_mode = st.radio("A-B input", ["Manual", "Draw on map"], index=1, horizontal=False)
+            st.caption("Section endpoints")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                a_lat = st.number_input("A lat", value=float(default_a["Latitude_degN"]), format="%.4f")
+                a_lon = st.number_input("A lon", value=float(default_a["Longitude_degE"]), format="%.4f")
+            with col_b:
+                b_lat = st.number_input("B lat", value=float(default_b["Latitude_degN"]), format="%.4f")
+                b_lon = st.number_input("B lon", value=float(default_b["Longitude_degE"]), format="%.4f")
+        section_vertices = section_vertices_from_ab(a_lat, a_lon, b_lat, b_lon)
+
     with st.sidebar.expander("Section settings", expanded=True):
-        target_col = st.radio(
-            "Target parameter",
-            ["d18O", "Salinity", "Temperature_degC", "dD"],
-            key=target_state_key,
-        )
         section_mode = st.radio(
             "Section mode",
             ["Axis-based", "A-B section"],
             index=1,
+            key=section_mode_key,
         )
         x_axis_option = None
         if section_mode == "Axis-based":
@@ -1263,6 +1766,20 @@ def main():
             corridor_default,
             1.0,
         )
+        show_section_corridor = False
+        if section_mode == "A-B section":
+            # Station map専用の表示切替。幅の値は上のスライダーをそのまま
+            # 使い、別の幅設定は作らない。
+            # Display toggle for the Station map only; it reuses the slider
+            # above rather than introducing a separate width control.
+            show_section_corridor = st.checkbox(
+                "Show section corridor",
+                value=True,
+                help=(
+                    "Show the ±corridor half-width band around the A-B "
+                    "line on the Station map below."
+                ),
+            )
         if include_uploaded_in_section:
             st.caption(
                 "Uploaded data is selected in Data filtering and will be "
@@ -1301,24 +1818,35 @@ def main():
     with st.sidebar.expander("Display controls", expanded=False):
         grid_res = st.select_slider("Resolution", options=[30, 50, 70, 90, 110, 130, 150, 180], value=70)
         smoothness = st.slider("Smoothing (visual only)", 0.0, 5.0, 1.0)
-        map_mode = st.selectbox("Map mode", MAP_MODE_OPTIONS, index=0)
         max_rows_for_section_plot = int(st.number_input(
             "Max valid rows for section plotting",
             min_value=100,
-            max_value=50000,
+            max_value=MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP,
             value=DEFAULT_MAX_ROWS_FOR_SECTION_PLOT,
             step=100,
+            key=_max_rows_key,
+            help=(
+                "Rows actually fed into the corridor/section interpolation. "
+                f"Capped at {MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP:,} "
+                "regardless of this setting, to keep interpolation "
+                "responsive on shared/Cloud environments."
+            ),
         ))
+        effective_max_rows_for_section_plot = resolve_section_row_limit(
+            max_rows_for_section_plot
+        )
 
+    # ── Early return (after all sidebars) ─────────────────────────────────
+    # Sidebars must render first so that the page shows the filter controls and
+    # an intelligible "No data" warning. The main-area content below is skipped
+    # when there is nothing to plot.
     if df_f.empty:
         st.warning("No data remain after filtering.")
         return
 
+    # ── Section-source computations (require non-empty df_f) ───────────────
     # Prepare valid uploaded rows once.  These remain an overlay by default,
     # but can be explicitly included in the local section calculation below.
-    required_section_columns = [
-        "Longitude_degE", "Latitude_degN", "Depth_m", target_col,
-    ]
     uploaded_section_source = pd.DataFrame()
     if set(required_section_columns).issubset(uploaded_section_input_df.columns):
         uploaded_section_source = uploaded_section_input_df.copy()
@@ -1345,56 +1873,78 @@ def main():
         )
     else:
         df_section_source = reference_section_source
+
+    # このフラグは「Draw on map」の対話地図（多数の CircleMarker 描画）を
+    # 表示するかどうかだけをガードする。断面計算そのものは corridor 投影後
+    # の実行数で別途ガードする（後述）。
+    # This flag only guards whether to render the interactive "Draw on map"
+    # widget (many CircleMarkers can be slow). The section calculation
+    # itself is gated separately below, using the post-corridor row count.
     section_plot_allowed = len(df_section_source) <= max_rows_for_section_plot
     section_plot_blocked_message = (
-        f"Section plotting is disabled while more than {max_rows_for_section_plot} valid rows remain "
-        f"after filtering. Current valid rows: {len(df_section_source)}. "
-        f"Please narrow Dataset / Transect / Year / Month / Lat-Lon filters."
+        f"Interactive map drawing is disabled while more than {max_rows_for_section_plot} valid rows "
+        f"remain after filtering. Current valid rows: {len(df_section_source)}. "
+        f"Please narrow Dataset / Transect / Year / Month / Lat-Lon filters, or use Manual A-B input."
     )
 
-    section_geometry_df = reference_df_f if not reference_df_f.empty else df_f
-    suggested_vertices = suggest_default_section_vertices(section_geometry_df)
-    if suggested_vertices is None:
-        default_a = section_geometry_df.sort_values(
-            ["Longitude_degE", "Latitude_degN"]
-        ).iloc[0]
-        default_b = section_geometry_df.sort_values(
-            ["Longitude_degE", "Latitude_degN"]
-        ).iloc[-1]
-    else:
-        default_a = pd.Series(
-            {
-                "Latitude_degN": float(suggested_vertices[0][0]),
-                "Longitude_degE": float(suggested_vertices[0][1]),
-            }
+    # ── Shared Map controls ────────────────────────────────────────────────
+    # This single widget governs both the A-B offline preview map and the
+    # Section Map below.  It must appear before the A-B selector so that
+    # effective_mode can gate whether Folium or the Plotly preview is shown.
+    # このウィジェット一つで A-B プレビュー地図と下部 Section Map の両方を制御する。
+    # effective_mode の確定が A-B 入力の前に必要なため、A-B 入力より前に置く。
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
+        map_mode = st.radio(
+            "Map style",
+            MAP_MODE_OPTIONS,
+            index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
+            horizontal=True,
+            key="vertical_section_map_style",
+            help=getattr(
+                envgeo_utils,
+                "MAP_STYLE_HELP_TEXT",
+                "Choose the background map style.",
+            ),
         )
-        default_b = pd.Series(
-            {
-                "Latitude_degN": float(suggested_vertices[-1][0]),
-                "Longitude_degE": float(suggested_vertices[-1][1]),
-            }
-        )
-    section_vertices = None
+    _eff_53, _fell_53 = envgeo_utils.resolve_map_mode(map_mode)
+    if _fell_53:
+        st.warning(envgeo_utils.OFFLINE_FALLBACK_WARNING)
 
-    submitted_vertices_key = "v003_submitted_section_vertices"
-    a_lat = a_lon = b_lat = b_lon = None
-    section_ready_for_plot = True
     if section_mode == "A-B section":
-        # A-B モードでは手入力と地図描画入力の両方を残す
-        # In A-B mode, keep both manual endpoint entry and map-based drawing.
-        with st.sidebar.expander("A-B endpoints", expanded=True):
-            endpoint_mode = st.radio("A-B input", ["Manual", "Draw on map"], index=1, horizontal=False)
-            st.caption("Section endpoints")
-            col_a, col_b = st.columns(2)
-            with col_a:
-                a_lat = st.number_input("A lat", value=float(default_a["Latitude_degN"]), format="%.4f")
-                a_lon = st.number_input("A lon", value=float(default_a["Longitude_degE"]), format="%.4f")
-            with col_b:
-                b_lat = st.number_input("B lat", value=float(default_b["Latitude_degN"]), format="%.4f")
-                b_lon = st.number_input("B lon", value=float(default_b["Longitude_degE"]), format="%.4f")
-        section_vertices = section_vertices_from_ab(a_lat, a_lon, b_lat, b_lon)
+        # ── Main-area A-B visual output ────────────────────────────────────
+        # The sidebar A-B endpoints expander (coordinate inputs) was already
+        # rendered above using early-read _eff_53_early.  Here we render the
+        # visual feedback in the main area using the live _eff_53 from the
+        # Map controls popover.
+        # A-B 座標入力はすでにサイドバーで描画済み。メイン画面にはライブ
+        # _eff_53 を用いた視覚フィードバックのみを描画する。
 
-        if endpoint_mode == "Draw on map":
+        if _eff_53 == "Coastline (offline)":
+            # オフライン時: create_station_map() で Plotly 海岸線プレビュー地図を作成する。
+            # A-B 端点から中心・ズームを自動計算するため、下部 Section Map と同じロジックを使う。
+            # Offline: use create_station_map() for the Plotly coastline preview.
+            # Centre and zoom are calculated from the A-B endpoints — same logic as Section Map.
+            _preview_stations = df_f.dropna(subset=["Longitude_degE", "Latitude_degN"])
+            _preview_fig = create_station_map(
+                _preview_stations,
+                section_vertices,
+                sample_name="Filtered stations (preview)",
+                line_name="A-B line",
+                map_mode="Coastline (offline)",
+            )
+            st.caption(
+                "Offline station map (preview) — "
+                "Enter A and B coordinates in the sidebar to position the section line."
+            )
+            st.plotly_chart(
+                _preview_fig,
+                config={"scrollZoom": True},
+                **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+            )
+
+        elif endpoint_mode == "Draw on map":
             # 地図上で引いた最後の線を A-B として採用する
             # Use the most recently drawn map line as the active A-B section.
             if section_plot_allowed:
@@ -1510,12 +2060,24 @@ def main():
             "filtered samples have valid values.]"
         )
 
-    st.write(f"Filtered Data: `{len(df_f)}` rows")
-    st.write(f"Valid rows for section plotting: `{len(df_section_source)}` rows")
-    st.write(f"{status_label}: `{len(df_section)}` rows")
-    st.write(f"Map background points: `{len(df_f.dropna(subset=['Longitude_degE', 'Latitude_degN']))}` rows")
+    # 関連する行数・距離を1行にまとめ、断面図の操作を視覚的に優先する。
+    # Keep related row counts and length on one compact line so the section
+    # controls and figure remain the visual focus.
+    background_point_count = len(
+        df_f.dropna(subset=["Longitude_degE", "Latitude_degN"])
+    )
+    section_count_label = (
+        "in corridor" if section_mode == "A-B section" else "used for axis section"
+    )
+    summary_parts = [
+        f"**Data:** {len(df_f):,} filtered",
+        f"{len(df_section_source):,} valid for plot",
+        f"{len(df_section):,} {section_count_label}",
+        f"**Map:** {background_point_count:,} background points",
+    ]
     if section_mode == "A-B section":
-        st.write(f"Section length: `{section_length_km:.2f} km`")
+        summary_parts.append(f"**Section:** {section_length_km:.2f} km")
+    st.caption(" · ".join(summary_parts))
     if not uploaded_df.empty:
         if include_uploaded_in_section:
             st.markdown(
@@ -1559,8 +2121,48 @@ def main():
             else:
                 st.dataframe(uploaded_quality_df.astype(str))
 
-    if not section_plot_allowed:
-        st.warning(section_plot_blocked_message)
+    # ── Section variable ──────────────────────────────────────────────────────
+    # 数値サマリーと断面図の表示変数を視覚的に分け、図の直前で選択できるようにする。
+    # Separate the numeric summary from the section-display variable and keep
+    # the choice immediately before the plot controls.
+    # This remains before the row-limit guard so users can switch variables
+    # even when the current selection cannot be plotted.
+    with st.container(border=True):
+        st.markdown("##### Section variable")
+        target_col = st.selectbox(
+            "Target parameter",
+            ["d18O", "Salinity", "Temperature_degC", "dD", "d-excess"],
+            key=target_state_key,
+        )
+        st.caption("Changes the section plot, colour scale, and map overlay.")
+
+    # ここでの安全ガードは corridor 投影後に実際に griddata へ渡る行数
+    # (len(df_section)) だけで判定する。投影前の件数 (section_plot_allowed)
+    # は Draw-on-map 用の地図描画（上の expander 内）だけを別途ガードして
+    # おり、ここで再利用すると「広いフィルタ×狭い corridor」の組み合わせを
+    # 不要にブロックしてしまう。投影は軽量なベクトル演算なので、実コストの
+    # 大きい griddata の直前でだけ、実際の入力行数を基準にブロックする。
+    # The safety guard here is based solely on the row count AFTER corridor
+    # projection (len(df_section)) — the number that actually reaches
+    # griddata. The pre-projection count (section_plot_allowed) already
+    # guards the Draw-on-map widget above; reusing it here as well would
+    # block harmless wide-filter/narrow-corridor combinations for no
+    # reason, since projection itself is a cheap vectorized step. Gate the
+    # genuinely expensive step (griddata) on its real input size instead.
+    if len(df_section) > effective_max_rows_for_section_plot:
+        hard_cap_note = (
+            f" (clamped from your {max_rows_for_section_plot:,}-row setting by the "
+            f"internal {MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP:,}-row hard cap)"
+            if max_rows_for_section_plot > MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP
+            else ""
+        )
+        st.warning(
+            f"Section plotting is disabled because {len(df_section):,} rows remain "
+            f"inside the corridor/section window, exceeding the "
+            f"{effective_max_rows_for_section_plot:,}-row limit used for "
+            f"interpolation{hard_cap_note}. Please narrow the corridor half-width, "
+            "the A-B section, or the Data filtering selection."
+        )
         return
 
     if section_mode == "A-B section" and not section_ready_for_plot:
@@ -1601,6 +2203,16 @@ def main():
         st.error("A and B are identical. Please change the endpoints.")
         return
 
+    if section_mode == "A-B section" and section_crosses_antimeridian(section_vertices):
+        st.warning(
+            "This A-B line crosses the antimeridian (180°/-180° longitude) "
+            "directly. The section's along-track distance, corridor, and "
+            "seafloor geometry all use a single flat local approximation "
+            "that is not designed for this case, so results below are not "
+            "scientifically validated for a dateline-crossing section — "
+            "treat them as a rough visual reference only."
+        )
+
     section_colorscale = envgeo_utils.get_plotly_colormap(target_col)
     section_colorbar_settings = None
     if len(df_section) > 5:
@@ -1615,7 +2227,7 @@ def main():
         try:
             # 点配置に応じて安全な補間法へ切り替える
             # Choose a safe interpolation path based on the geometry of the sampled points.
-            z_grid = interpolate_section_grid(df_section, target_col, x_grid, y_grid)
+            z_grid, extrapolated_mask = interpolate_section_grid(df_section, target_col, x_grid, y_grid)
 
             if show_seafloor:
                 # 海底線データは GEBCO -> upload -> 観測最深点 の順で優先する
@@ -1659,11 +2271,17 @@ def main():
                     bottom_profile,
                     max_fill_gap_m=bottom_fill_limit_m,
                 )
+            # 海底下としてマスクされたセルは「データ不足」ではなく単に
+            # 水柱の外なので、低信頼オーバーレイの対象から外す。
+            # Cells masked out as below the seafloor are outside the water
+            # column, not "low-confidence data" — exclude them from the
+            # extrapolation overlay.
+            extrapolated_mask = extrapolated_mask & np.isfinite(z_grid)
 
             if smoothness > 0:
                 # 平滑化後にも再度マスクして、海底下に値がにじまないようにする
                 # Re-apply the mask after smoothing so values do not bleed below the seafloor.
-                z_grid = gaussian_filter(z_grid, sigma=smoothness)
+                z_grid = smooth_with_nan_gaps(z_grid, smoothness)
                 z_grid = mask_below_bottom(z_grid, yi, bottom_profile)
                 if show_seafloor and bottom_fill_limit_m > 0:
                     z_grid = extend_section_toward_bottom(
@@ -1672,6 +2290,7 @@ def main():
                         bottom_profile,
                         max_fill_gap_m=bottom_fill_limit_m,
                     )
+                extrapolated_mask = extrapolated_mask & np.isfinite(z_grid)
 
             valid_vals = df_section[target_col].dropna()
             d_min = float(valid_vals.min()) if not valid_vals.empty else -10.0
@@ -1679,6 +2298,7 @@ def main():
             default_color_ranges = {
                 "d18O": (-5.0, 2.0),
                 "dD": (-200.0, 100.0),
+                "d-excess": (-30.0, 40.0),
                 "Salinity": (0.0, 42.0),
                 "Temperature_degC": (-5.0, 40.0),
             }
@@ -1790,6 +2410,7 @@ def main():
                         uploaded_style,
                         colorscale=section_colorscale,
                         colorbar_settings=section_colorbar_settings,
+                        extrapolated_mask=extrapolated_mask,
                     ),
                     **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
@@ -1812,6 +2433,7 @@ def main():
                         uploaded_style,
                         colorscale=section_colorscale,
                         colorbar_settings=section_colorbar_settings,
+                        extrapolated_mask=extrapolated_mask,
                     ),
                     **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
                 )
@@ -1832,6 +2454,8 @@ def main():
 
     st.markdown("---")
     st.subheader("Section Map")
+    # Map style is governed by the shared Map controls above; no duplicate widget here.
+    # 地図スタイルは上部の共通 Map controls で設定済み。ここに同キーの widget は置かない。
     df_map_background = reference_df_f.dropna(
         subset=["Longitude_degE", "Latitude_degN"]
     ).copy()
@@ -1846,6 +2470,8 @@ def main():
             max_background_points=None,
             max_foreground_points=None,
             map_mode=map_mode,
+            show_corridor=show_section_corridor,
+            corridor_km=corridor_km,
         )
     else:
         line_data = df_section.sort_values("SectionDistance_km")

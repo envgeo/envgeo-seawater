@@ -10,7 +10,7 @@ Last updated: 2026-09-22
 
 
 # --- Version info ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 
 # ToDo
 
@@ -612,6 +612,13 @@ def main():
                 override_height=600,
                 override_width="100%",
             )
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_xy),
+            envgeo_utils.build_figure_filename(f"p03_{key_prefix}_xy", extension="html"),
+            "text/html",
+            key=f"{key_prefix}_xy_html_dl",
+        )
         show_selection_tip()
 
         selected_indices_key = f"{key_prefix}_selected_indices"
@@ -686,6 +693,7 @@ def main():
             map_mode = st.radio(
                 "Map style",
                 envgeo_utils.MAP_MODE_OPTIONS,
+                index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
                 horizontal=True,
                 key=f"{key_prefix}_map_style",
                 help=getattr(
@@ -702,6 +710,13 @@ def main():
             key=f"{key_prefix}_map",
             config={"scrollZoom": True, "displayModeBar": True},
             **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+        )
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_map),
+            envgeo_utils.build_figure_filename("p03_map", extension="html"),
+            "text/html",
+            key=f"{key_prefix}_map_html_dl",
         )
 
         envgeo_utils.display_isotope_table(df1)
@@ -798,6 +813,13 @@ def main():
                 override_height=600,
                 override_width="100%",
             )
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_fixed_TS),
+            envgeo_utils.build_figure_filename("p03_TS", extension="html"),
+            "text/html",
+            key="p03_TS_html_dl",
+        )
         show_selection_tip()
         
         # --- 【選択個数の処理】 ---
@@ -888,8 +910,9 @@ def main():
             "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
         ):
             map_mode_ts = st.radio(
-                "Map style", 
-                envgeo_utils.MAP_MODE_OPTIONS, 
+                "Map style",
+                envgeo_utils.MAP_MODE_OPTIONS,
+                index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
                 horizontal=True,
                 key="ms_ts",
                 help=getattr(
@@ -910,22 +933,24 @@ def main():
         # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
         # マウスホイールでのズームが強制的に有効
         st.plotly_chart(
-            fig_ts_map, 
+            fig_ts_map,
             key="3d_visualizer_map_TS",
             config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
             **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
-        
-            
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_ts_map),
+            envgeo_utils.build_figure_filename("p03_TS_map", extension="html"),
+            "text/html",
+            key="p03_TS_map_html_dl",
+        )
+
+
         # Sidebar-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df1)
         # Plotly-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df_ts_map_display,  title="Box/Lasso-selected dataset (CSV)")
-        
-        
-        
-        #htmlで書き出す場合
-        # fig_ts_map.write_html('filename.html')
         
     
     ###############################################################################################
@@ -1082,6 +1107,13 @@ def main():
                 override_height=600,
                 override_width="100%",
             )
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_d18O),
+            envgeo_utils.build_figure_filename("p03_d18O", extension="html"),
+            "text/html",
+            key="p03_d18O_html_dl",
+        )
         show_selection_tip()
     
             
@@ -1151,8 +1183,9 @@ def main():
             "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
         ):
             map_mode_d18o = st.radio(
-                "Map style", 
-                envgeo_utils.MAP_MODE_OPTIONS, 
+                "Map style",
+                envgeo_utils.MAP_MODE_OPTIONS,
+                index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
                 horizontal=True,
                 key="ms_d18o",
                 help=getattr(
@@ -1172,22 +1205,25 @@ def main():
         # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
         # マウスホイールでのズームが強制的に有効
         st.plotly_chart(
-            fig_map_d18o, 
+            fig_map_d18o,
             key="3d_visualizer_map_d18O",
             config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
             **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
-        
-        
-        
+        st.download_button(
+            "Download interactive HTML",
+            envgeo_utils.figure_to_self_contained_html(fig_map_d18o),
+            envgeo_utils.build_figure_filename("p03_d18O_map", extension="html"),
+            "text/html",
+            key="p03_d18O_map_html_dl",
+        )
+
+
+
         # Sidebar-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df1)
         # Plotly-filtered datasetを読み出しデータフレームを作成
         envgeo_utils.display_isotope_table(df_map_d18o,  title="Box/Lasso-selected dataset (CSV)")
-        
-        
-        #htmlで書き出す場合
-        # fig_map_d18o.write_html('filename.html')
     
 
     

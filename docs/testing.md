@@ -39,6 +39,9 @@ This file currently checks:
 - Shared map-region presets and Data filtering area-preset bounds.
 - Dataset loading for Japan Sea, Around Japan, and Global data choices.
 - Required dataset columns and numeric column conversion.
+- Numeric conversion after removing invisible spreadsheet whitespace, including
+  the pandas PyArrow string backend.
+- Always-loaded local user-table merging, custom paths, and safe missing-file behavior.
 - Gap-row insertion for grouped depth-profile plotting.
 - Shared EnvGeo and cmocean colormap helpers.
 - Uploaded-data column-name standardization.
@@ -96,6 +99,7 @@ The current pytest suite focuses on:
 
 - Importability and version metadata.
 - Dataset loading and numeric conversion.
+- Local user-table integration and spreadsheet whitespace normalization.
 - Data-quality rules.
 - Common utility functions.
 - Shared plotting support such as colormaps, filenames, map presets, and coastline loading.

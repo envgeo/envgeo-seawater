@@ -10,7 +10,7 @@ Last updated: 2026-09-22
 
 
 # --- Version info ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 
 # ToDo
 
@@ -896,12 +896,20 @@ def main():
     ###############################################################################################
 
 
-    fig = px.scatter_mapbox(df_fig_add, lat="Latitude_degN", lon="Longitude_degE", zoom=3,
-                            # color='Month',
-                            hover_data=["d18O","Salinity",'Temperature_degC','Date','Cruise','Station','Depth_m', 'reference'],
-                            opacity=0.4,
-                            )
-    
+    # 有効座標の抽出（同一行に緯度・経度が両方有効、かつ範囲内）
+    if {"Latitude_degN", "Longitude_degE"}.issubset(df_fig_add.columns):
+        _lat_num = pd.to_numeric(df_fig_add["Latitude_degN"], errors="coerce")
+        _lon_num = pd.to_numeric(df_fig_add["Longitude_degE"], errors="coerce")
+        _valid_mask = (
+            _lat_num.notna() & _lon_num.notna()
+            & _lat_num.between(-90, 90) & _lon_num.between(-180, 180)
+        )
+        _valid_coords_df = df_fig_add.loc[_valid_mask].copy()
+        _valid_coords_df["Latitude_degN"] = _lat_num[_valid_mask].values
+        _valid_coords_df["Longitude_degE"] = _lon_num[_valid_mask].values
+    else:
+        _valid_coords_df = df_fig_add.iloc[0:0].copy()
+    _has_valid_map_coords = len(_valid_coords_df) > 0
 
     # 選択されたデータの地点プロット
     # --- Location map / 採取地点の地図表示 ---
@@ -915,10 +923,11 @@ def main():
         "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
     ):
             map_mode = st.radio(
-                "Map style", 
-                envgeo_utils.MAP_MODE_OPTIONS, 
+                "Map style",
+                envgeo_utils.MAP_MODE_OPTIONS,
+                index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
                 horizontal=True,
-                key="map_style_31_auto",
+                key="map_style_34_auto",
                 help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
             )
     st.caption(f"Map style: {map_mode}")
@@ -942,162 +951,175 @@ def main():
             uploaded_map_df["Latitude_degN"].between(-90, 90)
         ]
 
+    # Uploaded data alone may provide valid coordinates even when df_fig_add
+    # (reference rows only) is empty — extend the guard to cover that case.
+    _has_valid_map_coords = _has_valid_map_coords or not uploaded_map_df.empty
+
     # 2. データの範囲から中心座標とズームレベルを計算
-    map_extent_sources = [df_fig_add[["Longitude_degE", "Latitude_degN"]]]
+    map_extent_sources = []
+    if _has_valid_map_coords:
+        map_extent_sources.append(_valid_coords_df[["Longitude_degE", "Latitude_degN"]])
     if not uploaded_map_df.empty:
         map_extent_sources.append(
             uploaded_map_df[["Longitude_degE", "Latitude_degN"]]
         )
-    map_extent_df = pd.concat(map_extent_sources, ignore_index=True)
-    lat_min, lat_max = map_extent_df["Latitude_degN"].min(), map_extent_df["Latitude_degN"].max()
-    lon_min, lon_max = map_extent_df["Longitude_degE"].min(), map_extent_df["Longitude_degE"].max()
-
     # 初期値（日本）の設定
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
-    # --- 判定と計算を一本化 ---
-    if pd.isna(lat_min) or pd.isna(lon_min):
-        # 【抽出前】データがない場合は日本を中心に固定
+    if not map_extent_sources:
         center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
     else:
-        # 【抽出後】データがある場合
-        center_lat = (lat_min + lat_max) / 2
-        center_lon = (lon_min + lon_max) / 2
-        
-        lat_diff = max(lat_max - lat_min, 0.1)
-        lon_diff = max(lon_max - lon_min, 0.1)
-        
-        # 03番準拠のピクセル計算
-        map_width_px, map_height_px = 1200, 700
-        zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
-        zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
-        
-        # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-        # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
-        auto_zoom = min(zoom_lon, zoom_lat) - 2.0
-        auto_zoom = max(1, min(15, auto_zoom))
+        map_extent_df = pd.concat(map_extent_sources, ignore_index=True)
+        lat_min, lat_max = map_extent_df["Latitude_degN"].min(), map_extent_df["Latitude_degN"].max()
+        lon_min, lon_max = map_extent_df["Longitude_degE"].min(), map_extent_df["Longitude_degE"].max()
 
-        # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
-        if lon_diff > 100:
-              center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
+        # --- 判定と計算を一本化 ---
+        if pd.isna(lat_min) or pd.isna(lon_min):
+            # 【抽出前】データがない場合は日本を中心に固定
+            center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
+        else:
+            # 【抽出後】データがある場合
+            center_lat = (lat_min + lat_max) / 2
+            center_lon = (lon_min + lon_max) / 2
+
+            lat_diff = max(lat_max - lat_min, 0.1)
+            lon_diff = max(lon_max - lon_min, 0.1)
+
+            # 03番準拠のピクセル計算
+            map_width_px, map_height_px = 1200, 700
+            zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
+            zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
+
+            # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
+            # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+            auto_zoom = min(zoom_lon, zoom_lat) - 2.0
+            auto_zoom = max(1, min(15, auto_zoom))
+
+            # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+            if lon_diff > 100:
+                center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
     
  
 
 
     # 3. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
-    c_scale_d18o = envgeo_utils.get_custom_colorscale("d18O")
-
-    fig_map = px.scatter_mapbox(
-        df_fig_add, 
-        lat="Latitude_degN", 
-        lon="Longitude_degE",
-        color="d18O", 
-        color_continuous_scale=c_scale_d18o,
-        hover_data={
-            "Latitude_degN": True,  
-            "Longitude_degE": True,
-            "d18O": True, 
-            "dD": True, 
-            "Salinity": True, 
-            "Temperature_degC": True, 
-            "Year": True, 
-            "Month": True, 
-            "Day": True, 
-            "Cruise": True, 
-            "Station": True,
-            "Depth_m": True,
-            "reference": True, 
-        },
-        opacity=0.6,
-        height=500  # 高さはここで固定
-    )
-
-    map_d18o_sources = [pd.to_numeric(df_fig_add["d18O"], errors="coerce")]
-    if (
-        uploaded_style["color_mode"] == "Use current colorbar when possible"
-        and "d18O" in uploaded_map_df.columns
-    ):
-        map_d18o_sources.append(
-            pd.to_numeric(uploaded_map_df["d18O"], errors="coerce")
+    if not _has_valid_map_coords:
+        st.info(
+            "Map view is unavailable because the selected data contain no valid "
+            "latitude/longitude coordinates."
         )
-    map_d18o_values = pd.concat(map_d18o_sources, ignore_index=True).dropna()
-    map_d18o_range = None
-    if not map_d18o_values.empty:
-        map_d18o_range = (
-            float(map_d18o_values.min()),
-            float(map_d18o_values.max()),
+    else:
+        c_scale_d18o = envgeo_utils.get_custom_colorscale("d18O")
+
+        # Use reference coords as base when available; fall back to uploaded coords
+        # so that px.scatter_mapbox always receives a non-empty DataFrame.
+        _map_plot_df = (
+            _valid_coords_df if not _valid_coords_df.empty else uploaded_map_df
         )
-        fig_map.update_coloraxes(
-            cmin=map_d18o_range[0],
-            cmax=map_d18o_range[1],
+        _d18o_color = "d18O" if "d18O" in _map_plot_df.columns else None
+        _hover_cols = [
+            "Latitude_degN", "Longitude_degE", "d18O", "dD",
+            "Salinity", "Temperature_degC", "Year", "Month", "Day",
+            "Cruise", "Station", "Depth_m", "reference",
+        ]
+        fig_map = px.scatter_mapbox(
+            _map_plot_df,
+            lat="Latitude_degN",
+            lon="Longitude_degE",
+            color=_d18o_color,
+            color_continuous_scale=c_scale_d18o,
+            hover_data={c: True for c in _hover_cols if c in _map_plot_df.columns},
+            opacity=0.6,
+            height=500  # 高さはここで固定
         )
 
-    fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
-        fig_map,
-        uploaded_map_df,
-        uploaded_style,
-        color_column="d18O",
-        colorscale=c_scale_d18o,
-        color_range=map_d18o_range,
-        show_nodata=show_nodata_uploaded,
-    )
-    if not uploaded_df.empty:
-        if uploaded_map_count:
-            st.caption(
-                f":blue[Uploaded locations: {uploaded_map_count:,} / "
-                f"{len(uploaded_df):,} plotted on the map.]"
+        map_d18o_sources = [pd.to_numeric(df_fig_add["d18O"], errors="coerce")]
+        if (
+            uploaded_style["color_mode"] == "Use current colorbar when possible"
+            and "d18O" in uploaded_map_df.columns
+        ):
+            map_d18o_sources.append(
+                pd.to_numeric(uploaded_map_df["d18O"], errors="coerce")
             )
-        else:
-            st.caption(
-                ":gray[Uploaded locations are not shown because valid longitude "
-                "and latitude columns are unavailable.]"
+        map_d18o_values = pd.concat(map_d18o_sources, ignore_index=True).dropna()
+        map_d18o_range = None
+        if not map_d18o_values.empty:
+            map_d18o_range = (
+                float(map_d18o_values.min()),
+                float(map_d18o_values.max()),
+            )
+            fig_map.update_coloraxes(
+                cmin=map_d18o_range[0],
+                cmax=map_d18o_range[1],
             )
 
-    # 4. 背景スタイルの適用
-    fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
-    
-    
+        fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+            fig_map,
+            uploaded_map_df,
+            uploaded_style,
+            color_column="d18O",
+            colorscale=c_scale_d18o,
+            color_range=map_d18o_range,
+            show_nodata=show_nodata_uploaded,
+        )
+        if not uploaded_df.empty:
+            if uploaded_map_count:
+                st.caption(
+                    f":blue[Uploaded locations: {uploaded_map_count:,} / "
+                    f"{len(uploaded_df):,} plotted on the map.]"
+                )
+            else:
+                st.caption(
+                    ":gray[Uploaded locations are not shown because valid longitude "
+                    "and latitude columns are unavailable.]"
+                )
 
-    
+        # 4. 背景スタイルの適用
+        fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
 
-    # 5. レイアウト設定 (ここが幅を広げる決め手)
-    # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
-    fig_map.update_layout(
-        mapbox=dict(
-            center=dict(lat=center_lat, lon=center_lon),
-            zoom=auto_zoom,
-            domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
-        ),
-        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
-        autosize=True,
-        coloraxis_colorbar=dict(
-            title="δ18O (‰)",
-            x=0.98,
-            xanchor='right',
-            bgcolor='rgba(255,255,255,0.75)',
-            bordercolor='rgba(150,150,150,0.5)',
-            borderwidth=1,
-        ),
-        legend=dict(
-            x=0.01,
-            y=0.01,
-            xanchor='left',
-            yanchor='bottom',
-            bgcolor='rgba(255,255,255,0.85)',
-            bordercolor='rgba(150,150,150,0.5)',
-            borderwidth=1,
-        ),
-    )
 
-    # 6. 表示 (use_container_width=True を確実に使う)
-    # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
-    # マウスホイールでのズームが強制的に有効
-    st.plotly_chart(
-        fig_map, 
-        key="TS_plot",
-        config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
-        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
-    )
+
+
+
+        # 5. レイアウト設定 (ここが幅を広げる決め手)
+        # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
+        fig_map.update_layout(
+            mapbox=dict(
+                center=dict(lat=center_lat, lon=center_lon),
+                zoom=auto_zoom,
+                domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
+            ),
+            margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+            autosize=True,
+            coloraxis_colorbar=dict(
+                title="δ18O (‰)",
+                x=0.98,
+                xanchor='right',
+                bgcolor='rgba(255,255,255,0.75)',
+                bordercolor='rgba(150,150,150,0.5)',
+                borderwidth=1,
+            ),
+            legend=dict(
+                x=0.01,
+                y=0.01,
+                xanchor='left',
+                yanchor='bottom',
+                bgcolor='rgba(255,255,255,0.85)',
+                bordercolor='rgba(150,150,150,0.5)',
+                borderwidth=1,
+            ),
+        )
+
+        # 6. 表示 (use_container_width=True を確実に使う)
+        # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
+        # マウスホイールでのズームが強制的に有効
+        st.plotly_chart(
+            fig_map, 
+            key="TS_plot",
+            config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+        )
+
 
 
 

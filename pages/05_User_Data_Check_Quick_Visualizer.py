@@ -26,12 +26,17 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.2"
+version = "1.3.3"
 NO_COLOR = "No color"
 NO_COMPARISON_DATA = "None"
 PLOTLY_MARKERS = {"D": "diamond", "o": "circle", "s": "square", "^": "triangle-up", "*": "star", "X": "x"}
 MAX_HOVER_COLUMNS = 30
 MAX_HOVER_VALUE_LENGTH = 120
+
+# Internal origin column — never shown to users in filters, preview, or download.
+# 内部出所列 — フィルター・プレビュー・ダウンロードには表示しない。
+_ORIGIN_COL = "_EnvGeoDataOrigin"
+_INTERNAL_COLS = {_ORIGIN_COL}
 
 
 def render_tab_style():
@@ -103,7 +108,7 @@ def render_tab_style():
 
 def numeric_columns(dataframe):
     """Return numeric-capable uploaded columns / 数値を一つ以上含む列を返す。"""
-    excluded = {envgeo_utils.QUALITY_FLAG_COLUMN, envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN}
+    excluded = {envgeo_utils.QUALITY_FLAG_COLUMN, envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN} | _INTERNAL_COLS
     return [
         column for column in dataframe.columns if column not in excluded
         and pd.to_numeric(dataframe[column], errors="coerce").notna().any()
@@ -145,11 +150,17 @@ def marker_settings(style, color=None, color_column=None, palette_label=None):
 
 
 def rich_hover_text(dataframe):
-    """Build rich but bounded hover text / 多くの列を安全な長さでhoverへ表示する。"""
+    """Build rich but bounded hover text / 多くの列を安全な長さでhoverへ表示する。
+
+    The header line reflects each row's true data origin from the internal
+    _ORIGIN_COL column (Reference data / User-uploaded data / User Excel data).
+    If the column is absent the header falls back to "Filtered integrated data".
+    """
     excluded = {
         envgeo_utils.QUALITY_FLAG_COLUMN,
         envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
         "_Longitude_plot",
+        _ORIGIN_COL,   # shown as header — not repeated as a field
     }
     # Keep the familiar oceanographic identifiers first / 海洋観測でよく使う項目を先に表示する。
     priority = [
@@ -162,9 +173,15 @@ def rich_hover_text(dataframe):
     ordered_columns += [column for column in available if column not in ordered_columns]
     shown_columns = ordered_columns[:MAX_HOVER_COLUMNS]
     omitted_count = len(ordered_columns) - len(shown_columns)
+    _has_origin = _ORIGIN_COL in dataframe.columns
     text = []
     for _, row in dataframe.iterrows():
-        lines = ["<b>Uploaded data</b>"]
+        if _has_origin:
+            raw = row[_ORIGIN_COL]
+            header = str(raw) if not pd.isna(raw) else "Filtered integrated data"
+        else:
+            header = "Filtered integrated data"
+        lines = [f"<b>{html.escape(header)}</b>"]
         for column in shown_columns:
             value = row[column]
             if pd.isna(value):
@@ -207,7 +224,7 @@ def create_2d(dataframe, x_column, y_column, color_column, style, regression, pa
     rows = plot_rows(dataframe, [x_column, y_column])
     color = None if color_column == NO_COLOR else pd.to_numeric(dataframe.loc[rows.index, color_column], errors="coerce")
     figure = go.Figure(go.Scatter(
-        x=rows[x_column], y=rows[y_column], mode="markers", name="Uploaded data",
+        x=rows[x_column], y=rows[y_column], mode="markers", name="Filtered integrated data",
         marker=marker_settings(style, color, color_column, palette_label),
         text=rich_hover_text(dataframe.loc[rows.index]),
         hovertemplate="%{text}<extra></extra>",
@@ -223,7 +240,7 @@ def create_3d(dataframe, x_column, y_column, z_column, color_column, style, reve
     rows = plot_rows(dataframe, [x_column, y_column, z_column])
     color = None if color_column == NO_COLOR else pd.to_numeric(dataframe.loc[rows.index, color_column], errors="coerce")
     figure = go.Figure(go.Scatter3d(
-        x=rows[x_column], y=rows[y_column], z=rows[z_column], mode="markers", name="Uploaded data",
+        x=rows[x_column], y=rows[y_column], z=rows[z_column], mode="markers", name="Filtered integrated data",
         marker=marker_settings(style, color, color_column, palette_label),
         text=rich_hover_text(dataframe.loc[rows.index]),
         hovertemplate="%{text}<extra></extra>",
@@ -363,7 +380,7 @@ def create_geographic(
             figure.add_trace(go.Scatter3d(x=coast_lon, y=coast_lat, z=[depth_bottom] * len(coast_lon), mode="lines", name="Coastline projection", line={"color": "#8c959b", "width": 0.7}, hoverinfo="skip", showlegend=False))
     color = None if color_column == NO_COLOR else pd.to_numeric(dataframe.loc[rows.index, color_column], errors="coerce")
     figure.add_trace(go.Scatter3d(
-        x=rows["_Longitude_plot"], y=rows[columns[1]], z=rows[columns[2]], mode="markers", name="Uploaded data",
+        x=rows["_Longitude_plot"], y=rows[columns[1]], z=rows[columns[2]], mode="markers", name="Filtered integrated data",
         marker=marker_settings(style, color, color_column, palette_label),
         text=rich_hover_text(dataframe.loc[rows.index]),
         hovertemplate="%{text}<extra></extra>", showlegend=False,
@@ -415,8 +432,12 @@ def create_2d_map(dataframe, color_column, palette_label, region_label, map_mode
         arguments["color"] = color_column
         arguments["color_continuous_scale"] = envgeo_utils.get_plotly_colormap(color_column, palette_label)
     figure = px.scatter_mapbox(**arguments)
-    figure.update_traces(hovertemplate="%{customdata[0]}<extra></extra>", marker={"size": 8, "opacity": 0.78})
+    figure.update_traces(hovertemplate="%{customdata[0]}<extra></extra>", marker={"size": 8, "opacity": 0.78}, name="Filtered integrated data")
     figure = envgeo_utils.apply_map_style(figure, map_mode)
+    envgeo_utils.add_coastline_overlay(figure)
+    _eff_05_fn, _ = envgeo_utils.resolve_map_mode(map_mode)
+    if _eff_05_fn == "Coastline (offline)":
+        envgeo_utils.add_graticule_overlay(figure)
     if region_label in envgeo_utils.MAP_REGION_PRESETS:
         center_lat, center_lon, zoom = envgeo_utils.map_region_view(region_label)
     else:
@@ -480,8 +501,27 @@ def ensure_common_filter_columns(dataframe):
 
 
 def download_figure(figure, filename, key):
-    """Provide a portable interactive Plotly HTML file."""
-    st.download_button("Download interactive HTML", figure.to_html(include_plotlyjs="cdn").encode("utf-8"), envgeo_utils.build_figure_filename(filename, extension="html"), "text/html", key=key)
+    """Provide a self-contained interactive Plotly HTML file.
+
+    Plotly.js is embedded inline (include_plotlyjs=True) so the saved file
+    works offline without a CDN connection.
+    """
+    st.download_button(
+        "Download interactive HTML",
+        envgeo_utils.figure_to_self_contained_html(figure),
+        envgeo_utils.build_figure_filename(filename, extension="html"),
+        "text/html",
+        key=key,
+    )
+
+
+def _user_facing_df(df):
+    """Drop internal metadata columns before preview or download.
+
+    Removes _INTERNAL_COLS (e.g. _EnvGeoDataOrigin) so that users never see
+    them in the preview table, download CSV, or numeric axis dropdowns.
+    """
+    return df.drop(columns=[c for c in _INTERNAL_COLS if c in df.columns])
 
 
 def main():
@@ -507,7 +547,22 @@ def main():
     if ref_data != NO_COMPARISON_DATA and reference_df.empty:
         st.warning("No reference data are available for the selected source.")
         return
-    combined_df = envgeo_utils.combine_reference_and_uploaded_for_filtering(reference_df, uploaded_df)
+    # Attach internal origin column before combining so it survives filtering.
+    # combine_reference_and_uploaded_for_filtering is not modified (shared across pages).
+    # 内部出所列を結合前に付与し、フィルター後も残るようにする。
+    _USER_EXCEL_LABEL = getattr(envgeo_utils, "USER_EXCEL_DATA_LABEL", "__USER_EXCEL__")
+    _ref_to_combine = reference_df.copy() if not reference_df.empty else reference_df
+    if not _ref_to_combine.empty:
+        if "Dataset" in _ref_to_combine.columns:
+            _ref_to_combine[_ORIGIN_COL] = _ref_to_combine["Dataset"].apply(
+                lambda d: "User Excel data" if d == _USER_EXCEL_LABEL else "Reference data"
+            )
+        else:
+            _ref_to_combine[_ORIGIN_COL] = "Reference data"
+    _upl_to_combine = uploaded_df.copy() if not uploaded_df.empty else uploaded_df
+    if not _upl_to_combine.empty:
+        _upl_to_combine[_ORIGIN_COL] = "User-uploaded data"
+    combined_df = envgeo_utils.combine_reference_and_uploaded_for_filtering(_ref_to_combine, _upl_to_combine)
     combined_df = ensure_common_filter_columns(combined_df)
     if combined_df.empty:
         st.info("Upload a CSV/XLSX file, or select a comparison data source to begin.")
@@ -522,7 +577,12 @@ def main():
         envgeo_utils.data_source_AROUND_JAPAN,
     )
     filtered_df = filter_result[0]
-    _, selected_uploaded_df = envgeo_utils.split_uploaded_rows(filtered_df)
+    # Count uploaded rows from internal origin column; fall back to split_uploaded_rows if column absent.
+    if _ORIGIN_COL in filtered_df.columns:
+        _uploaded_count = int((filtered_df[_ORIGIN_COL] == "User-uploaded data").sum())
+    else:
+        _, _sel_upl = envgeo_utils.split_uploaded_rows(filtered_df)
+        _uploaded_count = len(_sel_upl)
 
     # Marker controls and variables apply to every quick-look figure.
     # マーカー設定と変数選択は、すべての簡易可視化で共通に使う。
@@ -593,7 +653,7 @@ def main():
     # Keep interactive figures responsive / インタラクティブ図の応答性を保つため表示行を制限する。
     displayed_df, sampled = sample_rows(filtered_df, int(maximum_rows))
     st.subheader("Filtered integrated data")
-    st.write(f"{len(filtered_df):,} rows available (Uploaded data: {len(selected_uploaded_df):,})")
+    st.write(f"{len(filtered_df):,} rows available (Uploaded data: {_uploaded_count:,})")
     if sampled:
         st.info(
             f"Figures currently show {len(displayed_df):,} of {len(filtered_df):,} filtered rows "
@@ -607,13 +667,13 @@ def main():
         )
     with st.expander("Preview, data quality, and download", expanded=False):
         st.dataframe(
-            envgeo_utils.arrow_display_dataframe(displayed_df),
+            envgeo_utils.arrow_display_dataframe(_user_facing_df(displayed_df)),
             **envgeo_utils.stretch_width_kwargs(st.dataframe),
         )
         quality_rows = envgeo_utils.get_quality_rows(filtered_df)
         st.write(f"Quality-flagged rows: {len(quality_rows):,} / {len(filtered_df):,}")
         envgeo_utils.render_quality_flag_criteria_note()
-        st.download_button("Download filtered integrated data (CSV)", filtered_df.to_csv(index=False).encode("utf-8-sig"), "envgeo_seawater_filtered_integrated_data.csv", "text/csv")
+        st.download_button("Download filtered integrated data (CSV)", _user_facing_df(filtered_df).to_csv(index=False).encode("utf-8-sig"), "envgeo_seawater_filtered_integrated_data.csv", "text/csv")
 
     # Use shared Streamlit-version-compatible tabs / 対応Streamlit版共通のタブ表示を使う。
     render_tab_style()
@@ -622,7 +682,7 @@ def main():
         "✅ Overview & Quality", "📈 2D Explore", "🧊 3D / 4D", "🗺️ 2D Map", "🌍 3D Map", "🗂️ Data & Export"
     ])
     with tab_overview:
-        render_overview_and_quality(filtered_df, len(selected_uploaded_df))
+        render_overview_and_quality(_user_facing_df(filtered_df), _uploaded_count)
     with tab_explore:
         plot_mode = st.segmented_control(
             "2D quick plot", ["Custom 2D", "Salinity-d18O", "Temperature-Salinity"], default="Custom 2D", key="quick_visualizer_2d_mode"
@@ -646,13 +706,23 @@ def main():
         st.plotly_chart(figure, **envgeo_utils.stretch_width_kwargs(st.plotly_chart))
         download_figure(figure, "integrated_data_3d_4d", "quick_visualizer_download_3d")
     with tab_map_2d:
-        map_mode = st.selectbox("Map style", envgeo_utils.MAP_MODE_OPTIONS, key="quick_visualizer_map_style")
+        map_mode = st.selectbox("Map style", envgeo_utils.MAP_MODE_OPTIONS, index=envgeo_utils.MAP_MODE_DEFAULT_INDEX, key="quick_visualizer_map_style")
+        _eff_05, _fell_05 = envgeo_utils.resolve_map_mode(map_mode)
+        if _fell_05:
+            st.warning(envgeo_utils.OFFLINE_FALLBACK_WARNING)
+        else:
+            st.caption(f"Map style: {_eff_05}")
         map_figure, map_count = create_2d_map(displayed_df, color_column, palette_label, geographic_region, map_mode)
         if map_figure is None:
             st.info("Assign longitude and latitude columns to enable the 2D map.")
         else:
             st.caption(f"{map_count:,} valid longitude-latitude rows plotted.")
-            st.plotly_chart(map_figure, **envgeo_utils.stretch_width_kwargs(st.plotly_chart))
+            # Enable map zoom with the mouse wheel / マウスホイールで地図をズームする。
+            st.plotly_chart(
+                map_figure,
+                config={"scrollZoom": True, "displayModeBar": True},
+                **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+            )
             download_figure(map_figure, "integrated_data_map", "quick_visualizer_download_map")
     with tab_map_3d:
         st.subheader("Geographic 3D")
@@ -686,8 +756,8 @@ def main():
                 download_figure(figure, "integrated_data_geographic_3d", "quick_visualizer_download_geographic")
     with tab_data:
         st.subheader("Filtered integrated dataset")
-        st.dataframe(envgeo_utils.arrow_display_dataframe(filtered_df), **envgeo_utils.stretch_width_kwargs(st.dataframe))
-        st.download_button("Download filtered integrated data (CSV)", filtered_df.to_csv(index=False).encode("utf-8-sig"), "envgeo_seawater_filtered_integrated_data.csv", "text/csv", key="quick_visualizer_download_filtered")
+        st.dataframe(envgeo_utils.arrow_display_dataframe(_user_facing_df(filtered_df)), **envgeo_utils.stretch_width_kwargs(st.dataframe))
+        st.download_button("Download filtered integrated data (CSV)", _user_facing_df(filtered_df).to_csv(index=False).encode("utf-8-sig"), "envgeo_seawater_filtered_integrated_data.csv", "text/csv", key="quick_visualizer_download_filtered")
 
 
 if __name__ == "__main__":

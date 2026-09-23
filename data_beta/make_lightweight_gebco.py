@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Create a lightweight GEBCO NetCDF by subsampling a global GEBCO grid.
+
+Maintainer: Toyoho Ishimura, Kyoto University
+Last updated: 2026-09-22
 
 Recommended source file:
   GEBCO_2025 Grid (ice surface elevation) -> global coverage -> netCDF

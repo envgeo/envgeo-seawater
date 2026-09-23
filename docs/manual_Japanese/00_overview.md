@@ -15,8 +15,8 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 
 ## 基本的な流れ
 
-1. 自分のデータを確認する場合は **User Data Check & Quick Visualizer** でCSV/XLSXをアップロードし、目的が決まっている場合は個別可視化ページを選ぶ。
-2. 利用可能なページでは `Uploaded data` を含めてデータセットを選び、Data filtering で絞り込む。
+1. 常時読み込みするローカル表は、アプリ起動前に `local_data/user_data.xlsx` へ置く。一時的に使うデータは **User Data Check & Quick Visualizer** でCSV/XLSXをアップロードする。
+2. Data filteringでデータセットを選ぶ。常時読み込み表は `User Excel data`、ブラウザアップロードは `Uploaded data` として表示される。
 3. 可視化ページを選ぶ。
 4. 図の設定を調整する。
 5. 地図、図、表、品質フラグを確認する。
@@ -38,4 +38,5 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 - beta と表示されたページは、ワークフローや科学的な扱いを調整中です。
 - 全球データを大きく選択すると、3D/4D表示が重くなることがあります。
 - ブラウザからアップロードしたデータは、現在のStreamlitセッションのメモリ内だけで扱い、アプリは保存しません。公開ページ **User Data Check & Quick Visualizer** では、アップロード起点の品質確認と簡易2D--4D可視化を行えます。
+- `User Excel data` は、Git管理対象外のローカルパスから起動時に読み込む任意の常時データセットです。選択した各参照データに結合されますが、セッション限定の `Uploaded data` とは別に扱います。
 - Vertical Sectionの補間は実験的な機能です。解析結果として扱う前に、観測点、設定、データ密度を確認してください。

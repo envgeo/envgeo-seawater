@@ -5,7 +5,7 @@ EnvGeo-Seawater home page and application overview.
 
 Created: 2023-05-21
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last updated: 2026-09-23
 """
 
 import streamlit as st
@@ -179,13 +179,21 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
+### Version 1.3.3 (2026-09-23)
+
+- Added offline-safe Plotly map behaviour: local coastline overlays remain visible when web tiles are unavailable, while `Coastline (offline)` provides a tile-free white-background map.
+- Bundled Natural Earth 50m land polygons for page 32 static Cartopy maps, avoiding first-run Natural Earth downloads while retaining correct land masking.
+- Added self-contained interactive HTML downloads for the main Plotly figures on pages 03, 04, and 05. Saved figures embed Plotly.js and retain zoom, mode-bar controls, and responsive sizing; online basemap tiles are not bundled.
+- Completed the persistent `User Excel data` workflow and clarified data origin in Quick Visualizer hover information.
+- Kept Vertical Section as a beta workflow with documented scientific and offline-input limitations.
+
 ### Version 1.3.2 (2026-09-22)
 
 - Added shared, in-memory CSV/XLSX user-data upload and filtering to the active specialist pages. `Uploaded data` can be selected in Data filtering; selected uploads are used in compatible plotting and calculation workflows and are drawn in the foreground.
 - Added `User Data Check & Quick Visualizer` as the public upload-first page for quality review, missing-value checks, shared filtering, 2D/3D/4D exploration, 2D maps, geographic 3D, and filtered CSV export.
 - Improved Vertical Section Visualizer with shared upload filtering, uploaded-data section inputs, target-parameter availability summaries, and configurable readable colorbars. Its interpolation outputs remain experimental.
 - Updated tab styling for Streamlit 1.63, kept the Plotly 5.24 baseline, and expanded targeted regression and AppTest coverage.
-- Recorded `dataset/91_USER_UPLOAD_UNPUB.xlsx` as a legacy-input removal candidate; browser upload is now the normal user-data workflow.
+- Replaced the fixed legacy workbook with a configurable, Git-ignored always-loaded local table labeled `User Excel data`; it is appended to each selected reference source while browser uploads remain separate.
 
 ### Version 1.3.1 (2026-09-19)
 
@@ -309,12 +317,25 @@ def main():
         ###############
 
         readme_file = resolve_path("README.md")
+        japanese_readme_file = resolve_path("README_Japanese.md")
         
         if readme_file.exists():
             readme_content = read_text_file(readme_file)
+            # Relative Markdown links are interpreted as browser URLs in
+            # Streamlit. Show the bundled Japanese README below instead.
+            readme_content = readme_content.replace(
+                "[日本語版 README](README_Japanese.md)",
+                "日本語版は下の「日本語版 README」を開いてください。",
+            )
         
             with st.expander("Show README"):
                 render_markdown_streamlit(readme_content, base_dir=BASE_DIR)
+
+        if japanese_readme_file.exists():
+            with st.expander("日本語版 README"):
+                render_markdown_streamlit(
+                    read_text_file(japanese_readme_file), base_dir=BASE_DIR
+                )
         ###############
 
 

@@ -10,7 +10,7 @@ Last updated: 2026-09-22
 
 
 # --- Version info ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 
 # ToDo
 
@@ -30,7 +30,7 @@ import io
 import textwrap
 from matplotlib.ticker import FormatStrFormatter
 import envgeo_utils
-import envgeo_user_data  
+import envgeo_user_data
 
     
 
@@ -943,146 +943,207 @@ def main():
         "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
     ):
         map_mode = st.radio(
-            "Map style", 
-            envgeo_utils.MAP_MODE_OPTIONS, 
+            "Map style",
+            envgeo_utils.MAP_MODE_OPTIONS,
+            index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
             horizontal=True,
             key="map_style_depth_profile",
             help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
-    st.caption(f"Map style: {map_mode}")
+    _eff_37, _fell_37 = envgeo_utils.resolve_map_mode(map_mode)
+    if _fell_37:
+        st.warning(envgeo_utils.OFFLINE_FALLBACK_WARNING)
 
- # 2. データの範囲から中心座標とズームレベルを計算
-    lat_min, lat_max = df_fig_add["Latitude_degN"].min(), df_fig_add["Latitude_degN"].max()
-    lon_min, lon_max = df_fig_add["Longitude_degE"].min(), df_fig_add["Longitude_degE"].max()
+    # 2. 有効座標の抽出（同一行に緯度・経度が両方有効、かつ範囲内）
+    if {"Latitude_degN", "Longitude_degE"}.issubset(df_fig_add.columns):
+        _lat_num = pd.to_numeric(df_fig_add["Latitude_degN"], errors="coerce")
+        _lon_num = pd.to_numeric(df_fig_add["Longitude_degE"], errors="coerce")
+        _valid_mask = (
+            _lat_num.notna() & _lon_num.notna()
+            & _lat_num.between(-90, 90) & _lon_num.between(-180, 180)
+        )
+        _valid_coords_df = df_fig_add.loc[_valid_mask].copy()
+        _valid_coords_df["Latitude_degN"] = _lat_num[_valid_mask].values
+        _valid_coords_df["Longitude_degE"] = _lon_num[_valid_mask].values
+    else:
+        _valid_coords_df = df_fig_add.iloc[0:0].copy()
+    _has_valid_map_coords = len(_valid_coords_df) > 0
 
+    # Build uploaded_map_df for the guard and center/zoom calculation.
+    # (page 37 uses uploaded_df directly in add_uploaded_map_overlay, so this
+    #  variable is local to the map extent logic and does not affect the overlay.)
+    uploaded_map_df = pd.DataFrame(columns=["Longitude_degE", "Latitude_degN"])
+    if not uploaded_df.empty and {"Longitude_degE", "Latitude_degN"}.issubset(uploaded_df.columns):
+        uploaded_map_df = uploaded_df.copy()
+        uploaded_map_df["Longitude_degE"] = pd.to_numeric(
+            uploaded_map_df["Longitude_degE"], errors="coerce"
+        )
+        uploaded_map_df["Latitude_degN"] = pd.to_numeric(
+            uploaded_map_df["Latitude_degN"], errors="coerce"
+        )
+        uploaded_map_df = uploaded_map_df.dropna(subset=["Longitude_degE", "Latitude_degN"])
+        uploaded_map_df = uploaded_map_df.loc[
+            uploaded_map_df["Latitude_degN"].between(-90, 90)
+            & uploaded_map_df["Longitude_degE"].between(-180, 180)
+        ]
+
+    # Uploaded data alone may provide valid coordinates even when df_fig_add
+    # (reference rows only) is empty — extend the guard to cover that case.
+    _has_valid_map_coords = _has_valid_map_coords or not uploaded_map_df.empty
+
+    # 3. データの範囲から中心座標とズームレベルを計算
     # 初期値（日本）の設定
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
-    # --- 判定と計算を一本化 ---
-    if pd.isna(lat_min) or pd.isna(lon_min):
-        # 【抽出前】データがない場合は日本を中心に固定
+    if not _has_valid_map_coords:
         center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
     else:
-        # 【抽出後】データがある場合
-        center_lat = (lat_min + lat_max) / 2
-        center_lon = (lon_min + lon_max) / 2
-        
-        lat_diff = max(lat_max - lat_min, 0.1)
-        lon_diff = max(lon_max - lon_min, 0.1)
-        
-        # 03番準拠のピクセル計算
-        map_width_px, map_height_px = 1200, 700
-        zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
-        zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
-        
-        # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-        # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
-        auto_zoom = min(zoom_lon, zoom_lat) - 2.0
-        auto_zoom = max(1, min(15, auto_zoom))
+        # Combine reference and uploaded coords for map extent
+        _map_ext_sources = []
+        if len(_valid_coords_df) > 0:
+            _map_ext_sources.append(_valid_coords_df[["Longitude_degE", "Latitude_degN"]])
+        if not uploaded_map_df.empty:
+            _map_ext_sources.append(uploaded_map_df[["Longitude_degE", "Latitude_degN"]])
+        _map_ext_df = pd.concat(_map_ext_sources, ignore_index=True)
+        lat_min, lat_max = _map_ext_df["Latitude_degN"].min(), _map_ext_df["Latitude_degN"].max()
+        lon_min, lon_max = _map_ext_df["Longitude_degE"].min(), _map_ext_df["Longitude_degE"].max()
 
-        # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
-        if lon_diff > 100:
-              center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
-    
-    
-    
-
-    # 3. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
-    c_scale_profile = envgeo_utils.get_custom_colorscale(X_data)
-    hover_columns = [
-        "Latitude_degN",
-        "Longitude_degE",
-        "d18O",
-        "dD",
-        "d-excess",
-        "Salinity",
-        "Temperature_degC",
-        "Year",
-        "Month",
-        "Day",
-        "Cruise",
-        "Station",
-        "Depth_m",
-        "reference",
-    ]
-    hover_data = {column: True for column in hover_columns if column in df_fig_add.columns}
-
-    fig_map = px.scatter_mapbox(
-        df_fig_add, 
-        lat="Latitude_degN", 
-        lon="Longitude_degE",
-        color=X_data, 
-        color_continuous_scale=c_scale_profile,
-        hover_data=hover_data,
-        opacity=0.6,
-        height=500  # 高さはここで固定
-    )
-
-    # 4. 背景スタイルの適用
-    fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
-
-    _depth_color_range = (
-        (lim_min_X, lim_max_X) if lim_min_X < lim_max_X else None
-    )
-    fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
-        fig_map,
-        uploaded_df,
-        uploaded_style,
-        color_column=X_data,
-        colorscale=c_scale_profile,
-        color_range=_depth_color_range,
-        show_nodata=show_nodata_uploaded,
-    )
-
-    # 5. レイアウト設定 (ここが幅を広げる決め手)
-    fig_map.update_layout(
-        mapbox=dict(
-            center=dict(lat=center_lat, lon=center_lon),
-            zoom=auto_zoom,
-            domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
-        ),
-        margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
-        autosize=True,
-        coloraxis_colorbar=dict(
-            title=plot_element,
-            x=0.98,
-            xanchor='right',
-            bgcolor='rgba(255,255,255,0.75)',
-            bordercolor='rgba(150,150,150,0.5)',
-            borderwidth=1,
-        ),
-        legend=dict(
-            x=0.01,
-            y=0.01,
-            xanchor='left',
-            yanchor='bottom',
-            bgcolor='rgba(255,255,255,0.85)',
-            bordercolor='rgba(150,150,150,0.5)',
-            borderwidth=1,
-        ),
-    )
-
-    # 6. 表示 
-    # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
-    # マウスホイールでのズームが強制的に有効
-    st.plotly_chart(
-        fig_map,
-        key="depth_profile",
-        config={'scrollZoom': True, 'displayModeBar': True},
-        **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
-    )
-
-    if not uploaded_df.empty:
-        if uploaded_map_count:
-            st.caption(
-                f":blue[Uploaded locations: {uploaded_map_count:,} / "
-                f"{len(uploaded_df):,} plotted on the map.]"
-            )
+        # --- 判定と計算を一本化 ---
+        if pd.isna(lat_min) or pd.isna(lon_min):
+            center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
         else:
-            st.caption(
-                ":orange[Uploaded data: no rows with valid Latitude_degN "
-                "and Longitude_degE found.]"
-            )
+            center_lat = (lat_min + lat_max) / 2
+            center_lon = (lon_min + lon_max) / 2
+
+            lat_diff = max(lat_max - lat_min, 0.1)
+            lon_diff = max(lon_max - lon_min, 0.1)
+
+            # 03番準拠のピクセル計算
+            map_width_px, map_height_px = 1200, 700
+            zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
+            zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
+
+            # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
+            # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+            auto_zoom = min(zoom_lon, zoom_lat) - 2.0
+            auto_zoom = max(1, min(15, auto_zoom))
+
+            # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+            if lon_diff > 100:
+                center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
+
+    # 4. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
+    if not _has_valid_map_coords:
+        st.info(
+            "Map view is unavailable because the selected data contain no valid "
+            "latitude/longitude coordinates."
+        )
+    else:
+        c_scale_profile = envgeo_utils.get_custom_colorscale(X_data)
+
+        # Use reference coords as base when available; fall back to uploaded coords
+        # so that px.scatter_mapbox always receives a non-empty DataFrame.
+        _map_plot_df = (
+            _valid_coords_df if not _valid_coords_df.empty else uploaded_map_df
+        )
+        _x_color = X_data if X_data in _map_plot_df.columns else None
+        hover_columns = [
+            "Latitude_degN",
+            "Longitude_degE",
+            "d18O",
+            "dD",
+            "d-excess",
+            "Salinity",
+            "Temperature_degC",
+            "Year",
+            "Month",
+            "Day",
+            "Cruise",
+            "Station",
+            "Depth_m",
+            "reference",
+        ]
+        hover_data = {column: True for column in hover_columns if column in _map_plot_df.columns}
+
+        fig_map = px.scatter_mapbox(
+            _map_plot_df,
+            lat="Latitude_degN",
+            lon="Longitude_degE",
+            color=_x_color,
+            color_continuous_scale=c_scale_profile,
+            hover_data=hover_data,
+            opacity=0.6,
+            height=500  # 高さはここで固定
+        )
+
+        # 4. 背景スタイルの適用
+        fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
+        envgeo_utils.add_coastline_overlay(fig_map)
+        if _eff_37 == "Coastline (offline)":
+            envgeo_utils.add_graticule_overlay(fig_map)
+
+        _depth_color_range = (
+            (lim_min_X, lim_max_X) if lim_min_X < lim_max_X else None
+        )
+        fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+            fig_map,
+            uploaded_df,
+            uploaded_style,
+            color_column=X_data,
+            colorscale=c_scale_profile,
+            color_range=_depth_color_range,
+            show_nodata=show_nodata_uploaded,
+        )
+
+        # 5. レイアウト設定 (ここが幅を広げる決め手)
+        fig_map.update_layout(
+            mapbox=dict(
+                center=dict(lat=center_lat, lon=center_lon),
+                zoom=auto_zoom,
+                domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
+            ),
+            margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+            autosize=True,
+            coloraxis_colorbar=dict(
+                title=plot_element,
+                x=0.98,
+                xanchor='right',
+                bgcolor='rgba(255,255,255,0.75)',
+                bordercolor='rgba(150,150,150,0.5)',
+                borderwidth=1,
+            ),
+            legend=dict(
+                x=0.01,
+                y=0.01,
+                xanchor='left',
+                yanchor='bottom',
+                bgcolor='rgba(255,255,255,0.85)',
+                bordercolor='rgba(150,150,150,0.5)',
+                borderwidth=1,
+            ),
+        )
+
+        # 6. 表示
+        # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）
+        # マウスホイールでのズームが強制的に有効
+        st.plotly_chart(
+            fig_map,
+            key="depth_profile",
+            config={'scrollZoom': True, 'displayModeBar': True},
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+        )
+
+        if not uploaded_df.empty:
+            if uploaded_map_count:
+                st.caption(
+                    f":blue[Uploaded locations: {uploaded_map_count:,} / "
+                    f"{len(uploaded_df):,} plotted on the map.]"
+                )
+            else:
+                st.caption(
+                    ":orange[Uploaded data: no rows with valid Latitude_degN "
+                    "and Longitude_degE found.]"
+                )
 
 
 

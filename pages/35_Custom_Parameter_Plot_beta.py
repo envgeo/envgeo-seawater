@@ -22,7 +22,7 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.2"
+version = "1.3.3"
 fig_title = "envgeo-seawater-database"
 
 
@@ -424,8 +424,6 @@ def main():
             )
 
     required_columns = [x_axis, y_axis]
-    if color_by != "Single color":
-        required_columns.append(color_by)
     if size_by != "Fixed size":
         required_columns.append(size_by)
 
@@ -500,22 +498,56 @@ def main():
         )
     elif color_by != "Single color" and not df_plot.empty:
         color_values = pd.to_numeric(df_plot[color_by], errors="coerce")
-        scatter = ax.scatter(
-            df_plot[x_axis],
-            df_plot[y_axis],
-            s=point_sizes,
-            c=color_values,
-            cmap=envgeo_utils.get_matplotlib_colormap(color_by, colormap_label),
-            vmin=color_range[0] if color_range is not None else None,
-            vmax=color_range[1] if color_range is not None else None,
-            alpha=marker_alpha,
-            edgecolors="black",
-            linewidths=0.5,
-            label="Filtered data",
-        )
-        cbar = fig.colorbar(scatter, ax=ax, orientation="vertical", pad=0.02, fraction=0.04)
-        cbar.set_label(PARAMETER_LABELS.get(color_by, color_by), fontsize=label_font_size)
-        cbar.ax.tick_params(labelsize=tick_font_size)
+        color_valid = color_values.notna()
+        if color_valid.any():
+            valid_sizes = (
+                point_sizes[color_valid]
+                if not np.isscalar(point_sizes)
+                else point_sizes
+            )
+            scatter = ax.scatter(
+                df_plot.loc[color_valid, x_axis],
+                df_plot.loc[color_valid, y_axis],
+                s=valid_sizes,
+                c=color_values[color_valid],
+                cmap=envgeo_utils.get_matplotlib_colormap(color_by, colormap_label),
+                vmin=color_range[0] if color_range is not None else None,
+                vmax=color_range[1] if color_range is not None else None,
+                alpha=marker_alpha,
+                edgecolors="black",
+                linewidths=0.5,
+                label="Filtered data",
+            )
+            cbar = fig.colorbar(
+                scatter,
+                ax=ax,
+                orientation="vertical",
+                pad=0.02,
+                fraction=0.04,
+            )
+            cbar.set_label(
+                PARAMETER_LABELS.get(color_by, color_by),
+                fontsize=label_font_size,
+            )
+            cbar.ax.tick_params(labelsize=tick_font_size)
+
+        missing_color = ~color_valid
+        if missing_color.any():
+            missing_sizes = (
+                point_sizes[missing_color]
+                if not np.isscalar(point_sizes)
+                else point_sizes
+            )
+            ax.scatter(
+                df_plot.loc[missing_color, x_axis],
+                df_plot.loc[missing_color, y_axis],
+                s=missing_sizes,
+                c="#8C8C8C",
+                alpha=marker_alpha,
+                edgecolors="black",
+                linewidths=0.5,
+                label=f"Filtered data (no {color_by})",
+            )
 
     if not uploaded_plot.empty:
         uploaded_sizes = scaled_marker_sizes(

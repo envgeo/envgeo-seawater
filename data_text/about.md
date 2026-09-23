@@ -11,3 +11,5 @@ Figures may be downloaded for research and educational use. Please cite the orig
 [For more information and permissions for use, click here](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 
 Visualization by TOYOHO ISHIMURA @ Kyoto Univ. (Built with Python and Streamlit)
+
+**AI-assisted development:** From version 1.3 onward, development of this application has made substantial use of AI coding assistants (OpenAI Codex; Anthropic Claude Code) for code review, implementation drafting, refactoring, test design, bug investigation, and documentation. AI tools are not treated as authors or co-developers; all scientific and design decisions, final review, verification, and responsibility for published content remain with the human author.

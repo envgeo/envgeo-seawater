@@ -9,7 +9,7 @@ Last updated: 2026-09-22
 """
 
 # --- Version info ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 
 # ToDo
 # 最後のマップのカラーバーの初期値を調整必要
@@ -1479,14 +1479,21 @@ def main():
 
     # --- 5. 最後に一回だけ表示を実行 ---
     st.plotly_chart(
-        target_fig, 
+        target_fig,
         # width="stretch" #Streramlitあげたら復活させる
         key=plot_key,
         config={'scrollZoom': True}
     )
-    
-    
-           
+    st.download_button(
+        "Download interactive HTML",
+        envgeo_utils.figure_to_self_contained_html(target_fig),
+        envgeo_utils.build_figure_filename("p04_3d4d", extension="html"),
+        "text/html",
+        key=f"{plot_key}_html_dl",
+    )
+
+
+
     ###############################################################################################
     ############################################################################################### 
     ###############################################################################################
@@ -1513,10 +1520,11 @@ def main():
         "Map detail settings", **envgeo_utils.stretch_width_kwargs(st.popover)
     ):
         map_mode = st.radio(
-            "Map style", 
-            envgeo_utils.MAP_MODE_OPTIONS, 
+            "Map style",
+            envgeo_utils.MAP_MODE_OPTIONS,
+            index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
             horizontal=True,
-            key="map_style_31_auto",
+            key="map_style_04_auto",
             help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
     st.caption(f"Map style: {map_mode}")
@@ -1645,10 +1653,17 @@ def main():
     # マウスホイールでのズームが強制的に有効
 
     st.plotly_chart(
-        fig_map, 
+        fig_map,
         # width="stretch" #Streramlitあげたら復活させる
         key="dynamic_map_final", # キーも一応ユニークに
         config={'scrollZoom': True, 'displayModeBar': True}
+    )
+    st.download_button(
+        "Download interactive HTML",
+        envgeo_utils.figure_to_self_contained_html(fig_map),
+        envgeo_utils.build_figure_filename("p04_map", extension="html"),
+        "text/html",
+        key="p04_map_html_dl",
     )
 
 

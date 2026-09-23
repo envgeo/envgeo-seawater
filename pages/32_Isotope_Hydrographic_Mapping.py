@@ -12,7 +12,7 @@ Last updated: 2026-09-22
 
 
 # --- Version info ---
-version = "1.3.2"  # 2026-09-22
+version = "1.3.3"  # 2026-09-23
 
 # ToDo
 # このバージョンは補完計算の調整が必要
@@ -32,8 +32,10 @@ import math
 import envgeo_utils
 import envgeo_user_data
 from scipy.interpolate import griddata # コンターマップ用
-import cartopy.feature as cfeature  # 陸地塗りつぶし用
+import cartopy.io.shapereader as shapereader  # ローカル NE land shapefile 読み込み用
 import io # ファイル処理用
+import pathlib
+import warnings
 
 
 MAP_PARAMETER_LABELS = {
@@ -150,6 +152,49 @@ def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
 
     return -20.0, 20.0, (-5.0, 5.0), 0.1
 
+
+# ── Local Natural Earth 50m Land shapefile ────────────────────────────────────
+# The shapefile is bundled in the repository so that the land mask can be drawn
+# without any external Natural Earth download, even in offline environments.
+# Path is resolved relative to this script's directory so it works regardless
+# of the working directory when Streamlit launches the page.
+_NE50M_LAND_DIR = (
+    pathlib.Path(__file__).parent.parent / "coastline" / "natural_earth_50m_land"
+)
+_NE50M_LAND_SHP = _NE50M_LAND_DIR / "ne_50m_land.shp"
+_NE50M_LAND_REQUIRED_EXTS = (".shp", ".shx", ".dbf")
+
+
+def _load_ne50m_land_geometries():
+    """Return a list of Shapely geometries from the bundled NE 50m land shapefile.
+
+    Returns an empty list (with a Streamlit warning) if any required component
+    is missing.  Never fetches from the network.
+
+    Rendering with an empty list degrades gracefully: the land mask is skipped,
+    but coastlines and data points are still drawn.
+    """
+    missing = [
+        _NE50M_LAND_DIR / ("ne_50m_land" + ext)
+        for ext in _NE50M_LAND_REQUIRED_EXTS
+        if not (_NE50M_LAND_DIR / ("ne_50m_land" + ext)).exists()
+    ]
+    if missing:
+        st.warning(
+            "Land mask (Natural Earth 50m) could not be drawn: "
+            f"missing bundled file(s): {[p.name for p in missing]}. "
+            "Coastlines and data points are still displayed."
+        )
+        return []
+    try:
+        reader = shapereader.Reader(str(_NE50M_LAND_SHP))
+        return list(reader.geometries())
+    except Exception as exc:
+        st.warning(
+            f"Land mask (Natural Earth 50m) could not be loaded: {exc}. "
+            "Coastlines and data points are still displayed."
+        )
+        return []
 
 
 def main():
@@ -692,13 +737,25 @@ def main():
             [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
         )
         
-        ax.coastlines(resolution="50m", zorder=3)
-        ax.add_feature(cfeature.LAND,
-                       facecolor="white",
-                       edgecolor="none",
-                       linewidth=0.5,
-                       zorder=2)
-        
+        # Draw land mask from bundled NE 50m shapefile (no network access).
+        # Drawing order: contours (zorder=1) → land mask (zorder=2) →
+        # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
+        _ne_geoms_sc = _load_ne50m_land_geometries()
+        if _ne_geoms_sc:
+            ax.add_geometries(
+                _ne_geoms_sc,
+                crs=ccrs.PlateCarree(),
+                facecolor="white",
+                edgecolor="none",
+                zorder=2,
+            )
+        envgeo_utils.plot_bundled_coastline(
+            ax,
+            transform=ccrs.PlateCarree(),
+            zorder=3,
+            color="0.35",
+            linewidth=0.6,
+        )
         ax.gridlines(draw_labels=True, zorder=4)
         
         # Plot sample points in the same longitude frame as the selected map extent.
@@ -893,14 +950,25 @@ def main():
             zorder=1
         )
         
-        ax2.add_feature(
-            cfeature.LAND,
-            facecolor="white",
-            edgecolor="none",
-            linewidth=0.5,
-            zorder=2
+        # Draw land mask from bundled NE 50m shapefile (no network access).
+        # Drawing order: contours (zorder=1) → land mask (zorder=2) →
+        # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
+        _ne_geoms_cn = _load_ne50m_land_geometries()
+        if _ne_geoms_cn:
+            ax2.add_geometries(
+                _ne_geoms_cn,
+                crs=ccrs.PlateCarree(),
+                facecolor="white",
+                edgecolor="none",
+                zorder=2,
+            )
+        envgeo_utils.plot_bundled_coastline(
+            ax2,
+            transform=ccrs.PlateCarree(),
+            zorder=3,
+            color="0.35",
+            linewidth=0.6,
         )
-        ax2.coastlines(resolution="50m", zorder=3)
         ax2.gridlines(draw_labels=True, zorder=4)
         
         lon_wrapped = normalize_lon_to_center(lon_original, lon_center)
@@ -1035,8 +1103,9 @@ def main():
         map_mode = st.radio(
             "Map style",
             envgeo_utils.MAP_MODE_OPTIONS,
+            index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
             horizontal=True,
-            key="map_style_31_auto",
+            key="map_style_32_auto",
             help=getattr(envgeo_utils, "MAP_STYLE_HELP_TEXT", "Choose the background map style for the sampling-location map."),
         )
     st.caption(f"Map style: {map_mode}")
