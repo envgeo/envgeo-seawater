@@ -215,3 +215,7 @@ __marimo__/
 
 # Local developer diagnostic page; never publish with the application.
 /pages/99_Environment_Check.py
+
+# Detailed internal Vertical Section review records; retain only in the working copy.
+/vertical_section_review_log_2026-09-22.md
+/vertical_section_review_log_2026-09-22_Japanese.md
