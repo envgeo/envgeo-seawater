@@ -9,6 +9,8 @@ Thumbs.db
 # Optional researcher-owned local data (never commit measurement data)
 local_data/*
 !local_data/README.md
+!local_data/README_Japanese.md
+!local_data/user_data.xlsx
 
 # C extensions
 *.so
