@@ -6,7 +6,9 @@ __pycache__/
 Thumbs.db
 .streamlit/secrets.toml
 
-# Optional researcher-owned local data (never commit measurement data)
+# Bundled zero-value sample for the always-loaded User Excel data workflow.
+# Researcher-owned measurements must be stored outside this repository and
+# selected with ENVGEO_LOCAL_USER_DATA_PATH.
 local_data/*
 !local_data/README.md
 !local_data/README_Japanese.md

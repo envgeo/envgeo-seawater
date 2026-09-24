@@ -2,6 +2,15 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased documentation maintenance
+
+- Clarified that `local_data/user_data.xlsx` is a tracked zero-value public
+  sample. It may be edited for local researcher use, or an external file may be
+  selected with `ENVGEO_LOCAL_USER_DATA_PATH`; restore the zero-value sample
+  before committing or synchronizing a public copy.
+- Added English and Japanese citation, license, and release-preparation
+  checklists.
+
 ## 1.3.3 - 2026-09-23
 
 ### Release summary
@@ -24,9 +33,75 @@ Detailed development log for recent EnvGeo-Seawater updates.
   Plotly 5.24 environment: **302 passed**. One pytest deprecation warning is
   recorded for future fixture cleanup; it does not indicate an app failure.
 
+### T-S Density Contours Stage 1 (2026-09-24)
+
+- Renamed internal variable `sigma_theta` to `sigma0_approx` in
+  `pages/34_T-S_diagram.py` to reflect that the quantity is an approximate
+  σ0 value, not σθ.
+- Changed the density-contour grid from data-extrema ±5 to the displayed
+  axis range (`lim_min_X/max_X`, `lim_min_Y/max_Y`) so contours are always
+  bounded by the selected salinity and temperature axes.
+- Added domain clipping: the contour grid is clipped to the quality-checked
+  valid input range (Salinity 0–50; Temperature −5–45 °C), so negative salinity
+  values selectable on the Global axis are never passed to `gsw.sigma0`.
+- Added **Density contour interval (approx. σ0)** selectbox inside Figure controls
+  (options: 0.2, 0.5, 1.0 kg m⁻³; default 0.5 kg m⁻³). Replaced the previous
+  `levels=50` fixed level count with an explicit contour-value array derived from
+  the selected interval. Degenerate ranges or missing valid values are handled
+  safely without raising an exception.
+- Added an inline `st.caption` below the T-S figure stating the contours are
+  approximate σ0 reference contours (Practical Salinity ≈ Absolute Salinity;
+  in-situ temperature ≈ Conservative Temperature) and not pointwise sample density.
+- Updated README.md and README_Japanese.md: replaced σθ with σ0 approximation wording.
+- Updated English and Japanese T-S manuals: added contour interval to Main Controls;
+  corrected approximation note to state differences vary by source, location, and
+  depth (removed earlier audit-specific 0.4 kg m⁻³ figure).
+- Added focused test `test/test_ts_density_contour.py` verifying axis-limit
+  grid bounds, domain clipping, absence of `levels=50`, contour interval options
+  and default, explicit level generation, and approximation wording.
+- Stage 2 (TEOS-10 data transformation) and Stage 3 (SA–CT mode) remain
+  pending; design record: `docs/ts_density_contour_review_and_plan.md`.
+
+### Approximate σ0 Reference Contour Overlay — Page 03 Pilot (2026-09-24)
+
+- Added a **Show density contours** checkbox so the approximate reference
+  layer can be hidden without changing the data points. Lightened the contour
+  lines and labels so they remain visual context rather than a dominant layer.
+- Added approximate σ0 reference contour overlay to the T–S scatter plot in
+  `pages/03_[Interactive]_2Dplus_Visualizer.py` as a limited pilot.
+  The overlay applies to the Temperature–Salinity view only; Salinity-d18O,
+  Custom, and dD views are unaffected.
+- Used `go.Contour` (physical isoline of a 2-D scalar field) rather than
+  `px.density_contour` (point kernel density). The grid is computed with
+  `gsw.sigma0(S_grid, T_grid)` where the salinity and temperature grid spans
+  the current scatter-plot axis range, clipped to the quality-checked domain
+  (Salinity 0–50; Temperature −5–45 °C). Negative salinity is never passed to
+  `gsw.sigma0`.
+- Contour trace is prepended to `fig.data` (behind scatter points). No fill,
+  no extra colorbar (`showscale=False`), no hover (`hoverinfo="none"`), no
+  legend entry. Line labels are drawn in grey.
+- Added **Density contour interval (approx. σ0)** selectbox in the T–S
+  section (options: 0.2, 0.5, 1.0 kg m⁻³; default 1.0 kg m⁻³). The
+  `contours.size` parameter is used; Plotly draws one contour line per
+  interval step.
+- Updated `selected_point_indices` to accept a `scatter_curve_number`
+  parameter (default 0). When the contour trace is prepended the scatter trace
+  shifts to `curveNumber=1`; the function receives the correct index so
+  Box/Lasso selection is not broken.
+- Added an inline `st.caption` below the T–S figure stating the contours are
+  approximate σ0 reference contours and not pointwise sample density.
+- Updated English and Japanese manuals for page 03
+  (`docs/manual/03_2dplus_visualizer.md`,
+  `docs/manual_Japanese/03_2dplus_visualizer.md`): added density contour
+  interval to Main Controls; added approximation note to Notes And Limitations.
+- Added focused static-analysis tests in `test/test_p03_ts_density_contour.py`
+  covering: `go.Contour` usage, absence of `px.density_contour`, domain
+  clipping constants, selectbox options and default, `showscale=False`,
+  approximation caption wording, and `scatter_curve_number` parameter.
+
 ### Detailed development log
 
-- Replaced the former fixed local workbook with the Git-ignored, always-loaded
+- Replaced the former fixed local workbook with an always-loaded
   `local_data/user_data.xlsx` workflow. Its rows receive the `User Excel data`
   dataset label and are appended to the Japan Sea, Around Japan, and Global
   reference selections. Browser `Uploaded data` remain session-only and

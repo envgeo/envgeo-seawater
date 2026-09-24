@@ -173,14 +173,17 @@ def render_regression_stats(stats_text):
     )
 
 
-def selected_point_indices(selected_points, max_len):
+def selected_point_indices(selected_points, max_len, scatter_curve_number=0):
     """Return selected indices from the main scatter trace only.
 
     近似直線などの追加traceが混ざっても、元の散布点だけを地図連動に使います。
+    scatter_curve_number: Plotly curveNumber of the scatter trace.  Defaults to
+    0 (scatter is the first trace).  Pass 1 when a background trace such as a
+    σ0 reference contour is prepended before the scatter trace.
     """
     indices = []
     for point in selected_points or []:
-        if point.get("curveNumber", 0) != 0:
+        if point.get("curveNumber", 0) != scatter_curve_number:
             continue
         point_index = point.get("pointIndex")
         if point_index is None:
@@ -218,11 +221,13 @@ def show_selection_tip():
 
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go  # for go.Contour (Page 03 σ0 contour pilot)
 from streamlit_plotly_events import plotly_events
 import math
-import envgeo_utils  
+import envgeo_utils
 import pandas as pd
 import numpy as np
+import gsw  # Gibbs SeaWater / TEOS-10 — approximate σ0 reference contours only
 
 
 
@@ -737,10 +742,31 @@ def main():
             st.session_state.ts_selected_indices = []
         
         st.subheader('Temperature-Salinity Diagram')
-        
+
         sel_col, target_item, c_scale_final = render_color_controls(df1, "fig_TS_zoom")
 
-        
+        # Density contour interval selectbox — Page 03 Stage 1 pilot
+        ts_contour_interval = st.selectbox(
+            "Density contour interval (approx. σ0)",
+            options=[0.2, 0.5, 1.0],
+            index=2,  # default 1.0 kg m⁻³
+            format_func=lambda v: f"{v} kg m⁻³",
+            help=(
+                "Spacing between approximate σ0 reference contour lines. "
+                "These are visual reference guides, not pointwise sample density."
+            ),
+            key="p03_ts_contour_interval",
+        )
+        show_ts_density_contours = st.checkbox(
+            "Show density contours",
+            value=True,
+            help=(
+                "Show or hide the approximate σ0 reference contours. "
+                "They are visual reference guides, not pointwise sample density."
+            ),
+            key="p03_ts_show_density_contours",
+        )
+
         # --- 2. T-S図の描画とサイズ圧縮 ---
         
         # 【2026/03/11修正ポイント】選択された要素(target_item)にデータがない行を排除する
@@ -802,7 +828,79 @@ def main():
                 range=[df_plot_ts["Temperature_degC"].min()-1, df_plot_ts["Temperature_degC"].max()+1]
             )
         )
-    
+
+        # ---- Approximate σ0 reference contour overlay (Page 03 Stage 1 pilot) ----
+        # Grid bounded by the displayed axis range, clipped to the valid GSW
+        # σ0 input domain to match the app's existing quality-cleaning rules.
+        # Negative salinity from the axis must never reach gsw.sigma0.
+        _T_GSW_MIN_03, _T_GSW_MAX_03 = -5.0, 45.0   # Temperature_degC quality range
+        _S_GSW_MIN_03, _S_GSW_MAX_03 =  0.0, 50.0   # Salinity quality range
+
+        # Displayed axis limits (mirrors the range set in update_layout above)
+        _sal_ax_lo  = float(df_plot_ts["Salinity"].min()) * 0.95
+        _sal_ax_hi  = float(df_plot_ts["Salinity"].max()) * 1.05
+        _temp_ax_lo = float(df_plot_ts["Temperature_degC"].min()) - 1.0
+        _temp_ax_hi = float(df_plot_ts["Temperature_degC"].max()) + 1.0
+
+        # Clip to GSW valid domain
+        _sal_lo  = max(_sal_ax_lo,  _S_GSW_MIN_03)
+        _sal_hi  = min(_sal_ax_hi,  _S_GSW_MAX_03)
+        _temp_lo = max(_temp_ax_lo, _T_GSW_MIN_03)
+        _temp_hi = min(_temp_ax_hi, _T_GSW_MAX_03)
+
+        _ts_scatter_curve = 0  # fallback: no contour prepended
+        if show_ts_density_contours and _sal_lo < _sal_hi and _temp_lo < _temp_hi:
+            _sal_grid  = np.linspace(_sal_lo,  _sal_hi,  100)
+            _temp_grid = np.linspace(_temp_lo, _temp_hi, 100)
+            _Sg, _Tg = np.meshgrid(_sal_grid, _temp_grid)
+            # sigma0_approx: gsw.sigma0 called with Practical Salinity ≈ Absolute Salinity
+            # and in-situ temperature ≈ Conservative Temperature (approximate reference only)
+            _sigma0_approx = gsw.sigma0(_Sg, _Tg)
+            _s0_min = float(np.nanmin(_sigma0_approx))
+            _s0_max = float(np.nanmax(_sigma0_approx))
+            if np.isfinite(_s0_min) and np.isfinite(_s0_max) and _s0_max > _s0_min:
+                _contour_start = float(
+                    np.ceil(_s0_min / ts_contour_interval) * ts_contour_interval
+                )
+                _contour_end = float(
+                    np.floor(_s0_max / ts_contour_interval) * ts_contour_interval
+                )
+                if _contour_start <= _contour_end:
+                    _contour_trace = go.Contour(
+                        x=_sal_grid,
+                        y=_temp_grid,
+                        z=_sigma0_approx,
+                        contours=dict(
+                            coloring="lines",       # lines only, no fill
+                            start=_contour_start,
+                            end=_contour_end,
+                            size=ts_contour_interval,
+                            showlabels=True,
+                            labelfont=dict(size=9, color="rgba(100, 100, 100, 0.70)"),
+                        ),
+                        # For ``coloring='lines'``, Plotly derives line colors
+                        # from colorscale rather than line.color.
+                        colorscale=[
+                            [0.0, "rgba(165, 165, 165, 0.22)"],
+                            [1.0, "rgba(165, 165, 165, 0.22)"],
+                        ],
+                        autocolorscale=False,
+                        line=dict(width=1),
+                        showscale=False,            # no extra colorbar
+                        hoverinfo="none",           # no hover on contour lines
+                        showlegend=False,
+                        name="",
+                    )
+                    # Plotly only permits ``figure.data = ...`` assignments
+                    # that are permutations of existing traces. Add the new
+                    # contour first, then reorder that complete trace set so
+                    # the contour remains behind the scatter points.
+                    # This moves the scatter to curveNumber 1; update the
+                    # selected_point_indices call below accordingly.
+                    fig_fixed_TS.add_trace(_contour_trace)
+                    fig_fixed_TS.data = (fig_fixed_TS.data[-1],) + fig_fixed_TS.data[:-1]
+                    _ts_scatter_curve = 1
+        # ---- end contour overlay ----
 
         # ③ 表示枠（窓枠）の設定
         with envgeo_utils.bounded_container(850):
@@ -813,6 +911,12 @@ def main():
                 override_height=600,
                 override_width="100%",
             )
+        st.caption(
+            "Density contour lines are approximate σ0 reference contours "
+            "(Practical Salinity ≈ Absolute Salinity; "
+            "in-situ temperature ≈ Conservative Temperature). "
+            "Not pointwise sample density. Visual reference only."
+        )
         st.download_button(
             "Download interactive HTML",
             envgeo_utils.figure_to_self_contained_html(fig_fixed_TS),
@@ -821,9 +925,13 @@ def main():
             key="p03_TS_html_dl",
         )
         show_selection_tip()
-        
+
         # --- 【選択個数の処理】 ---
-        selected_indices = selected_point_indices(selected_points, len(df_plot_ts))
+        # Use _ts_scatter_curve (1 if contour was prepended, 0 otherwise) so that
+        # box/lasso selection identifies the correct scatter trace.
+        selected_indices = selected_point_indices(
+            selected_points, len(df_plot_ts), scatter_curve_number=_ts_scatter_curve
+        )
         if selected_indices:
             st.session_state.ts_selected_indices = selected_indices
             num_selected = len(selected_indices)

@@ -395,6 +395,19 @@ def main():
             help="Show or hide uploaded data points that have no value for the T-S color parameter.",
         )
 
+        # Density contour interval selector (Stage 1)
+        contour_interval = st.selectbox(
+            "Density contour interval (approx. σ0)",
+            options=[0.2, 0.5, 1.0],
+            index=1,  # default 0.5 kg m⁻³
+            format_func=lambda v: f"{v} kg m⁻³",
+            help=(
+                "Spacing between approximate σ0 reference contour lines. "
+                "These are visual reference guides, not pointwise sample density."
+            ),
+            key="ts_diagram_contour_interval",
+        )
+
 
     ##############################################################################
     # キャッシュクリア
@@ -703,23 +716,39 @@ def main():
             
         #######   密度曲線を描く ###########
         # data=pd.read_excel(excel_file, sheet_name=sheet_num)
-        ts=df_fig_ALL[['Temperature_degC', 'Salinity']]
-        df=ts.sort_values('Temperature_degC',ascending=True)
-        mint=np.min(df['Temperature_degC'])
-        maxt=np.max(df['Temperature_degC'])
-        mins=np.min(df['Salinity'])
-        maxs=np.max(df['Salinity'])
-        tempL=np.linspace(mint-5,maxt+5)
-        salL=np.linspace(mins-5,maxs+5)
-        Tg, Sg = np.meshgrid(tempL,salL)
-        sigma_theta = gsw.sigma0(Sg, Tg)
-
-        
-        cs = ax.contour(Sg, Tg, sigma_theta, colors='lightgrey', linestyles='dashed', zorder=0, levels=50)
-        
-
-        
-        plt.clabel(cs,fontsize=sld_font_size_tick,inline=True,fmt='%.1f',zorder=0, )
+        # Stage 1: contour grid bounded by the displayed axis range,
+        # clipped to the valid GSW σ0 input domain (matching existing quality bounds)
+        _T_GSW_MIN, _T_GSW_MAX = -5.0, 45.0   # Temperature_degC quality range
+        _S_GSW_MIN, _S_GSW_MAX =  0.0, 50.0   # Salinity quality range
+        _T_lo = max(float(lim_min_Y), _T_GSW_MIN)
+        _T_hi = min(float(lim_max_Y), _T_GSW_MAX)
+        _S_lo = max(float(lim_min_X), _S_GSW_MIN)
+        _S_hi = min(float(lim_max_X), _S_GSW_MAX)
+        if _T_lo < _T_hi and _S_lo < _S_hi:
+            tempL = np.linspace(_T_lo, _T_hi)
+            salL  = np.linspace(_S_lo, _S_hi)
+            Tg, Sg = np.meshgrid(tempL, salL)
+            # sigma0_approx: gsw.sigma0 called with Practical Salinity ≈ Absolute Salinity
+            # and in-situ temperature ≈ Conservative Temperature (approximate reference contours only)
+            sigma0_approx = gsw.sigma0(Sg, Tg)
+            _s0_min = float(np.nanmin(sigma0_approx))
+            _s0_max = float(np.nanmax(sigma0_approx))
+            if np.isfinite(_s0_min) and np.isfinite(_s0_max) and _s0_max > _s0_min:
+                _first = np.ceil(_s0_min / contour_interval) * contour_interval
+                contour_levels = np.arange(
+                    _first, _s0_max + contour_interval * 0.5, contour_interval
+                )
+                contour_levels = contour_levels[contour_levels <= _s0_max]
+                if len(contour_levels) >= 1:
+                    cs = ax.contour(
+                        Sg, Tg, sigma0_approx,
+                        colors='lightgrey', linestyles='dashed', zorder=0,
+                        levels=contour_levels,
+                    )
+                    plt.clabel(
+                        cs, fontsize=sld_font_size_tick,
+                        inline=True, fmt='%.1f', zorder=0,
+                    )
 
         ##############################################################################
         # Uploaded data overlay (always drawn last / 常に最前面)
@@ -879,6 +908,12 @@ def main():
     img.seek(0)
      
     st.pyplot(fig)
+    st.caption(
+        "Density contours: approximate σ0 reference grid "
+        "(Practical Salinity ≈ Absolute Salinity; "
+        "in-situ temperature ≈ Conservative Temperature). "
+        "Not pointwise sample density."
+    )
 
     btn = st.download_button(
        label="Download image",

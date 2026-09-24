@@ -30,7 +30,7 @@ The platform is designed to support both **exploratory data analysis** and **rep
 
 - 🌍 Interactive map visualization with adaptive zoom  
 - 📊 Depth profiles with gap-aware plotting  
-- 📈 Temperature–Salinity (T–S) diagrams with density contours (σθ)  
+- 📈 Temperature–Salinity (T–S) diagrams with approximate σ0 reference contours  
 - 📉 Regression analysis (e.g., salinity–δ¹⁸O relationships)  
 - 🧭 3D / 4D visualization of spatial–temporal structures  
 - 📂 Session-only browser uploads and optional persistent local `User Excel data` for comparison with reference datasets
@@ -109,15 +109,15 @@ Visualizer` is the upload-first entry point for quality review and simple
 2D--4D exploration; supported specialist pages also expose `Uploaded data` in
 their shared Data filtering controls.
 
-For repeated local work, place a researcher-owned workbook at
-`local_data/user_data.xlsx`, or set `ENVGEO_LOCAL_USER_DATA_PATH` to a CSV,
-XLSX, or XLS file. This is the always-loaded local user table: it is assigned
-the dataset name `User Excel data` and combined with each selected reference
-source in the same way as the former fixed local workbook. It therefore appears
-in Data filtering from app startup without requiring a browser upload. Files
-under `local_data/` are excluded from Git.
-After replacing or editing the local table, restart Streamlit or clear its data
-cache so the updated workbook is read.
+The repository bundles `local_data/user_data.xlsx` as a zero-value public
+sample for the always-loaded `User Excel data` workflow. It is assigned the
+dataset name `User Excel data` and combined with each selected reference source,
+so it appears in Data filtering from app startup without a browser upload. For
+researcher-owned measurements, either edit `local_data/user_data.xlsx` for
+local use or set `ENVGEO_LOCAL_USER_DATA_PATH` to a CSV, XLSX, or XLS file.
+Before committing or synchronizing a public copy, restore the zero-value sample
+and never commit research data. Restart Streamlit or clear its data cache after
+changing either table.
 
 The always-loaded `User Excel data` and browser `Uploaded data` are independent.
 A browser upload does not overwrite the local workbook; when both categories
@@ -442,7 +442,7 @@ Contour interpolation highlights large-scale oceanographic patterns and basin-sc
 
 ### Temperature–Salinity Diagram
 
-Temperature–salinity (T–S) relationships with overlaid density contours (σθ).  
+Temperature–salinity (T–S) relationships with overlaid approximate σ0 reference contours (Practical Salinity ≈ Absolute Salinity; in-situ temperature ≈ Conservative Temperature).  
 This visualization supports identification of water masses and examination of isotope–hydrography relationships.
 
 ![TS diagram](images/ts_diagram.png)
