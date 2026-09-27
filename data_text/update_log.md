@@ -2,7 +2,212 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## Unreleased documentation maintenance
+## Unreleased maintenance
+
+- Manuscript: removed the internal offline-development priority and the
+  unsupported collaborator-use claim from `paper.md`. Updated the Japan
+  conference record to four presentations and the manuscript date to
+  26 September 2026. The approximate 50,000-record and <30 MB descriptions
+  remain, as they reflect the current dataset and repository scale.
+
+- Manuscript: retained the detailed AI-usage disclosure in `paper.md` for
+  development from version 1.3 onward. Removed only the internal session-log,
+  model-version uncertainty, and internal TODO sentence.
+
+- Manuscript: established `paper.md` and `paper.bib` as the canonical
+  manuscript pair. Added the four verified research-impact records and their
+  citations to the canonical files. Removed the superseded `paper_revised.md`
+  and `paper_revised.bib` working pair to prevent ambiguity; the historical
+  draft remains available through Git history.
+
+- Cleanup: removed the unused `outputs/` directory, which contained only two
+  discarded user-workbook draft exports and Finder metadata.
+
+- Documentation cleanup: removed the superseded root-level offline-map sprint
+  report (2026-09-23). Current offline and degraded-network behavior is
+  maintained solely in `docs/offline_operation_log.md` and its Japanese
+  counterpart; Git history retains the implementation-era record.
+
+- Completed distribution-foundation Sprint 2D as a documentation-only design
+  review. Applied six Codex-confirmed corrections to the audit report:
+  (1) test result is 403 passed, 1 existing pytest deprecation warning, not a
+  skip; (2) `ENVGEO_OFFLINE` covers two separate concerns — explicit offline
+  launch (future feature) and test network isolation (separate, already
+  resolved via monkeypatch; `ENVGEO_OFFLINE` is not a test-fix tool);
+  (3) `home.py` `resolve_path()` delegates to `envgeo_assets.asset_path()`,
+  and `BASE_DIR` is an auxiliary base for relative image resolution in Home's
+  Markdown display, used in both `render_markdown_file()` and direct
+  `render_markdown_streamlit(..., base_dir=BASE_DIR)` calls for the English
+  and Japanese README — not a parallel asset loader;
+  (4) `--no-binary :all:` selects source distribution, not zip-import;
+  `importlib.resources` migration condition is non-filesystem loaders,
+  zipapp, or embedded distribution, not standard pip install; (5) `open_asset()`
+  is not added; (6) `data_beta/make_lightweight_gebco.py` is recorded as a
+  Sprint 3 package-data allowlist audit item. Confirmed ten Sprint 2D design
+  decisions in the bilingual distribution plan: standard pip/wheel distribution
+  with real files, `asset_path()` maintained, no `importlib.resources`
+  migration or `open_asset()`, Cartopy/GEBCO consumers keep real `Path` objects,
+  `BASE_DIR` role clarified, no persistent OS cache this sprint, explicit offline
+  launch deferred, GEBCO stays bundled, `envgeo-utils`/Earthquake/`src/` move
+  deferred, Sprint 3 to address dependency truth, clean install, and
+  package-data allowlist. No code, tests, configuration, dataset, or bundled
+  asset was changed.
+
+- Completed the local Sprint 2B–2C wheel proof without moving `home.py`,
+  `pages/`, or bundled assets. Added minimal experimental build metadata, an
+  installed `envgeo-seawater` launcher, focused packaging tests, and a
+  bilingual proof report. A Python 3.12 wheel installed outside the checkout,
+  included all 12 public pages and representative assets, excluded the local
+  environment-check page and generated files, passed Home/Page 34 read-only
+  installation checks, and started a healthy Streamlit server. Full suite:
+  **403 passed, 1 existing pytest deprecation warning**. This remains a local
+  proof; dependency ownership, Cloud configuration, resource/cache APIs, and
+  release packaging are unchanged.
+
+- Completed distribution-foundation Sprint 2A as a documentation-only design
+  gate. The bilingual plan now keeps the existing `home.py` plus sibling
+  `pages/` layout, preserves `asset_path()` during the initial wheel proof,
+  keeps GEBCO bundled, and defers `src/` migration, dependency-source changes,
+  OS cache/offline implementation, and shared `envgeo-utils` extraction. It
+  also defines the scope and acceptance gates for a local, non-release wheel
+  proof in Sprints 2B–2C. No code, dataset, Cloud configuration, or bundled
+  asset was changed.
+
+- Added bilingual external-dataset workbook notes
+  (`docs/external_dataset_workbook_notes*.md`). They record current,
+  verifiable workbook facts without claiming a complete raw-source diff:
+  citations, access dates, worksheet/row counts, and the NASA convention that
+  all rows use `Transect = Nasa_database` solely for application sub-dataset
+  selection. The notes do not contain private correspondence.
+- Updated those notes after comparing the supplied local source snapshots.
+  NASA's 25,514 source records are value-equivalent after common-schema header
+  mapping; only application fields, `Transect = Nasa_database`, and one manual
+  QC note are added. PAGES retains all 18,598 source rows and maps all 50
+  source columns; it adds common-schema fields and a short `reference` field.
+  That field is an author-and-year form extracted from `Publication citation`:
+  a project-side Python transformation creates `Surname (year)` or `Surname et
+  al. (year)` (intermediate field name `reference_short`), while the full
+  source citation remains in `reference_full`.
+  The comparison also documents date-formatted metadata stored as Excel serial
+  values (5,969 analysis-date cells and 9 station cells), without modifying
+  either workbook.
+
+- Added a bilingual, evidence-focused dataset redistribution audit
+  (`docs/dataset_redistribution_audit*.md`). It separates confirmed terms for
+  the public template/geospatial assets from third-party `dataset/` workbooks
+  whose redistribution evidence requires clear provenance. It records the
+  source, version, transformation, and citation fields to preserve in any
+  full-data package, and notes that NASA GISS temperature metadata
+  cannot support a blanket T–S Stage 2 TEOS-10 conversion.
+- Corrected that audit and the provenance inventory to point to the already
+  recorded source metadata: NASA GISS v1.22 URLs/citation/access date
+  (2026-03-01) in `NASA_references.md`, and PAGES/NCEI study URL,
+  DOI/citation/access date (2026-03-16) in `CoralHydro2_references.md`.
+  The remaining gap is redistribution terms and transformation evidence, not
+  a missing source or access-date record.
+- Completed an official terms review. The NASA GISS page permits download for
+  one's own research and requests citation, but provides no redistribution
+  licence and includes some originator-permission unpublished data. NCEI's
+  policy distinguishes federally produced public-domain data from non-federal
+  deposits whose creators may retain rights; the CC BY 4.0 on the Atwood et al.
+  article does not automatically license the NCEI dataset. The bilingual audit
+  records these evidence-based boundaries. Project policy is now explicit:
+  retain the cited scholarly-use distribution and provenance records, and make
+  no additional provider enquiry before release or publication.
+  Reassess only for an explicit restriction, reviewer concern, or
+  rights-holder request.
+- Corrected the handling note: the project workbooks do contain project-side
+  changes, so they must not be described as unmodified. The known NASA
+  convention is `Transect = Nasa_database` for every NASA row because the
+  source has no application-usable transect metadata; this is an application
+  grouping label, not a source-supplied oceanographic transect. A concise
+  source-to-workbook change record remains a future documentation task.
+
+- Archived the unused source-only workbook
+  `dataset/d18O_upload_data_tmp_seawater.xlsx` to
+  `../過去のパーツ/`. It had no code, test, document, or public-clone
+  reference. The workbook was moved rather than deleted; `dataset/` data still
+  require a dedicated review before any other change.
+
+- Corrected the English and Japanese geospatial-asset records to match the
+  bundled files and official GEBCO terms: actual coastline filenames/columns,
+  the ~13 MB derived GEBCO file, its `scipy.io.netcdf_file()` loader, the full
+  GEBCO 2025 DOI, public-domain status, attribution, and non-navigation
+  disclaimer.
+- Added a bilingual working provenance inventory
+  (`docs/provenance_inventory*.md`). It explicitly distinguishes assets with a
+  known redistribution direction from `dataset/` workbooks that still require
+  file-level source, version, transformation, and reuse evidence before any
+  full-data package or wheel can be claimed.
+
+- Added bilingual concise code guides (`docs/code_guide.md` and
+  `docs/code_guide_Japanese.md`) covering the role and safety boundary of
+  core modules, page scripts, resource directories, tests, and documentation.
+  Added a Japanese purpose/boundary note to `envgeo_assets.py`. Longer
+  explanations remain in `docs/` rather than duplicating every source line as
+  comments.
+
+- Hardened `envgeo_assets.asset_path()` to reject Windows-format absolute paths
+  on any OS: `C:/...`, `C:\\...` (drive + root), and `\\\\server\\share\\...` / `//server/share/...`
+  (UNC) now raise `ValueError('absolute')` regardless of the running OS.
+  Uses `pathlib.PureWindowsPath.is_absolute()` alongside `os.path.isabs()`.
+  Drive-relative paths such as `C:relative` are not rejected (per design).
+- Improved `test_result_is_under_app_root` to use `Path.relative_to()` instead
+  of `str.startswith()` — semantically correct and immune to prefix collisions.
+- Added regression tests: `test_rejects_windows_drive_forward_slash`,
+  `test_rejects_windows_drive_backslash`, `test_rejects_unc_backslash`, and
+  `test_allows_drive_relative_path`. Test count raised from 21 to **25 passed**.
+
+- Added `envgeo_assets.py` — a small, CWD-independent asset resolver (Sprint 1
+  of the distribution-foundation plan). `application_root()` anchors to this
+  module's own location; `asset_path(*parts, required=True)` returns an absolute
+  ``Path`` relative to that root, rejects absolute inputs and ``..`` traversal,
+  and raises ``FileNotFoundError`` with a descriptive message for missing required
+  assets. No directories were moved and no packaging configuration was added in
+  this sprint.
+- Migrated the following direct or CWD-relative paths to `envgeo_assets.asset_path()`:
+  `envgeo_utils.py`: `DEFAULT_LOCAL_USER_DATA_PATH`, `dataset/*.xlsx` (5 files),
+  coastline CSV lookup in `load_coastline_data()`, and the Page 01 cruise-track
+  GIF; `home.py`: `resolve_path()` now delegates to `asset_path(required=False)`,
+  covering the home video and all text/manual files; `pages/32`: `_NE50M_LAND_DIR`;
+  `pages/53`: `DEFAULT_GEBCO_PATH`; `pages/80`: cruise-track GIF.
+- Added `test/test_envgeo_assets.py`: initial coverage of root detection,
+  CWD-independence for representative assets (coastline CSVs, Natural Earth
+  shapefile, user-data sample, cruise-track GIF, GEBCO absent-ok), and rejection
+  of absolute paths and ``..`` traversal. The later cross-platform security
+  additions above expanded this file to **25 passing tests** against the source
+  checkout.
+- Not implemented in this sprint: `importlib.resources` / package-data lookup,
+  `pyproject.toml`, OS user-cache directory, physical relocation of `coastline/`,
+  `data_beta/`, or `dataset/`. These are deferred to Sprint 2 (resolver proof)
+  and Sprint 3 (package skeleton) per the design record.
+- Verified the complete suite in the supported Python 3.12 / Streamlit 1.63 /
+  Plotly 5.24 environment after the cross-platform path-security patch:
+  **397 passed, 1 existing pytest deprecation warning**. The warning is the
+  existing class-scoped fixture warning in `test/test_self_contained_html.py`,
+  not an asset-resolver failure.
+
+- Added a bilingual distribution-foundation audit and staged design record
+  (`docs/distribution_foundation_audit_and_plan*.md`). It establishes an
+  asset resolver and source-checkout compatibility as prerequisites for a
+  future `pyproject.toml` / `pip install git+...` workflow, rather than
+  extracting a cross-application core first.
+- Rechecked official GEBCO terms: the GEBCO Grid is public domain and permits
+  distribution and commercial use with attribution and the stated disclaimer.
+  The obsolete non-commercial wording in `docs/geospatial_assets.md` is now a
+  documented correction for the next documentation-maintenance sprint.
+
+- Fixed pandas future-compatibility handling for the tracked, zero-value
+  `local_data/user_data.xlsx` sample. Empty or all-NA local user tables are
+  now read but excluded from the reference-data concatenation, because they
+  contribute no observations. Non-empty local user tables continue to load as
+  `User Excel data`.
+- Added a regression test confirming that an empty configured user workbook
+  neither adds user rows nor emits a pandas `FutureWarning` while loading the
+  global reference dataset.
+- The separate upload-overlay edge cases that can still exercise pandas
+  all-NA concatenation warnings remain a future compatibility maintenance item;
+  they are unrelated to the public local-user sample workflow.
 
 - Clarified that `local_data/user_data.xlsx` is a tracked zero-value public
   sample. It may be edited for local researcher use, or an external file may be
@@ -64,6 +269,18 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ### Approximate σ0 Reference Contour Overlay — Page 03 Pilot (2026-09-24)
 
+- Finalized the pilot after manual review: the default interval is **1.0 kg
+  m⁻³** (0.2 and 0.5 remain available), and **Show density contours** hides
+  the reference layer without changing the plotted points.
+- Plotly derives contour-line colors from `colorscale` when
+  `contours.coloring="lines"`; the pilot therefore uses a fixed translucent
+  grey colorscale rather than `line.color`. Contour-value labels remain shown
+  in subdued grey at the user's request.
+- Moved the approximation note to immediately below the T-S figure and before
+  the interactive-HTML download action.
+- After the Page 34 Stage 1 and Page 03 pilot work, the supported Python 3.12
+  environment passed the full suite: **371 passed, 1 existing pytest
+  deprecation warning**.
 - Added a **Show density contours** checkbox so the approximate reference
   layer can be hidden without changing the data points. Lightened the contour
   lines and labels so they remain visual context rather than a dominant layer.
@@ -140,6 +357,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
   controls now remain available even when current filters exclude all uploads.
 - Clarified the Quick Visualizer empty-state message: users should use the
   sidebar to upload a file or select comparison data.
+- Expanded `CONTRIBUTING.md` to welcome issue reports, feature and application
+  proposals, and help with sustainable software development. It now also
+  documents expectations for shareable data, scientific changes, and pull
+  requests.
 
 ## 1.3.2 - 2026-09-22
 

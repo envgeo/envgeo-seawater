@@ -1,0 +1,4 @@
+# Development and CI dependencies. Runtime requirements remain in
+# requirements.txt; this file is not used by Streamlit Community Cloud.
+-r requirements.txt
+pytest>=8,<10

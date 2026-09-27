@@ -1,0 +1,62 @@
+# Sprint 3 package configuration.
+# requirements.txt remains the single direct-runtime dependency declaration for
+# local use and Streamlit Community Cloud. Setuptools derives wheel metadata
+# from it so a wheel install receives the same runtime dependencies.
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "envgeo-seawater"
+version = "1.3.3"
+description = "Interactive seawater isotope and hydrographic data visualization"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dynamic = ["dependencies"]
+
+[project.scripts]
+envgeo-seawater = "envgeo_seawater.envgeo_launcher:main"
+envgeo-seawater-check = "envgeo_seawater.envgeo_diagnostic_launcher:main"
+
+[tool.setuptools]
+packages = ["envgeo_seawater"]
+package-dir = {envgeo_seawater = "."}
+include-package-data = false
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+envgeo_seawater = [
+  "README.md",
+  "README_Japanese.md",
+  "pages/*.py",
+  "coastline/*.csv",
+  "coastline/natural_earth_50m_land/*",
+  "data/d18O_all.mp4",
+  "data/sites_20230515.gif",
+  "data/year_20230517.gif",
+  "data_beta/*.nc",
+  "data_text/*.md",
+  "dataset/*.xlsx",
+  "docs/*.md",
+  "docs/manual/*.md",
+  "docs/manual_Japanese/*.md",
+  "images/*",
+  "local_data/README*.md",
+  "local_data/user_data.xlsx",
+  "tools/*.py",
+]
+
+[tool.setuptools.exclude-package-data]
+envgeo_seawater = [
+  "**/.DS_Store",
+  "**/__pycache__/*",
+  "pages/99_Environment_Check.py",
+  "data_beta/*.py",
+  "Claude outputs/**",
+  "docs/wheel_proof_report*.md",
+  "vertical_section_review_log_*.md",
+]

@@ -29,6 +29,10 @@ cmocean==4.0.3
 # --- Geospatial & Oceanography ---
 # NOTE: For macOS (M1/M2), install 'proj' and 'cartopy' via Conda first:
 # conda install -c conda-forge proj pyproj cartopy -y
+# Pin pyproj to a Python 3.12 Apple Silicon wheel release.  Leaving it
+# unconstrained currently resolves a source-only release that requires a newer
+# system PROJ than the clean-venv baseline provides.
+pyproj==3.6.1
 gsw==3.6.20
 cartopy==0.25.0
 

@@ -83,13 +83,13 @@ Streamlit アプリでは、`home.py` が About、データソース、マニュ
 
 ## ローカル環境診断ツール
 
-配布パッケージには、ローカル環境確認用の Streamlit 診断ツールを含めています。Python パスや依存パッケージを確認するためのローカル用ツールです。診断結果は CSV または PDF レポートとして保存できます。
+インストール済み配布パッケージには、ローカル環境確認用の Streamlit 診断ツールを含めています。Python パスや依存パッケージを確認するためのローカル用ツールです。診断結果は CSV または PDF レポートとして保存できます。
 
 ```bash
-streamlit run tools/env_check_streamlit.py
+envgeo-seawater-check
 ```
 
-ローカル開発中は、`pages/99_Environment_Check.py` から同じ診断機能をサイドバーに表示できます。公開アプリで可視化ページだけを表示したい場合は、このページを除外または非表示にする方針です。
+source checkoutでは、同じ診断を`streamlit run tools/env_check_streamlit.py`で起動できます。開発用の`pages/99_Environment_Check.py`ラッパーは、インストール済みpackageや公開deploymentには含めないため、通常のアプリナビゲーションには公開可視化ページだけが表示されます。
 
 ---
 

@@ -16,6 +16,17 @@ pytest
 pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 ```
 
+## 継続的インテグレーション
+
+`.github/workflows/ci.yml`は、push、pull request、手動起動時にLinux／Python 3.12で動作する。
+`requirements-dev.txt`を導入してpytestを実行し、wheelを作成した後、checkout外の別venvへそのwheelを
+導入する。最後に、インストール先、公開12ページ、診断ツール、99ページとGEBCO生成scriptの非収録を
+確認する。
+
+CIの環境構築時にはパッケージindexから宣言済み依存関係を取得する。一方、テストとアプリ確認そのものは
+外部タイル、外部download、実ネットワークサービスを必要としないことを原則とする。ブラウザ上の視覚確認と
+オンライン地図の挙動は、引き続き手動QAで確認する。
+
 ## テストファイル
 
 ### `test/test_basic.py`

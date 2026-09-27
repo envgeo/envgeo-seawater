@@ -2,7 +2,162 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
-## 未リリース: 文書整備
+## 未リリース: 保守・文書整備
+
+- 原稿: `paper.md` から内部TODOに当たるoffline開発優先の記述と、根拠を示しにくい
+  協力者利用の記述を削除した。日本国内の学会発表は4件に更新し、原稿日付を
+  2026年9月26日へ変更した。約50,000件と30 MB未満の記述は、現時点のデータ・
+  リポジトリ規模を反映するため維持した。
+
+- 原稿: `paper.md` のAI使用開示は、version 1.3以降の開発における詳細な記述を維持した。
+  内部セッションの記録、モデル版の確認状況、内部TODOを含む一文だけを削除した。
+
+- 原稿: `paper.md` と `paper.bib` を正本の原稿組として設定した。検証済みの研究波及効果に
+  関する書誌4件と本文中の引用を正本へ追加した。混同を避けるため、旧作業原稿
+  `paper_revised.md`／`paper_revised.bib` を削除した。履歴版はGit履歴から参照できる。
+
+- 整理: 使用しなかったユーザーExcelの試作出力2件とFinder管理ファイルのみを含む
+  `outputs/` ディレクトリを削除した。
+
+- 整理: ルート直下の旧オフライン地図スプリント報告（2026-09-23）を削除した。
+  現行のoffline／低速ネットワーク時の仕様・制約・検証範囲は
+  `docs/offline_operation_log.md` および日本語版を正本として維持する。実装当時の
+  記録はGit履歴から参照できる。
+
+- 設計: 配布基盤Sprint 2Dを文書のみの設計レビューとして完了した。監査レポートへ
+  Codex確認済み訂正を6件適用した。(1) テスト結果は403 passed、既存pytest
+  将来非推奨warning 1件であり、skipは0件。(2) `ENVGEO_OFFLINE`は二つの別問題：
+  明示的offline起動（将来機能）とテストのネットワーク分離（別問題、monkeypatchで解決済み。
+  `ENVGEO_OFFLINE`はテスト修正ツールではない）。(3) `home.py`の`resolve_path()`は
+  `envgeo_assets.asset_path()`に委譲しており、`BASE_DIR`はHomeのMarkdown表示における
+  相対画像の補助基準であり、`render_markdown_file()`への引数としてだけでなく英日READMEの
+  `render_markdown_streamlit(..., base_dir=BASE_DIR)`直接呼び出しでも使用される。
+  並行する資産ローダーではない。
+  (4) `--no-binary :all:`はソース配布選択であり、zip-importではない。
+  `importlib.resources`移行条件は非ファイルシステムloader・zipapp・組込み配布であり、
+  通常のpipインストールではない。(5) `open_asset()`は追加しない。
+  (6) `data_beta/make_lightweight_gebco.py`をSprint 3のpackage data allowlist
+  監査項目として記録。英日配布計画へSprint 2D設計判断10件を確定記録した：
+  標準pip/wheelで実ファイル展開、`asset_path()`維持、`importlib.resources`移行なし、
+  Cartopy／GEBCO利用箇所は実`Path`を維持、`BASE_DIR`の役割明確化、
+  永続OSキャッシュなし、明示的offline起動保留、GEBCO同梱維持、
+  `envgeo-utils`／Earthquake／`src/`移動保留、Sprint 3で依存関係正本・クリーンインストール・
+  package data allowlist監査を行う。コード、テスト、設定、dataset、同梱資産は変更していない。
+
+- 実証: `home.py`、`pages/`、同梱資産を移動せず、ローカルSprint 2B〜2C wheel実証を
+  完了した。最小限の実験用build metadata、インストール後の`envgeo-seawater`起動コマンド、
+  package焦点テスト、英日実証レポートを追加した。Python 3.12 wheelをcheckout外へ導入し、
+  公開ページ12件と代表資産の収録、ローカル環境診断ページ・生成物の除外、読取り専用環境での
+  Home／Page 34、Streamlit serverの正常起動を確認した。全テストは
+  **403 passed、既知のpytest将来非推奨warning 1件**。これはローカル実証であり、依存関係の
+  正本、Cloud設定、resource／cache API、公開package方針は変更していない。
+
+- 設計: 配布基盤Sprint 2Aを文書のみの設計ゲートとして完了した。英日計画で、現行の
+  `home.py`と同階層`pages/`を維持し、最初のwheel実証では`asset_path()`とGEBCO同梱を
+  維持する方針を確定した。`src/`移動、依存関係の正本変更、OS cache／offline実装、
+  `envgeo-utils`共通package分離は保留する。Sprint 2B〜2Cで行うローカル・非公開wheel実証の
+  範囲と合格条件も明記した。コード、dataset、Cloud設定、同梱資産は変更していない。
+
+- 追加: 外部データworkbookの現行状態メモを英日で追加した
+  （`docs/external_dataset_workbook_notes*.md`）。完全な元データ差分とは主張せず、確認可能な
+  現行事実のみ（引用、取得日、worksheet／行数、NASA全行の
+  `Transect = Nasa_database`がサブデータセット選択専用であること）を記録した。私的な連絡は含めない。
+- 更新: 提供されたローカル元データスナップショットと照合して同メモを具体化した。NASAの25,514行は
+  共通スキーマの列名対応後に値が等価であり、追加はアプリ側フィールド、`Transect = Nasa_database`、
+  手入力QCメモ1件である。PAGESは18,598行と元の50列を保持・対応付け、共通スキーマ列と短縮
+  `reference`列を追加している。この列は`Publication citation`から著者名・年を抽出したもので、
+  プロジェクト側Python処理が単著では`Surname (year)`、複数著者では`Surname et al. (year)`を作る
+  （中間列名は`reference_short`）。長い元引用は`reference_full`として保持する。PAGESでは日付形式のメタデータがExcel日付シリアル値として保存される
+  箇所（分析日5,969セル、Station 9セル）も記録した。いずれのworkbookも変更していない。
+
+- 追加: 英日併記のデータセット再配布根拠監査
+  （`docs/dataset_redistribution_audit*.md`）を追加した。公開テンプレート・地理資産で
+  確認できた規約と、来歴を明確に維持すべき第三者`dataset/`workbookを分離した。全データpackageにも
+  保持すべき出典・版・変換・引用のファイル単位記録を示した。またNASA GISSの
+  水温メタデータは、T–S Stage 2のTEOS-10変換を一律適用できる根拠にならないことを記録した。
+- 修正: 同監査と来歴一覧を、すでに`data_text`に記録されていた取得情報へ正しく接続した。
+  NASA GISS v1.22のURL・引用・アクセス日（2026-03-01）は`NASA_references.md`、
+  PAGES/NCEIのstudy URL・DOI／引用・アクセス日（2026-03-16）は
+  `CoralHydro2_references.md`を参照する。残る不足は取得元・取得日ではなく、再配布規約と
+  変換根拠である。
+- 確認: 公式規約を確認した。NASA GISSページは自身の研究のためのダウンロードと引用を示すが、
+  再配布ライセンスは示さず、出所者の許可による未公表データも一部含む。NCEI規約は連邦作成の
+  パブリックドメインデータと、権利を保持し得る非連邦提供データを区別する。Atwood et al.論文の
+  CC BY 4.0はNCEIデータセットを自動で許諾するものではない。この根拠に基づく判断境界と次の
+  確認事項を英日監査メモへ記録した。プロジェクト方針として、引用を伴う学術利用の配布と来歴記録を
+  維持し、公開リリースおよび論文投稿まで提供者への追加問い合わせは行わない。明示的な制限、
+  査読者からの指摘、または権利者からの要請が生じた場合にのみ見直す。
+- 修正: project workbookにはアプリ側の変更があるため、未変更とは記載しない。判明しているNASAの規約は、
+  元データにアプリで利用可能なtransectメタデータがないため、NASA全行に
+  `Transect = Nasa_database`を設定することである。これは元データ由来の海洋学的transectではなく、
+  アプリ側のグループ化ラベルである。元データ対workbookの簡潔な変更記録は今後の文書化項目とする。
+
+- 整理: 未使用の作業版限定workbook
+  `dataset/d18O_upload_data_tmp_seawater.xlsx`を`../過去のパーツ/`へ退避した。
+  コード、テスト、文書、公開クローンからの参照は確認されなかった。削除ではなく移動であり、
+  他の`dataset/`データは引き続き専用レビューなしに変更しない。
+
+- 修正: 英日地理資産文書を、同梱ファイルとGEBCO公式規約に合わせた。海岸線の実ファイル名・列名、
+  約13 MBの派生GEBCO格子、`scipy.io.netcdf_file()`による読込み、GEBCO 2025の完全DOI、
+  パブリックドメイン性、帰属、非航法注意を記録した。
+- 追加: 英日併記の作業用来歴一覧（`docs/provenance_inventory*.md`）を追加した。再配布の方向性が
+  明確な資産と、全データを含むpackageやwheelを主張する前に出典・版・変換・再利用根拠が必要な
+  `dataset/`workbookを明確に分けた。
+
+- 追加: 英日併記の簡潔なコード案内（`docs/code_guide.md`、
+  `docs/code_guide_Japanese.md`）を追加した。中心モジュール、各ページ、資産ディレクトリ、
+  テスト、文書化の役割と安全境界を記載した。`envgeo_assets.py`にも日本語の目的・範囲を追記した。
+  長い解説は、各行のコメントを重複させず`docs/`へ置く方針とする。
+
+- 堅牢化: `envgeo_assets.asset_path()` が、実行OS に関係なく Windows 形式の絶対パスを
+  拒否するよう修正した。`C:/...`・`C:\\...`（ドライブ＋ルート）および
+  `\\\\server\\share\\...`／`//server/share/...`（UNC）は `ValueError('absolute')` を送出する。
+  `pathlib.PureWindowsPath.is_absolute()` を `os.path.isabs()` と併用して実装した。
+  `C:relative` のようなドライブ相対パスは仕様どおり拒否しない。
+- 改善: `test_result_is_under_app_root` の検証を `str.startswith()` から
+  `Path.relative_to()` へ変更した（プレフィックス衝突に対し意味的に正確）。
+- 追加: `test_rejects_windows_drive_forward_slash`・`test_rejects_windows_drive_backslash`・
+  `test_rejects_unc_backslash`・`test_allows_drive_relative_path` の回帰テストを追加した。
+  テスト件数：21 → **25 件すべてパス**。
+
+- 追加: `envgeo_assets.py`（配布基盤計画・第1スプリント）を新規作成した。
+  `application_root()` はモジュール自身の場所を基準にアプリルートを決定し、
+  `asset_path(*parts, required=True)` はそのルートからの相対パスを絶対 `Path` で
+  返す。絶対パスと `..` によるルート外参照を拒否し、`required=True` で存在しない
+  場合は分かりやすい `FileNotFoundError` を送出する。このスプリントでディレクトリの
+  移動やパッケージング設定の追加は行っていない。
+- 変更: 以下の直接パス・CWD 相対パスを `envgeo_assets.asset_path()` 経由に移行した。
+  `envgeo_utils.py`: `DEFAULT_LOCAL_USER_DATA_PATH`、`dataset/*.xlsx`（5件）、
+  `load_coastline_data()` 内の海岸線CSV パス、Page 01 クルーズトラックGIF。
+  `home.py`: `resolve_path()` が `asset_path(required=False)` へ委譲するよう変更
+  （ホーム動画・テキスト・マニュアル類を網羅）。
+  `pages/32`: `_NE50M_LAND_DIR`。`pages/53`: `DEFAULT_GEBCO_PATH`。
+  `pages/80`: クルーズトラックGIF。
+- 追加: `test/test_envgeo_assets.py`。初期範囲として、ルート検出・CWD 非依存性
+  （海岸線CSV・Natural Earth SHP・ユーザーデータサンプル・GIF・GEBCO 不在OK）・
+  絶対パス拒否・`..` 参照拒否を検証。上記のクロスプラットフォーム安全性追加後は、
+  **25 件すべてパス**（ソースチェックアウト環境）。
+- 未実施: `importlib.resources` /パッケージデータ参照、`pyproject.toml`、
+  OS ユーザーキャッシュディレクトリ、`coastline/`・`data_beta/`・`dataset/` の
+  物理移動。これらは設計記録に従い Sprint 2（リゾルバ検証）・Sprint 3
+  （パッケージスケルトン）以降で実施する。
+- 確認: クロスプラットフォームのパス安全性修正後、対応環境
+  （Python 3.12 / Streamlit 1.63 / Plotly 5.24）で全テストを実行し、
+  **397 passed、既知のpytest将来非推奨警告1件**を確認した。警告は
+  `test/test_self_contained_html.py`のclass-scoped fixtureに関する既存項目であり、
+  資産ローダーの失敗ではない。
+
+- 追加: 英日併記の配布基盤監査・段階的設計記録
+  （`docs/distribution_foundation_audit_and_plan*.md`）を追加した。将来の
+  `pyproject.toml`／`pip install git+...`に先立ち、資産ローダーと
+  ソースチェックアウト互換を整える方針を定めた。アプリ横断の共通コア化は先行しない。
+- 確認: GEBCO公式規約を再確認し、GEBCO Gridは帰属・免責条件の下で配布・商用利用を
+  含めて許可されるパブリックドメイン資産であることを記録した。
+  `docs/geospatial_assets.md`の古い「非商用」表現は、次の文書保守スプリントで訂正する。
+
+- 修正: Git管理するゼロ値の公開サンプル`local_data/user_data.xlsx`について、pandasの将来互換性を改善した。空または全NAのローカルユーザー表は読み込むが、観測値を持たないため参照データとの結合対象から除外する。値を持つローカルユーザー表は従来どおり`User Excel data`として読み込む。
+- 追加: 空の指定ユーザーworkbookが、Global参照データ読み込み時にユーザー行を追加せず、pandasの`FutureWarning`も出さないことを確認する回帰テストを追加した。
+- 保留: Uploaded dataのオーバーレイ境界ケースで発生しうる、別経路のpandas全NA結合警告は、公開`local_data`サンプルとは無関係な将来互換性の保守項目として切り分ける。
 
 - 変更: `local_data/user_data.xlsx` はGit管理するゼロ値の公開サンプルであることを明確化した。研究者自身のデータはローカル利用のためにこの表へ入力するか、`ENVGEO_LOCAL_USER_DATA_PATH` で別ファイルを指定する。commitまたは公開用同期前にはゼロ値サンプルへ戻す。
 - 追加: 引用・ライセンス・リリース準備の英日チェックリストを追加した。
@@ -52,6 +207,15 @@
 
 ### 近似 σ0 参照等値線オーバーレイ — Page 03 パイロット（2026-09-24）
 
+- 手動確認後にパイロット仕様を確定した。既定間隔は**1.0 kg m⁻³**とし
+  （0.2、0.5も選択可能）、**Show density contours**で点群を変えずに
+  参照線だけを非表示にできる。
+- Plotlyでは`contours.coloring="lines"`時に線色が`colorscale`から決まるため、
+  `line.color`ではなく固定の半透明グレーcolorscaleを使う。ユーザーの希望により、
+  等値線の数値ラベルは控えめなグレーで表示する。
+- 近似である旨の注記を、T-S図の直下かつInteractive HTMLダウンロードの前へ移動した。
+- Page 34 Stage 1とPage 03パイロット後、対応するPython 3.12環境で全テストを
+  確認した：**371 passed、既知のpytest将来非推奨警告1件**。
 - 追加: **Show density contours** チェックボックスにより、点群を変えずに近似参照線を
   非表示にできるようにした。等値線とラベルの色・不透明度を下げ、主表示ではなく文脈情報
   として見えるよう調整した。
@@ -109,6 +273,7 @@
 - 修正: `User Data Check & Quick Visualizer` の2D地図でマウスホイールズームが動かず、ページスクロールになる問題を修正。Plotly地図の`scrollZoom`を有効化し、設定を守る回帰テストを追加。
 - 改善: Quick Visualizerのサイドバーで、`Uploaded marker style`をData filteringの前へ移動し、他のアップロード対応ページと順序を統一。現在のフィルターでアップロード行が0件になっても、マーカー設定を利用できるようにした。
 - 改善: Quick Visualizerでデータがない場合の案内に、サイドバーからCSV/XLSXをアップロードするか、比較データを選ぶことを明記。
+- 文書: `CONTRIBUTING.md`を拡充し、不具合報告、機能・新しい応用の提案、継続的なソフトウェア開発への助言・協力を歓迎する方針を追加。共有可能なデータ、科学的な変更、PRの作法も明記。
 
 ## 1.3.2 - 2026-09-22
 

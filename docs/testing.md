@@ -16,6 +16,20 @@ For a quick check during development, run the core utility and repository-health
 pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 ```
 
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on Linux with Python 3.12 for pushes, pull
+requests, and manual dispatch. It installs `requirements-dev.txt`, runs the
+pytest suite, builds a wheel, then installs that wheel in a separate venv from
+outside the checkout. The final check verifies the installed package location,
+the 12 public pages, the diagnostic tool, and the absence of page 99 and the
+GEBCO-generation script.
+
+Dependency installation necessarily uses the package index during CI setup.
+The test and application checks themselves must not require external tiles,
+downloads, or live network services. Browser-based visual checks and online
+map behaviour remain manual QA.
+
 ## Test Files
 
 ### `test/test_basic.py`

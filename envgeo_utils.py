@@ -72,6 +72,7 @@ import math
 import re
 import unicodedata
 from pathlib import Path
+import envgeo_assets  # CWD-independent asset resolver (Sprint 1)
 from datetime import datetime
 
 import warnings # for M1/M2 Mac
@@ -423,7 +424,7 @@ UPLOAD_SESSION_DATA_KEY = "envgeo_uploaded_data"
 UPLOAD_SESSION_FILENAME_KEY = "envgeo_uploaded_filename"
 LOCAL_USER_DATA_PATH_ENV = "ENVGEO_LOCAL_USER_DATA_PATH"
 LOCAL_USER_DATA_DISABLE_ENV = "ENVGEO_DISABLE_LOCAL_USER_DATA"
-DEFAULT_LOCAL_USER_DATA_PATH = Path(__file__).resolve().parent / "local_data" / "user_data.xlsx"
+DEFAULT_LOCAL_USER_DATA_PATH = envgeo_assets.asset_path("local_data/user_data.xlsx", required=False)
 INTEGRATED_EMBEDDED_PAGE_KEY = "envgeo_integrated_embedded_page"
 
 
@@ -1219,14 +1220,14 @@ def load_isotope_data(ref_data, sheet_num=0):
     #############################################################
     
     # ECS-Japan Sea
-    file_01 = 'dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx'
+    file_01 = envgeo_assets.asset_path('dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx')
     # around Japan
-    file_02 = 'dataset/11_AROUND_JAPAN_PUB_20260305.xlsx'
+    file_02 = envgeo_assets.asset_path('dataset/11_AROUND_JAPAN_PUB_20260305.xlsx')
     
     # Global
-    file_03 = 'dataset/71_GLOBA_NASA_20260226.xlsx'
-    file_04 = 'dataset/71_GLOBAL_Atwood_et_al_2026.xlsx' 
-    file_05 = 'dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx'
+    file_03 = envgeo_assets.asset_path('dataset/71_GLOBA_NASA_20260226.xlsx')
+    file_04 = envgeo_assets.asset_path('dataset/71_GLOBAL_Atwood_et_al_2026.xlsx')
+    file_05 = envgeo_assets.asset_path('dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx')
 
     # Optional always-loaded user table for local operation.
     # ローカル実行時に常時読み込む任意のユーザー表
@@ -1252,35 +1253,42 @@ def load_isotope_data(ref_data, sheet_num=0):
     df5 = pd.read_excel(file_05)
     df5['Dataset'] = 'Global (other reports)'
 
-    df_user_excel = pd.DataFrame()
+    df_user_excel = None
     if file_user_excel is not None:
         try:
             # Match the former local-workbook structure: read the table beside
             # the bundled sources, assign its Dataset category, concatenate it
             # below, then apply the shared cleaning pipeline to the full frame.
-            df_user_excel = read_local_user_table(file_user_excel)
-            df_user_excel['Dataset'] = USER_EXCEL_DATA_LABEL
+            candidate_user_excel = read_local_user_table(file_user_excel)
+            # The bundled public template intentionally contains no rows.
+            # Do not add an empty or all-NA table to pd.concat(): newer pandas
+            # versions warn that their dtype inference for such inputs will
+            # change, while the table contributes no observations.
+            if not candidate_user_excel.dropna(how="all").empty:
+                candidate_user_excel['Dataset'] = USER_EXCEL_DATA_LABEL
+                df_user_excel = candidate_user_excel
         except Exception as exc:
             # A local configuration error must not prevent public data loading.
             st.warning(f"Local user Excel data could not be loaded: {exc}")
 
     # Browser uploads remain session-only. The optional local user table is an
     # always-loaded dataset, matching the former local-workbook workflow.
-    if ref_data == data_source_JAPAN_SEA:  
-        df = pd.concat([df1, df_user_excel], ignore_index=True)
+    if ref_data == data_source_JAPAN_SEA:
+        frames = [df1]
         
-    elif ref_data == data_source_AROUND_JAPAN:  
-        df = pd.concat([df1, df2, df_user_excel], ignore_index=True)
+    elif ref_data == data_source_AROUND_JAPAN:
+        frames = [df1, df2]
 
         
-    elif ref_data == data_source_GLOBAL: 
-        df = pd.concat(
-            [df1, df2, df3, df4, df5, df_user_excel],
-            ignore_index=True,
-        )
+    elif ref_data == data_source_GLOBAL:
+        frames = [df1, df2, df3, df4, df5]
         
     else:
         return pd.DataFrame()  # Return empty DF as fallback
+
+    if df_user_excel is not None:
+        frames.append(df_user_excel)
+    df = pd.concat(frames, ignore_index=True)
 
 
 
@@ -1349,10 +1357,8 @@ def load_coastline_data(ref_data, resolution="50m"):
         )
         return [], []
 
-    coastline_path = (
-        Path(__file__).resolve().parent
-        / "coastline"
-        / coastline_files[resolution]
+    coastline_path = envgeo_assets.asset_path(
+        "coastline", coastline_files[resolution]
     )
 
     try:
@@ -2507,7 +2513,7 @@ def sidebar_filter_and_display(
         with st.expander("Area map: Kodama et al.(2024)", expanded=False):
             st.write('Cruise tracks and study area (2015–2021)')
             st.caption('Click top right to expand.')
-            st.image("data/sites_20230515.gif")
+            st.image(str(envgeo_assets.asset_path("data/sites_20230515.gif")))
 
 
             

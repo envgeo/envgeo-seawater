@@ -87,17 +87,19 @@ The former standalone about page was merged into `home.py`.
 
 ## Local Diagnostic Tool
 
-The package includes a local Streamlit-based environment checker. It is intended
-for local use when confirming Python paths and installed dependency versions.
-The diagnostic results can be exported as CSV or PDF reports:
+The installed package includes a local Streamlit-based environment checker. It
+is intended for local use when confirming Python paths and installed dependency
+versions. The diagnostic results can be exported as CSV or PDF reports:
 
 ```bash
-streamlit run tools/env_check_streamlit.py
+envgeo-seawater-check
 ```
 
-For local development, `pages/99_Environment_Check.py` can also expose the same
-diagnostic workflow in the Streamlit sidebar. It should be excluded or hidden
-from public deployment if the public app should only show visualization pages.
+In a source checkout, the equivalent command is
+`streamlit run tools/env_check_streamlit.py`. The development-only
+`pages/99_Environment_Check.py` wrapper is not included in the installed
+package or public deployment, so the normal application navigation contains
+only public visualization pages.
 
 ---
 

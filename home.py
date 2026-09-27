@@ -11,6 +11,7 @@ Last updated: 2026-09-23
 import streamlit as st
 import re
 from pathlib import Path
+import envgeo_assets  # CWD-independent asset resolver (Sprint 1)
 
 import envgeo_utils
 
@@ -70,7 +71,8 @@ def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> Non
 
 
 def resolve_path(*parts: str) -> Path:
-    return BASE_DIR.joinpath(*parts)
+    """Resolve a path relative to the application root via envgeo_assets."""
+    return envgeo_assets.asset_path(*parts, required=False)
 
 
 def read_text_file(path: Path) -> str:
@@ -179,6 +181,11 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
+### Post-v1.3.3 maintenance updates (2026-09-24)
+
+- Clarified that T–S density contours are approximate σ0 reference contours, and added selectable contour intervals. A full TEOS-10 (SA–CT) calculation mode remains planned work.
+- Added an optional approximate σ0 contour overlay pilot to the interactive T–S view on page 03, without changing its existing point colour, hover, or selection workflow.
+
 ### Version 1.3.3 (2026-09-23)
 
 - Added offline-safe Plotly map behaviour: local coastline overlays remain visible when web tiles are unavailable, while `Coastline (offline)` provides a tile-free white-background map.
@@ -193,7 +200,7 @@ def render_update_history() -> None:
 - Added `User Data Check & Quick Visualizer` as the public upload-first page for quality review, missing-value checks, shared filtering, 2D/3D/4D exploration, 2D maps, geographic 3D, and filtered CSV export.
 - Improved Vertical Section Visualizer with shared upload filtering, uploaded-data section inputs, target-parameter availability summaries, and configurable readable colorbars. Its interpolation outputs remain experimental.
 - Updated tab styling for Streamlit 1.63, kept the Plotly 5.24 baseline, and expanded targeted regression and AppTest coverage.
-- Replaced the fixed legacy workbook with a configurable, Git-ignored always-loaded local table labeled `User Excel data`; it is appended to each selected reference source while browser uploads remain separate.
+- Replaced the fixed legacy workbook with a configurable always-loaded table labeled `User Excel data`; the bundled zero-value public sample is used by default, while researcher-owned data are selected from an external path. Browser uploads remain separate.
 
 ### Version 1.3.1 (2026-09-19)
 
