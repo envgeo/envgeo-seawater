@@ -4,6 +4,12 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased maintenance
 
+- Distribution documentation: confirmed the selected scholarly-use package
+  scope includes every current `dataset/*.xlsx` workbook. Source citations,
+  access/provenance records, and documented schema or display transformations
+  remain attached to the collection; inclusion does not claim ownership of
+  third-party records. No workbook data were changed for this decision.
+
 - Manuscript: removed the internal offline-development priority and the
   unsupported collaborator-use claim from `paper.md`. Updated the Japan
   conference record to four presentations and the manuscript date to

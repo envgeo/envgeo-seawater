@@ -29,6 +29,9 @@ GEBCO、ゼロ値User Excelテンプレート、診断ツール本体だけを�
 
 - `dataset/*.xlsx`の技術的な収録確認と再配布／公開判断を分離し、このpackage作業を理由に
   データを無断で除外・公開しない。
+- 現行の判断（2026-09-28）：現行の全`dataset/*.xlsx` workbookを学術利用packageへ含める。
+  各workbookの出典引用と来歴／変換記録を維持し、同梱は所有関係を移転せず、将来のデータの
+  取扱いを自動的に決めるものでもない。
 - `pages/99_Environment_Check.py`は除外する。`pages/`内にあると、インストール版と
   Cloud版のどちらでも自動的にナビゲーションへ表示されるためである。
 - 99ページを含めず、明示的なcommandから診断ツールを使えるようにする。通常の起動では
@@ -95,6 +98,35 @@ CIは環境構築時に宣言済み依存関係を取得してよいが、テス
 local user dataを無効にしてテストを実行し、wheelを作成して、checkout外の隔離環境へのwheel導入を検証する。
 wheelは確認用にworkflow artifactとして保存するだけで、公開・Releaseには使用しない。Cloud設定は変更して
 いない。WindowsとIntel Macは、対応を表明する前の手動smoke test対象として残す。
+最初の成功workflow runは2026-09-27の#3（4分25秒）であり、test suite、wheel作成、隔離導入検証、
+wheel artifact保存を完了した。
+
+### Community Cloud 手動QA（未実施）
+
+これはwheelとCIの試験とは別の、ブラウザ上で行う受入確認である。現在の公開案内では、安定版は
+`envgeo/seawater_map`からの`envgeo-seawater-map.streamlit.app`、開発／公開前版は
+`envgeo/envgeo-seawater`からの`envgeo-seawater-pre.streamlit.app`として案内されている。
+結果を記録する前に、Streamlitのdeployment設定で実際のrepository、branch、revisionを確認する。
+wheel設定からCloudの構成を推測してはならない。
+
+開発／公開前deploymentについて、確認日、URL、deploymentのrepository・branch・revision、表示された
+errorを記録し、次を確認する。
+
+- Homeが開き、主要ナビゲーションを利用できる。
+- サイドバーには意図した公開ページだけが表示され、`99_Environment_Check.py`が表示されない。
+- Mapping、T-S Diagram、Depth Profile、および現在公開している場合はIntegrated Visualizer betaが、
+  アプリケーションerrorなく開いて描画される。
+- データセット選択と`Apply settings`で代表ビューが更新される。
+- オンライン地図タイルや外部サービスは、CIの要件ではなく、オンライン可用性として別に観察・記録する。
+- local filesystem path、private user data、token、診断専用情報がdeployment上に表示されない。
+
+#### 手動QA記録（2026-09-28）
+
+開発／公開前deploymentを手動確認した。Homeが開き、sidebarに`99_Environment_Check.py`は表示されず、
+Mapping、T-S Diagram、Depth Profileはアプリケーションerrorなく開いた。データセット選択と
+`Apply settings`により代表ビューが更新され、オンライン地図タイルも表示された。通常利用の範囲では
+application errorは観察されなかった。error詳細を確認するために意図的にerrorを起こすことは手動QAの
+対象にしない。private dataと診断情報の除外は、Release監査とsource/package確認で扱う。
 
 ## Releaseの境界
 

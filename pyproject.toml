@@ -40,6 +40,8 @@ envgeo_seawater = [
   "data/year_20230517.gif",
   "data_beta/*.nc",
   "data_text/*.md",
+  # Current cited scholarly-use dataset collection; provenance and
+  # transformation records are maintained in docs/.
   "dataset/*.xlsx",
   "docs/*.md",
   "docs/manual/*.md",

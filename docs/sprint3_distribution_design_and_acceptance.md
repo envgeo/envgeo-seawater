@@ -32,6 +32,10 @@ and the diagnostic tool implementation.
 - Keep the technical inclusion of `dataset/*.xlsx` separate from any
   redistribution or public-release decision; do not silently exclude or
   publish data as a consequence of packaging work.
+- Current decision (2026-09-28): include all current `dataset/*.xlsx`
+  workbooks in the scholarly-use package. Preserve each workbook's source
+  citation and provenance/transform record; inclusion does not transfer
+  ownership and does not automatically decide the treatment of future data.
 - Exclude `pages/99_Environment_Check.py`: a script in `pages/` appears
   automatically in both installed and Cloud navigation.
 - Include the diagnostic tool without page 99 and expose it through an explicit
@@ -115,6 +119,45 @@ isolated wheel install from outside the checkout. It uploads the wheel as a
 workflow artifact for inspection; it does not publish or release it. The
 workflow makes no Cloud configuration change. Windows and Intel-macOS remain
 manual smoke-test targets before their support status is declared.
+The first successful workflow run was #3 on 2026-09-27 (4 minutes 25 seconds),
+including the test suite, wheel build, isolated-install verification, and wheel
+artifact upload.
+
+### Pending Community Cloud manual QA
+
+This is a browser-based acceptance check, separate from wheel and CI testing.
+The current public site identifies `envgeo-seawater-map.streamlit.app` from
+`envgeo/seawater_map` as the stable demo and
+`envgeo-seawater-pre.streamlit.app` from `envgeo/envgeo-seawater` as the
+development/pre-release demo. Confirm the actual repository, branch, and
+revision in the Streamlit deployment settings before recording a result; do
+not infer them from the wheel configuration.
+
+For the development/pre-release deployment, record the date, URL, deployment
+repository and branch/revision, and any visible errors. Confirm that:
+
+- Home loads and its main navigation is usable.
+- The sidebar shows the intended public pages and does not show
+  `99_Environment_Check.py`.
+- Representative pages open and render without application errors: Mapping,
+  T-S Diagram, Depth Profile, and, if currently exposed, Integrated Visualizer
+  beta.
+- Dataset selection and `Apply settings` update a representative view.
+- Online map tiles and other live external services are recorded as separate
+  online-availability observations, not as CI requirements.
+- No local filesystem path, private user data, token, or diagnostic-only
+  information is visible in the deployment.
+
+#### Manual QA record (2026-09-28)
+
+The development/pre-release deployment was checked manually. Home opened; the
+sidebar did not show `99_Environment_Check.py`; Mapping, T-S Diagram, and
+Depth Profile opened without application errors; and dataset selection with
+`Apply settings` updated a representative view. Online map tiles rendered.
+No application error was observed during this normal-use check. Deliberately
+triggering an error to inspect its details is not part of manual QA; private
+data and diagnostic-information exclusion remain release-audit and
+source/package checks.
 
 ## Release boundary
 
