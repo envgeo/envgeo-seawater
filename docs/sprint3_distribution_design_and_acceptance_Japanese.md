@@ -19,8 +19,8 @@
   依存関係リストを重複管理しない。
 - 将来のconstraints／lock相当の記録には、各検証環境で実際に解決された版を残す。
   これは検証根拠であり、第2の依存関係正本ではない。
-- 完全新規導入とCIの最初の基準はPython 3.12とする。Python 3.10は対応候補として維持するが、
-  同等の試験に通るまでは正式な導入確認済みとは表記しない。
+- Python 3.10と3.12はLinux CIで検証済みの対象とする。最初のローカル完全新規導入基準は
+  Apple Silicon上のPython 3.12であり、Python 3.10の完全新規導入実証はCIで維持する。
 
 ## production package-dataの方針
 
@@ -100,6 +100,12 @@ wheelは確認用にworkflow artifactとして保存するだけで、公開・R
 いない。WindowsとIntel Macは、対応を表明する前の手動smoke test対象として残す。
 最初の成功workflow runは2026-09-27の#3（4分25秒）であり、test suite、wheel作成、隔離導入検証、
 wheel artifact保存を完了した。
+文書・配布方針更新についても、2026-09-28の#4（5分58秒）が成功し、同じtest、wheel、隔離導入、
+artifact確認を完了した。
+Python 3.10と3.12は、2026-09-28の#6（5分57秒）でこの確認にともに成功した。workflowでは、
+Python版ごとに別のwheel artifactを保持する。最初のPython 3.10収集errorは、Python 3.11以降の
+`tomllib`をtestが使っていたことだけによるものであり、条件付きのtest専用`tomli` fallbackで修正した。
+runtime依存関係およびwheel内容は変更していない。
 
 ### Community Cloud 手動QA（未実施）
 
@@ -130,7 +136,7 @@ application errorは観察されなかった。error詳細を確認するため�
 
 ## Releaseの境界
 
-実証版`1.3.3`は正式Release版ではない。将来のReleaseでは、clean checkout、source revision、
-Python版、解決済み依存関係記録、wheel SHA-256、テスト結果、Git tag、GitHub Release、
-Zenodo DOIを対応付ける。JOSSでは安定したSeawaterワークフローを中心にし、Page 90と91を
-公開ナビゲーションへ残すかはSprint 3C後に別途判断する。
+実証版`1.3.3`は正式Release版ではない。予定する正式Releaseは`1.3.4`とし、clean checkout、
+source revision、Python版、解決済み依存関係記録、wheel SHA-256、テスト結果、Git tag、
+GitHub Release、Zenodo DOIを対応付ける。JOSSでは安定したSeawaterワークフローを中心にする。
+Page 90と91は当面開発／公開前repositoryに残すが、予定する安定版`seawater_map`の対象からは外す。

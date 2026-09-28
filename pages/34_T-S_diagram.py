@@ -10,7 +10,7 @@ Last updated: 2026-09-22
 
 
 # --- Version info ---
-version = "1.3.3"  # 2026-09-23
+version = "1.3.4"  # 2026-09-28
 
 # ToDo
 

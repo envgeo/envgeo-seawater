@@ -6,7 +6,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**現在の開発バージョン:** 1.3.3（2026-09-23）
+**現在のRelease候補バージョン:** 1.3.4（2026-09-28）
 
 **海水同位体・水文データを、地図・断面・T-S図・3D/4D表示で探索する研究用Webアプリです。**
 

@@ -4,6 +4,11 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased maintenance
 
+- Release preparation: established 1.3.4 as the release-candidate version.
+  Python 3.10 and 3.12 CI both build and validate an isolated wheel, with a
+  separate artifact retained for each Python version. The planned stable
+  release is `seawater_map`; Pages 90 and 91 remain development-only.
+
 - Distribution documentation: confirmed the selected scholarly-use package
   scope includes every current `dataset/*.xlsx` workbook. Source citations,
   access/provenance records, and documented schema or display transformations

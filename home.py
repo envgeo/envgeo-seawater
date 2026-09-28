@@ -5,7 +5,7 @@ EnvGeo-Seawater home page and application overview.
 
 Created: 2023-05-21
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-23
+Last updated: 2026-09-28
 """
 
 import streamlit as st
@@ -181,6 +181,12 @@ def render_tab_style() -> None:
 def render_update_history() -> None:
     st.markdown(
         """
+### Version 1.3.4 (2026-09-28)
+
+- Prepared the installable release candidate: package metadata, application and page version labels now agree on 1.3.4.
+- Verified the test suite, wheel build, and isolated wheel installation on Python 3.10 and 3.12 in CI.
+- Retained the complete current cited dataset collection with documented provenance and source-to-workbook transformations.
+
 ### Post-v1.3.3 maintenance updates (2026-09-24)
 
 - Clarified that T–S density contours are approximate σ0 reference contours, and added selectable contour intervals. A full TEOS-10 (SA–CT) calculation mode remains planned work.

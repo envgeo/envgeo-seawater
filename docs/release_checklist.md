@@ -4,7 +4,7 @@ Use this checklist before uploading a test site, updating GitHub, creating a rel
 
 ## 1. Local Environment
 
-### Verified for the 1.3.3 release candidate (2026-09-23)
+### Release candidate 1.3.4 (2026-09-28)
 
 - [x] Python 3.12 / Streamlit 1.63 / Plotly 5.24 environment used for the
   final test run.
@@ -32,7 +32,7 @@ streamlit run home.py
 ```
 
 - [ ] Confirm `home.py` opens successfully.
-- [ ] Confirm the app version is shown as `1.3.3 (2026-09-23)`.
+- [ ] Confirm the app version is shown as `1.3.4 (2026-09-28)`.
 - [ ] Confirm the Home tabs load: Main, About, Data Sources, Manual, Update History, and Japanese information where applicable.
 
 ## 3. Sidebar And Filtering

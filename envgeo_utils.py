@@ -16,8 +16,8 @@ Last updated: 2026-09-22
 """
 
 # --- App version / バージョン情報 ---
-APP_VERSION = "1.3.3"
-APP_VERSION_DATE = "2026-09-23"
+APP_VERSION = "1.3.4"
+APP_VERSION_DATE = "2026-09-28"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 
 # Backward-compatible alias used by older pages.

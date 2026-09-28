@@ -8,7 +8,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Current development version:** 1.3.3 (2026-09-23)
+**Current release-candidate version:** 1.3.4 (2026-09-28)
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 

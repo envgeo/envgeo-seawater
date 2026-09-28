@@ -36,8 +36,8 @@ REQUIRED_COLUMNS = {
 # Verifies that app version metadata is kept in one reusable place.
 # アプリのバージョン情報が、使い回せる共通定数として管理されていることを確認する。
 def test_app_version_metadata_is_available():
-    assert envgeo_utils.APP_VERSION == "1.3.3"
-    assert envgeo_utils.APP_VERSION_DATE == "2026-09-23"
+    assert envgeo_utils.APP_VERSION == "1.3.4"
+    assert envgeo_utils.APP_VERSION_DATE == "2026-09-28"
     assert envgeo_utils.APP_VERSION in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.APP_VERSION_DATE in envgeo_utils.APP_VERSION_LABEL
     assert envgeo_utils.version == envgeo_utils.APP_VERSION

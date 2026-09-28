@@ -20,8 +20,9 @@
   must not become an independently maintained duplicate dependency list.
 - A future constraints/lock-style file records fully resolved versions per
   tested environment; it is evidence, not a second dependency declaration.
-- Python 3.12 is the first clean-install and CI baseline. Python 3.10 remains
-  an intended compatibility target until it passes the corresponding test.
+- Python 3.10 and 3.12 are verified Linux CI targets. The first local
+  clean-install baseline is Python 3.12 on Apple Silicon; the Python 3.10
+  clean-install proof is maintained through CI.
 
 ## Production package-data policy
 
@@ -122,6 +123,15 @@ manual smoke-test targets before their support status is declared.
 The first successful workflow run was #3 on 2026-09-27 (4 minutes 25 seconds),
 including the test suite, wheel build, isolated-install verification, and wheel
 artifact upload.
+The documentation-policy update was independently verified by successful run
+#4 on 2026-09-28 (5 minutes 58 seconds), with the same test, wheel, isolated
+install, and artifact checks.
+Python 3.10 and 3.12 both passed these checks in run #6 on 2026-09-28
+(5 minutes 57 seconds). The workflow retained separate wheel artifacts for
+each Python version. The initial Python 3.10 collection error was confined to
+the test's use of the Python 3.11+ `tomllib` module; its conditional
+test-only `tomli` fallback corrected that compatibility issue without changing
+runtime dependencies or wheel contents.
 
 ### Pending Community Cloud manual QA
 
@@ -161,8 +171,9 @@ source/package checks.
 
 ## Release boundary
 
-The proof version `1.3.3` is not a release decision. A later release records a
-clean checkout, source revision, Python version, resolved dependencies, wheel
-SHA-256, test result, Git tag, GitHub Release, and Zenodo DOI. JOSS scope
-centres on stable Seawater workflows; the public status of pages 90 and 91 is a
-separate navigation review after Sprint 3C.
+The proof version `1.3.3` is not a release decision. The planned formal release
+is `1.3.4`; it records a clean checkout, source revision, Python version,
+resolved dependencies, wheel SHA-256, test result, Git tag, GitHub Release,
+and Zenodo DOI. JOSS scope centres on stable Seawater workflows. Pages 90 and
+91 remain in the development/pre-release repository for now, but are excluded
+from the planned stable `seawater_map` release scope.

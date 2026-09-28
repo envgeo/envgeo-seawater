@@ -26,7 +26,7 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.3"
+version = "1.3.4"
 NO_COLOR = "No color"
 NO_COMPARISON_DATA = "None"
 PLOTLY_MARKERS = {"D": "diamond", "o": "circle", "s": "square", "^": "triangle-up", "*": "star", "X": "x"}

@@ -26,7 +26,7 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.3"
+version = "1.3.4"
 
 BASE_DIR = Path(__file__).resolve().parent
 

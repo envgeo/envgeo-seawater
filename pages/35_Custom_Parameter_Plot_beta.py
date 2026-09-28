@@ -22,7 +22,7 @@ import envgeo_user_data
 import envgeo_utils
 
 
-version = "1.3.3"
+version = "1.3.4"
 fig_title = "envgeo-seawater-database"
 
 
