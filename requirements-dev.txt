@@ -2,3 +2,4 @@
 # requirements.txt; this file is not used by Streamlit Community Cloud.
 -r requirements.txt
 pytest>=8,<10
+tomli>=2.0.1; python_version < "3.11"
