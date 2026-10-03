@@ -89,6 +89,6 @@ Coastline outlines (the line overlay on top of the land mask) are drawn
 separately from the bundled coastline CSV files in `coastline/`, via
 `envgeo_utils.plot_bundled_coastline()`.
 
-GEBCO bathymetry data (`data_beta/GEBCO_2025_6min.nc`) is kept in a separate
+GEBCO bathymetry data (`bathymetry/GEBCO_2025_6min.nc`) is kept in a separate
 directory and serves a different purpose (vertical-section depth interpolation
 and seafloor estimation); it is not affected by this asset.

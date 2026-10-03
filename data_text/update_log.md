@@ -2,7 +2,37 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## Unreleased maintenance
+## Unreleased maintenance for v1.3.4
+
+This section records work completed after v1.3.3 and before the formal v1.3.4
+release. The short summary below describes the current release-candidate
+scope; the following notes retain dated technical and documentation history.
+
+### Current release-candidate summary
+
+- Set version 1.3.4 as the release candidate. GitHub Actions builds and checks
+  isolated wheels with Python 3.10 and 3.12.
+- Defined the stable public scope as the 10 Seawater pages in `seawater_map`.
+  Development Pages 90 and 91, and local diagnostic Page 99, are excluded from
+  the stable release, GitHub Release, and Zenodo archive.
+- Retained every current `dataset/*.xlsx` workbook as a cited scholarly-use
+  reference collection. Provenance, source citations, and documented
+  application-side transformations remain part of the release record; the
+  package decision did not alter workbook observations.
+- Renamed the geospatial-resource directory from `data_beta/` to
+  `bathymetry/`. The bundled derived GEBCO grid remains available for the
+  Vertical Section workflow; its development generator remains outside the
+  wheel.
+- Updated public Home text, English/Japanese manuals, dataset guidance,
+  release checks, and code comments. Browser uploads remain session-only, and
+  the bundled User Excel workbook remains a zero-row public sample.
+
+### Historical preparation notes
+
+- Home content: clarified the stable public scope, browser-upload boundary,
+  citation guidance, and the distinction between the short Home guide and the
+  page-by-page English/Japanese manuals. Removed obsolete browser and
+  concurrency notices from the Japanese overview.
 
 - Release preparation: established 1.3.4 as the release-candidate version.
   Python 3.10 and 3.12 CI both build and validate an isolated wheel, with a
@@ -378,7 +408,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 ### Release summary
 
 - From version 1.3 onward, development has substantially adopted AI coding assistants (OpenAI Codex, Anthropic Claude Code) for code review, implementation drafting, refactoring, tests, bug investigation, and documentation; every adopted change is reviewed, edited, and verified by the human author. See `docs/development_notes.md` and the project README for the full policy.
-- Established the shared browser-upload workflow across the active specialist pages and the new public `User Data Check & Quick Visualizer`.
+- Established the shared browser-upload workflow for `User Data Check & Quick Visualizer` and compatible specialist workflows.
 - Made selected `Uploaded data` available through common Data filtering and integrated it into compatible calculations while preserving foreground marker rendering.
 - Improved Vertical Section upload handling and colorbar controls; its interpolation remains an experimental workflow requiring scientific validation.
 - Restored consistent tab styling under Streamlit 1.63 and documented the planned retirement of the legacy local user-data workbook.

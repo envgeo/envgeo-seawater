@@ -73,7 +73,7 @@ def test_correlation_overview_has_no_active_print_calls():
 # Custom plot ranges should be recalculated when the selected dataset changes.
 # Custom plotの軸・カラー範囲は、データソース切替時に各データセットから再計算する。
 def test_custom_plot_range_widget_keys_include_data_source():
-    page_text = (ROOT / "pages" / "35_Custom_Parameter_Plot_beta.py").read_text(
+    page_text = (ROOT / "pages" / "35_Custom_Parameter_Plot.py").read_text(
         encoding="utf-8"
     )
 
@@ -254,8 +254,8 @@ def test_integrated_quality_tab_mentions_quality_flag_criteria():
     assert "render_quality_flag_criteria_note()" in quality_block
 
 
-# The shared-filter beta tabs should use compact icon labels like the earthquake Advanced page.
-# Shared-filter betaのタブはearthquake Advancedに近い、見分けやすい短いラベルにする。
+# Shared-filter beta tabs use compact, readable icon labels.
+# Shared-filter betaのタブは、見分けやすい短いアイコン付きラベルを使う。
 def test_integrated_shared_filter_tabs_use_readable_icon_labels():
     page_text = (ROOT / "pages" / "90_Integrated_Visualizer_beta.py").read_text(
         encoding="utf-8"

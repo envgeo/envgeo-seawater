@@ -8,7 +8,6 @@ CSV and Excel files remain in memory only for the current Streamlit session.
 任意のユーザーアップロード表を、2D・3D・4Dで簡易可視化するページです。
 CSV / Excel は現在の Streamlit セッション内だけで扱い、保存しません。
 
-Created: 2023-05-21
 Author: Toyoho Ishimura, Kyoto University
 Last updated: 2026-09-22
 """
@@ -25,7 +24,9 @@ import streamlit as st
 import envgeo_user_data
 import envgeo_utils
 
-
+# =============================================================================
+# Page constants and internal metadata / ページ定数と内部メタデータ
+# =============================================================================
 version = "1.3.4"
 NO_COLOR = "No color"
 NO_COMPARISON_DATA = "None"
@@ -39,8 +40,14 @@ _ORIGIN_COL = "_EnvGeoDataOrigin"
 _INTERNAL_COLS = {_ORIGIN_COL}
 
 
+# =============================================================================
+# Shared display and data helpers / 共通表示・データ補助処理
+# =============================================================================
 def render_tab_style():
-    """Apply legacy tab styling / 旧Streamlit用の青いカード型タブ表示を適用する。"""
+    """Apply the compact card-style tab appearance.
+
+    コンパクトなカード型タブの表示スタイルを適用します。
+    """
     st.markdown(
         """
         <style>
@@ -155,6 +162,9 @@ def rich_hover_text(dataframe):
     The header line reflects each row's true data origin from the internal
     _ORIGIN_COL column (Reference data / User-uploaded data / User Excel data).
     If the column is absent the header falls back to "Filtered integrated data".
+
+    先頭行には内部の出所列から各行の実際のデータ出所を示します。出所列が
+    ない場合は「Filtered integrated data」として表示します。
     """
     excluded = {
         envgeo_utils.QUALITY_FLAG_COLUMN,
@@ -199,6 +209,9 @@ def rich_hover_text(dataframe):
     return text
 
 
+# =============================================================================
+# Cartesian plot construction / 直交座標プロットの作成
+# =============================================================================
 def add_regression(figure, dataframe, x_column, y_column):
     """Add a least-squares line / 描画可能な場合に最小二乗の近似直線を追加する。"""
     rows = plot_rows(dataframe, [x_column, y_column])
@@ -253,6 +266,9 @@ def create_3d(dataframe, x_column, y_column, z_column, color_column, style, reve
     return figure, len(rows)
 
 
+# =============================================================================
+# Geographic 3D construction / 地理3D表示の作成
+# =============================================================================
 def _padded_range(values, minimum_span):
     """Return a stable geographic range / 短い観測線でも安定した地理範囲を返す。"""
     lower, upper = float(values.min()), float(values.max())
@@ -395,6 +411,9 @@ def create_geographic(
     return figure, len(rows)
 
 
+# =============================================================================
+# Map, overview, and export helpers / 地図・概要・出力補助処理
+# =============================================================================
 def _auto_map_view(dataframe):
     """Return a practical map view / データ範囲に合わせた地図中心とズームを返す。"""
     lat = pd.to_numeric(dataframe["Latitude_degN"], errors="coerce").dropna()
@@ -505,6 +524,8 @@ def download_figure(figure, filename, key):
 
     Plotly.js is embedded inline (include_plotlyjs=True) so the saved file
     works offline without a CDN connection.
+
+    Plotly.jsをHTML内へ埋め込むため、保存したファイルはCDN接続なしで表示できます。
     """
     st.download_button(
         "Download interactive HTML",
@@ -520,6 +541,8 @@ def _user_facing_df(df):
 
     Removes _INTERNAL_COLS (e.g. _EnvGeoDataOrigin) so that users never see
     them in the preview table, download CSV, or numeric axis dropdowns.
+
+    内部メタデータ列をプレビュー、CSV出力、数値軸候補から除外します。
     """
     return df.drop(columns=[c for c in _INTERNAL_COLS if c in df.columns])
 
@@ -684,7 +707,7 @@ def main():
 
     # Use shared Streamlit-version-compatible tabs / 対応Streamlit版共通のタブ表示を使う。
     render_tab_style()
-    envgeo_utils.render_earthquake_tab_style()
+    envgeo_utils.render_card_tab_style()
     tab_overview, tab_explore, tab_3d, tab_map_2d, tab_map_3d, tab_data = st.tabs([
         "✅ Overview & Quality", "📈 2D Explore", "🧊 3D / 4D", "🗺️ 2D Map", "🌍 3D Map", "🗂️ Data & Export"
     ])

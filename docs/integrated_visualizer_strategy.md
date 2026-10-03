@@ -1,9 +1,21 @@
 # Integrated Visualizer Strategy
 
+> Historical development record. Page 90 remains in this development workspace,
+> but is not part of the separate stable-release repository, the public
+> documentation website, JOSS scope, or the Zenodo archive.
+
+## Current release position (v1.3.4)
+
+Page 05 is the public upload-first quality-review and quick-visualisation
+workflow. Supported specialist pages provide their own documented upload and
+overlay controls. This historical record does not prescribe a shared-session
+handoff between pages or a future `envgeo4d` package. Current public behaviour
+is described by the user manuals, `code_guide.md`, and `release_checklist.md`.
+
 Decision date: 2026-09-20  
 Last updated: 2026-09-22
 
-## 1.3.2 Implementation Update
+## Historical implementation update
 
 The planned independent User Data Validator is now implemented as the public
 **User Data Check & Quick Visualizer** (page 05). It provides the upload-first
@@ -20,9 +32,9 @@ local section calculation. Pages 03 and 04 remain outside the upload rollout.
 
 Individual visualization pages remain first-class EnvGeo-Seawater workflows.
 Uploaded-data validation and comparison are provided by the public User Data
-Check & Quick Visualizer. Integrated Visualizer remains a transitional beta test bed and
-will become a hidden development archive after its useful workflows have moved
-to the validator, shared core, and individual pages.
+Check & Quick Visualizer. Integrated Visualizer remains a transitional beta
+test bed and is retained as a development archive rather than a normal public
+workflow.
 
 Upload support will use one shared implementation. Common upload processing and
 UI should move out of page files into a focused core module, provisionally
@@ -41,7 +53,10 @@ rapid comparison without mixing those tasks with publication-oriented figure
 controls. Shared session data will let users validate once and then move to any
 individual visualization page.
 
-## Current Transitional State
+## Historical transitional state (2026-09)
+
+The following ownership notes capture the migration state at the time. They
+are not a statement of the v1.3.4 release architecture.
 
 - Upload files and prepared data remain in memory for the current Streamlit
   session only.
@@ -80,7 +95,7 @@ color or shared-colorbar mode, shape name, opacity, outline color, and outline
 width. Individual Matplotlib and Plotly pages should only translate that model
 to backend-specific marker arguments.
 
-## Final User-Data Workflow
+## Historical target user-data workflow
 
 1. Every supported individual page provides the shared upload panel near the
    top of its sidebar and registers prepared data in the same in-memory session
@@ -126,7 +141,7 @@ Rows without a compatible color value use the fixed upload color. If location
 columns are missing or invalid, the page reports why no uploaded locations are
 shown and displays plotted/excluded counts.
 
-## Planned Validator And Integrated Roles
+## Historical planned Validator and Integrated roles
 
 Move to the independent User Data Validator:
 
@@ -148,7 +163,7 @@ Retire or hide with Integrated Visualizer after migration:
 Integrated Visualizer source may remain as a development archive, but it should
 not be presented as the normal public workflow after migration.
 
-## Migration Sequence
+## Historical migration sequence
 
 1. Extract upload processing, shared upload UI, session state, quality reporting, required-column profiles, and the marker-style model into a focused core module.
 2. Replace the T-S Diagram's local upload controls with that shared component and verify the pilot again. Completed on 2026-09-21.
@@ -160,7 +175,7 @@ not be presented as the normal public workflow after migration.
 Each migration step requires focused pytest coverage and an AppTest or visual
 check before moving to the next page.
 
-## Incremental Migration Rules
+## Historical incremental migration rules
 
 - Limit one work unit to either one shared component or one individual page.
 - Do not remove the current Integrated implementation until its replacement has
@@ -172,7 +187,7 @@ check before moving to the next page.
 - End every migration step with a usable application so development can pause
   safely between steps.
 
-## Future envgeo4d Direction
+## Deferred shared-core direction
 
 The eventual module boundary should separate generic upload mechanics from
 domain rules and plotting:
@@ -184,8 +199,8 @@ domain rules and plotting:
   validation result structures, and shared UI models.
 - `envgeo4d/seawater`: seawater aliases, ranges, d-excess, and figure-specific
   requirements.
-- `envgeo4d/earthquake` and future domains: their own schemas and quality rules
-  while reusing the common upload framework.
+- Future domains, if independently audited: their own schemas and quality rules
+  while reusing only an appropriate common upload framework.
 
 ### Shared map and offline-asset direction
 
@@ -202,17 +217,17 @@ per page and is a future extraction candidate.
 
 The common layer must not contain scientific interpretation of its data.
 GEBCO sampling, seafloor interpolation, and oceanographic fallback policy
-remain in `envgeo4d/seawater`; earthquake catalog acquisition, plate-boundary
-semantics, and magnitude/depth rules remain in `envgeo4d/earthquake`. External
-services do not argue against common code: their configuration, capability
-status, attribution hooks, and safe local fallback belong in the common layer,
-while each domain decides which sources are scientifically appropriate.
+remain in the Seawater domain. Any future domain retains its own scientific
+semantics and source-selection rules. External services do not argue against
+common code: their configuration, capability status, attribution hooks, and
+safe local fallback may belong in a common layer, while each domain decides
+which sources are scientifically appropriate.
 
 Start the migration with bundled 50 m/110 m coastline assets and their loader,
 cache, resolution selection, licence/attribution metadata, and tests. Then
 extract map controls and layout, followed by longitude/extent helpers. Adopt
 one component in one page at a time; retain each app's local implementation
-until both Seawater and Earthquake have been visually checked and tested.
+until that app has been visually checked and tested.
 
 Unknown column names must never be accepted solely through speculative matching.
 Automatic recognition should be followed by a visible mapping report and, when

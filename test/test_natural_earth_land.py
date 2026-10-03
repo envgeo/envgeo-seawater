@@ -1,5 +1,7 @@
 """Tests for the bundled Natural Earth 50m land shapefile.
 
+同梱するNatural Earth 50m陸域shapefileのテスト。
+
 Verifies:
 - Required shapefile components are present in the repository.
 - The shapefile can be read by cartopy.io.shapereader.Reader (no download).
@@ -10,17 +12,31 @@ Verifies:
 
 Run from the app root:
     pytest -q test/test_natural_earth_land.py
+
+アプリのrootから上記コマンドで実行する。
 """
 
 import pathlib
 import sys
 import types
 import unittest.mock as mock
+from importlib.util import find_spec
 
 import pytest
 
+
+# Cartopy is installed in the CI dependency set.  Some local editing
+# environments intentionally omit it, so tests that import Page 32 or the
+# Cartopy Reader are skipped there while file-presence and source audits run.
+# CartopyはCIの依存関係で導入する。一部のローカル編集環境では意図して省略されるため、
+# Page 32またはCartopy Readerをimportするテストだけをskipし、資産・ソース監査は実行する。
+requires_cartopy = pytest.mark.skipif(
+    find_spec("cartopy") is None,
+    reason="Cartopy is not installed in this local test environment",
+)
+
 # ---------------------------------------------------------------------------
-# Paths
+# Paths / パス
 # ---------------------------------------------------------------------------
 ROOT = pathlib.Path(__file__).parent.parent
 NE50M_DIR = ROOT / "coastline" / "natural_earth_50m_land"
@@ -30,11 +46,11 @@ OPTIONAL_EXTS = (".prj", ".cpg")
 
 
 # ---------------------------------------------------------------------------
-# 1. Shapefile presence
+# 1. Shapefile presence / shapefileの同梱確認
 # ---------------------------------------------------------------------------
 
 class TestShapefilePresence:
-    """All required components must exist in the repository."""
+    """All required components exist in the repository. / 必須構成ファイルがrepository内にある。"""
 
     def test_directory_exists(self):
         assert NE50M_DIR.is_dir(), (
@@ -65,11 +81,12 @@ class TestShapefilePresence:
 
 
 # ---------------------------------------------------------------------------
-# 2. Readable by Cartopy shapereader — no network needed
+# 2. Readable by Cartopy shapereader — no network needed / Cartopyでネットワークなしに読める
 # ---------------------------------------------------------------------------
 
+@requires_cartopy
 class TestShapefileReadable:
-    """Cartopy Reader must open the file locally without downloading anything."""
+    """Cartopy Reader opens the file locally without downloading. / Cartopy Readerがダウンロードなしにローカルファイルを開く。"""
 
     def test_reader_opens_without_download(self):
         """Open the shapefile with cartopy.io.shapereader.Reader.
@@ -120,11 +137,11 @@ class TestShapefileReadable:
 
 
 # ---------------------------------------------------------------------------
-# 3. _load_ne50m_land_geometries() — graceful degradation when file missing
+# 3. _load_ne50m_land_geometries() — graceful degradation when file missing / 欠損時の安全な縮退
 # ---------------------------------------------------------------------------
 
 def _make_minimal_streamlit_stub():
-    """Minimal st stub that captures st.warning() calls."""
+    """Minimal Streamlit stub that captures warnings. / warning呼出しを記録する最小Streamlit stub。"""
     st = types.ModuleType("streamlit")
     st.warning = mock.MagicMock()
     st.error = mock.MagicMock()
@@ -134,8 +151,9 @@ def _make_minimal_streamlit_stub():
     return st
 
 
+@requires_cartopy
 class TestLoadHelper:
-    """Tests for the _load_ne50m_land_geometries() helper in page 32."""
+    """Tests for Page 32's local land-geometry helper. / Page 32のローカル陸域geometry補助関数を検証する。"""
 
     @pytest.fixture(autouse=True)
     def _stub_streamlit(self, monkeypatch):
@@ -219,7 +237,7 @@ class TestLoadHelper:
 
 
 # ---------------------------------------------------------------------------
-# 4. Page 32 source-code audit: forbidden drawing calls
+# 4. Page 32 source-code audit: forbidden drawing calls / 禁止する描画呼出しの静的検査
 # ---------------------------------------------------------------------------
 
 class TestPage32ForbiddenCalls:
@@ -273,9 +291,10 @@ class TestPage32ForbiddenCalls:
 
 
 # ---------------------------------------------------------------------------
-# 5. Page 32 degradation: missing shapefile → English warning, no network
+# 5. Page 32 degradation: missing shapefile → English warning, no network / 欠損時は英語警告・通信なし
 # ---------------------------------------------------------------------------
 
+@requires_cartopy
 class TestPage32ShapefileMissingDegradation:
     """When the bundled NE 50m shapefile is absent, page 32 must:
     - show an English-language warning

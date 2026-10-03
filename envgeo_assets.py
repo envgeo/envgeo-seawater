@@ -1,49 +1,49 @@
-"""
-envgeo_assets.py — EnvGeo-Seawater application asset resolver (Sprint 1).
+"""Resolve read-only EnvGeo-Seawater assets independently of the CWD.
 
-Provides a CWD-independent path to bundled application assets.
-The application root is determined from this module's own location,
-not from the working directory.
+The application root is the directory containing this module.  Pages should use
+``asset_path()`` rather than direct relative paths.
 
-同梱資産の場所を、起動時のカレントディレクトリ（CWD）に依存せずに
-解決する小さな共通モジュールです。ページ側は直接の相対パスではなく
-``asset_path()`` を使います。個人データ、書込み可能なキャッシュ、
-パッケージデータの実体化はこのSprint 1の対象外です。
+起動時のカレントディレクトリに依存せず、読み取り専用の同梱資産を解決します。
+ページ側では直接の相対パスではなく``asset_path()``を使います。
 
-API
----
-    application_root() -> Path
-    asset_path(*parts, required=True) -> Path
-
-Not implemented in this sprint
-------------------------------
-- importlib.resources / package data lookup (Sprint 2+)
-- User or OS cache directory (Sprint 2+)
-- pyproject.toml / pip install packaging (Sprint 3+)
-- Physical asset relocation (deferred)
+This module does not manage private data, user output, or writable caches.
+個人データ、利用者出力、書込み可能なcacheは扱いません。
 """
 from __future__ import annotations
 
 import os
 from pathlib import Path, PureWindowsPath
 
-# The application root is the directory that contains this file.
-# Stable whether Streamlit is launched from the repo root, a parent
-# directory, or (in a future sprint) from an installed package entry point.
+# =============================================================================
+# Application root / アプリケーションroot
+# =============================================================================
+# The application root is stable for checkout and installed-package launches.
+# checkoutとインストール済みpackageのどちらで起動しても同じrootを使う。
 _APPLICATION_ROOT: Path = Path(__file__).resolve().parent
 
 
+# -------------------------------------------------------------------
+# Application-root lookup / アプリケーションrootの取得
+# -------------------------------------------------------------------
 def application_root() -> Path:
     """Return the absolute path of the EnvGeo-Seawater application root.
 
     Always the directory containing ``envgeo_assets.py``, regardless of
     the current working directory.
+
+    カレントディレクトリにかかわらず、``envgeo_assets.py``を含む
+    アプリケーションrootの絶対パスを返します。
     """
     return _APPLICATION_ROOT
 
 
+# =============================================================================
+# Bundled-asset path resolution / 同梱資産パスの解決
+# =============================================================================
 def asset_path(*parts: str, required: bool = True) -> Path:
     """Resolve a bundled application asset to an absolute :class:`~pathlib.Path`.
+
+    同梱アプリケーション資産を絶対``Path``として解決し、root外参照を拒否します。
 
     Parameters
     ----------

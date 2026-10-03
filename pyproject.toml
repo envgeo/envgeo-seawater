@@ -1,7 +1,9 @@
-# Sprint 3 package configuration.
-# requirements.txt remains the single direct-runtime dependency declaration for
+# Sprint 3 package configuration / Sprint 3 のパッケージ設定
+# requirements.txt is the single direct-runtime dependency declaration for
 # local use and Streamlit Community Cloud. Setuptools derives wheel metadata
-# from it so a wheel install receives the same runtime dependencies.
+# from it, so a wheel install receives the same runtime dependencies.
+# requirements.txtをローカル実行とCommunity Cloudの実行時依存関係の正本とし、
+# Setuptoolsはここからwheelの依存metadataを導出する。
 
 [build-system]
 requires = ["setuptools>=77", "wheel"]
@@ -30,6 +32,7 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.package-data]
 envgeo_seawater = [
+  "CITATION.cff",
   "README.md",
   "README_Japanese.md",
   "pages/*.py",
@@ -38,10 +41,11 @@ envgeo_seawater = [
   "data/d18O_all.mp4",
   "data/sites_20230515.gif",
   "data/year_20230517.gif",
-  "data_beta/*.nc",
+  "bathymetry/*.nc",
   "data_text/*.md",
   # Current cited scholarly-use dataset collection; provenance and
   # transformation records are maintained in docs/.
+  # 現在の引用付き学術利用データセット。来歴と変換記録はdocs/で管理する。
   "dataset/*.xlsx",
   "docs/*.md",
   "docs/manual/*.md",
@@ -56,8 +60,10 @@ envgeo_seawater = [
 envgeo_seawater = [
   "**/.DS_Store",
   "**/__pycache__/*",
+  "pages/90_Integrated_Visualizer_beta.py",
+  "pages/91_EnvGeo_Earthquake.py",
   "pages/99_Environment_Check.py",
-  "data_beta/*.py",
+  "bathymetry/*.py",
   "Claude outputs/**",
   "docs/wheel_proof_report*.md",
   "vertical_section_review_log_*.md",

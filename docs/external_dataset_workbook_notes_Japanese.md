@@ -1,10 +1,17 @@
 # 外部データworkbookの取扱いメモ
 
-**状態:** 2026-09-25時点の元データ対workbook照合記録。この文書は、監査用に提供されたローカル元データスナップショットと同梱workbookを比較し、確認できた差分だけを記録する。元データ・同梱データはいずれも変更しない。
+**状態:** 2026-09-25時点の元データ対workbook照合記録、および2026-09-30時点の同梱workbook構造再確認。この文書は、監査用に提供されたローカル元データスナップショットと同梱workbookを比較し、確認できた差分だけを記録する。元データ・同梱データはいずれも変更しない。英語版は[`external_dataset_workbook_notes.md`](external_dataset_workbook_notes.md)。
 
 ## 目的
 
 NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用いる引用付き第三者参照データである。このメモでは、出典の引用と、アプリで利用するプロジェクト側のフィールドを分けて記録する。私的な連絡や連絡先は含めない。
+
+## 現行同梱workbookの再確認（2026-09-30）
+
+この読み取り専用の再確認では、現在同梱しているファイルとworkbook構造を確認した。元データスナップショットは意図的にアプリケーションツリー外で管理しているため、2026-09-25の元ファイル照合自体を繰り返したものではない。2つのworkbookのSHA-256値と安定版cloneとの関係は[`provenance_inventory_Japanese.md`](provenance_inventory_Japanese.md)に記録する。
+
+- NASA GISS：`NASA_20260227`は25,514行・22列である。全行が`Transect = Nasa_database`であり、`Cruise`、`Station`、`remarks by TI`は空欄である。
+- PAGES CoralHydro2k：`CoralHydro2k_SW_1_0_0_20260303`は18,598行・58列である。`Transect`は全行に入り93種類あり、短縮`reference`は15,340行に入り、記録済みの共通スキーマ用プレースホルダー6列は空欄のままである。
 
 ## NASA GISS workbook
 
@@ -21,7 +28,7 @@ NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用い
 元データの11列は共通スキーマの列名へ対応付けて保持している。
 `Longitude` → `Longitude_degE`、`Latitude` → `Latitude_degN`、`Depth` →
 `Depth_m`、`pTemperature` → `Temperature_degC`、`Reference` → `reference`であり、
-`Salinity`、`d18O`、`dD`、`Year`、`Month`、`Notes`は同名で保持する。25,514行すべてについて、元データと同梱workbookの対応値は数値的に一致するか、元の`**`欠損値マーカーをそのまま保持していた。プロジェクト側の共通スキーマ列は、`Transect`と手入力の`remarks by TI` QCメモ1件を除き空欄である。この照合では観測値の差異は見つからなかった。
+`Salinity`、`d18O`、`dD`、`Year`、`Month`、`Notes`は同名で保持する。25,514行すべてについて、元データと同梱workbookの対応値は数値的に一致するか、元の`**`欠損値マーカーをそのまま保持していた。プロジェクト側の共通スキーマ列は、`Transect`を除き空欄である。この照合では観測値の差異は見つからなかった。
 
 `Cruise`および`Station`は共通スキーマの列として存在するが、現行NASA workbookでは値を持たない。これは現行workbookについての記録であり、元データベースについての主張ではない。
 
@@ -47,4 +54,4 @@ NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用い
 
 ## 現行packageの判断
 
-両workbookは、学術利用のための現行`dataset/*.xlsx` package dataへ引き続き含める。照合結果から、観測レコードは保持されていると説明できる。記録した差分は、共通スキーマまたはグループ化ラベル、空欄プレースホルダー、表示用の短縮引用、NASAのQCメモ1件、上記のExcel日付形式表現であり、観測値を置き換えるデータではない。出典引用とこの変更記録を維持し、いずれのworkbookもプロジェクト所有データとは扱わない。
+両workbookは、学術利用のための現行`dataset/*.xlsx` package dataへ引き続き含める。照合結果から、観測レコードは保持されていると説明できる。記録した差分は、共通スキーマまたはグループ化ラベル、空欄プレースホルダー、表示用の短縮引用、上記のExcel日付形式表現であり、観測値を置き換えるデータではない。出典引用とこの変更記録を維持し、いずれのworkbookもプロジェクト所有データとは扱わない。

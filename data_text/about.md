@@ -1,15 +1,36 @@
-EnvGeo Seawater visualizes seawater isotope and hydrographic data from a core dataset of more than 2,000 samples collected around Japan (Kodama et al., 2024). Users can explore salinity, temperature, d18O, dD, sampling period, and location through interactive maps, 3D/4D views, relationship plots, and depth profiles.
+EnvGeo-Seawater is an interactive application for exploring seawater isotope
+and hydrographic data. Its current core dataset is the multi-year Kodama et al.
+(2024) collection from the East China Sea and Japan Sea, comprising more than
+2,000 samples. Maps, 3D/4D views, relationship plots, and depth profiles can
+be used to explore salinity, temperature, d18O, dD, sampling period, and
+location.
 
-For broader comparison, the app can also add regional and global reference datasets. As of 2025, the extended reference collection includes nearly 50,000 seawater isotope records, including records from the NASA GISS database and the CoralHydro2k seawater isotope database (Atwood et al., 2026).
+For comparison, the application also includes cited regional and global
+reference datasets, including the NASA GISS Global Seawater Oxygen Isotope
+Database and PAGES CoralHydro2k. EnvGeo-Seawater is a visualisation and
+comparison tool; users should cite the original dataset sources shown in
+**Data Sources** and **Filtered dataset** when using results.
 
-The platform supports consistent, quantitative comparison of seawater isotope data across regions, depths, and time periods within a common visualization framework.
+Including the global reference data, the current collection contains
+approximately 50,000 records.
 
-The Japan-region core dataset consists of samples analyzed under consistent conditions, which improves comparability across locations and sampling periods. Additional high-quality datasets from the Northwest Pacific are planned for integration after publication.
+The current Japan-region core dataset was analysed under consistent conditions,
+which supports comparison across locations and sampling periods. Further
+laboratory datasets may be added only after their publication and provenance
+records are available.
 
-Figures may be downloaded for research and educational use. Please cite the original data sources listed in `Data Sources` and `Filtered dataset`, as well as this application: [https://envgeo.h.kyoto-u.ac.jp/sw_jpn/](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/) by T. Ishimura. (Mar. 2026)
+Where a page provides a download control, figures may be exported for research
+and educational use. Please also cite this application using the guidance in
+the repository README and release materials.
 
-[For more information and permissions for use, click here](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
+[Laboratory website](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 
-Visualization by TOYOHO ISHIMURA @ Kyoto Univ. (Built with Python and Streamlit)
+Developed and released by Toyoho Ishimura, Kyoto University, using Python and
+Streamlit.
 
-**AI-assisted development:** From version 1.3 onward, development of this application has made substantial use of AI coding assistants (OpenAI Codex; Anthropic Claude Code) for code review, implementation drafting, refactoring, test design, bug investigation, and documentation. AI tools are not treated as authors or co-developers; all scientific and design decisions, final review, verification, and responsibility for published content remain with the human author.
+**AI-assisted development:** From version 1.3 onward, development has made
+substantial use of OpenAI Codex and Anthropic Claude Code for code review,
+implementation drafting, refactoring, test design, bug investigation, and
+documentation. AI tools are not authors or co-developers. The human author
+retains responsibility for scientific and design decisions, final review,
+verification, and published content.

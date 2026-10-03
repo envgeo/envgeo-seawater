@@ -3,9 +3,8 @@
 """
 Vertical-section visualizer for EnvGeo-Seawater data.
 
-Created: 2026-03-17
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 
 Developed and improved with assistance from Codex.
 Codexの支援を受けて作成・改良しています。
@@ -24,21 +23,16 @@ from scipy.interpolate import RegularGridInterpolator, griddata
 from scipy.ndimage import gaussian_filter
 from scipy.io import netcdf_file
 
-import envgeo_utils
+import envgeo_assets
 import envgeo_user_data
+import envgeo_utils
 
-
-
-DEFAULT_GEBCO_PATH = "data_beta/GEBCO_2025_6min.nc"
+# =============================================================================
+# Page configuration and scientific-data constants / ページ設定と科学データ定数
+# =============================================================================
+DEFAULT_GEBCO_PATH = envgeo_assets.asset_path("bathymetry/GEBCO_2025_6min.nc", required=False)
 MAX_MAP_POINTS = 50000
 DEFAULT_MAX_ROWS_FOR_SECTION_PLOT = 3000
-# grid_res の最大値(180)では対象グリッドが 180x180=32,400 点になる。
-# ローカル計測では corridor 投影後 50,000 点の cubic+linear+nearest 補間
-# でも1秒未満だったが、Streamlit Community Cloud の共有・低性能な環境
-# ではウィジェット操作ごとにスクリプト全体が再実行されるため、同程度の
-# 計算を繰り返すコストは無視できない。ユーザーが「Max valid rows for
-# section plotting」を上げても解除できない、より現実的な内部ハード
-# 上限としてこの値を選んだ（既定の3,000件はそのまま維持する）。
 # At grid_res's maximum (180) the target grid is 180x180 = 32,400 nodes.
 # Local benchmarking showed even 50,000 post-corridor points stayed under
 # 1 second for cubic+linear+nearest combined, but Streamlit Community
@@ -46,6 +40,10 @@ DEFAULT_MAX_ROWS_FOR_SECTION_PLOT = 3000
 # interaction, so repeating that cost adds up. This is a more realistic,
 # internal hard ceiling that raising "Max valid rows for section plotting"
 # cannot override (the default of 3,000 rows is unchanged).
+# grid_resの最大値(180)では対象格子は180×180=32,400点となる。corridor投影後の
+# 50,000点に対するcubic+linear+nearest補間はローカルで1秒未満だったが、共有型の
+# Streamlit Cloudはウィジェット操作ごとにスクリプト全体を再実行する。この上限は
+# 既定3,000行を変えず、ユーザー設定で解除できない現実的な内部保護として設ける。
 MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP = 8000
 BATHY_SOURCE_OBSERVED = "Observed deepest samples"
 BATHY_SOURCE_GEBCO = "Built-in GEBCO"
@@ -65,45 +63,47 @@ PLOTLY_MARKER_SYMBOLS = {
     "X": "x",
 }
 
+# =============================================================================
+# Section geometry and map helpers / 測線形状と地図の補助関数
+# =============================================================================
 
 def sample_points_for_map(df_points, max_points=MAX_MAP_POINTS):
-    # 地図描画が重くなりすぎないよう、表示点数を抑える
     # Limit point count for maps so the interactive view stays responsive.
+    # 対話地図の応答性を保つため、表示点数を制限する。
     if df_points.empty or len(df_points) <= max_points:
         return df_points
     return df_points.sample(max_points, random_state=42).sort_index()
 
 
 def resolve_section_row_limit(user_value, hard_cap=MAX_ROWS_FOR_SECTION_INTERPOLATION_HARD_CAP):
-    # ユーザー設定値とハード上限の小さい方を使う。ハード上限はUIの許可
-    # 最大値そのものにも使うため、通常はuser_valueがこれを超えること
-    # はないが、念のため計算前にも二重で確認する。
     # Use whichever is smaller: the user's setting or the hard cap. The
     # hard cap also serves as the UI widget's own max_value, so user_value
     # should rarely exceed it, but this keeps the actual gate safe
     # regardless of how that value was produced.
+    # ユーザー設定値と内部上限の小さい方を使う。通常はUI側でも上限を設けるが、
+    # 実際の計算前にも同じ制限を適用して安全性を保つ。
     return min(int(user_value), int(hard_cap))
 
 
 def maybe_sample_points(df_points, max_points=None):
-    # max_points が未指定なら全点をそのまま返す
     # Return all points when no display cap is requested.
+    # 表示上限が指定されなければ全点をそのまま返す。
     if max_points is None:
         return df_points
     return sample_points_for_map(df_points, max_points=max_points)
 
 
 def lonlat_to_local_km(lon, lat, lon0, lat0, lat_ref):
-    # 緯度経度を、基準点まわりのローカル直交座標(km)へ近似変換する
     # Approximate lon/lat as local Cartesian coordinates (km) around a reference point.
+    # 緯度経度を基準点まわりのローカル直交座標（km）へ近似変換する。
     x = (np.asarray(lon, dtype=float) - lon0) * 111.32 * np.cos(np.radians(lat_ref))
     y = (np.asarray(lat, dtype=float) - lat0) * 111.32
     return x, y
 
 
 def normalize_section_vertices(section_vertices):
-    # 測線頂点を [lat, lon] 形式へ正規化し、重複する連続点は落とす
     # Normalize section vertices to [lat, lon] pairs and remove repeated consecutive points.
+    # 測線頂点を[lat, lon]形式へ正規化し、連続する重複点を除く。
     normalized = []
     for vertex in section_vertices:
         if len(vertex) < 2:
@@ -116,8 +116,8 @@ def normalize_section_vertices(section_vertices):
 
 
 def build_section_polyline(section_vertices):
-    # 折れ線測線をローカル km 座標へ変換し、各頂点までの累積距離を計算する
     # Convert the section polyline to local km coordinates and compute cumulative along-track distance.
+    # 折れ線測線をローカルkm座標へ変換し、各頂点までの累積距離を計算する。
     vertices = normalize_section_vertices(section_vertices)
     if len(vertices) < 2:
         return None
@@ -158,8 +158,8 @@ def build_section_polyline(section_vertices):
 
 
 def section_vertices_from_ab(a_lat, a_lon, b_lat, b_lon):
-    # 直線測線も内部的には2点の折れ線として扱う
     # Treat a straight A-B section as a two-vertex polyline internally.
+    # 直線A–B測線も内部では2頂点の折れ線として扱う。
     return [[float(a_lat), float(a_lon)], [float(b_lat), float(b_lon)]]
 
 
@@ -603,6 +603,9 @@ def render_ab_selector_map(df_points, map_mode, uploaded_df=None, uploaded_style
     return st_folium(fmap, width=None, height=420, key="ab_selector_map")
 
 
+# =============================================================================
+# Bathymetry and interpolation helpers / 海底地形と補間の補助関数
+# =============================================================================
 def load_bathymetry_table(uploaded_file):
     # ユーザーアップロードの簡易地形ファイル(CSV/Excel)を DataFrame に正規化する
     # Normalize a user-uploaded simple bathymetry file (CSV/Excel) into a standard DataFrame.
@@ -1173,6 +1176,9 @@ def build_station_profile_trace(df_points):
     )
 
 
+# =============================================================================
+# Plot construction helpers / 図作成の補助関数
+# =============================================================================
 def create_section_plot(
     z_grid,
     xi,
@@ -1587,8 +1593,8 @@ def prepare_uploaded_axis_section(
 
 
 def main():
-    # アプリ本体。フィルタ、断面条件、補間、地図表示を順にまとめる
     # Main app body: filters, section settings, interpolation, and map visualization.
+    # アプリ本体：フィルター、断面条件、補間、地図表示を順に扱う。
     version = envgeo_utils.APP_VERSION
     st.header(f"Vertical Section Visualizer beta ({version})")
     st.caption("Experimental section-view workflow. Interpolation and display settings are still being refined.")
@@ -1669,12 +1675,15 @@ def main():
     reference_df_f = df_f.loc[~uploaded_rows].copy()
     uploaded_df = df_f.loc[uploaded_rows].copy()
     # The shared form has already applied every selected filter to these rows.
+    # 共通フォームにより、選択済みフィルターはこれらの行へすでに適用されている。
     uploaded_section_input_df = uploaded_df.copy()
     include_uploaded_in_section = envgeo_utils.uploaded_dataset_selected(
         "vertical_section"
     )
 
-    # ── Pre-sidebar computations (safe with empty df_f) ────────────────────
+    # =============================================================================
+    # Section defaults and sidebar controls / 測線初期値とサイドバー設定
+    # =============================================================================
     # Default A-B vertices: computed from data when available, otherwise use
     # a geographic fallback so the sidebar A-B endpoints expander can render
     # even before data is loaded (sidebar widgets must render for tests and
@@ -1717,12 +1726,14 @@ def main():
     section_ready_for_plot = True
     endpoint_mode = "Manual"  # default; overridden below for A-B section
 
-    # ── Sidebar: A-B endpoints (A-B section only, before Section settings) ──
+    # -------------------------------------------------------------------------
+    # A–B endpoint controls / A–B端点の設定
+    # -------------------------------------------------------------------------
     if section_mode == "A-B section":
         with st.sidebar.expander("A-B endpoints", expanded=True):
             if _eff_53_early == "Coastline (offline)":
-                # オフライン時は Draw を無効化し、英語メッセージを表示する
                 # Disable Draw in offline mode and show an English-only notice.
+                # オフライン時はDrawを無効にし、英語の案内だけを表示する。
                 endpoint_mode = "Manual"
                 st.info(
                     "Drawing an A–B line on the map is unavailable offline. "
@@ -1836,7 +1847,9 @@ def main():
             max_rows_for_section_plot
         )
 
-    # ── Early return (after all sidebars) ─────────────────────────────────
+    # -------------------------------------------------------------------------
+    # Empty-selection guard / 空の選択に対する保護
+    # -------------------------------------------------------------------------
     # Sidebars must render first so that the page shows the filter controls and
     # an intelligible "No data" warning. The main-area content below is skipped
     # when there is nothing to plot.
@@ -1844,7 +1857,9 @@ def main():
         st.warning("No data remain after filtering.")
         return
 
-    # ── Section-source computations (require non-empty df_f) ───────────────
+    # =============================================================================
+    # Section input and map controls / 断面入力と地図設定
+    # =============================================================================
     # Prepare valid uploaded rows once.  These remain an overlay by default,
     # but can be explicitly included in the local section calculation below.
     uploaded_section_source = pd.DataFrame()
@@ -1859,8 +1874,8 @@ def main():
         )
         uploaded_section_source["SectionDataSource"] = "Uploaded"
 
-    # 初期フィルタ後の有効データ件数が多すぎる場合は、Cloud での極端な重さを避ける
     # Avoid extremely heavy section rendering on Streamlit Cloud when too many valid rows remain.
+    # 有効行が多すぎる場合は、Streamlit Cloud上での極端な負荷を避ける。
     reference_section_source = reference_df_f.dropna(
         subset=required_section_columns
     ).copy()
@@ -1887,7 +1902,9 @@ def main():
         f"Please narrow Dataset / Transect / Year / Month / Lat-Lon filters, or use Manual A-B input."
     )
 
-    # ── Shared Map controls ────────────────────────────────────────────────
+    # -------------------------------------------------------------------------
+    # Shared map controls / 共通地図設定
+    # -------------------------------------------------------------------------
     # This single widget governs both the A-B offline preview map and the
     # Section Map below.  It must appear before the A-B selector so that
     # effective_mode can gate whether Folium or the Plotly preview is shown.
@@ -1913,7 +1930,9 @@ def main():
         st.warning(envgeo_utils.OFFLINE_FALLBACK_WARNING)
 
     if section_mode == "A-B section":
-        # ── Main-area A-B visual output ────────────────────────────────────
+        # ---------------------------------------------------------------------
+        # A–B section preview / A–B測線のプレビュー
+        # ---------------------------------------------------------------------
         # The sidebar A-B endpoints expander (coordinate inputs) was already
         # rendered above using early-read _eff_53_early.  Here we render the
         # visual feedback in the main area using the live _eff_53 from the
@@ -1945,8 +1964,8 @@ def main():
             )
 
         elif endpoint_mode == "Draw on map":
-            # 地図上で引いた最後の線を A-B として採用する
             # Use the most recently drawn map line as the active A-B section.
+            # 地図上で最後に引いた線を、現在のA–B測線として使う。
             if section_plot_allowed:
                 st.caption("Draw a single line on the map below. The first point becomes A and the last point becomes B.")
                 try:
@@ -2000,8 +2019,8 @@ def main():
                 st.warning(section_plot_blocked_message)
 
     if section_mode == "A-B section":
-        # A-B 線に沿って点群を投影し、断面用データを作る
         # Project observations onto the A-B line to create section-ready data.
+        # 観測点をA–B線へ投影し、断面用データを作る。
         df_section, section_length_km, section_polyline = project_points_to_polyline(
             df_section_source,
             section_vertices,
@@ -2011,8 +2030,8 @@ def main():
         xaxis_title = "Distance along A-B (km)"
         hover_mode = "ab"
     else:
-        # 従来の axis-based 断面をそのまま選べるようにしておく
         # Keep the legacy axis-based section workflow available.
+        # 従来の軸基準断面も選択できるように維持する。
         df_section, section_length_km = prepare_axis_section(
             df_section_source,
             target_col,
@@ -2389,7 +2408,7 @@ def main():
                     colorbar_tick_count,
                 )
 
-            envgeo_utils.render_earthquake_tab_style()
+            envgeo_utils.render_card_tab_style()
             tab_color, tab_line = st.tabs(["🎨 Color", "📈 Line"])
             with tab_color:
                 st.plotly_chart(

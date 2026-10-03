@@ -1,5 +1,6 @@
-"""
-pytest tests for the self-contained HTML download feature (sprint #43–#47).
+"""Tests for the self-contained HTML download feature.
+
+自己完結HTMLのダウンロード機能を確認する。
 
 Verifies:
 1. envgeo_utils.figure_to_self_contained_html() embeds Plotly.js inline
@@ -9,7 +10,8 @@ Verifies:
 4. pages/03 and pages/04 source contain st.download_button calls with
    figure_to_self_contained_html.
 
-No real Streamlit server, no network calls.
+No real Streamlit server or network call is used.
+実際のStreamlit serverやネットワーク通信は使用しない。
 """
 import re
 from pathlib import Path
@@ -17,7 +19,7 @@ from pathlib import Path
 import pytest
 
 # ---------------------------------------------------------------------------
-# Paths
+# Paths / パス
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).parent.parent
 UTILS_PY   = REPO_ROOT / "envgeo_utils.py"
@@ -27,7 +29,7 @@ PAGE_05    = REPO_ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
 
 
 # ---------------------------------------------------------------------------
-# Helper: read source once
+# Helper: read source once / sourceを一度だけ読む補助関数
 # ---------------------------------------------------------------------------
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")

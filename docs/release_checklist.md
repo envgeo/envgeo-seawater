@@ -2,6 +2,13 @@
 
 Use this checklist before uploading a test site, updating GitHub, creating a release, or archiving a version with Zenodo.
 
+[日本語版](release_checklist_Japanese.md)
+
+This canonical working-copy checklist supports development and pre-release
+checks. The formal GitHub Release, Zenodo archive, and JOSS-facing record must
+be made from the stable `seawater_map` repository, not by tagging this working
+copy.
+
 ## 1. Local Environment
 
 ### Release candidate 1.3.4 (2026-09-28)
@@ -11,6 +18,21 @@ Use this checklist before uploading a test site, updating GitHub, creating a rel
 - [x] `python -m pytest -q test` completed: **302 passed, 1 warning**.
   The warning is Pytest's future deprecation notice for a class-scoped fixture;
   it is not an application test failure and remains a maintenance follow-up.
+
+### Earlier manual smoke evidence (repeat after the release commit)
+
+The following exploratory checks were completed during the release-candidate
+review. They provide useful evidence, but do **not** replace the final manual
+check against the committed stable release and its deployment.
+
+- [x] Home opened, and the local-only `99_Environment_Check.py` page was absent
+      from the public sidebar.
+- [x] Mapping, T–S Diagram, and Depth Profile opened without an application
+      error; data selection and `Apply settings` updated the displayed result.
+- [x] A Mapping background tile loaded successfully.
+- [x] No application error screen was present. A static public-file and wheel
+      audit separately checked for absolute local paths and credential-like
+      values.
 
 - [ ] Confirm the intended Python environment is active.
 - [ ] Confirm one of the tested baselines is active: Python 3.10.15 / Streamlit 1.42 or Python 3.12.14 / Streamlit 1.63, both with Plotly 5.24.
@@ -50,14 +72,14 @@ Open each page and perform a light visual check.
 
 - [ ] `03_[Interactive]_2Dplus_Visualizer.py`
 - [ ] `04_[Interactive]_3D_4D_Visualizer.py`
+- [ ] `05_User_Data_Check_Quick_Visualizer.py`
 - [ ] `31_Salinity-d18O_Relationship.py`
 - [ ] `32_Isotope_Hydrographic_Mapping.py`
 - [ ] `34_T-S_diagram.py`
-- [ ] `35_Custom_Parameter_Plot_beta.py`
+- [ ] `35_Custom_Parameter_Plot.py`
 - [ ] `37_Depth_Profile.py`
-- [ ] `80_Correlation_Overview.py`
 - [ ] `53_Vertical_Section_Visualizer.py`
-- [ ] `90_Integrated_Visualizer_beta.py`
+- [ ] `80_Correlation_Overview.py`
 
 For each page:
 
@@ -79,11 +101,11 @@ For each page:
 
 ## 6. User Data Upload
 
-- [ ] Confirm an optional `local_data/user_data.xlsx` is labeled `User Excel data`
-      and appended once to each reference source without entering browser-upload
-      session state.
-- [ ] Confirm a deployment without a local user table loads bundled reference
-      data normally.
+- [ ] Confirm the bundled zero-value sample `local_data/user_data.xlsx` is
+      labeled `User Excel data` and appended once to each reference source
+      without entering browser-upload session state.
+- [ ] Confirm the public sample contains no researcher measurements and that
+      researcher-owned data are configured through an external path.
 - [ ] Confirm the integrated beta upload workflow still works.
 - [ ] Confirm uploaded data are visually distinguishable from reference data.
 - [ ] Confirm uploaded data remain session-only and are not saved to disk or server storage.
@@ -93,8 +115,12 @@ For each page:
 
 ## 7. Local-Only And Development Pages
 
-- [ ] Decide whether `pages/99_Environment_Check.py` should be included in the current deployment.
+- [x] Exclude `pages/99_Environment_Check.py` from the public repository and deployment; retain it only in the local development working copy.
 - [x] `pages/05_User_Data_Check_Quick_Visualizer.py` is the public User Data Check & Quick Visualizer for upload-first quality review and 2D/3D/4D exploration.
+- [ ] If reviewing the development/test deployment, separately confirm that
+      `pages/90_Integrated_Visualizer_beta.py` remains clearly experimental.
+      It is not a stable-release acceptance item and is excluded from the
+      stable `seawater_map` application and user-facing documentation website.
 - [ ] Decide whether beta pages should be shown publicly, hidden, or documented as experimental.
 - [ ] Confirm no private notes, restricted data, or unpublished datasets are included in public deployment files.
 
@@ -123,6 +149,17 @@ pytest
 - [ ] Confirm `data_text/update_log_Japanese.md` includes the latest unreleased changes.
 - [ ] Confirm beta and local-development pages are clearly described.
 - [ ] Confirm citation and data-source guidance are understandable.
+- [ ] Create or update the bilingual, figure-supported static documentation
+  website from the reviewed manuals; verify that it describes the stable public
+  scope only and contains no private paths, data, tokens, or internal records.
+- [ ] Publish the documentation website through GitHub Pages and verify the
+  public URLs, navigation, images, and links.
+- [ ] Update the laboratory website after the stable URL, release version,
+  public-page scope, documentation URL, and Zenodo DOI are final. Keep its
+  description aligned with the stable `seawater_map` release: approximately
+  50,000 cited records including NASA GISS and PAGES CoralHydro2k, and the
+  user-data upload/plot capability. Do not retain superseded version numbers,
+  draft DOI wording, or pages excluded from the stable release.
 
 ## 10. GitHub Release Preparation
 
@@ -157,6 +194,9 @@ pytest
 - [ ] Confirm the GitHub release is final before creating the Zenodo archive.
 - [ ] Confirm title, authors, affiliations, license, and description.
 - [ ] Confirm the archived version matches the release tag.
+- [ ] Record a wheel SHA-256 only for a wheel rebuilt from the clean tagged
+      checkout. CI wheel artifacts are inspection evidence, not release or
+      Zenodo distribution files.
 - [ ] Record the DOI in the README and citation files after the archive is created.
 
 ## 13. JOSS-Oriented Follow-Up

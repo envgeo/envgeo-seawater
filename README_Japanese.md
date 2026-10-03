@@ -62,19 +62,19 @@ Streamlit アプリでは、`home.py` が About、データソース、マニュ
 - `pages/37_Depth_Profile.py`  
   δ18O、δD、d-excess、水温、塩分の深度プロファイルを表示するページ。
 
-- `pages/35_Custom_Parameter_Plot_beta.py`  
-  X軸、Y軸、色、マーカーサイズを任意の数値パラメーターから選ぶ試験的な2Dプロットページ。
+- `pages/35_Custom_Parameter_Plot.py`
+  X軸、Y軸、色、マーカーサイズを任意の数値パラメーターから選ぶ柔軟な2Dプロットページ。
 
-- `pages/80_Correlation_Overview.py`  
-  手書きで開発してきた元の探索ワークフローを保存するアーカイブ表示ページです。開発記録として残し、新機能は追加しません。
-
-- `pages/53_Vertical_Section_Visualizer.py`  
+- `pages/53_Vertical_Section_Visualizer.py`
   Vertical Section Visualizer beta。測線選択、補間、海底地形、鉛直断面図の表示方法を調整するための試験版ページです。
 
-- `pages/90_Integrated_Visualizer_beta.py`  
+- `pages/80_Correlation_Overview.py`
+  手書きで開発してきた元の探索ワークフローを保存するアーカイブ表示ページです。開発記録として残し、新機能は追加しません。
+
+- `pages/90_Integrated_Visualizer_beta.py`
   試作統合ページ。既存の可視化ワークフローを1ページ内から選択実行できる互換モード、既存ページへのユーザーデータ一時結合、海域プリセット付きの共通フィルタ・タブ切り替えモードを含みます。独立アップロードページはアップロード起点の別ワークフローのため、統合ページ内の選択肢からは外しています。
 
-- `pages/99_Environment_Check.py`  
+- `pages/99_Environment_Check.py`
   ローカル開発用の環境診断ラッパーページ。ローカル環境確認には有用ですが、公開 Streamlit サイドバーに表示するページではありません。
 
 以前の独立した about ページは `home.py` に統合しました。
@@ -264,11 +264,23 @@ pytest
 
 ## ディレクトリ構成
 
-- `home.py`  
+- `home.py`
   EnvGeo-Seawater の Streamlit メインページ。
 
-- `envgeo_utils.py`  
+- `envgeo_utils.py`
   データ読み込み、データクリーニング、フィルタリング、Plotly共通レイアウト、地図スタイル、海岸線読み込み、表表示などを含む共通ユーティリティ。
+
+- `envgeo_assets.py`
+  起動ディレクトリに依存せず、アプリに同梱する読み取り専用資産へのパスを解決する。
+
+- `envgeo_user_data.py`
+  ブラウザ内だけで扱うアップロード、列の標準化、ユーザー提供データの表示補助を担う。ブラウザからのアップロードをこのモジュールがディスクへ保存することはない。
+
+- `envgeo_launcher.py`
+  インストール済みアプリを `envgeo-seawater` コマンドで起動する。
+
+- `envgeo_diagnostic_launcher.py`
+  `envgeo-seawater-check` コマンドでローカル診断ツールを起動する。公開アプリのナビゲーションとは分離されている。
 
 - `pages/`  
   アプリのサイドバーに表示される安定版の可視化ページ。
@@ -347,6 +359,16 @@ pytest
 
 詳細な出典情報は、アプリ内および `data_text/` 以下の Markdown ファイルに記載しています。
 
+## ソフトウェアと地理空間データの謝辞
+
+EnvGeo-Seawater は、アプリケーション画面に Streamlit、対話的な図に Plotly を使用しています。
+選択可能な科学カラーパレットには cmocean を用いています。T-S 図の σ0 参照等値線は、
+Gibbs SeaWater（GSW）による TEOS-10 実装を用いた明示的な近似です。観測ごとの絶対塩分・
+保存温度への変換は行っていません。Vertical Section Visualizer では、海底地形の文脈表示に限り、
+プロジェクトで軽量化した GEBCO 2025 Grid を使用できます。これは航海・安全目的の製品では
+ありません。Natural Earth は同梱する陸地資産に使用しており、帰属表示は上記に示しています。
+完全な文献情報と来歴記録は `paper.bib` および `docs/` に記載しています。
+
 ## AI支援開発と人間による監督
 
 バージョン1.3以降、EnvGeo-Seawaterの開発では、コードレビュー、実装草案の
@@ -367,6 +389,25 @@ https://envgeo-seawater-map.streamlit.app
 
 Stable demo with experimental updates:
 https://envgeo-seawater-pre.streamlit.app
+
+---
+
+## これまでの研究ワークフローでの利用
+
+EnvGeo-SeawaterがソフトウェアとしてのアーカイブDOIを取得する前から、著者および共同研究者の
+ワークフローにおいて、Kodama et al. (2024) の地域海水同位体データセットの一部を選択・探索・
+可視化するために利用されてきました。これらの研究成果では本ソフトウェアではなく元データセットの
+論文が引用されています。したがって、これらは直接のソフトウェア引用ではなく、研究ワークフローでの
+利用例です。
+
+---
+
+## 今後の発展
+
+データモデルは、出典、来歴、再配布上の位置づけが記録された後に、追加データセットを統合できるように
+設計しています。再利用可能な可視化、資産パス解決、配布の構成要素は、将来の関連EnvGeoアプリケーションを
+支えることも想定しています。これらは将来の方向性であり、v1.3.4 Release candidateに含まれる機能や
+データセットではありません。
 
 ---
 

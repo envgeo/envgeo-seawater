@@ -1,7 +1,10 @@
-# Sprint 3 配布設計と受入条件
+# 配布設計・検証記録（Sprint 3）
 
-**状態:** 2026-09-27に合意したSprint 3B実装用の設計基準。  
-**対象:** EnvGeo-Seawaterのみ。公開Releaseの承認ではない。
+「Sprint 3」は、インストール可能な配布物、CI、公開前確認を整備した開発フェーズを指すプロジェクト内の名称である。この表題では、当時の記録との履歴上のつながりを保つためだけに用いる。
+
+**状態:** Sprint 3の設計・実装検証記録。2026-09-27にSprint 3Bの設計基準として合意し、2026-09-30に再確認した。
+**対象:** EnvGeo-Seawaterの開発／公開前repositoryのみ。公開Releaseの承認ではない。英語版は
+[`sprint3_distribution_design_and_acceptance.md`](sprint3_distribution_design_and_acceptance.md)。
 
 ## 固定する境界
 
@@ -36,7 +39,7 @@ GEBCO、ゼロ値User Excelテンプレート、診断ツール本体だけを�
   Cloud版のどちらでも自動的にナビゲーションへ表示されるためである。
 - 99ページを含めず、明示的なcommandから診断ツールを使えるようにする。通常の起動では
   公開ページだけを表示する。
-- `data_beta/make_lightweight_gebco.py`は実行時参照がないためwheelから除外する。GEBCO
+- `bathymetry/make_lightweight_gebco.py`は実行時参照がないためwheelから除外する。GEBCO
   生成手順の記録としてsource treeには残す。
 - `Claude outputs/`、cache、build成果物、`.DS_Store`、内部レビュー記録、ローカル専用
   ラッパーは除外する。
@@ -107,7 +110,7 @@ Python版ごとに別のwheel artifactを保持する。最初のPython 3.10収�
 `tomllib`をtestが使っていたことだけによるものであり、条件付きのtest専用`tomli` fallbackで修正した。
 runtime依存関係およびwheel内容は変更していない。
 
-### Community Cloud 手動QA（未実施）
+### Community Cloud 手動QA
 
 これはwheelとCIの試験とは別の、ブラウザ上で行う受入確認である。現在の公開案内では、安定版は
 `envgeo/seawater_map`からの`envgeo-seawater-map.streamlit.app`、開発／公開前版は

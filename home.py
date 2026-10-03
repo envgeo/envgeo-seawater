@@ -3,28 +3,26 @@
 """
 EnvGeo-Seawater home page and application overview.
 
-Created: 2023-05-21
-Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-28
+EnvGeo-SeawaterのHome画面とアプリケーション概要を表示する。
 """
 
-import streamlit as st
 import re
 from pathlib import Path
-import envgeo_assets  # CWD-independent asset resolver (Sprint 1)
 
+import streamlit as st
+
+import envgeo_assets
 import envgeo_utils
 
 
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
 BASE_DIR = Path(__file__).resolve().parent
 
-
-# page info
 st.set_page_config(
-    page_title="EnvGeo Seawater Isotope Database", 
-    # page_icon=image, 
-    # layout="wide", 
-    initial_sidebar_state="auto", 
+    page_title="EnvGeo Seawater Isotope Database",
+    initial_sidebar_state="auto",
     menu_items={
          'Get Help': 'https://envgeo.h.kyoto-u.ac.jp/sw_jpn/',
          'Report a bug': "https://www.h.kyoto-u.ac.jp/en_f/faculty_f/ishimura_toyoho_4dea/#mailform",
@@ -36,8 +34,14 @@ st.set_page_config(
      })
 
 
-# to show markdown files with local images
+# =============================================================================
+# Markdown and bundled-file rendering / Markdownと同梱ファイルの表示
+# =============================================================================
 def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> None:
+    """Render Markdown, resolving standalone local-image lines when available.
+
+    単独行のローカル画像を解決できる場合は画像として、それ以外はMarkdownとして表示する。
+    """
     image_pattern = re.compile(r'!\[(.*?)\]\((.*?)\)')
     buffer = []
 
@@ -45,7 +49,7 @@ def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> Non
         match = image_pattern.fullmatch(line.strip())
 
         if match:
-            # それまでのMarkdownを先に表示
+            # Render preceding Markdown before the image. / 画像の前のMarkdownを先に表示する。
             if buffer:
                 st.markdown("\n".join(buffer), unsafe_allow_html=True)
                 buffer = []
@@ -65,38 +69,53 @@ def render_markdown_streamlit(md_text: str, base_dir: Path | None = None) -> Non
         else:
             buffer.append(line)
 
-    # 残りを表示
+    # Render the remaining Markdown. / 残りのMarkdownを表示する。
     if buffer:
         st.markdown("\n".join(buffer), unsafe_allow_html=True)
 
 
 def resolve_path(*parts: str) -> Path:
-    """Resolve a path relative to the application root via envgeo_assets."""
+    """Resolve a path relative to the application root via ``envgeo_assets``.
+
+    ``envgeo_assets``を通じてアプリケーションrootからのパスを解決する。
+    """
     return envgeo_assets.asset_path(*parts, required=False)
 
 
 def read_text_file(path: Path) -> str:
+    """Read a bundled UTF-8 text file. / 同梱UTF-8テキストを読む。"""
     return path.read_text(encoding="utf-8")
 
 
 def render_markdown_file(file_path: Path, not_found_message: str | None = None) -> None:
+    """Render a bundled Markdown file with a safe user-facing failure message.
+
+    同梱Markdownを表示し、読込失敗時は安全な利用者向けメッセージを出す。
+    """
     if not file_path.exists():
         st.info(not_found_message or f"Error: {file_path.name} not found.")
         return
 
     try:
         render_markdown_streamlit(read_text_file(file_path), base_dir=BASE_DIR)
-    except Exception as e:
-        st.error(f"Error loading {file_path.name}: {e}")
+    except Exception:
+        st.error(f"Could not load {file_path.name}.")
 
 
 def render_external_link(label: str, url: str) -> None:
+    """Render an external link with a Streamlit-version fallback.
+
+    Streamlitの版によるfallbackを備えて外部リンクを表示する。
+    """
     if hasattr(st, "link_button"):
         st.link_button(label, url)
     else:
         st.markdown(f"[{label}]({url})")
 
 
+# =============================================================================
+# Home display styles and update history / Home表示スタイルと更新履歴
+# =============================================================================
 def render_tab_style() -> None:
     """
     Render compact, readable tabs for the Home page.
@@ -179,6 +198,7 @@ def render_tab_style() -> None:
 
 
 def render_update_history() -> None:
+    """Render the concise public update history. / 簡潔な公開更新履歴を表示する。"""
     st.markdown(
         """
 ### Version 1.3.4 (2026-09-28)
@@ -202,7 +222,7 @@ def render_update_history() -> None:
 
 ### Version 1.3.2 (2026-09-22)
 
-- Added shared, in-memory CSV/XLSX user-data upload and filtering to the active specialist pages. `Uploaded data` can be selected in Data filtering; selected uploads are used in compatible plotting and calculation workflows and are drawn in the foreground.
+- Added shared, in-memory CSV/XLSX user-data upload and filtering for User Data Check and compatible specialist workflows. `Uploaded data` can be selected in Data filtering on supported pages; selected uploads are used in compatible plotting and calculation workflows and are drawn in the foreground.
 - Added `User Data Check & Quick Visualizer` as the public upload-first page for quality review, missing-value checks, shared filtering, 2D/3D/4D exploration, 2D maps, geographic 3D, and filtered CSV export.
 - Improved Vertical Section Visualizer with shared upload filtering, uploaded-data section inputs, target-parameter availability summaries, and configurable readable colorbars. Its interpolation outputs remain experimental.
 - Updated tab styling for Streamlit 1.63, kept the Plotly 5.24 baseline, and expanded targeted regression and AppTest coverage.
@@ -235,36 +255,32 @@ def render_update_history() -> None:
 
 
 
-def main():
-
+# =============================================================================
+# Home-page interface / Home画面
+# =============================================================================
+def main() -> None:
+    """Render the EnvGeo-Seawater Home page. / EnvGeo-SeawaterのHome画面を表示する。"""
     st.title('EnvGeo Seawater')
-    
-    # st.title(':red[Unpublished version]')
-    # st.title(':red[for internal use only]')
-    
     st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
-    st.write('Interactive 3D/4D Seawater Isotope and Hydrographic Database – Japan Marginal Seas and Global Ocean')
-    st.write(':blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]')
-    st.write(f'Version {envgeo_utils.APP_VERSION_LABEL}')
-    # st.write('Current Version: Version 1.0 _(v220-20260316)_')
-    # st.write(':red[NEW!! Mar 18, 2026: MAJOR UPDATE]')
-
-
-
-
+    st.write("Interactive 3D/4D Seawater Isotope and Hydrographic Database – Japan Marginal Seas and Global Ocean")
+    st.write(":blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]")
+    st.write(f"Version {envgeo_utils.APP_VERSION_LABEL}")
     render_tab_style()
-    envgeo_utils.render_earthquake_tab_style()
+    envgeo_utils.render_card_tab_style()
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-        ["Main", "About", "Data Sources", "Manual", "Updates", "Japanese"]
+        ["🏠 Main", "ℹ️ About", "📚 Data Sources", "📖 Manual", "📝 Updates", "🇯🇵 日本語"]
     )
     
     
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # Main tab / メインタブ
+    # -------------------------------------------------------------------------
     with tab1:
         def display_autoplay_video(video_path_or_url):
+            """Render a bundled or remote looping video. / 同梱または外部のループ動画を表示する。"""
             import base64
-            
-            # 動画ファイルが存在するか、URLであるかを確認
+
+            # Resolve a bundled path unless the value is a URL. / URL以外は同梱パスとして解決する。
             if not video_path_or_url.startswith(('http://', 'https://')):
                 video_path = resolve_path(video_path_or_url)
 
@@ -279,7 +295,7 @@ def main():
             else:
                 video_url = video_path_or_url
         
-            # HTMLで自動再生設定を書き込む
+            # Use HTML to request muted autoplay. / muted自動再生を指定するためHTMLを使う。
             video_html = f'''
                 <video width="100%" autoplay loop muted playsinline>
                     <source src="{video_url}" type="video/mp4">
@@ -289,53 +305,42 @@ def main():
             st.markdown(video_html, unsafe_allow_html=True)
 
 
-        target_video = 'data/d18O_all.mp4' 
+        target_video = "data/d18O_all.mp4"
         display_autoplay_video(target_video)
 
         st.markdown("<h6 style='text-align: center; color: grey;'>Animation created with GMT (The Generic Mapping Tools)</h6>", unsafe_allow_html=True)
 
         st.markdown(
             """
-### Start Exploring
+### Start exploring
 
-- **Core dataset:** explore the highly comparable Japan-region seawater isotope dataset.
-- **Reference datasets:** expand the view to regional and global comparison datasets.
-- **Visualization pages:** use the sidebar to open maps, 3D/4D views, T-S diagrams, depth profiles, and beta tools.
-- **User data:** upload your own seawater dataset for temporary, session-only comparison.
+- **Core dataset:** explore the multi-year Kodama et al. (2024) seawater-isotope dataset centred on the East China Sea and Japan Sea.
+- **Reference datasets:** compare it with cited regional and global datasets, including NASA GISS and PAGES CoralHydro2k.
+- **Visualisation:** use the sidebar to open maps, 3D/4D views, T--S diagrams, depth profiles, and other specialist tools.
+- **Browser uploads:** use **User Data Check Quick Visualizer** to inspect and plot an uploaded CSV/XLSX file for the current browser session. Upload overlays are also available on the salinity--d18O, mapping, T--S, custom-parameter, depth-profile, and vertical-section pages; 2Dplus and 3D 4D do not currently accept browser uploads.
+- **Detailed guidance:** open the **Manual** tab for a quick guide and links to the page-by-page English and Japanese manuals.
             """
         )
 
     
 
 
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # About tab / Aboutタブ
+    # -------------------------------------------------------------------------
     with tab2:
-
-
         st.header("About")
-
-        
-        ###############
-        # 外部ファイル (about.md) の読み込みと実行 
         about_file = resolve_path('data_text', 'about.md')
         render_markdown_file(about_file)
-        ###############
-            
-        ###############
-        # データソース読み込み
-        st.header('Read me')
-        ###############
-        
-
-        ###############
+        st.header("README")
 
         readme_file = resolve_path("README.md")
         japanese_readme_file = resolve_path("README_Japanese.md")
         
         if readme_file.exists():
             readme_content = read_text_file(readme_file)
-            # Relative Markdown links are interpreted as browser URLs in
-            # Streamlit. Show the bundled Japanese README below instead.
+            # Streamlit treats relative links as browser URLs; render the bundled Japanese README below.
+            # Streamlitは相対linkをbrowser URLとして扱うため、同梱の日本語READMEを下に表示する。
             readme_content = readme_content.replace(
                 "[日本語版 README](README_Japanese.md)",
                 "日本語版は下の「日本語版 README」を開いてください。",
@@ -349,86 +354,64 @@ def main():
                 render_markdown_streamlit(
                     read_text_file(japanese_readme_file), base_dir=BASE_DIR
                 )
-        ###############
-
-
-        st.write('_____')
+        st.divider()
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
     
 
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # Data-sources tab / データソースタブ
+    # -------------------------------------------------------------------------
     with tab3:
-
-            
-        ###############
-        # データソース読み込み
-        st.header('Data Sources')
-        ###############
-        
-        ###############
-        # --- メイン引用文献　外部ファイル (main_references.md) の読み込みと実行 ---
+        st.header("Data Sources")
         ref_file_main = resolve_path('data_text', 'main_references.md')
         render_markdown_file(ref_file_main)
-        ###############
-
-        
-        ###############
-        # --- その他の引用文献　外部ファイル (other_references.md) の読み込みと実行 ---
         ref_file_others = resolve_path('data_text', 'other_references.md')
         render_markdown_file(ref_file_others)
-           
-           
-        ###############
-        st.write('  ')
-
-        st.subheader(':red[Global Database Integration]')
-        
-        ###############
-
-        st.subheader('CoralHydro2 Seawater Oxygen Isotope Database')
-        
-        # --- CoralHydro2データベースの引用文献　外部ファイル(テキスト/Markdown)からの読み込み ---
-        render_markdown_file(
-            resolve_path('data_text', 'CoralHydro2_references.md'),
-            "The reference list file cannot be found. Please visit https://doi.org/10.25921/ap7d-2k16",
-        )
+        st.divider()
+        st.markdown("## :red[External Reference Databases for Comparison]")
+        st.caption("NASA GISS and PAGES CoralHydro2k are cited third-party datasets used for comparison; see the source records below.")
+        st.subheader("PAGES CoralHydro2k Seawater Oxygen Isotope Database")
+        with st.expander("View PAGES CoralHydro2k source record", expanded=False):
+            render_markdown_file(
+                resolve_path('data_text', 'CoralHydro2_references.md'),
+                "The reference list file cannot be found. Please visit https://doi.org/10.25921/ap7d-2k16",
+            )
 
 
-        ###############
-
-        
-        st.write('  ')
-
-        st.subheader('NASA GISS Global Seawater Oxygen Isotope Database')
-        
-        # --- NASAデータベースの引用文献　外部ファイル(テキスト/Markdown)からの読み込み ---
-        render_markdown_file(
-            resolve_path('data_text', 'NASA_references.md'),
-            "The reference list file cannot be found. Please visit https://data.giss.nasa.gov/o18data/ref.html",
-        )
-        ###############
-        
-        
-
-
-
-
-
-        st.write('_____')
+        st.divider()
+        st.subheader("NASA GISS Global Seawater Oxygen Isotope Database")
+        with st.expander("View NASA GISS source references", expanded=False):
+            render_markdown_file(
+                resolve_path('data_text', 'NASA_references.md'),
+                "The reference list file cannot be found. Please visit https://data.giss.nasa.gov/o18data/ref.html",
+            )
+        st.divider()
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
     
         
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # Manual tab / マニュアルタブ
+    # -------------------------------------------------------------------------
     with tab4:
-
-        st.header('User Manual')
-        
-        ###############
-        # --- その他の引用文献　外部ファイル (other_references.md) の読み込みと実行 ---
-        manual_file = resolve_path('data_text', 'manual.md')
-        render_markdown_file(manual_file, f"情報: {manual_file.name} が見つかりません。")
+        st.header("User Manual")
+        manual_file = resolve_path("data_text", "manual.md")
+        render_markdown_file(manual_file, f"Information: {manual_file.name} was not found.")
+        manual_japanese_file = resolve_path("data_text", "manual_Japanese.md")
+        with st.expander("日本語版マニュアル"):
+            render_markdown_file(
+                manual_japanese_file,
+                f"情報: {manual_japanese_file.name} が見つかりません。",
+            )
+        st.markdown(
+            "For page-by-page guidance, see the "
+            "[full user manual on GitHub](https://github.com/envgeo/seawater_map/tree/main/docs/manual)."
+        )
+        st.markdown(
+            "ページ別の詳しい説明は、GitHubの"
+            "[詳細ユーザーマニュアル](https://github.com/envgeo/seawater_map/tree/main/docs/manual_Japanese)を参照してください。"
+        )
         st.video(
             'https://envgeo.h.kyoto-u.ac.jp/wp-content/uploads/2024/10/envgeo20241016-HD-720p.mp4',
             format="video/mp4",
@@ -436,26 +419,26 @@ def main():
             end_time=None,
             loop=True,
         )
-        ###############
-        st.write('_____')
+        st.divider()
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
         
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # Updates tab / 更新履歴タブ
+    # -------------------------------------------------------------------------
     with tab5:
-
-        st.header('Update History')
+        st.header("Update History")
         render_update_history()
 
         update_log_file = resolve_path('data_text', 'update_log.md')
         update_log_ja_file = resolve_path('data_text', 'update_log_Japanese.md')
         with st.expander("Detailed update log (English)"):
-            render_markdown_file(update_log_file, f"情報: {update_log_file.name} が見つかりません。")
+            render_markdown_file(update_log_file, f"Information: {update_log_file.name} was not found.")
         with st.expander("Detailed update log (Japanese)"):
-            render_markdown_file(update_log_ja_file, f"情報: {update_log_ja_file.name} が見つかりません。")
+            render_markdown_file(update_log_ja_file, f"Information: {update_log_ja_file.name} was not found.")
 
-        st.write('_____')
+        st.divider()
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
@@ -463,18 +446,14 @@ def main():
 
 
 
-    ##############################################################
+    # -------------------------------------------------------------------------
+    # Japanese tab / 日本語タブ
+    # -------------------------------------------------------------------------
     with tab6:
-
-
-        st.header('このデータベースとwebアプリについて')
-        
-        ###############
-        # --- 日本語簡易説明　外部ファイル (japanese.md) の読み込みと実行 ---
-        japanese_file = resolve_path('data_text', 'japanese.md')
+        st.header("EnvGeo-Seawaterについて")
+        japanese_file = resolve_path("data_text", "japanese.md")
         render_markdown_file(japanese_file, f"情報: {japanese_file.name} が見つかりません。")
-        ###############
-        st.write('_____')
+        st.divider()
         render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
     
 
@@ -482,7 +461,6 @@ def main():
     
 
     
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-    
     

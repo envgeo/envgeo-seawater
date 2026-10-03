@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Tests for the public-facing documentation surface.
+"""Checks for the public-facing landing page, documents, and page inventory.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+公開するHome、文書、ページ構成を確認する。開発作業フォルダだけに許可するページと、
+安定版cloneで公開するページを区別する。
 """
 
 from pathlib import Path
@@ -63,7 +62,7 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
         "31_Salinity-d18O_Relationship.py",
         "32_Isotope_Hydrographic_Mapping.py",
         "34_T-S_diagram.py",
-        "35_Custom_Parameter_Plot_beta.py",
+        "35_Custom_Parameter_Plot.py",
         "37_Depth_Profile.py",
         "05_User_Data_Check_Quick_Visualizer.py",
         "80_Correlation_Overview.py",

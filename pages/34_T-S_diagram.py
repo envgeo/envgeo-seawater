@@ -3,66 +3,52 @@
 """
 Temperature–salinity diagram visualizer for EnvGeo-Seawater data.
 
-Created: 2023-04-22
+EnvGeo-Seawater データの水温–塩分関係を表示するページです。
+
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
+version = "1.3.4"
+fig_title = "envgeo-seawater-database"
 
-# --- Version info ---
-version = "1.3.4"  # 2026-09-28
+import io
+import math
 
-# ToDo
-
-
-
-
-fig_title = "envgeo-seawater-database"  
-    
-    
-    
-import streamlit as st
-import numpy as np
+import gsw
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
+import numpy as np
 import pandas as pd
 import plotly.express as px
-import math
-import gsw
-import io
-import envgeo_utils  
+import streamlit as st
+from matplotlib.ticker import FormatStrFormatter
+
 import envgeo_user_data
+import envgeo_utils
 
 def main():
-    
-    # タイトル
+    # =============================================================================
+    # Page header / ページ見出し
+    # =============================================================================
     st.header(f'Temperature-Salinity Diagram ({version})')
     
 
-    # リロードボタン
     st.button('Reload')
-    
- 
 
-    ##############################################################################
-    # データソースの変数、envgeo_utilsから読み出す
-    ##############################################################################
+    # =============================================================================
+    # Data-source selection / データソースの選択
+    # =============================================================================
     data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
-    
-
-    ##############################################################################
-    # データソース選択
-    ##############################################################################
     ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
-
-    ##############################################################################
-    # データソース選択
-    ##############################################################################
-
-    # 全データと凡例を表示するかどうか
+    # -----------------------------------------------------------------------------
+    # Figure options / 図の表示オプション
+    # -----------------------------------------------------------------------------
     plot_option_col1, plot_option_col2 = st.columns([1, 1])
     with plot_option_col1:
         plot_all_data = st.radio(
@@ -81,12 +67,9 @@ def main():
             help="Show or hide the legend for plotted data groups.",
         )
     
-
-
-    ##############################################################################
-    # 選択したデータセットの文献表示
-    ##############################################################################
-    
+    # -----------------------------------------------------------------------------
+    # Attribution / 出典表示
+    # -----------------------------------------------------------------------------
     if ref_data == data_source_JAPAN_SEA:
         st.write(envgeo_utils.refs_JAPAN_SEA)
         
@@ -99,12 +82,11 @@ def main():
     else:
         st.warning("Invalid data source selection.")
 
-
-    ##############################################################################
-    # envgeo_utilsからデータフレーム読み込み
-    ##############################################################################
-    df_original = envgeo_utils.load_isotope_data(ref_data) # フィルターしないデータ
-    df1 = df_original # このあとフィルターするデータ
+    # =============================================================================
+    # Data loading and uploaded overlay / データ読込とアップロード重ね表示
+    # =============================================================================
+    df_original = envgeo_utils.load_isotope_data(ref_data)
+    df1 = df_original
 
     if df_original.empty:
         st.warning("No data available for the selected conditions.")
@@ -134,14 +116,9 @@ def main():
         "ts",
     )
 
-
-
-    ##############################################################################
-    # サイドバーここから　　df1フィルタリング　も一括で
-    ##############################################################################
-
-    # envgeo_utils を使って一括フィルタリングとサイドバー生成
-    # すべての変数を順番通りに受け取る
+    # =============================================================================
+    # Shared sidebar filtering / 共通サイドバーによるデータ絞り込み
+    # =============================================================================
     (df1,
      sld_year_min, sld_year_max,
      selected_months,
@@ -164,33 +141,28 @@ def main():
         df1, envgeo_utils.UPLOADED_DATA_LABEL
     )
 
-    # データが一つだけの時に警告　近似直線を引くなどの必要がある図の場合のみ使用，d18Oなどは適宜変更
+    # A meaningful T-S diagram requires at least two selected points.
+    # 意味のあるT-S図には、選択された2点以上のデータが必要です。
     data_found = len(df1["d18O"])
     if data_found == 1:
         st.warning('Only one data point was found. A T–S diagram could not be meaningfully generated.')
         st.stop()
     
-
-
-    ##############################################################################
-    # 後半の定義用
-    ##############################################################################
-        
+    # -----------------------------------------------------------------------------
+    # Coordinate aliases / 座標列の別名
+    # -----------------------------------------------------------------------------
     df1['lat'] = df1['Latitude_degN']
     df1['lon'] = df1['Longitude_degE']
-    # df1['Depth_m'] = df1['Depth_m']*(-1) # 以前の3D-4Dでは，depthをマイナス表示にしてた
-
-
-    ##############################################################################
-    # 図のスケール変更
-    ##############################################################################
+    # =============================================================================
+    # Figure controls / 図の表示設定
+    # =============================================================================
    
 
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         
-        # マーカーの問明度調整
+        # Marker transparency / マーカーの透明度
         alpha_selected = st.slider(label='Transparency (Filtered Plot)',
                                     min_value=0.0,
                                     max_value=1.0,
@@ -278,7 +250,7 @@ def main():
         else:
             ts_matplotlib_colormap = None
         
-        # --- 図のスケール設定  ---
+        # Axis ranges / 軸の表示範囲
         if ref_data == data_source_JAPAN_SEA:
             sal_min, sal_max = st.slider(label='Salinity scale selected',
                                         min_value=20,
@@ -320,8 +292,7 @@ def main():
                                         value=(-5,40),
                                         )
 
-        # --- Matplotlib figure appearance ---
-        # Depth Profileと同じ考え方で、論文図向けの見た目をページ上で調整する。
+        # Matplotlib appearance / Matplotlib図の表示設定
         fig_size_col1, fig_size_col2 = st.columns(2)
         with fig_size_col1:
             sld_fig_size_x = st.number_input(
@@ -387,7 +358,7 @@ def main():
                 help="Adjust the number of major tick marks on the temperature axis.",
             )
 
-        # アップロードデータのうちカラーバー要素が無いポイントの表示切替
+        # Uploaded rows missing the color parameter / 色分け値がないアップロード行
         show_nodata_uploaded = st.checkbox(
             f"Show uploaded points without {ts_color_by} values",
             value=True,
@@ -395,11 +366,11 @@ def main():
             help="Show or hide uploaded data points that have no value for the T-S color parameter.",
         )
 
-        # Density contour interval selector (Stage 1)
+        # Approximate σ0 contour interval / 近似σ0等値線の間隔
         contour_interval = st.selectbox(
             "Density contour interval (approx. σ0)",
             options=[0.2, 0.5, 1.0],
-            index=1,  # default 0.5 kg m⁻³
+            index=1,
             format_func=lambda v: f"{v} kg m⁻³",
             help=(
                 "Spacing between approximate σ0 reference contour lines. "
@@ -408,36 +379,16 @@ def main():
             key="ts_diagram_contour_interval",
         )
 
-
-    ##############################################################################
-    # キャッシュクリア
-    ##############################################################################
-        
-    # キャッシュのクリア　サイドバーの一番下などに配置
+    # =============================================================================
+    # Cache control / キャッシュ制御
+    # =============================================================================
     if st.sidebar.button("🔄 Clear cache"):
         envgeo_utils.clear_app_cache()
-        st.rerun() # アプリを再実行して最新のExcelを読み込ませる
+        st.rerun()
 
-
-
-
-        
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-
-
-    ##############################################################################
-    #  ここから図の設定と描画
-    ##############################################################################
-
-
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
+    # =============================================================================
+    # Figure preparation and drawing / 図の準備と描画
+    # =============================================================================
     st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
 
     uploaded_ts = pd.DataFrame()
@@ -472,25 +423,17 @@ def main():
                 )
     
     
-    
-
-    
-    ############################################
-    ######      font size line etc..       #####
-    ############################################
-    
+    # -----------------------------------------------------------------------------
+    # Matplotlib constants / Matplotlibの共通設定
+    # -----------------------------------------------------------------------------
     plt.rcParams["font.size"] = sld_font_size_tick
-    fig_size = [sld_fig_size_x, sld_fig_size_y] #図のサイズ
-    fig_dpi = 150 #図の解像度
+    fig_size = [sld_fig_size_x, sld_fig_size_y]
+    fig_dpi = 150
     ax_length = 15
     
-
-    
-    ########################################
-    ######    FIG: x vs y    #####
-    ########################################
-    
-    
+    # -----------------------------------------------------------------------------
+    # T-S diagram definition / T-S図の定義
+    # -----------------------------------------------------------------------------
     X_data = "Salinity"
     Y_data = "Temperature_degC"
     
@@ -501,35 +444,22 @@ def main():
     iso_scale_Y = "(C)"
     
 
-    ###### 別途，X_Yのプロットをするかどうか,色を一括にするか ######
-    #する場合は1,しない場合は2
+    # Existing plot switch / 既存の描画切替
     X_Y = 1
     
-    #メインプロットの設定
-    X_Y_C = "red" #色の設定
-    X_Y_M = "." #現時点で色は変更設定なしマーカーの種類
+    X_Y_C = "red"
+    X_Y_M = "."
     X_Y_S = 100
     
 
   
     
-    #タイトル
-    fig_title_X_Y= X_label + " - "+ Y_label + "" # 書き出し専用
-    
-    #追加データのlabel
+    fig_title_X_Y = X_label + " - " + Y_label
     sheet_names_add2 = "filtered data"
-    
-    #プロットの透明度
-    alpha_all = 0.2 #メインプロット
-    
-    #強調プロットの色の指定
-    X_Y_C_add =  "blue" 
+    alpha_all = 0.2
+    X_Y_C_add = "blue"
 
-    
-    #############################################
-    ######      data range for  FIG         #####
-    #############################################
-    
+    # Axis limits / 軸範囲
 
     lim_min_X = sal_min
     lim_max_X = sal_max
@@ -537,49 +467,25 @@ def main():
     lim_max_Y = temp_max
     
     
-
-    
-    
-    
-    ############################################
-    ######      　　　設定ここまで！！　　       #####
-    ############################################
-    
-    
-    
-    
-
-    
-
-    ##############################################################################
-    # 全データを背景にプロット
-    ##############################################################################
-
-    
-    # 全データプロット
+    # -----------------------------------------------------------------------------
+    # Background data / 背景データ
+    # -----------------------------------------------------------------------------
     if X_Y == 1:
 
-        fig = plt.figure(figsize = (fig_size),dpi=fig_dpi)
+        fig = plt.figure(figsize=fig_size, dpi=fig_dpi)
         ax = plt.subplot(111)
     
         ax.set_xlabel(X_label + iso_scale_X, fontsize=sld_font_size_label)
-        ax.set_ylabel(Y_label + iso_scale_Y, fontsize=sld_font_size_label)  
+        ax.set_ylabel(Y_label + iso_scale_Y, fontsize=sld_font_size_label)
 
         if plot_all_data == "Yes":
-            ax.scatter(-1000, -1000, s=X_Y_S,c=X_Y_C,marker=X_Y_M, alpha=alpha_all, label='ALL') #凡例等のダミー
-        else:
-            pass
-        
+            # Invisible point supplies the background-series legend label.
+            # 非表示点により、背景系列の凡例ラベルを用意する。
+            ax.scatter(-1000, -1000, s=X_Y_S, c=X_Y_C, marker=X_Y_M, alpha=alpha_all, label='ALL')
 
-        
-        # --------------------------------------
-        # 全プロット用のデータフレーム読み込みと整理
-        # --------------------------------------
-        # 塩分と温度が無いデータを削除
-        
+        # Keep rows that can be positioned on both axes. / 両軸に表示できる行だけを用いる。
         df_fig_ALL = df_original.dropna(subset=["Salinity", "Temperature_degC"]).reset_index(drop=True)
         
-        # 排除したサンプル数を計算（オプション：前述の英語メッセージなどで使う用）
         excluded_count = len(df_original) - len(df_fig_ALL)
         if excluded_count > 0:
             st.caption(f":red[Background plot: {len(df_fig_ALL):,} / {len(df_original):,} plotted ({excluded_count:,} excluded due to missing salinity/temperature).]")
@@ -588,8 +494,8 @@ def main():
         Ya = df_fig_ALL[Y_data]
         Xa = df_fig_ALL[X_data]
 
-        ax.set_xlim(lim_min_X, lim_max_X) 
-        ax.set_ylim(lim_min_Y, lim_max_Y) 
+        ax.set_xlim(lim_min_X, lim_max_X)
+        ax.set_ylim(lim_min_Y, lim_max_Y)
         ax.set_xticks(np.linspace(lim_min_X, lim_max_X, tick_count_x))
         ax.set_yticks(np.linspace(lim_min_Y, lim_max_Y, tick_count_y))
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.1f"))
@@ -601,34 +507,18 @@ def main():
         if plot_all_data == "Yes":
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
             if show_legend == "Yes":
-                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
-        else:
-            pass
-            
-            
-        plt.title(fig_title_X_Y) 
-        
-    
+                plt.legend(fontsize=sld_font_size_tick)
 
-        ##############################################################################
-        # フィルターしたデータを重ね書き
-        ##############################################################################
+        plt.title(fig_title_X_Y)
 
+        # -------------------------------------------------------------------------
+        # Filtered data / 絞り込みデータ
+        # -------------------------------------------------------------------------
+        X_Y_C_add = 'blue'
 
-                
-        X_Y_C_add  =  'blue' #カラーを選ぶ
-        
-        df_fig_add = df_original
-        
-
-
-        # --------------------------------------
-        # フィルターデータ用のデータフレーム読み込みと整理
-        # --------------------------------------
-        # 塩分とd18Oが無いデータを削除
+        # Keep rows that can be positioned on both axes. / 両軸に表示できる行だけを用いる。
         df_fig_add = df1.dropna(subset=["Salinity", "Temperature_degC"]).reset_index(drop=True)
 
-        # 排除したサンプル数を計算（オプション：前述の英語メッセージなどで使う用）
         excluded_count_add = len(df1) - len(df_fig_add)
         if excluded_count_add > 0:
             st.caption(f":blue[Filtered plot: {len(df_fig_add):,} / {len(df1):,} plotted ({excluded_count_add:,} excluded due to missing salinity/temperature).]")
@@ -653,7 +543,7 @@ def main():
                 label=sheet_names_add2,
             )
             if show_legend == "Yes":
-                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
+                plt.legend(fontsize=sld_font_size_tick)
         else:
             color_values = pd.to_numeric(df_fig_add[ts_color_by], errors="coerce")
             color_valid = color_values.notna()
@@ -707,19 +597,15 @@ def main():
                 )
 
             if show_legend == "Yes":
-                plt.legend(fontsize = sld_font_size_tick) # 凡例の数字のフォントサイズを設定
+                plt.legend(fontsize=sld_font_size_tick)
 
- 
-        ##############################################################################
-        # 密度曲線を描く
-        ##############################################################################
-            
-        #######   密度曲線を描く ###########
-        # data=pd.read_excel(excel_file, sheet_name=sheet_num)
-        # Stage 1: contour grid bounded by the displayed axis range,
-        # clipped to the valid GSW σ0 input domain (matching existing quality bounds)
-        _T_GSW_MIN, _T_GSW_MAX = -5.0, 45.0   # Temperature_degC quality range
-        _S_GSW_MIN, _S_GSW_MAX =  0.0, 50.0   # Salinity quality range
+        # -------------------------------------------------------------------------
+        # Approximate σ0 reference contours / 近似σ0参照等値線
+        # -------------------------------------------------------------------------
+        # The grid is clipped to the valid GSW input domain.
+        # グリッドはGSWの有効な入力範囲に制限する。
+        _T_GSW_MIN, _T_GSW_MAX = -5.0, 45.0
+        _S_GSW_MIN, _S_GSW_MAX = 0.0, 50.0
         _T_lo = max(float(lim_min_Y), _T_GSW_MIN)
         _T_hi = min(float(lim_max_Y), _T_GSW_MAX)
         _S_lo = max(float(lim_min_X), _S_GSW_MIN)
@@ -728,8 +614,9 @@ def main():
             tempL = np.linspace(_T_lo, _T_hi)
             salL  = np.linspace(_S_lo, _S_hi)
             Tg, Sg = np.meshgrid(tempL, salL)
-            # sigma0_approx: gsw.sigma0 called with Practical Salinity ≈ Absolute Salinity
-            # and in-situ temperature ≈ Conservative Temperature (approximate reference contours only)
+            # Approximation: Practical Salinity ≈ Absolute Salinity and in-situ
+            # temperature ≈ Conservative Temperature; contours are reference only.
+            # 近似として実用塩分≒絶対塩分、現場水温≒保存温度を用いる参照等値線。
             sigma0_approx = gsw.sigma0(Sg, Tg)
             _s0_min = float(np.nanmin(sigma0_approx))
             _s0_max = float(np.nanmax(sigma0_approx))
@@ -750,9 +637,9 @@ def main():
                         inline=True, fmt='%.1f', zorder=0,
                     )
 
-        ##############################################################################
-        # Uploaded data overlay (always drawn last / 常に最前面)
-        ##############################################################################
+        # -------------------------------------------------------------------------
+        # Uploaded overlay / アップロードデータの重ね表示
+        # -------------------------------------------------------------------------
 
         if not uploaded_ts.empty:
             use_shared_colorbar = (
@@ -830,50 +717,22 @@ def main():
             if show_legend == "Yes":
                 ax.legend(fontsize=sld_font_size_tick)
 
-    
-    
-        #######   水塊分類 ###########
-        # # NPIW
-        # ax.plot([34.0,34.4],[4,8], color="blue", lw=2)
-        # ax.text(34.25,6,"NPIW", color="blue")
-        
-        # # Kuroshio
-        # ax.plot([34.5,35.0],[20,28], color="red", lw=2)
-        # ax.text(34.7,24,"Kuroshio", color="red")
-        
-        # # Oyashio
-        # ax.plot([33.0,34.0],[0,5], color="green", lw=2)
-        # ax.text(33.4,2,"Oyashio", color="green")
-            
-            
-    
-
-    
-        #==========  以下，図のファイル名用　============
-        #全体のタイトル名
+        # -------------------------------------------------------------------------
+        # Figure title and file name / 図題とファイル名
+        # -------------------------------------------------------------------------
         main_title = fig_title
-        
-        # --- 月 (スライダー用) ---  
-        # sub_title = 'Lon:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', Lat:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', Y:'+str(sld_year_min)+'-'+str(sld_year_max)+', M:'+str(sld_month_min)+'-'+str(sld_month_max)+', S:'+str(sld_sal_min)+'-'+str(sld_sal_max)+', D:'+str(sld_depth_min)+'-'+str(sld_depth_max)+'m'
-        # --- 月 (multiselect用) ---
-        # 月の表示用テキストを作成（選択されたリストをカンマ区切りにする）
-        month_text = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-        
-        
-        ### もし「月が多すぎてサブタイトルが長くなる」のが嫌な場合
-        # 月の表示ロジック
+
+        # Compact month-range text for the figure title. / 月範囲を図題用に短縮する。
         if len(selected_months) == 12:
             month_display = "All"
         elif len(selected_months) == 0:
             month_display = "None"
         else:
-            # 標準機能だけで「1-3」のように短縮するロジック
             sorted_m = sorted(list(set(selected_months)))
             ranges = []
             if sorted_m:
                 start = sorted_m[0]
                 for i in range(len(sorted_m)):
-                    # 次の要素が連続していない、または最後の要素の場合に書き出し
                     if i + 1 == len(sorted_m) or sorted_m[i+1] != sorted_m[i] + 1:
                         end = sorted_m[i]
                         ranges.append(f"{start}-{end}" if start != end else str(start))
@@ -886,25 +745,21 @@ def main():
         sub_title = f"Lon:{sld_lon_min}-{sld_lon_max}, Lat:{sld_lat_min}-{sld_lat_max}, Y:{sld_year_min}-{sld_year_max}, M:{month_display}, S:{sld_sal_min}-{sld_sal_max}, D:{sld_depth_min}-{sld_depth_max}m"
         
         main_title2 = sub_title
-        
-        sub_title2 = ''
-        
-        title_head = str(main_title+'\n'+main_title2+'\n'+sub_title2)
-        
-        title_head2 = title_head.replace('_', ' ') #図のタイトル表示用
+        title_head = f"{main_title}\n{main_title2}"
+        title_head2 = title_head.replace('_', ' ')
         fig.suptitle(title_head2,fontsize=sld_font_size_label + 4)
         
  
     else:
         pass
             
-    
-    
-    
-    #Save to memory first. の場合は，ローカルに保存されないので安心
+    # =============================================================================
+    # Image download / 図のダウンロード
+    # =============================================================================
+    # Keep the PNG in memory; no local file is written. / PNGはメモリ上だけで生成する。
     fn = envgeo_utils.build_figure_filename("Fig_T-S_SW", main_title2)
     img = io.BytesIO()
-    plt.savefig(img, format='png')
+    fig.savefig(img, format='png')
     img.seek(0)
      
     st.pyplot(fig)
@@ -922,16 +777,12 @@ def main():
        mime="image/png")
    
 
-
-
-    ###############################################################################################
-    ###############################################################################################
-    # Map section
-    ###############################################################################################
-    ###############################################################################################
-
-
-    # 有効座標の抽出（同一行に緯度・経度が両方有効、かつ範囲内）
+    # =============================================================================
+    # Sampling-location map / 採取地点の地図
+    # =============================================================================
+    # -----------------------------------------------------------------------------
+    # Coordinate validation / 座標の検証
+    # -----------------------------------------------------------------------------
     if {"Latitude_degN", "Longitude_degE"}.issubset(df_fig_add.columns):
         _lat_num = pd.to_numeric(df_fig_add["Latitude_degN"], errors="coerce")
         _lon_num = pd.to_numeric(df_fig_add["Longitude_degE"], errors="coerce")
@@ -946,8 +797,6 @@ def main():
         _valid_coords_df = df_fig_add.iloc[0:0].copy()
     _has_valid_map_coords = len(_valid_coords_df) > 0
 
-    # 選択されたデータの地点プロット
-    # --- Location map / 採取地点の地図表示 ---
     st.divider()
     st.subheader('Sampling Location Map')
     
@@ -986,11 +835,13 @@ def main():
             uploaded_map_df["Latitude_degN"].between(-90, 90)
         ]
 
-    # Uploaded data alone may provide valid coordinates even when df_fig_add
-    # (reference rows only) is empty — extend the guard to cover that case.
+    # Uploaded rows may provide the only valid coordinates.
+    # アップロード行だけが有効座標を持つ場合も地図を表示する。
     _has_valid_map_coords = _has_valid_map_coords or not uploaded_map_df.empty
 
-    # 2. データの範囲から中心座標とズームレベルを計算
+    # -----------------------------------------------------------------------------
+    # Automatic map extent / 地図範囲の自動計算
+    # -----------------------------------------------------------------------------
     map_extent_sources = []
     if _has_valid_map_coords:
         map_extent_sources.append(_valid_coords_df[["Longitude_degE", "Latitude_degN"]])
@@ -998,7 +849,7 @@ def main():
         map_extent_sources.append(
             uploaded_map_df[["Longitude_degE", "Latitude_degN"]]
         )
-    # 初期値（日本）の設定
+    # Japan-centered fallback when no valid coordinates exist. / 有効座標がない場合の日本中心設定。
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
     if not map_extent_sources:
@@ -1008,36 +859,35 @@ def main():
         lat_min, lat_max = map_extent_df["Latitude_degN"].min(), map_extent_df["Latitude_degN"].max()
         lon_min, lon_max = map_extent_df["Longitude_degE"].min(), map_extent_df["Longitude_degE"].max()
 
-        # --- 判定と計算を一本化 ---
         if pd.isna(lat_min) or pd.isna(lon_min):
-            # 【抽出前】データがない場合は日本を中心に固定
             center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
         else:
-            # 【抽出後】データがある場合
             center_lat = (lat_min + lat_max) / 2
             center_lon = (lon_min + lon_max) / 2
 
             lat_diff = max(lat_max - lat_min, 0.1)
             lon_diff = max(lon_max - lon_min, 0.1)
 
-            # 03番準拠のピクセル計算
+            # Pixel dimensions estimate a zoom level that includes the data extent.
+            # ピクセル寸法を用いて、データ範囲を収めるズームを見積もる。
             map_width_px, map_height_px = 1200, 700
             zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
             zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
 
-            # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-            # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+            # Leave margin around the selected extent. / 選択範囲の周囲に余白を確保する。
             auto_zoom = min(zoom_lon, zoom_lat) - 2.0
             auto_zoom = max(1, min(15, auto_zoom))
 
-            # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+            # Use a wide Japan-centered view for near-global longitude spans.
+            # 経度範囲がほぼ全球の場合は、日本中心の広域表示にする。
             if lon_diff > 100:
                 center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
     
  
 
-
-    # 3. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
+    # -----------------------------------------------------------------------------
+    # Plotly location map / Plotly採取地点地図
+    # -----------------------------------------------------------------------------
     if not _has_valid_map_coords:
         st.info(
             "Map view is unavailable because the selected data contain no valid "
@@ -1046,8 +896,8 @@ def main():
     else:
         c_scale_d18o = envgeo_utils.get_custom_colorscale("d18O")
 
-        # Use reference coords as base when available; fall back to uploaded coords
-        # so that px.scatter_mapbox always receives a non-empty DataFrame.
+        # Use uploaded coordinates when no reference coordinates are available.
+        # 参照データに有効座標がない場合はアップロード座標を基準にする。
         _map_plot_df = (
             _valid_coords_df if not _valid_coords_df.empty else uploaded_map_df
         )
@@ -1065,7 +915,7 @@ def main():
             color_continuous_scale=c_scale_d18o,
             hover_data={c: True for c in _hover_cols if c in _map_plot_df.columns},
             opacity=0.6,
-            height=500  # 高さはここで固定
+            height=500,
         )
 
         map_d18o_sources = [pd.to_numeric(df_fig_add["d18O"], errors="coerce")]
@@ -1109,15 +959,11 @@ def main():
                     "and latitude columns are unavailable.]"
                 )
 
-        # 4. 背景スタイルの適用
+        # Apply the selected background style. / 選択した背景スタイルを適用する。
         fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
 
-
-
-
-
-        # 5. レイアウト設定 (ここが幅を広げる決め手)
-        # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
+        # Keep the colorbar and legend inside the map, preserving map width.
+        # カラーバーと凡例を地図内に置き、外側余白による圧縮を避ける。
         fig_map.update_layout(
             mapbox=dict(
                 center=dict(lat=center_lat, lon=center_lon),
@@ -1145,56 +991,20 @@ def main():
             ),
         )
 
-        # 6. 表示 (use_container_width=True を確実に使う)
-        # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
-        # マウスホイールでのズームが強制的に有効
+        # The unique key prevents Streamlit element-ID collisions; wheel zoom is enabled.
+        # 一意のkeyでStreamlit要素IDの重複を避け、ホイールズームを有効にする。
         st.plotly_chart(
-            fig_map, 
+            fig_map,
             key="TS_plot",
-            config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+            config={'scrollZoom': True, 'displayModeBar': True},
             **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
         )
 
-
-
-
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-    ##選ばれたデータを表示
-    # 例：特定の列だけを選択して新しいデータフレームを作成
-    
-    # with表記 (推奨)
-    # with st.expander("selected dataset (CSV)", expanded=False):
-                
-    #     df1_table = df1[['reference','Cruise', 'Station', 'Date', 'Longitude_degE', 'Latitude_degN', 'Depth_m', 'Temperature_degC', 'Salinity', 'd18O', 'dD']]
-
-    #     st.dataframe(df1_table)    
-        
-    # with st.expander("selected dataset (CSV)", expanded=False):
-    #     df1_table = df1[['reference','Cruise', 'Station', 'Date', 'Year', 'Month', 'Longitude_degE', 'Latitude_degN', 'Depth_m', 'Temperature_degC', 'Salinity', 'd18O', 'dD']].copy()        
-    #     # 【重要】表示直前に全列を文字列化（これでArrowエラーは100%消えます）
-    #     df1_table = df1_table.astype(str) 
-        
-    #     # 最新の width='stretch' を使用
-    #     st.dataframe(df1_table, use_container_width=True)
-    
-        
-    # envgeo_utilsから読み出すとき   
+    # =============================================================================
+    # Filtered-data table / 絞り込みデータ表
+    # =============================================================================
     envgeo_utils.display_isotope_table(df_fig_add)
     
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-
-
-
 
 if __name__ == '__main__':
     main()

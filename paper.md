@@ -13,7 +13,7 @@ authors:
 affiliations:
   - name: Graduate School of Human and Environmental Studies, Kyoto University, Japan
     index: 1
-date: 21 March 2026
+date: 26 September 2026
 bibliography: paper.bib
 ---
 
@@ -21,9 +21,18 @@ bibliography: paper.bib
 
 EnvGeo-Seawater is a web-based interactive visualization platform for exploring marine geochemical and hydrographic datasets, including stable water isotopes ($\delta^{18}$O and $\delta$D), salinity, temperature, and depth.
 
-The platform integrates approximately 50,000 seawater isotope records from major global datasets, including the NASA GISS database [@schmidt1999] and the CoralHydro2k seawater isotope database [@atwood2026], together with internally consistent regional datasets (e.g., around Japan) [@kodama2024] analyzed under unified analytical protocols.
+The platform integrates approximately 50,000 seawater isotope records from
+major global datasets, including the NASA GISS database [@schmidt1999] and the
+CoralHydro2k seawater isotope database [@atwood2026], together with cited
+regional reference data and the internally consistent Kodama et al. (2024)
+Japan-region core collection [@kodama2024].
 
-EnvGeo-Seawater enables simultaneous exploration of spatial distributions, cross-variable relationships, and vertical structures through an integrated interface. By combining multiple visualization modes—such as mapping, depth profiles, temperature–salinity diagrams, regression analysis, and multi-dimensional (3D/4D) plots—the platform supports rapid exploratory analysis and reproducible comparison of heterogeneous seawater datasets.
+EnvGeo-Seawater enables simultaneous exploration of spatial distributions,
+cross-variable relationships, and vertical structures through an integrated
+interface. By combining mapping, depth profiles, temperature–salinity diagrams,
+regression analysis, and multi-dimensional (3D/4D) plots, it supports rapid
+exploratory analysis and documented comparison of heterogeneous seawater
+datasets.
 
 # Statement of Need
 
@@ -31,15 +40,25 @@ Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) ar
 
 Existing platforms primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
 
-EnvGeo-Seawater addresses this gap by providing a unified, interactive environment that integrates heterogeneous global datasets with internally consistent regional datasets analyzed under unified analytical protocols. This design enables rigorous cross-comparison across datasets while minimizing methodological inconsistencies.
+EnvGeo-Seawater addresses this gap by providing a unified, interactive
+environment that integrates heterogeneous global datasets, cited regional
+reference data, and an internally consistent Japan-region core collection.
+Source-specific citations and provenance remain visible so that comparisons can
+be interpreted in light of their respective sampling and analytical contexts.
 
-A key contribution of this platform is the integration of regionally curated datasets for around Japan, which provide consistent analytical quality and enhance the reliability of comparative analyses across spatial scales.
+A key contribution is the integration of the regionally curated Kodama et al.
+(2024) collection, which provides a consistent analytical baseline for
+exploratory comparison across its sampled locations and periods.
 
 ## State of the field
 
 Oceanographic and geochemical datasets, particularly those including seawater stable isotopes (e.g., $\delta^{18}$O, $\delta$D), are increasingly available through global and regional databases such as the NASA GISS seawater isotope database and CoralHydro2k. However, these datasets are often distributed across heterogeneous formats and lack integrated tools for interactive exploration.
 
-Existing oceanographic visualization tools, such as Ocean Data View (ODV)  [@schlitzer2018], provide powerful capabilities for analyzing hydrographic data but are not specifically designed to handle isotope datasets or to integrate multiple sources in a unified, web-accessible environment. Furthermore, many existing tools require local installation and are not optimized for rapid exploratory analysis or comparison with user-supplied datasets.
+Existing oceanographic visualization tools, such as Ocean Data View (ODV)
+[@schlitzer2002], provide powerful capabilities for analyzing hydrographic
+data. EnvGeo-Seawater instead provides a preconfigured web interface for
+seawater-isotope and hydrographic exploration across its bundled sources and
+for session-only comparison with user-supplied data.
 
 As a result, there is a gap in the availability of lightweight, accessible tools that enable integrated visualization and analysis of seawater isotope and hydrographic data across multiple datasets.
 
@@ -47,17 +66,27 @@ In contrast, EnvGeo-Seawater is specifically designed to integrate isotope datas
 
 ## Software design
 
-EnvGeo-Seawater is designed as a modular Python-based application that separates data processing, visualization, and user interface components.
+EnvGeo-Seawater is organized as a modular Python application with shared
+modules for asset resolution, data loading, filtering, and visualization, plus
+Streamlit page scripts for the interactive interface. These modules are
+reused within the application; the project does not currently claim a separate
+stable public API for programmatic analysis.
 
-The modular structure allows individual components to be reused independently of the web interface.
-
-The design emphasizes reusability and extensibility, enabling integration with additional datasets and facilitating future development.
-
-The core functionality is implemented as reusable Python modules that handle data loading, filtering, and visualization. These modules are exposed through a simple API, allowing users to access key functions programmatically for custom analyses.
-
-In addition, command-line execution can be used to support reproducible workflows without relying on the graphical interface.
+The design supports the addition of new, source-documented datasets and future
+maintenance without changing the existing page-oriented workflow. Installed
+console commands start the application or its local diagnostic tool; the
+interactive interface remains the primary analysis route.
 
 The interactive web interface is implemented using Streamlit, which provides an accessible platform for exploratory analysis. The application supports multiple visualization types, including map-based exploration, temperature–salinity diagrams, depth profiles, and regression analyses.
+
+Oceanographic colour scales follow the cmocean design guidance [@thyng2016].
+T–S diagrams include approximate $\sigma_0$ reference contours calculated
+with the Gibbs SeaWater (GSW) implementation of TEOS-10 [@mcdougall2011],
+using Practical Salinity and in-situ temperature as display-oriented proxies.
+They are visual reference contours rather than fully converted TEOS-10 density
+values for individual observations. The Vertical Section Visualizer can use a
+project-derived, downsampled GEBCO 2025 Grid for bathymetric context
+[@gebco2025].
 
 ## Research impact
 
@@ -67,7 +96,25 @@ By integrating multiple datasets into a single interface, the software reduces b
 
 This tool is particularly relevant for studies of ocean circulation, water mass mixing, and paleoclimate reconstruction, where isotope data play a critical role. By improving accessibility and usability of these datasets, EnvGeo-Seawater has the potential to accelerate data-driven research in oceanography and geochemistry.
 
-The software has been used in the author's research workflows and has supported analyses presented at multiple scientific conferences in Japan (three presentations to date). It has also been adopted by collaborators for their own research and has been used in their presentations.
+Before EnvGeo-Seawater had an archival software DOI, it was used in the
+author's and collaborators' research workflows to select, explore, and
+visualize subsets of the regional seawater isotope dataset reported by Kodama
+et al. (2024). These workflows supported isotope-based interpretation in
+studies of Japanese sardine migration [@aono2024], sardine juvenile habitat
+selection [@sakamoto2024], anguillid eel larval experienced-temperature
+reconstruction [@kuroki2025], and early-life Japanese jack mackerel movement
+[@sakamoto2026]. The resulting publications cite the underlying Kodama et al.
+(2024) dataset paper rather than EnvGeo-Seawater; they are evidence of
+workflow use, not direct software citations. The platform has also been used
+in scientific conference presentations in Japan.
+
+## Future directions
+
+The data model is designed to accommodate additional datasets after their
+sources, provenance, and redistribution status have been recorded. Reusable
+visualization, asset-resolution, and distribution components may also support
+future related EnvGeo applications. These are future directions and are not
+part of the v1.3.4 public release scope.
 
 # Capabilities
 
@@ -75,10 +122,10 @@ The platform provides the following capabilities:
 
 - Interactive spatial mapping with adaptive zoom  
 - Depth profile visualization with gap-aware plotting for discrete sampling data  
-- Temperature–salinity (T–S) diagrams with density contours ($\sigma_\theta$)  
+- Temperature–salinity (T–S) diagrams with approximate $\sigma_0$ reference contours
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
 - Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
-- Integration of global datasets (~50,000 records) and internally consistent regional datasets  
+- Integration of global datasets (~50,000 records), cited regional reference data, and the Kodama et al. (2024) core collection
 - User data upload for direct comparison with reference datasets  
 - Export of publication-quality figures  
 
@@ -86,7 +133,16 @@ The platform provides the following capabilities:
 
 The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
 
-The application is designed for reproducibility and lightweight deployment, with all required datasets included in the repository (<30 MB) and minimal setup required for local execution.
+The bundled application data and assets occupy less than 30 MB. Local execution
+requires installation of the declared Python dependencies; wheel builds and
+isolated installs are verified in continuous integration.
+
+# Availability
+
+The stable public source repository is
+https://github.com/envgeo/seawater_map. Version 1.3.4 is the current release
+candidate. A tagged GitHub Release and Zenodo archival DOI will be created only
+after the release checklist has been completed; no DOI is claimed here.
 
 # Example Use Case
 
@@ -100,15 +156,22 @@ researchers can use bundled reference data and local measurements to inspect dat
 quality, sampling positions, depth profiles, temperature–salinity structure, and
 isotope–hydrographic relationships. Detecting outliers, coordinate errors, missing
 values, or unexpected profiles while still at sea can inform remeasurement,
-additional sampling, and adjustments to the remaining observation plan. Full
-offline operation, including map and browser assets, is a current development and
-verification priority.
+additional sampling, and adjustments to the remaining observation plan.
 
 ## AI Usage Disclosure
 
-Development of this software, from version 1.3 onward, has made substantial use of AI coding assistants for code review, implementation drafting, refactoring, test design and authoring, bug investigation, and documentation. The tools used were OpenAI Codex and Anthropic Claude Code. At least one documented development session used the Claude Sonnet 4.6 model, as recorded in the project's internal session logs; exact model versions were not consistently recorded for every session, and confirming and listing them precisely remains a TODO to complete before JOSS submission. Portions of language editing in earlier drafts of this manuscript were also assisted by a general-purpose AI language tool (ChatGPT, OpenAI); no specific model version was recorded for that use.
+Development of this software, from version 1.3 onward, has made substantial use of AI
+coding assistants for code review, implementation drafting, refactoring, test design and
+authoring, bug investigation, and documentation. The tools used were OpenAI Codex and
+Anthropic Claude Code. Portions of language editing in earlier drafts of this manuscript
+were also assisted by a general-purpose AI language tool (ChatGPT, OpenAI).
 
-All AI-assisted output was reviewed, edited, and verified by the corresponding author before being adopted into the codebase, tests, documentation, or this manuscript. The author performed all scientific design, data interpretation, and validation decisions, and takes full responsibility for the accuracy, originality, licensing, and ethical and legal compliance of the software and this manuscript. AI tools are not authors or co-developers of this work.
+All AI-assisted output was reviewed, edited, and verified by the corresponding author
+before being adopted into the codebase, tests, documentation, or this manuscript. The
+author performed all scientific design, data interpretation, and validation decisions,
+and takes full responsibility for the accuracy, originality, licensing, and ethical and
+legal compliance of the software and this manuscript. AI tools are not authors or
+co-developers of this work.
 
 ## Conflict of Interest
 

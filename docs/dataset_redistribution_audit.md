@@ -1,7 +1,8 @@
 # Dataset Redistribution Evidence Audit
 
-**Status:** working evidence audit, 2026-09-25.  This is a release-planning
-record, not legal advice. It supplements the concise
+**Status:** release-evidence audit, initially reviewed 2026-09-25,
+workbook/package scope rechecked 2026-09-30, and derived-asset records
+verified 2026-10-03. This is a release-planning record, not legal advice. It supplements the concise
 [`provenance_inventory.md`](provenance_inventory.md).
 
 ## Purpose and release rule
@@ -47,18 +48,36 @@ known project-side schema or display transformations. Inclusion does not make
 the underlying records project-owned, and does not automatically apply to a
 future dataset added to the collection.
 
+### Verified package snapshot (2026-09-30)
+
+A read-only comparison confirmed that the five `dataset/*.xlsx` workbooks
+selected by `pyproject.toml` are byte-identical in the canonical working
+folder and the stable `seawater_map` clone. Their filenames, worksheet names,
+row/column counts, and SHA-256 checksums are recorded in
+[`provenance_inventory.md`](provenance_inventory.md). No workbook content was
+modified by this audit. The tracked `local_data/user_data.xlsx` sample is a
+zero-row, 22-column public template in both locations. On 2026-10-03, its
+workbook metadata was regenerated without a local absolute-path field; its
+headers, zero-row state, and visible template formatting were retained.
+
+The unused legacy files `data/reference.xlsx` and
+`data/seawater_data_sample.xlsx` were removed from both application trees on
+2026-10-03. Byte-identical recovery copies are retained only in a local
+historical archive outside the application and public-release trees; they are
+not wheel, GitHub Release, or Zenodo inputs.
+
 ## Findings by resource
 
-| Resource | Evidence confirmed on 2026-09-25 | What is still needed before redistribution | Packaging decision now |
+| Resource | Evidence confirmed | Ongoing release safeguard | Packaging decision now |
 |---|---|---|---|
-| `local_data/user_data.xlsx` | Project-created, zero-value template; public distribution policy is explicit. | Maintain its zero-value state in public synchronization. | May remain tracked and bundled as a sample. |
-| Natural Earth land and derived coastline CSVs | Natural Earth states that its data are public domain. | Record CSV generator, source version, retrieval date, and checksums; retain credit. | Eligible in principle, subject to provenance completion. |
-| Derived `data_beta/GEBCO_2025_6min.nc` | GEBCO states that the Grid is public domain and allows redistribution subject to attribution, disclaimer, and non-navigation terms. | Preserve the GEBCO 2025 citation; record input retrieval date/checksum and the exact derivation. | Eligible in principle, subject to provenance completion. |
-| `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | A publication citation is recorded. | Preserve the source location, version/access date when available, citation, and transformation record. | Included in the current package under the documented scholarly-use policy. |
-| `11_AROUND_JAPAN_PUB_20260305.xlsx` | A regional compilation and its references are recorded. | Preserve the row/source mapping, citations, and transformations for contributing records. | Included in the current package under the documented scholarly-use policy. |
-| `71_GLOBA_NASA_20260226.xlsx` | `data_text/NASA_references.md` records the GISS reference URL, database v1.22 citation, source URL, and access date **2026-03-01**. `external_dataset_workbook_notes.md` records the 25,514-row comparison, schema labels, `Transect = Nasa_database`, and one QC note. | Retain the source/version/access record, the `Transect` convention, and the change record. Review only if an explicit restriction, reviewer concern, or rights-holder request arises. | Retain current scholarly-use distribution with citation; do not represent it as project-owned. |
+| `local_data/user_data.xlsx` | Project-created, zero-value template; headers, zero-row state, visible formatting, and absence of a local absolute-path metadata field were verified 2026-10-03. | Maintain its zero-value state and metadata-safe workbook form in public synchronization. | May remain tracked and bundled as a sample. |
+| Natural Earth land and derived coastline CSVs | Natural Earth states that its data are public domain. Natural Earth 50m land is documented separately; 50m/110m CSV intermediates, output checksums, and numerical correspondence were verified 2026-10-03. | Retain credit, intermediate-file record, and output checksums. Original raw-download checksums were not retained. | Included under the documented public-domain source record. |
+| Derived `bathymetry/GEBCO_2025_6min.nc` | GEBCO states that the Grid is public domain and allows redistribution subject to attribution, disclaimer, and non-navigation terms. NetCDF history, retained generator, grid dimensions, and output checksum were verified 2026-10-03. | Retain the GEBCO 2025 citation, disclaimer, non-navigation notice, generator, and output checksum. Original input-grid checksum was not retained. | Included under the documented GEBCO source record. |
+| `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | Publication DOI/citation, analytical record, current row count, and output checksum are recorded. | Preserve the source location, version/access date when available, citation, and transformation record. | Included in the current package under the documented scholarly-use policy. |
+| `11_AROUND_JAPAN_PUB_20260305.xlsx` | Four regional source labels, citations, current row count, and output checksum are recorded. | Preserve the row/source mapping, citations, and transformations for contributing records. | Included in the current package under the documented scholarly-use policy. |
+| `71_GLOBA_NASA_20260226.xlsx` | `data_text/NASA_references.md` records the GISS reference URL, database v1.22 citation, source URL, and access date **2026-03-01**. `external_dataset_workbook_notes.md` records the 25,514-row comparison, schema labels, and `Transect = Nasa_database`. | Retain the source/version/access record, the `Transect` convention, and the change record. Review only if an explicit restriction, reviewer concern, or rights-holder request arises. | Retain current scholarly-use distribution with citation; do not represent it as project-owned. |
 | `71_GLOBAL_Atwood_et_al_2026.xlsx` | `data_text/CoralHydro2_references.md` records the NCEI study URL, project DOI, cited Atwood et al. reference, and access date **2026-03-16**. `external_dataset_workbook_notes.md` records the 18,598-row comparison, source-column mapping, short reference label, `Transect` field, and date-format representation. | Retain the DOI, source/access record, requested citation, and change record. Review any study-specific restriction if it is identified. | Retain current scholarly-use distribution with citation; do not represent it as project-owned. |
-| `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | It is identified as a project compilation. | Preserve its row/source mapping, citations, and transformations for report-derived records. | Included in the current package under the documented scholarly-use policy. |
+| `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | It is a 35-row project compilation currently labelled Sakamoto et al. (2022); its current output checksum is recorded. | Preserve its row/source mapping, citations, and transformations for report-derived records. | Included in the current package under the documented scholarly-use policy. |
 
 ## Scientific-provenance consequence for T–S Stage 2
 
@@ -94,10 +113,10 @@ retain the existing cited-workbook distribution with complete provenance. No
 additional contact is planned before release or manuscript submission. Any
 explicit study-level restriction or request will be recorded and acted on.
 
-## Evidence package to collect per workbook/source
+## Evidence package for future additions or changes
 
-Before a future full-data release, add a small machine- and human-readable
-record for each source:
+For a new source, or when replacing a currently bundled workbook, add a small
+machine- and human-readable record for each source:
 
 1. Dataset title, owner/publisher, canonical landing URL, DOI or identifier.
 2. Dataset version, retrieval date, original filename/checksum, and local
@@ -112,8 +131,8 @@ record for each source:
 
 ## Recommended release sequence
 
-1. Maintain and complete this evidence package for the project-owned and
-   regional workbooks as source-level detail becomes available.
+1. Maintain this evidence package for the project-owned and regional workbooks;
+   add source-level detail when a workbook is changed or a new source is added.
 2. Retain DOI/source, access-date, citation, and transformation records for
    each third-party source. Do not make additional enquiries before release or
    manuscript submission unless a concrete issue requires it.

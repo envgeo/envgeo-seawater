@@ -3,72 +3,55 @@
 """
 Depth-profile visualizer for EnvGeo-Seawater data.
 
-Created: 2023-04-22
+EnvGeo-Seawater データの深度プロファイルを表示するページです。
+
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
-
-# --- Version info ---
-version = "1.3.4"  # 2026-09-28
-
-# ToDo
-
-
-
-fig_title = "envgeo-seawater-database"  # 2026/02/12
-    
-
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import plotly.express as px
-import math
 import io
+import math
 import textwrap
-from matplotlib.ticker import FormatStrFormatter
-import envgeo_utils
-import envgeo_user_data
 
-    
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+from matplotlib.ticker import FormatStrFormatter
+
+import envgeo_user_data
+import envgeo_utils
+
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
+version = "1.3.4"
+fig_title = "envgeo-seawater-database"
 
 def main():
-    
-    # タイトル
+    # =============================================================================
+    # Page header / ページ見出し
+    # =============================================================================
     st.header(f'Depth Profile ({version})')
 
-    # リロードボタン
     st.button('Reload')
-    
-    
 
-    
-    ##############################################################################
-    # データソースの変数、envgeo_utilsから読み出す
-    ##############################################################################
+    # =============================================================================
+    # Data-source selection / データソースの選択
+    # =============================================================================
     data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
-    
-
-    ##############################################################################
-    # データソース選択
-    ##############################################################################
     ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
-
-
-    ##############################################################################
-    # 選択したデータセットの文献表示
-    ##############################################################################
-    
+    # -----------------------------------------------------------------------------
+    # Attribution / 出典表示
+    # -----------------------------------------------------------------------------
     if ref_data == data_source_JAPAN_SEA:
         st.write(envgeo_utils.refs_JAPAN_SEA)
         
     elif ref_data == data_source_AROUND_JAPAN:
-        # st.text('including data from previous reports')
         st.write(envgeo_utils.refs_AROUND_JAPAN)
 
     elif ref_data == data_source_GLOBAL:
@@ -77,11 +60,9 @@ def main():
     else:
         st.warning("Invalid data source selection.")
 
-
-    ##############################################################################
-    # --- 3. プロットのエレメント選択　---　　 
-    ##############################################################################
-
+    # =============================================================================
+    # Profile parameter and display / プロファイルのパラメーターと表示
+    # =============================================================================
     col1, col2 = st.columns([1,1])
     with col1:
         plot_all_data = st.radio(
@@ -99,50 +80,38 @@ def main():
             help="Choose the seawater parameter plotted against water depth.",
         )
 
-
         
     if plot_element == "d18O(VSMOW)":
-        #水深-d18Oの時
         X_data = "d18O"
         Y_data = "Depth_m"
         
         
-        # """XYの表示用のラベルを指定"""
         X_label = r"$\delta^{18}$O"
         Y_label = "water depth (m)"
         
         
-        # """XYの表示用のラベルのスケールを指定"""
         iso_scale_X = "(VSMOW)"
         iso_scale_Y = ""
      
-        #水深-d18Oの時
-        # lim_min_X = -1.4
-        # lim_max_X = 0.6
-        
-        # 海域別の初期値設定
+        # Dataset-specific initial axis range / データセット別の初期軸範囲
         if ref_data == data_source_GLOBAL:
-            fig_x_min, fig_x_max = -20.0, 4.0  # GLOBALは幅を広く
+            fig_x_min, fig_x_max = -20.0, 4.0
         elif ref_data == data_source_JAPAN_SEA:
-            fig_x_min, fig_x_max = -1.4, 0.6  # 日本海はズーム
+            fig_x_min, fig_x_max = -1.4, 0.6
         else:
-            fig_x_min, fig_x_max = -1.4, 0.6  # Around JAPAN(標準)
+            fig_x_min, fig_x_max = -1.4, 0.6
 
      
     elif plot_element == "dD(VSMOW)":
-        # 水深-dDの時
         X_data = "dD"
         Y_data = "Depth_m"
         
-        # """XYの表示用のラベルを指定"""
         X_label = r"$\delta$D"
         Y_label = "water depth (m)"
         
-        # """XYの表示用のラベルのスケールを指定"""
         iso_scale_X = "(VSMOW)"
         iso_scale_Y = ""
         
-        # 海域別の初期値設定
         if ref_data == data_source_GLOBAL:
             fig_x_min, fig_x_max = -150.0, 50.0
         elif ref_data == data_source_JAPAN_SEA:
@@ -151,19 +120,15 @@ def main():
             fig_x_min, fig_x_max = -30.0, 20.0
 
     elif plot_element == "d-excess":
-        # 水深-d-excessの時
         X_data = "d-excess"
         Y_data = "Depth_m"
         
-        # """XYの表示用のラベルを指定"""
         X_label = "d-excess"
         Y_label = "water depth (m)"
         
-        # """XYの表示用のラベルのスケールを指定"""
         iso_scale_X = ""
         iso_scale_Y = ""
         
-        # 海域別の初期値設定
         if ref_data == data_source_GLOBAL:
             fig_x_min, fig_x_max = -30.0, 40.0
         elif ref_data == data_source_JAPAN_SEA:
@@ -172,81 +137,52 @@ def main():
             fig_x_min, fig_x_max = -10.0, 30.0
 
     elif plot_element == "Temperature (°C)":
-        #水深-水温の時
         X_data = "Temperature_degC"
         Y_data = "Depth_m"
         
-        # """XYの表示用のラベルを指定"""
         X_label = "Temperature(°C)"
         Y_label = "water depth (m)"
         
-        # """XYの表示用のラベルのスケールを指定"""
         iso_scale_X = ""
         iso_scale_Y = ""
         
-    	# #水深-d18Oの時
-        # lim_min_X = -2
-        # lim_max_X = 30
-        
-        # 海域別の初期値設定
         if ref_data == data_source_GLOBAL:
-            fig_x_min, fig_x_max = -3, 35  # GLOBALは幅を広く
+            fig_x_min, fig_x_max = -3, 35
         elif ref_data == data_source_JAPAN_SEA:
-            fig_x_min, fig_x_max = -2, 30  # 日本海はズーム
+            fig_x_min, fig_x_max = -2, 30
         else:
-            fig_x_min, fig_x_max = -2, 30  # Around JAPAN(標準)
+            fig_x_min, fig_x_max = -2, 30
 
         
     elif plot_element == "Salinity":
-        #水深-塩分の時
         X_data = "Salinity"
         Y_data = "Depth_m"
         
-        # """XYの表示用のラベルを指定"""
         X_label = "Salinity"
         Y_label = "water depth (m)"
         
-        # """XYの表示用のラベルのスケールを指定"""
         iso_scale_X = ""
         iso_scale_Y = ""
         
-    	# #水深-d18Oの時
-        # lim_min_X = 28
-        # lim_max_X = 36
-        
-        # 海域別の初期値設定
         if ref_data == data_source_GLOBAL:
-            fig_x_min, fig_x_max = 0, 40  # GLOBALは幅を広く
+            fig_x_min, fig_x_max = 0, 40
         elif ref_data == data_source_JAPAN_SEA:
-            fig_x_min, fig_x_max = 28, 36  # 日本海はズーム
+            fig_x_min, fig_x_max = 28, 36
         else:
-            fig_x_min, fig_x_max = 28, 36  # Around JAPAN(標準)
+            fig_x_min, fig_x_max = 28, 36
     
     else:
         pass
 
-
-
-
-
-    ##############################################################################
-    # envgeo_utilsからデータフレーム読み込み
-    ##############################################################################
-    df_original = envgeo_utils.load_isotope_data(ref_data) # フィルターしないデータ
-
-    df1 = df_original # このあとフィルターするデータ
+    # =============================================================================
+    # Data loading and uploaded overlay / データ読込とアップロード重ね表示
+    # =============================================================================
+    df_original = envgeo_utils.load_isotope_data(ref_data)
+    df1 = df_original
 
     if df_original.empty:
         st.warning("No data available for the selected conditions.")
         return
-
-    
-
-
-    ##############################################################################
-    # --- Upload overlay ---
-    ##############################################################################
-
     embedded_in_integrated = (
         st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
         == "37_Depth_Profile.py"
@@ -280,17 +216,9 @@ def main():
         marker_size_min=1,
         marker_size_step=1,
     )
-
-
-    ##############################################################################
-    # サイドバーここから　　df1フィルタリング　も一括で
-    #　2026/03/06　Min-Maxをdfから取得に変更
-    #  緯度経度などは型変換をせず、そのまま最小・最大を取得
-    ##############################################################################
-
-
-    # 関数の呼び出し
-    # すべての変数を順番通りに受け取り
+    # =============================================================================
+    # Shared sidebar filtering / 共通サイドバーによるデータ絞り込み
+    # =============================================================================
     (df1,
      sld_year_min, sld_year_max,
      selected_months,
@@ -314,12 +242,8 @@ def main():
         filtered_profile_df, envgeo_utils.UPLOADED_DATA_LABEL
     )
 
-
-    # データが一つだけの時に警告。
-    # dD / d-excessは欠損が多いため、対象列と水深が両方ある点だけを数える。
-    # The selected Dataset list can contain only Uploaded data.  Use the
-    # complete filtered input here; df1 below remains reference-only so the
-    # existing foreground uploaded trace stays visually distinct.
+    # Count rows with both the selected parameter and depth; dD/d-excess can be sparse.
+    # アップロード行だけの選択にも対応するため、絞り込み後の統合テーブルで数える。
     data_found = len(filtered_profile_df.dropna(subset=[X_data, "Depth_m"]))
     if data_found == 1:
         st.warning('Only one data point was found. A depth profile could not be meaningfully generated.')
@@ -329,39 +253,23 @@ def main():
         st.stop()
     
 
-    ##############################################################################
-    # [重要] 同じ地点，同じ年月日，はグループにして他は1行開ける
-    ##############################################################################
-
-    
-    df_original = envgeo_utils.insert_gap_rows(df_original)     # [重要]　同じ地点，同じ年月日，はグループにして他は1行開ける
-    
-    df1 = envgeo_utils.insert_gap_rows(df1)     # [重要]　同じ地点，同じ年月日，はグループにして他は1行開ける
-    
-    
-
-    ##############################################################################
-    # 後半の定義用
-    ##############################################################################
-        
+    # =============================================================================
+    # Gap rows and coordinate aliases / 区切り空白行と座標列の別名
+    # =============================================================================
+    # Gap rows separate different station/date groups in connected profiles.
+    # 空白行で異なる地点・年月日のグループを分離し、線が誤って接続されるのを防ぐ。
+    df_original = envgeo_utils.insert_gap_rows(df_original)
+    df1 = envgeo_utils.insert_gap_rows(df1)
     df1['lat'] = df1['Latitude_degN']
     df1['lon'] = df1['Longitude_degE']
 
-
-
-    
-    #######################################################################
-    #######################################################################   
-    ###  図の調整　サイドバー
-    #######################################################################        
-    #######################################################################       
-    
-    
+    # =============================================================================
+    # Figure controls / 図の表示設定
+    # =============================================================================
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "FIGURE_CONTROLS_LABEL", "Figure controls"))
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
         
-        # st.sidebar.subheader('描画水深の範囲')
         if ref_data == data_source_JAPAN_SEA:
             fig_depth_min, fig_depth_max = st.slider(label='Depth range',
                                         min_value=0,
@@ -369,7 +277,6 @@ def main():
                                         value=(0, 500),
                                         step = 50,
                                         )
-            # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
             
         elif ref_data == data_source_AROUND_JAPAN:
             fig_depth_min, fig_depth_max = st.slider(label='Depth range',
@@ -378,7 +285,6 @@ def main():
                                         value=(0, 2000),
                                         step = 50,
                                         )
-            # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
             
         else:
             fig_depth_min, fig_depth_max = st.slider(label='Depth range',
@@ -387,12 +293,10 @@ def main():
                                         value=(0, 2000),
                                         step = 50,
                                         )
-            # st.sidebar.write(f'Selected: {fig_depth_min} ~ {fig_depth_max}')
             
 
         
 
-        # st.sidebar.subheader('X軸の描画範囲の範囲')
         axis_margin = max(abs(fig_x_min), abs(fig_x_max)) * 0.5
         lim_min_X, lim_max_X = st.slider(
             label=f'Axis Scale for {plot_element}',
@@ -406,8 +310,7 @@ def main():
             
             
 
-        #図のサイズXY
-        # st.sidebar.subheader('図のサイズ')
+        # Figure size / 図の寸法
         fig_size_col1, fig_size_col2 = st.columns(2)
         with fig_size_col1:
             sld_fig_size_min_X = st.number_input(
@@ -432,7 +335,7 @@ def main():
         
     
     
-        #フォントサイズ
+        # Font sizes / フォントサイズ
         font_col1, font_col2 = st.columns(2)
         with font_col1:
             sld_font_size_min_S = st.number_input(
@@ -454,7 +357,7 @@ def main():
             )
                     
                     
-        #メモリ間隔
+        # Tick counts / 目盛り数
         tick_col1, tick_col2 = st.columns(2)
         with tick_col1:
             tick_interval_min_X = st.number_input(
@@ -475,7 +378,7 @@ def main():
                 key=f"depth_profile_y_tick_count::{plot_element}",
             )
 
-        # アップロードデータのうち月情報が無い行の表示切替
+        # Uploaded rows without month information / 月情報がないアップロード行
         show_nodata_uploaded = st.checkbox(
             "Show uploaded data without Month information",
             value=True,
@@ -487,37 +390,22 @@ def main():
             ),
         )
 
-    ##############################################################################
-    # キャッシュクリア
-    ##############################################################################
-        
-    # キャッシュのクリア　サイドバーの一番下などに配置
+    # =============================================================================
+    # Cache control / キャッシュ制御
+    # =============================================================================
     if st.sidebar.button("🔄 Clear cache"):
         envgeo_utils.clear_app_cache()
-        # st.sidebar.success("キャッシュをクリアしました！再読み込みします...")
-        st.rerun() # アプリを再実行して最新のExcelを読み込ませる
+        st.rerun()
 
   
    
     
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
 
+    # =============================================================================
+    # Figure preparation and drawing / 図の準備と描画
+    # =============================================================================
 
-    ##############################################################################
-    #  ここから図の設定と描画
-    ##############################################################################
-
-
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
     st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
-
-
 
     if not uploaded_df.empty:
         uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
@@ -535,11 +423,10 @@ def main():
                     **envgeo_utils.stretch_width_kwargs(st.dataframe),
                 )
 
-    ############################################
-    ######      font size line etc..       #####
-    ############################################
-        
-    fig = plt.figure(figsize = (sld_fig_size_min_X, sld_fig_size_max_Y),dpi=150)
+    # -----------------------------------------------------------------------------
+    # Figure and title / 図と図題
+    # -----------------------------------------------------------------------------
+    fig = plt.figure(figsize=(sld_fig_size_min_X, sld_fig_size_max_Y), dpi=150)
     
     fig.subplots_adjust(wspace=0.3, hspace=0.3)
 
@@ -548,32 +435,20 @@ def main():
     
 
     
-    # ==========  以下，図のファイル名用　============
-
-    #全体のタイトル名　
+    # Figure title and file name / 図題とファイル名
     main_title = fig_title
     
-    # --- 月 (スライダー用) ---  
-    # sub_title = 'Lon:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', Lat:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', Y:'+str(sld_year_min)+'-'+str(sld_year_max)+', M:'+str(sld_month_min)+'-'+str(sld_month_max)+', S:'+str(sld_sal_min)+'-'+str(sld_sal_max)+', D:'+str(sld_depth_min)+'-'+str(sld_depth_max)+'m'
-    # --- 月 (multiselect用) ---
-    # 月の表示用テキストを作成（選択されたリストをカンマ区切りにする）
-    month_text = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-    
-    
-    ### もし「月が多すぎてサブタイトルが長くなる」のが嫌な場合
-    # 月の表示ロジック
+    # Compact month-range text for the figure title. / 月範囲を図題用に短縮する。
     if len(selected_months) == 12:
         month_display = "All"
     elif len(selected_months) == 0:
         month_display = "None"
     else:
-        # 標準機能だけで「1-3」のように短縮するロジック
         sorted_m = sorted(list(set(selected_months)))
         ranges = []
         if sorted_m:
             start = sorted_m[0]
             for i in range(len(sorted_m)):
-                # 次の要素が連続していない、または最後の要素の場合に書き出し
                 if i + 1 == len(sorted_m) or sorted_m[i+1] != sorted_m[i] + 1:
                     end = sorted_m[i]
                     ranges.append(f"{start}-{end}" if start != end else str(start))
@@ -585,14 +460,11 @@ def main():
 
     sub_title = f"Lon:{sld_lon_min}-{sld_lon_max}, Lat:{sld_lat_min}-{sld_lat_max}, Y:{sld_year_min}-{sld_year_max}, M:{month_display}, S:{sld_sal_min}-{sld_sal_max}, D:{sld_depth_min}-{sld_depth_max}m"
 
-    sub_title2 = ''
-    
-    # Keep the saved Depth Profile title inside the figure width.
-    # Depth Profileはフィルタ条件が長くなりやすいため、保存図では少し短めに折り返す。
+    # Wrap long filter conditions so saved figures remain readable.
+    # 保存図では長いフィルター条件を折り返し、図幅内に収める。
     wrapped_sub_title = "\n".join(textwrap.wrap(sub_title, width=62))
-    title_head = str(main_title+'\n'+wrapped_sub_title+'\n'+sub_title2)
-    
-    title_head2 = title_head.replace('_', ' ') #図のタイトル表示用
+    title_head = f"{main_title}\n{wrapped_sub_title}"
+    title_head2 = title_head.replace('_', ' ')
 
     fig.suptitle(title_head2, fontsize=max(14, sld_font_size_max_L - 3), y=0.97)
     fig.subplots_adjust(top=0.87)
@@ -600,66 +472,36 @@ def main():
     
 
     
-    # """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-    # """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     
     
     
     
     
     
-    #####################################
-    ######    EXCEL SHEET select    #####
-    #####################################
-
-    sheet_num = [2]  #ここ必要ない，過去に複数のエクセルシート読み込んだなごり
-    
-  
-    
-    ############################################
-    ######      font size line etc..       #####
-    ############################################
-    
+    # -----------------------------------------------------------------------------
+    # Profile drawing constants / プロファイル描画の共通設定
+    # -----------------------------------------------------------------------------
     ax_length = 5
     
-   
-    
-    
-    ########################################
-    ######     FIG: depth profile    #####
-    ########################################
-    
-
-
-    
-    sheet_num_XY = sheet_num #ここは変更しない
+    # -----------------------------------------------------------------------------
+    # Depth profile / 深度プロファイル
+    # -----------------------------------------------------------------------------
     X_Y = 1
     
-    #メインプロットの設定
-    X_Y_C = "gray" #色の設定
-    X_Y_M = " " #現時点で色は変更設定なしマーカーの種類
+    X_Y_C = "gray"
+    X_Y_M = " "
 
     
-    # 追加で強調プロットをする場合は「1」
     X_Y_add = 1
 
     
     
-    #プロットの透明度
-    alpha_all = 0.4 #メインプロット
-    alpha_selected = 1 #強調プロット
-    
-    #強調プロットの色の指定
-    # X_Y_C_add =  "blue" #単色にしたい場合
-    X_Y_C_add_each = 1 #シート毎に塗り分けたい場合は「１」　そうでなければ「２」
+    alpha_all = 0.4
+    alpha_selected = 1
+    X_Y_C_add_each = 1
 
-    
-    #############################################
-    ######      data range for SUB FIG      #####
-    #############################################
-    
-    
-    # #水深-d18Oの時
+    # Invert the vertical axis so increasing depth is downward.
+    # 深くなる方向が下になるよう、鉛直軸を反転する。
     lim_min_Y = fig_depth_max
     lim_max_Y = fig_depth_min
     
@@ -676,7 +518,6 @@ def main():
         ax.set_ylabel(Y_label + iso_scale_Y, fontsize=sld_font_size_max_L)  
     
         
-
 
         # 対象列と水深があるデータだけをプロットする。
         # dD / d-excessは欠損が多いため、除外数を表示してから空白行を挿入する。
@@ -700,10 +541,7 @@ def main():
         else:
             pass
 
-
-
         plt.legend(fontsize = 16) #
-
 
         ax.set_xlim(lim_min_X, lim_max_X) 
         ax.set_ylim(lim_min_Y, lim_max_Y) 
@@ -769,32 +607,26 @@ def main():
                 # 同じ地点，同じ年月日，はグループにして他は1行開ける
                 df_fig_add = envgeo_utils.insert_gap_rows(df_fig_add)
 
-
-                #########月ごとに色分けする場合######################
-                lw_add = 0.6 #線の太さ
-                # 描画する月範囲を指定 and指定
+                # Month-band colors / 月帯ごとの色分け
+                lw_add = 0.6
                 df13 = df_fig_add[(df_fig_add['Month'] >= 1) & (df_fig_add['Month'] <= 3)
                           | df_fig_add.isnull().all(axis=1)]  
                 plt.plot(df13[X_data], df13[Y_data],c='blue', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='1-3')
                 
-                # 描画する月範囲を指定 and指定
                 df46 = df_fig_add[(df_fig_add['Month'] >= 4) & (df_fig_add['Month'] <= 6)
                           | df_fig_add.isnull().all(axis=1)]  
                 plt.plot(df46[X_data], df46[Y_data],c='green', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='4-6')
                 
-                # 描画する月範囲を指定 and指定
                 df79 = df_fig_add[(df_fig_add['Month'] >= 7) & (df_fig_add['Month'] <= 9)
                           | df_fig_add.isnull().all(axis=1)]  
                 plt.plot(df79[X_data], df79[Y_data],c='orange', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='7-9')
-                # 描画する月範囲を指定 and指定
                 df1012 = df_fig_add[(df_fig_add['Month'] >= 10) & (df_fig_add['Month'] <= 12)
                           | df_fig_add.isnull().all(axis=1)]  
                 plt.plot(df1012[X_data], df1012[Y_data],c='purple', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='10-12')
                 
 
     
-                plt.legend(fontsize = sld_font_size_min_S) # 凡例の数字のフォントサイズを設定
-
+                plt.legend(fontsize=sld_font_size_min_S)
 
                 
         else:
@@ -890,13 +722,12 @@ def main():
     
 
      
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
 
     
-    #Save to memory first. の場合は，ローカルに保存されないので安心
+    # =============================================================================
+    # Image download / 図のダウンロード
+    # =============================================================================
+    # Keep the PNG in memory; no local file is written. / PNGはメモリ上だけで生成する。
     safe_parameter_name = envgeo_utils.safe_filename_text(X_data)
     fn = envgeo_utils.build_figure_filename(f"Fig_depth_{safe_parameter_name}", sub_title)
     img = io.BytesIO()
@@ -924,18 +755,13 @@ def main():
     
     
     
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
     
 
-
-    # 選択されたデータの地点プロット
-    # --- Location map / 採取地点の地図表示 ---
+    # =============================================================================
+    # Sampling-location map / 採取地点の地図
+    # =============================================================================
     st.divider()
     st.subheader('Sampling Location Map')
-
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
@@ -954,7 +780,11 @@ def main():
     if _fell_37:
         st.warning(envgeo_utils.OFFLINE_FALLBACK_WARNING)
 
-    # 2. 有効座標の抽出（同一行に緯度・経度が両方有効、かつ範囲内）
+    # -------------------------------------------------------------------------
+    # Coordinate validation / 座標の検証
+    # -------------------------------------------------------------------------
+    # Keep rows only when both coordinates are numeric and geographically valid.
+    # 緯度・経度が数値かつ地理的に有効な行だけを地図用に残す。
     if {"Latitude_degN", "Longitude_degE"}.issubset(df_fig_add.columns):
         _lat_num = pd.to_numeric(df_fig_add["Latitude_degN"], errors="coerce")
         _lon_num = pd.to_numeric(df_fig_add["Longitude_degE"], errors="coerce")
@@ -969,9 +799,10 @@ def main():
         _valid_coords_df = df_fig_add.iloc[0:0].copy()
     _has_valid_map_coords = len(_valid_coords_df) > 0
 
-    # Build uploaded_map_df for the guard and center/zoom calculation.
-    # (page 37 uses uploaded_df directly in add_uploaded_map_overlay, so this
-    #  variable is local to the map extent logic and does not affect the overlay.)
+    # Uploaded coordinates support the map guard and automatic extent only.
+    # Page 37 passes ``uploaded_df`` itself to the overlay helper.
+    # アップロード座標は地図表示可否と表示範囲の計算だけに用いる。
+    # 実際の重ね表示には ``uploaded_df`` をヘルパーへ渡す。
     uploaded_map_df = pd.DataFrame(columns=["Longitude_degE", "Latitude_degN"])
     if not uploaded_df.empty and {"Longitude_degE", "Latitude_degN"}.issubset(uploaded_df.columns):
         uploaded_map_df = uploaded_df.copy()
@@ -987,18 +818,21 @@ def main():
             & uploaded_map_df["Longitude_degE"].between(-180, 180)
         ]
 
-    # Uploaded data alone may provide valid coordinates even when df_fig_add
-    # (reference rows only) is empty — extend the guard to cover that case.
+    # Uploaded data alone can provide a usable map when reference rows are empty.
+    # 参照データが空でもアップロードデータだけで地図を表示できるようにする。
     _has_valid_map_coords = _has_valid_map_coords or not uploaded_map_df.empty
 
-    # 3. データの範囲から中心座標とズームレベルを計算
-    # 初期値（日本）の設定
+    # -------------------------------------------------------------------------
+    # Map extent and zoom / 地図範囲とズーム
+    # -------------------------------------------------------------------------
+    # Default view: Japan / 初期表示: 日本
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
     if not _has_valid_map_coords:
         center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
     else:
-        # Combine reference and uploaded coords for map extent
+        # Combine reference and uploaded coordinates for the map extent.
+        # 参照・アップロード座標を合わせて表示範囲を求める。
         _map_ext_sources = []
         if len(_valid_coords_df) > 0:
             _map_ext_sources.append(_valid_coords_df[["Longitude_degE", "Latitude_degN"]])
@@ -1008,7 +842,6 @@ def main():
         lat_min, lat_max = _map_ext_df["Latitude_degN"].min(), _map_ext_df["Latitude_degN"].max()
         lon_min, lon_max = _map_ext_df["Longitude_degE"].min(), _map_ext_df["Longitude_degE"].max()
 
-        # --- 判定と計算を一本化 ---
         if pd.isna(lat_min) or pd.isna(lon_min):
             center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
         else:
@@ -1018,21 +851,25 @@ def main():
             lat_diff = max(lat_max - lat_min, 0.1)
             lon_diff = max(lon_max - lon_min, 0.1)
 
-            # 03番準拠のピクセル計算
+            # Pixel-based zoom estimate, consistent with Page 03.
+            # Page 03と整合するピクセル基準のズーム推定。
             map_width_px, map_height_px = 1200, 700
             zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
             zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
 
-            # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-            # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+            # Leave a margin so broad east-west datasets remain visible.
+            # 東西に広いデータも収まるように余白を確保する。
             auto_zoom = min(zoom_lon, zoom_lat) - 2.0
             auto_zoom = max(1, min(15, auto_zoom))
 
-            # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+            # Use a world-scale fallback for very broad longitude coverage.
+            # 経度範囲が非常に広い場合は世界規模の表示に切り替える。
             if lon_diff > 100:
                 center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
 
-    # 4. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
+    # -------------------------------------------------------------------------
+    # Sampling-location map / 採取地点地図
+    # -------------------------------------------------------------------------
     if not _has_valid_map_coords:
         st.info(
             "Map view is unavailable because the selected data contain no valid "
@@ -1041,8 +878,8 @@ def main():
     else:
         c_scale_profile = envgeo_utils.get_custom_colorscale(X_data)
 
-        # Use reference coords as base when available; fall back to uploaded coords
-        # so that px.scatter_mapbox always receives a non-empty DataFrame.
+        # Use reference coordinates first; otherwise render the uploaded points.
+        # px.scatter_mapboxには必ず空でないデータフレームを渡す。
         _map_plot_df = (
             _valid_coords_df if not _valid_coords_df.empty else uploaded_map_df
         )
@@ -1073,10 +910,10 @@ def main():
             color_continuous_scale=c_scale_profile,
             hover_data=hover_data,
             opacity=0.6,
-            height=500  # 高さはここで固定
+            height=500,
         )
 
-        # 4. 背景スタイルの適用
+        # Background style and offline overlays / 背景スタイルとオフライン重ね表示
         fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
         envgeo_utils.add_coastline_overlay(fig_map)
         if _eff_37 == "Coastline (offline)":
@@ -1095,7 +932,7 @@ def main():
             show_nodata=show_nodata_uploaded,
         )
 
-        # 5. レイアウト設定 (ここが幅を広げる決め手)
+        # Figure layout / 図のレイアウト
         fig_map.update_layout(
             mapbox=dict(
                 center=dict(lat=center_lat, lon=center_lon),
@@ -1123,9 +960,8 @@ def main():
             ),
         )
 
-        # 6. 表示
-        # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）
-        # マウスホイールでのズームが強制的に有効
+        # Render an explicitly keyed chart with mouse-wheel zoom enabled.
+        # 一意のキーを指定し、マウスホイールによるズームを有効にして表示する。
         st.plotly_chart(
             fig_map,
             key="depth_profile",
@@ -1145,18 +981,10 @@ def main():
                     "and Longitude_degE found.]"
                 )
 
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-    ##フィルタ後・現在表示中のデータを表示
-    # 例：特定の列だけを選択して新しいデータフレームを作成
-        
+    # =============================================================================
+    # Filtered-data table / 絞り込みデータ表
+    # =============================================================================
     with st.expander("Filtered dataset for current view (CSV)", expanded=False):
-        # 1. 必要な列をコピー
         table_columns = [
             'reference',
             'Cruise',
@@ -1173,26 +1001,15 @@ def main():
             'dD',
             'd-excess',
         ]
-        df1_table = df_fig_add[[column for column in table_columns if column in df_fig_add.columns]].copy()        
-        # --- [追加] 空白行（すべての列が欠損値の行）を削除 --- CSV用
+        df1_table = df_fig_add[[column for column in table_columns if column in df_fig_add.columns]].copy()
+        # Remove gap rows before CSV display. / CSV表示前に区切り空白行を除外する。
         df1_table = df1_table.dropna(how='all')
-        # 【重要】表示直前に全列を文字列化（これでArrowエラーは消える）
-        df1_table = df1_table.astype(str) 
-        
-        # 3. テーブルを表示
-        # 最新の width='stretch' を使用すべきか？
-        st.dataframe(df1_table, 
-                     # width="stretch", #Streramlitあげたら復活させる  
-                     )
-        
-        
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
+        # Convert to text immediately before display for Arrow compatibility.
+        # Arrow互換性のため、表示直前に文字列へ変換する。
+        df1_table = df1_table.astype(str)
 
+        st.dataframe(df1_table, **envgeo_utils.stretch_width_kwargs(st.dataframe))
 
 if __name__ == '__main__':
     main()
-    
     

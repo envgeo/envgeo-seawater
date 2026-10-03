@@ -20,6 +20,21 @@ sys.path.insert(0, str(ROOT))
 import envgeo_utils
 
 
+@pytest.fixture(autouse=True)
+def _force_online_map_mode(monkeypatch):
+    """Keep generic overlay tests independent of the host network state.
+
+    The dedicated vertical-section tests cover offline fallback separately.
+    汎用overlayテストは実行ホストのネットワーク状態に依存させない。
+    オフライン縮退はVertical Section専用テストで別途確認する。
+    """
+    monkeypatch.setattr(
+        envgeo_utils,
+        "check_online_connectivity",
+        lambda mode="Standard": True,
+    )
+
+
 def _vertical_section_module():
     page_path = ROOT / "pages" / "53_Vertical_Section_Visualizer.py"
     spec = importlib.util.spec_from_file_location(
@@ -66,7 +81,7 @@ def _visible_text(app):
         "31_Salinity-d18O_Relationship.py",
         "32_Isotope_Hydrographic_Mapping.py",
         "34_T-S_diagram.py",
-        "35_Custom_Parameter_Plot_beta.py",
+        "35_Custom_Parameter_Plot.py",
         "37_Depth_Profile.py",
         "53_Vertical_Section_Visualizer.py",
     ],
@@ -100,7 +115,7 @@ def test_uploaded_dataset_option_is_visible_in_common_filter(page_name):
             {"d18O": [0.1, 0.2], "Depth_m": [10.0, 20.0], "Month": [1, 2]},
         ),
         (
-            "35_Custom_Parameter_Plot_beta.py",
+            "35_Custom_Parameter_Plot.py",
             {"d18O": [0.1, 0.2], "dD": [1.0, 2.0], "NovelElement": [3.0, 4.0]},
         ),
     ],
@@ -296,7 +311,7 @@ def test_quick_visualizer_hover_includes_station_and_oceanographic_fields():
             {"Salinity": [34.5, 35.0], "Temperature_degC": [20.0, 22.0]},
         ),
         (
-            "35_Custom_Parameter_Plot_beta.py",
+            "35_Custom_Parameter_Plot.py",
             {"d18O": [0.1, 0.2], "dD": [1.0, 2.0]},
         ),
     ],
@@ -384,7 +399,7 @@ def test_depth_profile_draws_when_only_uploaded_subdataset_is_selected():
 
 def test_custom_plot_supports_uploaded_only_numeric_axes():
     app = _run_page(
-        "35_Custom_Parameter_Plot_beta.py",
+        "35_Custom_Parameter_Plot.py",
         {
             "Experimental_X": [1.0, 2.0, "bad"],
             "Experimental_Y": [10.0, 20.0, 30.0],
@@ -407,7 +422,7 @@ def test_custom_plot_supports_uploaded_only_numeric_axes():
 
 def test_custom_plot_regression_accepts_uploaded_only_selected_rows():
     app = _run_page(
-        "35_Custom_Parameter_Plot_beta.py",
+        "35_Custom_Parameter_Plot.py",
         {"d18O": [0.1, 0.2], "dD": [1.0, 2.0]},
     )
     next(
@@ -426,7 +441,7 @@ def test_custom_plot_regression_accepts_uploaded_only_selected_rows():
 
 def test_custom_plot_embedded_mode_uses_integrated_upload_owner():
     app = _app_test().from_file(
-        str(ROOT / "pages" / "35_Custom_Parameter_Plot_beta.py")
+        str(ROOT / "pages" / "35_Custom_Parameter_Plot.py")
     )
     app.session_state[envgeo_utils.UPLOAD_SESSION_DATA_KEY] = (
         envgeo_utils.prepare_uploaded_data(
@@ -434,7 +449,7 @@ def test_custom_plot_embedded_mode_uses_integrated_upload_owner():
         )
     )
     app.session_state[envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY] = (
-        "35_Custom_Parameter_Plot_beta.py"
+        "35_Custom_Parameter_Plot.py"
     )
     app.run(timeout=45)
 

@@ -1,5 +1,7 @@
-# Development and CI dependencies. Runtime requirements remain in
-# requirements.txt; this file is not used by Streamlit Community Cloud.
+# Development and CI dependencies / 開発・CI用依存関係
+# Runtime requirements remain in requirements.txt; this file is not used by
+# Streamlit Community Cloud. requirements.txtは実行時依存関係の正本であり、
+# このファイルはStreamlit Community Cloudでは使用しない。
 -r requirements.txt
 pytest>=8,<10
 tomli>=2.0.1; python_version < "3.11"

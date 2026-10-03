@@ -1,20 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Data-integrity tests for the EnvGeo-Seawater reference datasets.
+"""Data-integrity tests for the EnvGeo-Seawater reference datasets.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+These tests protect the data contract used by all public visualizers.
+これらのテストは、全公開可視化ページが使うデータの約束を保護する。
 """
-
-import sys
-from pathlib import Path
 
 import pandas as pd
 
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 import envgeo_utils
 

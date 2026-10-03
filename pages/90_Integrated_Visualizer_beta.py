@@ -9,12 +9,15 @@ then multiple plot/table views switched by tabs.
 EnvGeo-Seawater 統合可視化ページの試作版です。
 共通フィルタで抽出した同じデータを、タブで複数の表示に切り替えます。
 
+Development-only page: excluded from the stable-release acceptance scope and JOSS.
+開発版専用ページであり、安定版の受入範囲およびJOSS対象からは除外します。
+
 Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
-import math
 import importlib.util
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -25,7 +28,9 @@ import streamlit as st
 import envgeo_user_data
 import envgeo_utils
 
-
+# =============================================================================
+# Page configuration and embedded-workflow registry / ページ設定と埋込みワークフロー一覧
+# =============================================================================
 version = "1.3.4"
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -36,7 +41,7 @@ FULL_PAGE_WORKFLOWS = {
     "Salinity-d18O Relationship": "31_Salinity-d18O_Relationship.py",
     "Isotope & Hydrographic Mapping": "32_Isotope_Hydrographic_Mapping.py",
     "T-S Diagram": "34_T-S_diagram.py",
-    "Custom Parameter Plot beta": "35_Custom_Parameter_Plot_beta.py",
+    "Custom Parameter Plot": "35_Custom_Parameter_Plot.py",
     "Depth Profile": "37_Depth_Profile.py",
     "Correlation Overview": "80_Correlation_Overview.py",
     "Vertical Section beta": "53_Vertical_Section_Visualizer.py",
@@ -53,17 +58,20 @@ NATIVE_UPLOAD_OVERLAY_PAGES = {
     "31_Salinity-d18O_Relationship.py",
     "32_Isotope_Hydrographic_Mapping.py",
     "34_T-S_diagram.py",
-    "35_Custom_Parameter_Plot_beta.py",
+    "35_Custom_Parameter_Plot.py",
     "37_Depth_Profile.py",
     "53_Vertical_Section_Visualizer.py",
 }
 
 
+# =============================================================================
+# Shared upload and display helpers / 共通アップロード・表示補助関数
+# =============================================================================
 def render_tab_style():
     """
     Render compact, visible tab styling for the shared-filter workflow.
 
-    earthquake Advancedページと同じ考え方で、タブの境界と選択状態を見やすくします。
+    タブの境界と選択状態を見やすくします。
     """
     st.markdown(
         """
@@ -396,6 +404,9 @@ def render_full_existing_page(uploaded_df):
             module.envgeo_utils.load_isotope_data = original_loader
 
 
+# =============================================================================
+# Shared-filter visualization helpers / 共通フィルター可視化の補助関数
+# =============================================================================
 def _auto_map_view(df):
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
     lat = _numeric_series(df, "Latitude_degN").dropna()
@@ -1113,6 +1124,9 @@ def render_quality_table(quality_df, uploaded_quality_df=None):
 
 
 def main():
+    # =============================================================================
+    # Development-only integrated workflow / 開発版専用の統合ワークフロー
+    # =============================================================================
     st.header(f"Integrated Visualizer beta ({version})")
     st.caption(f"Shared app version: {envgeo_utils.APP_VERSION_LABEL}")
 
@@ -1186,7 +1200,7 @@ def main():
     uploaded_quality_df = _quality_rows(uploaded_df)
 
     render_tab_style()
-    envgeo_utils.render_earthquake_tab_style()
+    envgeo_utils.render_card_tab_style()
     st.caption("Select a tab to switch visualization views.")
     tab_summary, tab_map, tab_ts, tab_sal_d18o, tab_upload, tab_data, tab_quality = st.tabs(
         [

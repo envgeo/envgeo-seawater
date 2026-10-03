@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Tests for shared uploaded-data controls and map overlays.
+"""Tests for shared uploaded-data controls and map overlays.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+The tests ensure that session-only user data are drawn safely and that
+internal quality-control fields do not appear in public hover text.
+セッション内だけのユーザーデータを安全に描画し、内部の品質管理列を公開用hover textへ
+出さないことを確認する。
 """
-
-import sys
-from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 import envgeo_user_data
 import envgeo_utils

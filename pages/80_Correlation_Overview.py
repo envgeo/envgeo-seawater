@@ -7,14 +7,14 @@ Created: 2023-04-22
 Author: Toyoho Ishimura, Kyoto University
 Last updated: 2026-09-22
 """
+# compiledのみ，各図でExcelからの読み込みをしているので，ちょっと重いかも
+# 手書きでコードを書いていたときのなごりを残してます。はずかしいですが，記録です
+
 
 # --- バージョン管理の設定 ---
 version = "1.3.4"  # 2026-09-28
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
-
-# compiledのみ，各図でExcelからの読み込みをしているので，ちょっと重いかも
-
 
 
 import streamlit as st
@@ -26,6 +26,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 import cartopy.crs as ccrs
 import envgeo_utils  # 作った設定ファイルを読み込む
+import envgeo_assets  # CWD-independent asset resolver (Sprint 1)
 
 
 @st.cache_data(show_spinner=False)
@@ -300,18 +301,14 @@ def plot_xy_with_regression(
 
 
 
-
-
-
-
-
-
 def main():
     st.header(f'Correlation Overview ({version})')
     # Preserve this page as a research-prototype view of the original exploratory workflow.
     st.caption(
         "This page preserves the original exploratory workflow used during development. "
-        "It is maintained as an archive display rather than an actively developed workflow."
+        "It is maintained as an archive display rather than an actively developed workflow.\n\n"
+        "このページは開発時の探索的ワークフローを保存するアーカイブです。"
+        "新機能の追加対象ではなく、必要最小限の互換性維持だけを行います。"
     )
     
     
@@ -353,9 +350,6 @@ def main():
 
     #     st.write(':blue[data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023)')
     #     st.write(':blue[with:] NASA_database (Jan.23, 2025)]https://data.giss.nasa.gov/cgi-bin/o18data/geto18.cgi')
-
-
-
 
     # メインのDF,これは改変しない
     df_original = load_isotope_data_cached(ref_data)
@@ -477,7 +471,7 @@ def main():
         
         
         st.caption('Cruise area reference (2015-2021)')
-        st.image("data/sites_20230515.gif") 
+        st.image(str(envgeo_assets.asset_path("data/sites_20230515.gif")))
     
           
           
@@ -870,7 +864,7 @@ def main():
             plt.plot(df_fig_ALL[X_data], df_fig_ALL[Y_data],c=X_Y_C, marker=X_Y_M, lw=0.5, alpha=alpha_all, label='ALL')
             
             #列の要素を表示
-            # d_select = df_fiｇ_add[selected_row].value_counts().to_dict()
+            # d_select = df_fig_add[selected_row].value_counts().to_dict()
             # print('要素と出現数:', d_select)
             # print('---------------')
     
@@ -913,16 +907,16 @@ def main():
                     
            
                     # # Excelファイルの読み込み
-                    # df_fiｇ_add = pd.read_excel(excel_file, sheet_name=sheet_num_add)
+                    # df_fig_add = pd.read_excel(excel_file, sheet_name=sheet_num_add)
                     
-                    # df1 = df_fiｇ_add
+                    # df1 = df_fig_add
                     
                     # df1 = df1[(df1['Depth_m'] == 'xxx') 
                     #         |(df1['Depth_m'] <= 10) & (df1['Depth_m'] >= 0)
                     #         |(df1['Depth_m'] <= 200) & (df1['Depth_m'] > 10)
                     #         |(df1['Depth_m'] <= 500) & (df1['Depth_m'] > 200)
                     #         # |(df1['Depth_m'] <= 1000) & (df1['Depth_m'] > 500)
-                    #           | df_fiｇ_add.isnull().all(axis=1)] 
+                    #           | df_fig_add.isnull().all(axis=1)]
                     
                     # df1 = df1[ (df1['Transect'] == 0) 
                     #             | (df1['Transect'] == 'CK') 
@@ -939,7 +933,7 @@ def main():
                     #             | (df1['Transect'] == 'Yamato')
                     #             # | (df1['Transect'] == 'NA2') 
                     #             # | (df1['Transect'] == 'ECS2021') 
-                    #             | df_fiｇ_add.isnull().all(axis=1)]
+                    #             | df_fig_add.isnull().all(axis=1)]
     
     
                     # # #描画する緯度経度を指定 
@@ -950,7 +944,7 @@ def main():
                     #             |(df1['Longitude_degE'] <= 130) & (df1['Longitude_degE'] > 125)
                     #             |(df1['Longitude_degE'] <= 125) & (df1['Longitude_degE'] > 120)
                     #             |(df1['Longitude_degE'] <= 120) & (df1['Longitude_degE'] >= 115)
-                    #           | df_fiｇ_add.isnull().all(axis=1)] 
+                    #           | df_fig_add.isnull().all(axis=1)]
     
                     # df1 = df1[(df1['Latitude_degN'] == 'xxx')
                     #           |(df1['Latitude_degN'] <= 45) & (df1['Latitude_degN'] > 40)          
@@ -958,8 +952,8 @@ def main():
                     #           |(df1['Latitude_degN'] <= 35) & (df1['Latitude_degN'] > 30)
                     #           |(df1['Latitude_degN'] <= 30) & (df1['Latitude_degN'] > 25)
                     #           |(df1['Latitude_degN'] <= 25) & (df1['Latitude_degN'] >= 20)
-                    #           | df_fiｇ_add.isnull().all(axis=1)]
-                    # df_fiｇ_add = df1
+                    #           | df_fig_add.isnull().all(axis=1)]
+                    # df_fig_add = df1
                     
                     # df1 = data_limit(sheet_num=2)
                     df1 = data_limit()
@@ -976,7 +970,7 @@ def main():
                             # |(df1['Depth_m'] <= 200) & (df1['Depth_m'] > 10)
                             # |(df1['Depth_m'] <= 500) & (df1['Depth_m'] > 200)
                             # |(df1['Depth_m'] <= 1000) & (df1['Depth_m'] > 500)
-                              # | df_fiｇ_add.isnull().all(axis=1)] 
+                              # | df_fig_add.isnull().all(axis=1)]
    
                     
                     # df30m_empty = df30m.empty
@@ -1026,27 +1020,27 @@ def main():
                     lw_add = 0.6 #線の太さ
                     # 描画する月範囲を指定 and指定
                     df13 = df1[(df1['Month'] >= 1) & (df1['Month'] <= 3)
-                              | df_fiｇ_add.isnull().all(axis=1)]  
+                              | df_fig_add.isnull().all(axis=1)]
                     plt.plot(df13[X_data], df13[Y_data],c='blue', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='1-3')
                     
                     # 描画する月範囲を指定 and指定
                     df46 = df1[(df1['Month'] >= 4) & (df1['Month'] <= 6)
-                              | df_fiｇ_add.isnull().all(axis=1)]  
+                              | df_fig_add.isnull().all(axis=1)]
                     plt.plot(df46[X_data], df46[Y_data],c='green', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='4-6')
                     
                     # 描画する月範囲を指定 and指定
                     df79 = df1[(df1['Month'] >= 7) & (df1['Month'] <= 9)
-                              | df_fiｇ_add.isnull().all(axis=1)]  
+                              | df_fig_add.isnull().all(axis=1)]
                     plt.plot(df79[X_data], df79[Y_data],c='orange', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='7-9')
                     # 描画する月範囲を指定 and指定
                     df1012 = df1[(df1['Month'] >= 10) & (df1['Month'] <= 12)
-                              | df_fiｇ_add.isnull().all(axis=1)]  
+                              | df_fig_add.isnull().all(axis=1)]
                     plt.plot(df1012[X_data], df1012[Y_data],c='purple', marker=X_Y_M, lw=lw_add, alpha=alpha_selected, label='10-12')
                     
                     
                     # 特定の列に特定の変数を持つ行と空白行を残す
-                    # df_fiｇ_add = df_fiｇ_add[(df_fiｇ_add[selected_row] == selected_area) | df_fiｇ_add.isnull().all(axis=1)]
-                    # df_fiｇ_add = df_fiｇ_add[(df_fiｇ_add[selected_row] == selected_area) | df_fiｇ_add.isnull().all(axis=1)]
+                    # df_fig_add = df_fig_add[(df_fig_add[selected_row] == selected_area) | df_fig_add.isnull().all(axis=1)]
+                    # df_fig_add = df_fig_add[(df_fig_add[selected_row] == selected_area) | df_fig_add.isnull().all(axis=1)]
                     
                     
                     
@@ -1055,7 +1049,7 @@ def main():
                     #########全部plotする場合######################    
                     
                     #列の要素を表示
-                    d_select = df_fiｇ_add[selected_row].value_counts().to_dict()
+                    d_select = df_fig_add[selected_row].value_counts().to_dict()
                     # print('要素と出現数:', d_select)
                     # print('---------------')
     
@@ -1070,18 +1064,18 @@ def main():
     
                         #個別に色を変えてもう一つプロット
                         # Excelファイルの読み込み
-                        # df_fiｇ_add = pd.read_excel(excel_file, sheet_name=sheet_num_add)
-                        # df_fiｇ_add = envgeo_utils.load_isotope_data(ref_data, sheet_num=2)
+                        # df_fig_add = pd.read_excel(excel_file, sheet_name=sheet_num_add)
+                        # df_fig_add = envgeo_utils.load_isotope_data(ref_data, sheet_num=2)
                         
                         # 同じ地点，同じ年月日，はグループにして他は1行開ける
-                        df_fiｇ_add = envgeo_utils.insert_gap_rows(df_original)
+                        df_fig_add = envgeo_utils.insert_gap_rows(df_original)
                         
                         selected_row2 = selected_row2
                         selected_value = selected_value
                         
                         # 特定の列に特定の変数を持つ行と空白行を残す
-                        df_fiｇ_add = df_fiｇ_add[(df_fiｇ_add[selected_row2] == selected_value) | df_fiｇ_add.isnull().all(axis=1)]
-                        plt.plot(df_fiｇ_add[X_data], df_fiｇ_add[Y_data],c='red', marker=X_Y_M, lw=2, alpha=alpha_selected, label=selected_value)
+                        df_fig_add = df_fig_add[(df_fig_add[selected_row2] == selected_value) | df_fig_add.isnull().all(axis=1)]
+                        plt.plot(df_fig_add[X_data], df_fig_add[Y_data],c='red', marker=X_Y_M, lw=2, alpha=alpha_selected, label=selected_value)
                         plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
                         
                     else:()

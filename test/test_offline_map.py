@@ -1,5 +1,7 @@
 """Tests for the offline map sprint helpers in envgeo_utils.
 
+envgeo_utilsのオフライン地図補助関数のテスト。
+
 No real network calls are made: check_online_connectivity() is always
 monkeypatched via the ``online`` / ``offline`` fixtures below, and
 socket.create_connection is patched wherever the inner cached function is
@@ -7,6 +9,8 @@ tested directly.
 
 Run from the app root:
     pytest -q test/test_offline_map.py
+
+アプリのrootから上記コマンドで実行する。
 """
 
 import sys
@@ -20,6 +24,8 @@ import pytest
 # Minimal Streamlit stub so envgeo_utils can be imported without a running
 # Streamlit server.  Only the symbols actually used at module-load time are
 # needed; runtime calls are either tested in-process or not called here.
+# 実行中のStreamlit serverなしにenvgeo_utilsをimportする最小stub。必要なsymbolだけを
+# 用意し、実行時呼出しはprocess内で検査するか、このテストでは呼び出さない。
 # ---------------------------------------------------------------------------
 
 def _make_streamlit_stub():
@@ -62,7 +68,7 @@ import envgeo_utils  # noqa: E402  (must come after stub)
 
 
 # ---------------------------------------------------------------------------
-# Connectivity fixtures
+# Connectivity fixtures / 接続状態fixture
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
@@ -80,7 +86,7 @@ def offline(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Helper to build a minimal Plotly figure for apply_map_style tests
+# Helper to build a minimal Plotly figure for apply_map_style tests / apply_map_style用の最小Plotly図
 # ---------------------------------------------------------------------------
 
 def _blank_mapbox_fig():
@@ -93,7 +99,7 @@ def _blank_mapbox_fig():
 
 
 # ---------------------------------------------------------------------------
-# 1. MAP_MODE_OPTIONS structure
+# 1. MAP_MODE_OPTIONS structure / 地図モード選択肢の構造
 # ---------------------------------------------------------------------------
 
 class TestMapModeOptions:
@@ -116,7 +122,7 @@ class TestMapModeOptions:
 
 
 # ---------------------------------------------------------------------------
-# 2. resolve_map_mode
+# 2. resolve_map_mode / 地図モードの解決
 # ---------------------------------------------------------------------------
 
 class TestResolveMapMode:
@@ -158,7 +164,7 @@ class TestResolveMapMode:
 
 
 # ---------------------------------------------------------------------------
-# 3. apply_map_style — offline mode
+# 3. apply_map_style — offline mode / オフライン地図スタイル
 # ---------------------------------------------------------------------------
 
 class TestApplyMapStyleOffline:
@@ -192,7 +198,7 @@ class TestApplyMapStyleOffline:
 
 
 # ---------------------------------------------------------------------------
-# 4. add_coastline_overlay
+# 4. add_coastline_overlay / 海岸線overlay
 # ---------------------------------------------------------------------------
 
 class TestAddCoastlineOverlay:
@@ -251,7 +257,7 @@ class TestAddCoastlineOverlay:
 
 
 # ---------------------------------------------------------------------------
-# 5. add_graticule_overlay
+# 5. add_graticule_overlay / 経緯線overlay
 # ---------------------------------------------------------------------------
 
 class TestAddGraticuleOverlay:
@@ -306,7 +312,7 @@ class TestAddGraticuleOverlay:
 
 
 # ---------------------------------------------------------------------------
-# 6. check_online_connectivity — per-mode hosts, caching / mocking
+# 6. check_online_connectivity — per-mode hosts, caching / mocking / モード別host・cache・mock
 # ---------------------------------------------------------------------------
 
 class TestCheckOnlineConnectivity:
@@ -404,7 +410,7 @@ class TestCheckOnlineConnectivity:
 
 
 # ===========================================================================
-# OFFLINE_FALLBACK_WARNING exact text
+# OFFLINE_FALLBACK_WARNING exact text / fallback警告文の固定確認
 # ===========================================================================
 
 class TestOfflineFallbackWarningText:
@@ -435,7 +441,7 @@ class TestOfflineFallbackWarningText:
 
 
 # ===========================================================================
-# add_coastline_overlay idempotency
+# add_coastline_overlay idempotency / 重複呼出し時の不変性
 # ===========================================================================
 
 class TestAddCoastlineOverlayIdempotency:

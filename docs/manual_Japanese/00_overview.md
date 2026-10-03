@@ -2,30 +2,31 @@
 
 ## このアプリでできること
 
-EnvGeo-Seawater は、海水の安定同位体・水文データを探索するためのインタラクティブアプリです。
+EnvGeo-Seawaterは、海水の安定同位体・水文データを探索するためのインタラクティブなWebアプリです。
 
-地図、Temperature-Salinity 図、塩分-d18O 関係、深度プロファイル、3D/4D 可視化に対応しています。
+地図、水温–塩分図、塩分–δ¹⁸O関係図、深度プロファイル、2D/3D/4D可視化に対応しています。
+
+現在のコレクションには、複数年のKodama et al. (2024)中核データ、日本周辺の引用付きデータ、NASA GISSとPAGES CoralHydro2kを含む全球参照データセットが収録され、約50,000件の記録を探索できます。結果を利用する際は、**Data Sources**と**Filtered dataset**に示される元データの出典を引用してください。
 
 ## 想定ユーザー
 
 - 海洋地球化学の研究者
 - 海洋学を学ぶ学生
 - 自分の海水データを参照データセットと比較したいユーザー
-- EnvGeo-Seawater を保守・拡張する開発者
 
 ## 基本的な流れ
 
-1. 常時読み込みするローカル表は、アプリ起動前に `local_data/user_data.xlsx` へ置く。一時的に使うデータは **User Data Check & Quick Visualizer** でCSV/XLSXをアップロードする。
-2. Data filteringでデータセットを選ぶ。常時読み込み表は `User Excel data`、ブラウザアップロードは `Uploaded data` として表示される。
-3. 可視化ページを選ぶ。
-4. 図の設定を調整する。
+1. サイドバーからページを選びます。一時的なファイルを使う場合は、**User Data Check & Quick Visualizer**でCSV/XLSXをアップロードします。ファイルは現在のブラウザセッション内だけで扱われます。
+2. 常時使うローカル表を読み込む場合は、アプリ起動前に`ENVGEO_LOCAL_USER_DATA_PATH`で、repository外のCSV、XLSX、XLSファイルを指定します。同梱の`local_data/user_data.xlsx`はゼロ値の公開サンプルです。個人データをrepositoryやアプリフォルダへ入れないでください。
+3. **Data filtering**で参照データセットを選び、条件を調整します。常時読み込み表を設定した場合は`User Excel data`、セッション内アップロードが使える場合は`Uploaded data`が表示されます。
+4. 条件を変更した後に**Apply settings**を選び、必要に応じて図の設定を調整します。
 5. 地図、図、表、品質フラグを確認する。
-6. 必要に応じて図や概要CSVをダウンロードする。
+6. ページに操作がある場合は、必要に応じて図や抽出データの概要をダウンロードします。
 
 ## 主なデータ項目
 
-- d18O
-- dD
+- δ¹⁸O（`d18O`）
+- δD（`dD`）
 - d-excess
 - 塩分
 - 水温
@@ -37,6 +38,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 
 - beta と表示されたページは、ワークフローや科学的な扱いを調整中です。
 - 全球データを大きく選択すると、3D/4D表示が重くなることがあります。
-- ブラウザからアップロードしたデータは、現在のStreamlitセッションのメモリ内だけで扱い、アプリは保存しません。公開ページ **User Data Check & Quick Visualizer** では、アップロード起点の品質確認と簡易2D--4D可視化を行えます。
-- `User Excel data` は、Git管理対象外のローカルパスから起動時に読み込む任意の常時データセットです。選択した各参照データに結合されますが、セッション限定の `Uploaded data` とは別に扱います。
+- ブラウザからアップロードしたデータは、現在のStreamlitセッションのメモリ内だけで扱い、アプリは保存しません。アップロードは**User Data Check & Quick Visualizer**に加え、salinity--d18O、mapping、T--S、custom-parameter、depth-profile、vertical-sectionの各ページで使えます。2Dplusと3D/4Dでは現時点でブラウザからのアップロードには対応していません。
+- `User Excel data`は、repository外のパスから読み込む常時データセットです。セッション限定の`Uploaded data`とは別に扱います。
 - Vertical Sectionの補間は実験的な機能です。解析結果として扱う前に、観測点、設定、データ密度を確認してください。
+- Custom Parameter PlotとVertical Sectionはbetaワークフローです。Correlation Overviewは、探索的な開発ワークフローを残すアーカイブであり、新機能の追加対象ではありません。

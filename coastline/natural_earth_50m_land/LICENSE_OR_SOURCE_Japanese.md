@@ -87,5 +87,5 @@ Natural Earth データは**パブリックドメイン**です。
 海岸線アウトライン（陸地マスクの上に重ねる線）は `coastline/` 配下の
 バンドル済み海岸線 CSV から `envgeo_utils.plot_bundled_coastline()` で別途描画します。
 
-GEBCO 測深データ（`data_beta/GEBCO_2025_6min.nc`）は別ディレクトリに格納されており、
+GEBCO 測深データ（`bathymetry/GEBCO_2025_6min.nc`）は別ディレクトリに格納されており、
 鉛直断面の深度補間・海底推定という異なる用途に使用するため、このアセットとは無関係です。

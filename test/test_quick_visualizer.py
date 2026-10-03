@@ -1,11 +1,14 @@
-"""
-pytest tests for pages/05_User_Data_Check_Quick_Visualizer.py
-Verifies the _EnvGeoDataOrigin column logic and hover header behavior.
-No real network, no real data files, no Streamlit server.
+"""Tests for Page 05, User Data Check & Quick Visualizer.
+
+Verifies the internal ``_EnvGeoDataOrigin`` column and hover-header behaviour
+without a real network, data file, or Streamlit server.
+内部の``_EnvGeoDataOrigin``列とhover見出しの挙動を、実ネットワーク、実データファイル、
+Streamlit serverなしで確認する。
 
 Test isolation: stubs inserted into sys.modules are fully removed after
 this module's tests finish, so subsequent test files (e.g. test_offline_map.py)
 run against the real modules.
+テストで注入したstubは終了後にすべて取り除き、後続テストが実際のmoduleを読むようにする。
 """
 import importlib
 import importlib.util
@@ -18,7 +21,7 @@ import pandas as pd
 import pytest
 
 # ---------------------------------------------------------------------------
-# Stub factories
+# Stub factories / stub生成
 # ---------------------------------------------------------------------------
 
 def _make_streamlit_stub():
@@ -71,14 +74,14 @@ def _make_envgeo_utils_stub():
     eu.recommended_plotly_colormap_label = MagicMock(return_value="Viridis")
     eu.build_upload_template_csv = MagicMock(return_value=b"")
     eu.build_figure_filename = MagicMock(return_value="fig.html")
-    eu.render_earthquake_tab_style = MagicMock()
+    eu.render_card_tab_style = MagicMock()
     eu.resolve_map_mode = MagicMock(return_value=("Standard", False))
     eu.add_coastline_overlay = MagicMock()
     eu.add_graticule_overlay = MagicMock()
     return eu
 
 
-# Names of every stub module we will inject
+# Names of every stub module we will inject / 注入するstub module名
 _STUB_NAMES = [
     "streamlit",
     "envgeo_utils",
@@ -139,7 +142,7 @@ def _restore(saved: dict):
 
 
 # ---------------------------------------------------------------------------
-# Fixtures
+# Fixtures / fixture
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()

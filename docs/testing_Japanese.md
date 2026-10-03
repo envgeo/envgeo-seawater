@@ -2,6 +2,8 @@
 
 この文書では、EnvGeo-Seawater の現在の pytest 群が何を確認しているか、また今後どこを拡充すべきかを説明します。
 
+[English version](testing.md)
+
 ## テストの実行方法
 
 プロジェクトのルートディレクトリで、全体のテストを実行します。
@@ -18,10 +20,10 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 
 ## 継続的インテグレーション
 
-`.github/workflows/ci.yml`は、push、pull request、手動起動時にLinux／Python 3.12で動作する。
+`.github/workflows/ci.yml`は、push、pull request、手動起動時にLinux／Python 3.10と3.12で動作する。
 `requirements-dev.txt`を導入してpytestを実行し、wheelを作成した後、checkout外の別venvへそのwheelを
-導入する。最後に、インストール先、公開12ページ、診断ツール、99ページとGEBCO生成scriptの非収録を
-確認する。
+導入する。開発／公開前repositoryでは最後に、インストール先、packageに収録する12ページ、診断ツール、
+Page 99とGEBCO生成scriptの非収録を確認する。
 
 CIの環境構築時にはパッケージindexから宣言済み依存関係を取得する。一方、テストとアプリ確認そのものは
 外部タイル、外部download、実ネットワークサービスを必要としないことを原則とする。ブラウザ上の視覚確認と
@@ -114,7 +116,8 @@ CIの環境構築時にはパッケージindexから宣言済み依存関係を�
 - 共通ユーティリティ関数。
 - カラーマップ、保存ファイル名、海域プリセット、海岸線読み込みなどの作図支援。
 - リポジトリ構成と公開ページの健全性。
-- 統合 beta のアップロードデータワークフロー。
+- 開発／公開前repositoryだけで確認する、Page 90 Integrated Visualizerのアップロードデータworkflow。
+  安定版repositoryにはこのページを意図して含めない。
 
 これらのテストは、リファクタリングや公開準備中のよくある破損を検出することを目的としています。
 

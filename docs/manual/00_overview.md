@@ -2,33 +2,46 @@
 
 ## What This App Does
 
-EnvGeo-Seawater is an interactive application for exploring seawater isotope and hydrographic datasets.
+EnvGeo-Seawater is an interactive application for exploring seawater isotope
+and hydrographic datasets.
 
-It supports maps, temperature-salinity diagrams, salinity-d18O relationships, depth profiles, and 3D/4D visualizations.
+It supports maps, temperature-salinity diagrams, salinity--d18O relationships,
+depth profiles, and 2D/3D/4D visualizations.
+
+The current collection includes the multi-year Kodama et al. (2024) core
+dataset, cited regional datasets, and global reference datasets including NASA
+GISS and PAGES CoralHydro2k. It contains approximately 50,000 records. Cite
+the original sources shown in **Data Sources** and **Filtered dataset** when
+using results.
 
 ## Target Users
 
 - Marine geochemistry researchers
 - Oceanography students
 - Users who want to compare local seawater data with curated reference datasets
-- Developers maintaining or extending EnvGeo-Seawater
 
 ## Basic Workflow
 
-1. For an always-loaded local table, place the file at
-   `local_data/user_data.xlsx` before starting the app. For one-time data,
-   upload a CSV/XLSX file in **User Data Check & Quick Visualizer**.
-2. Select a dataset. The local table appears as `User Excel data`; browser
-   uploads appear as `Uploaded data`.
-3. Choose a visualization page.
-4. Adjust figure settings.
+1. Choose a page from the sidebar. For a one-time file, open **User Data Check
+   & Quick Visualizer** and upload CSV/XLSX data. Files remain only in the
+   current browser session.
+2. To load a persistent local table, set `ENVGEO_LOCAL_USER_DATA_PATH` to an
+   external CSV, XLSX, or XLS file before starting the app. The bundled
+   `local_data/user_data.xlsx` is a zero-value public sample; do not place
+   personal data in the repository or app folder.
+3. In **Data filtering**, select the reference datasets and adjust the desired
+   conditions. `User Excel data` appears when a persistent local table is
+   configured; `Uploaded data` appears when a session upload is available.
+4. Select **Apply settings** after changing filters, then adjust figure
+   settings as needed.
 5. Inspect maps, plots, tables, and quality flags.
-6. Download figures or filtered-data summaries when needed.
+6. Download figures or filtered-data summaries where a page provides that
+   control.
 
 ## Main Data Types
 
-- d18O
-- dD
+- δ18O (`d18O`)
+- δD (`dD`)
 - d-excess
 - Salinity
 - Temperature
@@ -41,10 +54,13 @@ It supports maps, temperature-salinity diagrams, salinity-d18O relationships, de
 - Some pages are labeled beta because their workflow or scientific design is still being refined.
 - Very large global selections may make 3D/4D visualizations slow.
 - Browser-uploaded data remain in memory for the current Streamlit session and
-  are not saved by the app. The public **User Data Check & Quick Visualizer**
-  provides upload-first quality review and simple 2D--4D exploration.
-- `User Excel data` is the optional, always-loaded local dataset. It is read
-  from the Git-ignored local path at startup and appended to each reference
-  source. It is not the same as session-only `Uploaded data`.
+  are not saved by the app. Uploads are supported by **User Data Check & Quick
+  Visualizer** and the salinity--d18O, mapping, T--S, custom-parameter,
+  depth-profile, and vertical-section pages. The 2Dplus and 3D/4D pages do not
+  currently accept browser uploads.
+- `User Excel data` is a persistent local dataset loaded from an external path;
+  it is separate from session-only `Uploaded data`.
 - Vertical Section interpolation remains experimental; inspect observed points,
   settings, and data coverage before using a section as an analysis result.
+- Custom Parameter Plot and Vertical Section are beta workflows. Correlation
+  Overview is a retained exploratory archive and does not receive new features.

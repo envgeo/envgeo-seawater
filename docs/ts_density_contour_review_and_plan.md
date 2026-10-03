@@ -1,6 +1,7 @@
 # T-S Density Contours — Review and Implementation Plan
 
-**Status:** design record; no implementation change is made by this document.  
+**Status:** design record. Stage 1 transparency work is implemented in v1.3.4;
+Stages 2–3 remain future scientific-development work.
 **Recorded:** 2026-09-24  
 **Scope:** `pages/34_T-S_diagram.py` and the data fields used by its T-S plot.
 
@@ -20,11 +21,9 @@ sigma_theta = gsw.sigma0(Sg, Tg)
 ```
 
 where `Sg` is derived from the `Salinity` column and `Tg` from
-`Temperature_degC`. The page itself labels contour lines numerically and its
-dedicated manual uses the general phrase “density contours.” However, the
-repository README files have described these contours as `σθ`. Stage 1 must
-therefore correct the README wording and add an explicit explanation to the
-page and its dedicated manuals.
+`Temperature_degC`. The page, README, and dedicated manual now identify this
+layer as approximate `σ0` reference contours and explain that it is not
+pointwise sample density.
 
 This is not a TEOS-10-consistent call.  `gsw.sigma0` calculates the potential
 density anomaly referenced to 0 dbar (`σ0`) and expects Absolute Salinity
@@ -74,29 +73,21 @@ location and pressure enter the conversion from SP/t to SA/CT.  Consequently,
 pointwise TEOS-10 density and a two-dimensional background reference-contour
 layer should be presented as distinct concepts.
 
-## Recommended staged work
+## Completed transparency work (Stage 1)
 
-### Stage 1 — transparent current behaviour
+The v1.3.4 implementation completed the non-scientific change needed to make
+the current approximation transparent:
 
-- Change UI/manual/README wording from `σθ` to an explicit label such as
-  “Approximate σ0 reference contours (SP≈SA; in-situ temperature≈CT)”.
-- Explain that the lines are visual reference guides, not pointwise sample
-  densities.
-- Generate the contour grid from the displayed axis limits and constrain it
-  to the documented valid domain, rather than silently extending observed
-  salinity and temperature by a fixed amount.
-- Add a regression test for the visible wording and contour-grid domain.
+- UI, README, and manuals use “Approximate σ0 reference contours” rather than
+  `σθ`.
+- The figure explains that these are visual reference guides, not pointwise
+  sample densities.
+- The contour grid follows the displayed axes and is clipped to the documented
+  GSW input domain (temperature −5–45 °C; salinity 0–50).
+- Focused T–S tests and the broader page/upload tests cover the current
+  behaviour. They do not validate a pointwise TEOS-10 transformation.
 
-#### Stage 1 acceptance conditions
-
-- The T-S page displays an approximation notice adjacent to the figure.
-- The contour grid is bounded by the selected displayed salinity and
-  temperature axes, rather than by data extrema plus a fixed extension.
-- English and Japanese README/manual text states that the layer is an
-  approximate `σ0` reference grid, not pointwise sample density.
-- At least one focused test asserts the grid-bound calculation and the
-  approximation wording. Existing page/upload behaviour remains covered by
-  the full suite.
+## Future staged work
 
 ### Stage 2 — testable TEOS-10 data transformation
 
@@ -123,7 +114,7 @@ layer should be presented as distinct concepts.
   Salinity (PSS-78) before the TEOS-10 mode is available for it.
 - Report counts excluded from TEOS-10 conversion and the reason for exclusion.
 
-## Acceptance conditions before release
+## Acceptance conditions before a Stage 2 or Stage 3 release
 
 - A domain reviewer confirms the source-field interpretation for each bundled
   dataset.
@@ -133,8 +124,8 @@ layer should be presented as distinct concepts.
   renders.
 - UI, manuals, downloads, and citations distinguish source measurements from
   derived TEOS-10 quantities.
-- The release notes state whether the current approximate layer remains,
-  changes label only, or is superseded by the SA–CT mode.
+- The release notes state whether the current approximate layer remains or is
+  supplemented/superseded by an SA–CT mode.
 
 ## References
 

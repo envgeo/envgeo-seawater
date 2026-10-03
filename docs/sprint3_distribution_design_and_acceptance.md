@@ -1,7 +1,15 @@
-# Sprint 3 Distribution Design and Acceptance Criteria
+# Distribution Design and Verification Record (Sprint 3)
 
-**Status:** approved design basis for Sprint 3B implementation, 2026-09-27.  
-**Scope:** EnvGeo-Seawater only. This is not a release approval.
+“Sprint 3” is the project's internal name for the development phase that
+established installable distribution, CI, and pre-release checks. It is kept
+in this title solely to preserve the historical connection to contemporaneous
+records.
+
+**Status:** Sprint 3 design and implementation-verification record; originally
+approved as the Sprint 3B design basis on 2026-09-27 and rechecked 2026-09-30.
+**Scope:** EnvGeo-Seawater development/pre-release repository only. This is
+not a release approval. The corresponding Japanese record is
+[`sprint3_distribution_design_and_acceptance_Japanese.md`](sprint3_distribution_design_and_acceptance_Japanese.md).
 
 ## Fixed boundaries
 
@@ -41,7 +49,7 @@ and the diagnostic tool implementation.
   automatically in both installed and Cloud navigation.
 - Include the diagnostic tool without page 99 and expose it through an explicit
   command. The normal application command must expose only public pages.
-- Exclude `data_beta/make_lightweight_gebco.py`: it has no runtime reference;
+- Exclude `bathymetry/make_lightweight_gebco.py`: it has no runtime reference;
   retain it in source as the documented GEBCO-generation procedure.
 - Exclude `Claude outputs/`, cache files, build products, `.DS_Store`, internal
   review logs, and local-only diagnostic wrappers.
@@ -133,7 +141,7 @@ the test's use of the Python 3.11+ `tomllib` module; its conditional
 test-only `tomli` fallback corrected that compatibility issue without changing
 runtime dependencies or wheel contents.
 
-### Pending Community Cloud manual QA
+### Community Cloud manual QA
 
 This is a browser-based acceptance check, separate from wheel and CI testing.
 The current public site identifies `envgeo-seawater-map.streamlit.app` from

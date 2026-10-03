@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Tests for EnvGeo-Seawater shared utility functions.
+"""Regression tests for the shared :mod:`envgeo_utils` module.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+This module protects shared behaviour used across public pages: data loading,
+quality flags, geographical presets, uploaded-data preparation, coastlines,
+and export helpers. It does not replace page-level scientific validation.
+このモジュールは、公開ページに共通するデータ読込、品質フラグ、地理プリセット、
+アップロードデータ前処理、海岸線、書出し補助の挙動を保護する。ページごとの科学的検証を
+置き換えるものではない。
 """
 
 import io
-import os
-import sys
-from pathlib import Path
+import warnings
 
 import pandas as pd
 import pytest
 import plotly.graph_objects as go
 from pandas.api.types import is_numeric_dtype
-
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 import envgeo_utils
 
@@ -481,7 +479,10 @@ def test_standardize_uploaded_column_names_maps_japanese_aliases():
 
 
 class NamedBytesIO(io.BytesIO):
-    """In-memory upload stand-in carrying the filename used by Streamlit."""
+    """In-memory upload stand-in with a Streamlit-style filename.
+
+    Streamlit形式のファイル名を持つ、メモリ内アップロードの代替オブジェクト。
+    """
 
     def __init__(self, content, name):
         super().__init__(content)
@@ -555,7 +556,10 @@ def test_prepare_uploaded_data_keeps_d_excess_nan_without_dd():
 
 
 def test_arrow_display_dataframe_coerces_mixed_identifier_columns_to_strings():
-    """Mixed spreadsheet identifiers must not trigger Streamlit Arrow errors."""
+    """Mixed spreadsheet identifiers must not trigger Streamlit Arrow errors.
+
+    表計算ソフト由来の型が混在する識別子で、Streamlit Arrowエラーを起こさない。
+    """
     source = pd.DataFrame({"Station": [14, "14_5", None], "Salinity": [34.1, 34.2, 34.3]})
 
     displayed = envgeo_utils.arrow_display_dataframe(source)
@@ -602,6 +606,26 @@ def test_filter_uploaded_data_for_sidebar_keeps_overlay_separate_and_filterable(
     assert envgeo_utils.filter_uploaded_data_for_sidebar(
         uploaded, "test", state=state
     ).empty
+
+
+def test_combine_reference_and_uploaded_skips_all_na_columns_without_future_warning():
+    """An all-NA column does not affect rows or emit a Pandas warning.
+
+    全NAの列を安全に扱い、結合結果やPandasの将来仕様警告に影響しないことを確認する。
+    """
+    reference = pd.DataFrame({"Dataset": ["Reference data"], "d18O": [None]})
+    uploaded = pd.DataFrame({"Dataset": ["Uploaded data"], "d18O": [0.1]})
+
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        combined = envgeo_utils.combine_reference_and_uploaded_for_filtering(
+            reference, uploaded
+        )
+
+    assert combined["Dataset"].tolist() == ["Reference data", "Uploaded data"]
+    assert pd.isna(combined.loc[0, "d18O"])
+    assert combined.loc[1, "d18O"] == 0.1
+    assert not any(issubclass(item.category, FutureWarning) for item in captured)
 
 
 # Verifies that unknown labels can be assigned manually without losing source columns.
@@ -756,6 +780,30 @@ def test_reference_loader_merges_configured_user_excel_data(tmp_path, monkeypatc
         envgeo_utils.load_isotope_data.clear()
 
 
+def test_reference_loader_skips_empty_user_excel_without_future_warning(tmp_path, monkeypatch):
+    """The empty public template does not affect loading or pandas dtypes.
+
+    空の公開テンプレートがデータ読込やpandasのdtypeに影響しない。
+    """
+    local_file = tmp_path / "user_data.xlsx"
+    pd.DataFrame(columns=["Longitude_degE", "Latitude_degN", "d18O"]).to_excel(
+        local_file, index=False
+    )
+    monkeypatch.delenv(envgeo_utils.LOCAL_USER_DATA_DISABLE_ENV, raising=False)
+    monkeypatch.setenv(envgeo_utils.LOCAL_USER_DATA_PATH_ENV, str(local_file))
+    envgeo_utils.load_isotope_data.clear()
+
+    try:
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always")
+            loaded = envgeo_utils.load_isotope_data(envgeo_utils.data_source_GLOBAL)
+
+        assert envgeo_utils.USER_EXCEL_DATA_LABEL not in loaded["Dataset"].tolist()
+        assert not any(issubclass(item.category, FutureWarning) for item in captured)
+    finally:
+        envgeo_utils.load_isotope_data.clear()
+
+
 # Verifies that coastline loading returns valid longitude and latitude lists of equal length.
 # 海岸線データ読み込み結果として、有効な経度・緯度リストが同じ長さで返ることを確認する。
 def test_load_coastline_data_returns_same_length_coordinate_lists():
@@ -783,7 +831,10 @@ def test_load_coastline_data_supports_110m_csv():
 
 
 def test_plot_bundled_coastline_uses_csv_without_cartopy_downloader(monkeypatch):
-    """The Matplotlib helper must plot bundled coordinates without Cartopy I/O."""
+    """The Matplotlib helper plots bundled coordinates without Cartopy I/O.
+
+    Matplotlib補助関数がCartopyのI/Oなしで同梱座標を描画する。
+    """
     calls = []
 
     class DummyAxes:

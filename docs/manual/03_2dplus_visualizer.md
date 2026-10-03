@@ -1,21 +1,24 @@
-# Interactive 2D/2.5D Visualizer
+# Interactive 2Dplus Visualizer
 
 ## What This Page Does
 
-This page links interactive Plotly scatter plots with sampling-location maps.
+This page links interactive Plotly relationship plots with sampling-location
+maps for selected reference datasets.
 
 ## Basic Workflow
 
-1. Select a dataset.
-2. Apply sidebar filters.
-3. Choose a plot type.
-4. Select a color parameter and colormap.
-5. Use Box Select or Lasso Select to highlight points.
-6. Inspect the corresponding sampling locations on the map.
+1. Select a reference data source and set the sidebar filters.
+2. Choose a plot type: Temperature--Salinity, δD--δ18O, custom 2D/2.5D, or
+   Salinity--δ18O.
+3. Select a color parameter and colormap where those controls are available.
+4. Select **Apply settings** after changing the filters.
+5. Use Box Select or Lasso Select on an interactive scatter plot.
+6. Inspect the corresponding sampling locations and selected-data table.
 
 ## Main Controls
 
-- **Plot type**
+- **Plot type** — Temperature--Salinity, δD--δ18O, custom 2D/2.5D beta, or
+  Salinity--δ18O
 - **Color parameter**
 - **Colormap**
 - **Density contour interval (approx. σ0)** — spacing between approximate σ0
@@ -27,8 +30,10 @@ This page links interactive Plotly scatter plots with sampling-location maps.
 
 ## Outputs
 
-- Temperature-Salinity interactive plot
-- Salinity-d18O interactive plot
+- Temperature--Salinity interactive plot
+- δD--δ18O interactive plot
+- Custom 2D/2.5D plot beta
+- Salinity--δ18O interactive plot
 - Sampling location map
 - Filtered dataset table
 - Box/Lasso-selected dataset table
@@ -38,6 +43,9 @@ This page links interactive Plotly scatter plots with sampling-location maps.
 - The regression line is intended for quick visual reference.
 - Box/Lasso selection depends on Plotly interaction behavior.
 - Very dense selections may be slower on older computers.
+- This page does not accept browser uploads. Use **User Data Check & Quick
+  Visualizer** or a page with an **Uploaded data overlay** for session-only
+  uploaded data.
 - The T–S diagram density contour lines are **approximate σ0 reference
   contours**, not pointwise sample density. They are computed by passing
   Practical Salinity (≈ Absolute Salinity) and in-situ temperature

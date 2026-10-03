@@ -1,26 +1,31 @@
 # EnvGeo-Seawater ユーザーマニュアル
 
-このマニュアルは、EnvGeo-Seawater の全体的な使い方と、各ページの操作方法をまとめるためのものです。
+このマニュアルは、安定版として公開するEnvGeo-Seawaterの全体的な使い方と、各ページの操作方法をまとめるものです。
 
-Markdown 形式で作成しているため、GitHub、JOSS関連資料、研究室ホームページ、WordPress記事などへ再利用しやすい構成です。
+Markdown形式のファイルを、repository文書および今後作成する英日静的ドキュメントサイトの精査済み原稿として使用します。
 
-## 目次
+## 安定版の目次
 
 - [概要](00_overview.md)
-- [Data filtering](01_data_filtering.md)
-- [User Data Check & Quick Visualizer](05_user_data_check_quick_visualizer.md)
-- [Interactive 2D/2.5D Visualizer](03_2dplus_visualizer.md)
-- [Interactive 3D/4D Visualizer](04_3d_4d_visualizer.md)
-- [Salinity-d18O Relationship](31_salinity_d18o.md)
-- [Isotope & Hydrographic Mapping](32_mapping.md)
-- [Temperature-Salinity Diagram](34_ts_diagram.md)
-- [Custom Parameter Plot beta](35_custom_parameter_plot.md)
-- [Depth Profile](37_depth_profile.md)
-- [Vertical Section Visualizer beta](53_vertical_section.md)
-- [Integrated Visualizer beta](90_integrated_visualizer.md)
+- [データの絞り込み](01_data_filtering.md)
+- [ユーザーデータ確認・簡易可視化](05_user_data_check_quick_visualizer.md)
+- [インタラクティブ2Dplus可視化](03_2dplus_visualizer.md)
+- [インタラクティブ3D/4D可視化](04_3d_4d_visualizer.md)
+- [塩分–δ¹⁸O関係図](31_salinity_d18o.md)
+- [同位体・水文マッピング](32_isotope_hydrographic_mapping.md)
+- [水温–塩分図](34_ts_diagram.md)
+- [カスタムパラメータプロット](35_custom_parameter_plot.md)
+- [深度プロファイル](37_depth_profile.md)
+- [鉛直断面可視化 beta](53_vertical_section.md)
+
+## アーカイブおよび開発資料
+
+`pages/80_Correlation_Overview.py`は、開発初期の探索ワークフローを残すアーカイブです。必要最小限の互換性維持だけを行い、個別の操作マニュアルは作成しません。
+
+[Integrated Visualizerの開発記録](90_integrated_visualizer.md)は、開発経緯を残すための資料です。Page 90は安定版および利用者向け静的ドキュメントサイトには含めません。
 
 ## 読み方
 
 1. まず [概要](00_overview.md) を確認します。
-2. 多くのページで共通する [Data filtering](01_data_filtering.md) を確認します。
+2. 多くのページで共通する [データの絞り込み](01_data_filtering.md) を確認します。
 3. 利用したい可視化ページの個別マニュアルを参照します。

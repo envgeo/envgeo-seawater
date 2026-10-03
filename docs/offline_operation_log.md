@@ -1,10 +1,20 @@
-# Offline Operation Log
+# Offline Operation Record
+
+[日本語版](offline_operation_log_Japanese.md)
+
+## Status
+
+This is a historical implementation record, updated to distinguish the
+offline-map work introduced during v1.3.3 development from the current v1.3.4
+release candidate. It is not the final release acceptance record; use
+`release_checklist.md` and `testing.md` for current verification.
 
 ## Overview
 
 This document records the design decisions and implementation details for the
 offline / degraded-network operation of the Plotly interactive maps in
-**EnvGeo Seawater** (v1.3.3).
+**EnvGeo-Seawater**. The original implementation notes were written for v1.3.3;
+the described map modes and local-coastline fallback remain part of v1.3.4.
 
 ---
 
@@ -32,9 +42,9 @@ always visible, regardless of network state.
 | Bathymetry (Sea) | Esri World Ocean Base | Yes |
 | Contour (GSI) | Geospatial Information Authority of Japan | Yes |
 
-**Note:** All online tile sources are used under their respective public
-web-use licences.  None requires an API key as of v1.3.3.  CARTO basemaps,
-which previously required an API key, have been removed.
+**Release boundary:** These modes do not configure a project API key. Their
+upstream terms, availability, and recommended attribution can change, so they
+must be rechecked at the tagged release. CARTO basemaps are not configured.
 
 ---
 
@@ -89,16 +99,16 @@ and 04.  Page 05 also provides a download button via `download_figure()`.
 
 ---
 
-## Constraints not changed by this sprint
+## Scope and remaining limitations
 
 * Cartopy static contour maps (page 32), Vertical Section, and GEBCO logic are
   unchanged.
 * Persistent user-data storage locations and upload/share specifications are
   unchanged.
 * Folium / Leaflet / Draw CDN assets are not bundled locally.
-* No earthquake catalogue, plate boundary, or Bering Sea date-line logic was
-  modified.
-* Version is 1.3.3.
+* This record does not establish that every browser map tile will be available
+  in every network environment. The local coastline mode is the explicit
+  no-tile fallback.
 
 ---
 

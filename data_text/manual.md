@@ -1,23 +1,41 @@
-Select a page from the sidebar to start exploring the data.
+# Getting started
 
-For the best experience, use this app on a desktop or laptop computer.
+Choose a page from the sidebar to explore the included seawater isotope and
+hydrographic data. A desktop or laptop browser is recommended; mobile and
+tablet layouts may have limited space for interactive figures and controls.
 
-Note: Mobile or tablet displays may have limited features or layout constraints.
+## A first workflow
 
-Suggested starting points:
+1. Start with **User Data Check Quick Visualizer** to inspect a CSV/XLSX file,
+   review missing values and quality flags, and make a simple 2D--4D plot.
+2. On that page, and on the supported specialist pages, use **Data filtering**
+   to choose a reference dataset and, when appropriate, select **Uploaded
+   data**. Change filters, then select **Apply settings** to update the figure.
+3. Use the specialist pages for the bundled reference data or the optional
+   local **User Excel data**: **2Dplus Visualizer** for a spatial overview;
+   **3D 4D Visualizer** for longitude, latitude, depth, and variable
+   relationships; or the salinity--d18O, mapping, T--S, and depth-profile
+   pages for focused hydrographic and isotope exploration.
 
-- For a workbook that should always be available during local use, place it at
-  `local_data/user_data.xlsx` before starting the app. It appears in Data
-  filtering as `User Excel data` and is combined with the selected reference
-  source. Use `ENVGEO_LOCAL_USER_DATA_PATH` for another CSV/XLSX/XLS path.
-- Use **User Data Check & Quick Visualizer** to upload CSV/XLSX data, check
-  missing values and quality flags, select `Uploaded data` through Data
-  filtering, and make simple 2D--4D figures before moving to a specialist page.
-- Use the 2D mapping page for a quick spatial overview.
-- Use the 3D/4D visualizers to explore longitude, latitude, depth, and variable relationships.
-- Use the T-S, salinity-d18O, and depth-profile pages for detailed hydrographic and isotope relationships.
-- Use beta pages for experimental workflows such as integrated views and
-  vertical sections. Vertical-section interpolation should be checked against
-  observed points and data coverage before use as an analysis result.
+## User data
 
-[Description of each page is here](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/#pages)
+`local_data/user_data.xlsx` is a zero-value public sample supporting the
+always-loaded **User Excel data** workflow. For researcher-owned CSV, XLSX, or
+XLS data outside the repository, set `ENVGEO_LOCAL_USER_DATA_PATH` before
+starting the app. Uploaded files are used only for the current browser session
+and are not written into the bundled reference datasets. Browser uploads are
+available in **User Data Check Quick Visualizer** and as overlays on the
+salinity--d18O, mapping, T--S, custom-parameter, depth-profile, and
+vertical-section pages. They are not currently available in 2Dplus or 3D 4D.
+
+## Page status and interpretation
+
+The **Vertical Section Visualizer** is an experimental workflow. Check
+vertical-section interpolation against observed points and data coverage before
+using it as an analysis result. The
+**Correlation Overview** page is a preserved exploratory/archive workflow; it
+is not a target for new feature development.
+
+Reference data sources, citation guidance, and known limitations are available
+in the Home-page **Data Sources**, **About**, and **Updates** tabs and in the
+repository documentation.

@@ -1,8 +1,13 @@
-# Integrated Visualizer beta
+# Integrated Visualizer development record (beta)
+
+> Historical development record. Page 90 is retained here to explain earlier
+> integration experiments. It is excluded from the stable-release application
+> and the user-facing static documentation website.
 
 ## What This Page Does
 
-This beta page tests integrated workflows that combine existing visualization pages, shared filtering, upload comparison, and quick visual checks.
+This beta page records tests of integrated workflows that combine existing
+visualization pages, shared filtering, upload comparison, and quick visual checks.
 
 ## Basic Workflow
 
@@ -34,7 +39,7 @@ This beta page tests integrated workflows that combine existing visualization pa
 
 ## Notes And Limitations
 
-- This page is the main test bed for future integration.
+- This page is retained as development history, not a supported stable-release workflow.
 - Uploaded data are intended to remain in memory only during the Streamlit session.
 - Some workflows call existing page files for compatibility.
 - Individual visualization pages remain first-class workflows. The public

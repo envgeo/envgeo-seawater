@@ -2,7 +2,28 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
-## 未リリース: 保守・文書整備
+## v1.3.4に向けた未リリースの保守・文書整備
+
+この節には、v1.3.3後から正式なv1.3.4リリースまでの作業を記録する。直下の要約は
+現在のRelease candidateの範囲を示し、その後の項目は日付を含む技術・文書整備の履歴として残す。
+
+### 現在のRelease candidate要約
+
+- v1.3.4をRelease candidateに設定した。GitHub ActionsではPython 3.10と3.12で、
+  隔離wheelの作成と検証を行う。
+- `seawater_map`の安定版公開範囲を、Seawaterの10ページとして定義した。開発用の
+  Page 90・91とローカル診断用Page 99は、安定版、GitHub Release、Zenodo archiveに含めない。
+- 現行の全`dataset/*.xlsx` workbookを、引用付きの学術利用参照コレクションとして維持する。
+  来歴、元データの引用、記録済みのアプリ側変換はRelease記録に残し、このpackage判断で
+  workbookの観測値は変更していない。
+- 地理空間資産のディレクトリ名を`data_beta/`から`bathymetry/`へ変更した。派生GEBCO格子は
+  Vertical Sectionで引き続き利用し、開発用の生成スクリプトはwheelに含めない。
+- Home本文、英日manual、データ案内、Release確認、コードコメントを更新した。ブラウザuploadは
+  セッション限定であり、同梱User Excel workbookはデータ行0件の公開sampleとして維持する。
+
+### 準備作業の履歴
+
+- Home内容: 安定版の公開範囲、ブラウザアップロードの利用境界、引用案内、Homeの短い案内と英日ページ別manualの役割分担を明確化した。日本語概要から古いbrowser制約と同時アクセス制約の案内を削除した。
 
 - Release準備: 1.3.4をRelease候補版として設定した。Python 3.10と3.12のCIはともに
   隔離wheelを作成・検証し、Python版ごとにartifactを保存する。予定する安定版は
@@ -288,7 +309,7 @@
 ### リリース概要
 
 - 準備: バージョン1.3以降、コードレビュー、実装草案の作成、リファクタリング、テスト、バグ調査、文書整備にAIコーディング支援ツール（OpenAI Codex、Anthropic Claude Code）を本格的に活用する方針を採用。採用したすべての変更は人間の著者がレビュー・編集・検証する。方針の詳細は`docs/development_notes_Japanese.md`とREADMEを参照。
-- アクティブな個別ページと新しい公開ページ`User Data Check & Quick Visualizer`に、共通のブラウザアップロード運用を展開。
+- `User Data Check & Quick Visualizer`と、対応する個別ワークフローに共通のブラウザアップロード運用を展開。
 - Data filteringで選択した`Uploaded data`を、対応する描画・計算へ統合し、アップロード点は最前面表示を維持。
 - Vertical Sectionのアップロード処理とカラーバー操作を改善。補間結果は引き続き科学的検証が必要な実験的ワークフローとして扱う。
 - Streamlit 1.63でタブ表示を統一し、旧ローカルユーザーデータブックを将来の削除候補として記録。

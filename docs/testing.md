@@ -2,6 +2,8 @@
 
 This document explains the current pytest suite for EnvGeo-Seawater, what it checks, and what still needs to be expanded as the software matures.
 
+[日本語版](testing_Japanese.md)
+
 ## How To Run Tests
 
 Run the full test suite from the project root:
@@ -18,12 +20,12 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 
 ## Continuous Integration
 
-`.github/workflows/ci.yml` runs on Linux with Python 3.12 for pushes, pull
-requests, and manual dispatch. It installs `requirements-dev.txt`, runs the
-pytest suite, builds a wheel, then installs that wheel in a separate venv from
-outside the checkout. The final check verifies the installed package location,
-the 12 public pages, the diagnostic tool, and the absence of page 99 and the
-GEBCO-generation script.
+`.github/workflows/ci.yml` runs on Linux with Python 3.10 and 3.12 for pushes,
+pull requests, and manual dispatch. It installs `requirements-dev.txt`, runs
+the pytest suite, builds a wheel, then installs that wheel in a separate venv
+from outside the checkout. For this development/pre-release repository, the
+final check verifies the installed package location, 12 packaged pages, the
+diagnostic tool, and the absence of Page 99 and the GEBCO-generation script.
 
 Dependency installation necessarily uses the package index during CI setup.
 The test and application checks themselves must not require external tiles,
@@ -118,7 +120,9 @@ The current pytest suite focuses on:
 - Common utility functions.
 - Shared plotting support such as colormaps, filenames, map presets, and coastline loading.
 - Repository structure and public-facing page hygiene.
-- Integrated beta upload workflow checks.
+- Page 90 Integrated Visualizer upload-workflow checks in the
+  development/pre-release repository only; the stable repository intentionally
+  omits that page.
 
 These tests are intended to catch common breakage during refactoring and release preparation.
 

@@ -30,7 +30,7 @@ The platform is designed to support both **exploratory data analysis** and **rep
 
 - 🌍 Interactive map visualization with adaptive zoom  
 - 📊 Depth profiles with gap-aware plotting  
-- 📈 Temperature–Salinity (T–S) diagrams with approximate σ0 reference contours  
+- 📈 Temperature–Salinity (T–S) diagrams with approximate σ0 reference contours
 - 📉 Regression analysis (e.g., salinity–δ¹⁸O relationships)  
 - 🧭 3D / 4D visualization of spatial–temporal structures  
 - 📂 Session-only browser uploads and optional persistent local `User Excel data` for comparison with reference datasets
@@ -63,22 +63,22 @@ main visualization tools, along with selected beta and local-development pages:
 - `pages/34_T-S_diagram.py`  
   Temperature-salinity diagrams with density contours.
 
-- `pages/37_Depth_Profile.py`  
+- `pages/37_Depth_Profile.py`
   Depth profiles for δ18O, δD, d-excess, temperature, and salinity.
 
-- `pages/35_Custom_Parameter_Plot_beta.py`  
-  Experimental custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
+- `pages/35_Custom_Parameter_Plot.py`
+  Flexible custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
+
+- `pages/53_Vertical_Section_Visualizer.py`
+  Vertical Section Visualizer beta. This experimental page is used to refine section-line selection, interpolation, bathymetry handling, and vertical-section plotting.
 
 - `pages/80_Correlation_Overview.py`
 Archive display of the original hand-written exploratory workflow used during development. It is retained as a development record; no new features are planned.
 
-- `pages/53_Vertical_Section_Visualizer.py`  
-  Vertical Section Visualizer beta. This experimental page is used to refine section-line selection, interpolation, bathymetry handling, and vertical-section plotting.
-
-- `pages/90_Integrated_Visualizer_beta.py`  
+- `pages/90_Integrated_Visualizer_beta.py`
   Experimental integrated visualizer. It can run the original visualization workflows inside one beta page, temporarily merge uploaded user data into those workflows, and test a shared-filter tab workflow with ocean-region map presets for future integration. The standalone uploader page remains separate because it uses its own upload-first workflow.
 
-- `pages/99_Environment_Check.py`  
+- `pages/99_Environment_Check.py`
   Local-development wrapper for the environment checker. It is useful for local diagnostics but is not intended for the public Streamlit deployment sidebar.
 
 The former standalone about page was merged into `home.py`.
@@ -170,7 +170,7 @@ This ensures that observed patterns reflect environmental signals rather than me
 
 All datasets included in this repository are either publicly available or redistributed in accordance with their respective licenses.
 
-- Provided in a standardized format for immediate use  
+- Provided in a standardized format for immediate use
 
 Unpublished or restricted datasets are **not included**.
 
@@ -291,12 +291,28 @@ Project checklists and longer development notes are kept under `docs/`.
 
 ## Directory Structure
 
-- `home.py`  
+- `home.py`
   Main Streamlit entry point for EnvGeo-Seawater.
 
-- `envgeo_utils.py`  
+- `envgeo_utils.py`
   Shared utilities for dataset loading, data cleaning, filtering, common Plotly
   layout, map styles, coastline loading, and table display.
+
+- `envgeo_assets.py`
+  Resolves paths to read-only resources bundled with the application, without
+  depending on the launch directory.
+
+- `envgeo_user_data.py`
+  Provides session-only browser-upload controls, column normalisation, and
+  display helpers for user-supplied data. Browser uploads are not written to
+  disk by this module.
+
+- `envgeo_launcher.py`
+  Starts the installed application through the `envgeo-seawater` command.
+
+- `envgeo_diagnostic_launcher.py`
+  Starts the local diagnostic tool through the `envgeo-seawater-check`
+  command; it is separate from the public app navigation.
 
 - `pages/`  
   Stable visualization page files shown in the app sidebar.
@@ -395,6 +411,18 @@ EnvGeo-Seawater and the original dataset providers used in the selected
 visualization. Source details are shown in the app and in the Markdown files
 under `data_text/`.
 
+## Software and geospatial acknowledgements
+
+EnvGeo-Seawater uses Streamlit for the application interface and Plotly for
+interactive figures. Selected scientific colour palettes are provided by
+cmocean. The T–S diagram draws explicitly approximate σ0 reference contours
+with the Gibbs SeaWater (GSW) implementation of TEOS-10; it does not perform a
+per-observation conversion to Absolute Salinity and Conservative Temperature.
+The Vertical Section Visualizer can use a project-derived, downsampled GEBCO
+2025 Grid for seafloor context only; it is not a navigation product. Natural
+Earth supports the bundled land assets; its attribution appears above. Full
+bibliographic and provenance records are maintained in `paper.bib` and `docs/`.
+
 ## AI-assisted development and human oversight
 
 From version 1.3 onward, development of EnvGeo-Seawater has made
@@ -416,6 +444,27 @@ https://envgeo-seawater-map.streamlit.app
 
 Stable demo with experimental updates:
 https://envgeo-seawater-pre.streamlit.app
+
+---
+
+## Prior workflow use
+
+Before EnvGeo-Seawater had an archival software DOI, it was used in the
+author's and collaborators' workflows to select, explore, and visualize
+subsets of the Kodama et al. (2024) regional seawater isotope dataset. The
+resulting publications cited the underlying dataset paper rather than this
+software. They are therefore examples of workflow use, not direct software
+citations.
+
+---
+
+## Future development
+
+The data model can accommodate additional datasets after their sources,
+provenance, and redistribution status have been recorded. Reusable
+visualization, asset-resolution, and distribution components may support future
+related EnvGeo applications. These are future directions, not functions or
+datasets included in the v1.3.4 release candidate.
 
 ---
 
@@ -444,7 +493,7 @@ Contour interpolation highlights large-scale oceanographic patterns and basin-sc
 
 ### Temperature–Salinity Diagram
 
-Temperature–salinity (T–S) relationships with overlaid approximate σ0 reference contours (Practical Salinity ≈ Absolute Salinity; in-situ temperature ≈ Conservative Temperature).  
+Temperature–salinity (T–S) relationships with overlaid approximate σ0 reference contours (Practical Salinity ≈ Absolute Salinity; in-situ temperature ≈ Conservative Temperature).
 This visualization supports identification of water masses and examination of isotope–hydrography relationships.
 
 ![TS diagram](images/ts_diagram.png)

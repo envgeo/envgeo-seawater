@@ -1,24 +1,28 @@
 # ==============================================================================
-# EnvGeo SEAWATER GEOCHEMICAL DATABASE - Requirements
+# EnvGeo-Seawater runtime dependencies / 実行時依存関係
 # ------------------------------------------------------------------------------
 # - Verified environments: Python 3.10 / Streamlit 1.42 and
 #   Python 3.12 / Streamlit 1.63, both with Plotly 5.24.
+# - 検証済み環境はPython 3.10 / Streamlit 1.42およびPython 3.12 /
+#   Streamlit 1.63で、どちらもPlotly 5.24を使用する。
 # - A fresh test-site installation resolves to Streamlit 1.63.
-# - Apple Silicon (M1/M2) Users: 
-#   To avoid build errors (especially for pyproj/cartopy), 
-#   follow the Conda-first installation steps in README.md.
+# - 新規のテストサイト導入ではStreamlit 1.63が解決される。
+# - Apple Silicon (M1/M2) users: to avoid build errors, especially for
+#   pyproj/cartopy, follow the Conda-first installation steps in README.md.
+# - Apple Silicon（M1/M2）では、とくにpyproj/cartopyのbuild errorを避けるため、
+#   README.mdのCondaを先に用いる導入手順に従う。
 # ==============================================================================
 
-# --- Core Framework ---
+# --- Core framework / 基盤フレームワーク ---
 streamlit>=1.42.0,<=1.63.0
 
-# --- Data Science & Analytics ---
+# --- Data science and analytics / データ解析 ---
 numpy==1.26.4
 pandas==2.3.3
 scipy==1.15.3
 scikit-learn==1.7.2
 
-# --- Visualization ---
+# --- Visualization / 可視化 ---
 plotly==5.24.1
 matplotlib==3.10.8
 streamlit-plotly-events==0.0.6
@@ -26,15 +30,18 @@ folium==0.20.0
 streamlit-folium==0.26.1
 cmocean==4.0.3
 
-# --- Geospatial & Oceanography ---
+# --- Geospatial and oceanography / 地理空間・海洋学 ---
 # NOTE: For macOS (M1/M2), install 'proj' and 'cartopy' via Conda first:
+# 注記：macOS（M1/M2）では、先にCondaで'proj'と'cartopy'を導入する。
 # conda install -c conda-forge proj pyproj cartopy -y
-# Pin pyproj to a Python 3.12 Apple Silicon wheel release.  Leaving it
+# Pin pyproj to a Python 3.12 Apple Silicon wheel release. Leaving it
 # unconstrained currently resolves a source-only release that requires a newer
 # system PROJ than the clean-venv baseline provides.
+# pyprojはPython 3.12 Apple Silicon用wheelのある版に固定する。固定しない場合、
+# 新規venvの基準より新しいsystem PROJを必要とするsource-only版に解決される。
 pyproj==3.6.1
 gsw==3.6.20
 cartopy==0.25.0
 
-# --- Utilities ---
+# --- Utilities / 補助ライブラリ ---
 openpyxl==3.1.5

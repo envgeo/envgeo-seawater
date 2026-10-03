@@ -1,9 +1,11 @@
 # External Dataset Workbook Notes
 
-**Status:** source-to-workbook comparison, 2026-09-25. This note compares the
-bundled workbooks with the locally retained source snapshots supplied for the
-audit. It records observed differences only; it does not alter either source or
-bundled data.
+**Status:** source-to-workbook comparison, 2026-09-25; current bundled
+workbook structure rechecked, 2026-09-30. This note compares the bundled
+workbooks with the locally retained source snapshots supplied for the audit. It
+records observed differences only; it does not alter either source or bundled
+data. The corresponding Japanese record is
+[`external_dataset_workbook_notes_Japanese.md`](external_dataset_workbook_notes_Japanese.md).
 
 ## Purpose
 
@@ -11,6 +13,22 @@ The NASA GISS and PAGES CoralHydro2k workbooks are cited third-party reference
 data used for comparison and visualization. This record keeps their source
 citations separate from project-side fields used by the application. It
 contains no private correspondence or contact details.
+
+## Current bundled-workbook recheck (2026-09-30)
+
+This read-only recheck confirms the currently bundled files and their workbook
+structure; it does not repeat the historical source-file comparison because the
+source snapshots are intentionally outside the application tree. The two
+workbook SHA-256 values and their relationship to the stable-release clone are
+listed in [`provenance_inventory.md`](provenance_inventory.md).
+
+- NASA GISS: `NASA_20260227` has 25,514 rows and 22 columns. All rows have
+  `Transect = Nasa_database`; `Cruise`, `Station`, and `remarks by TI` remain
+  empty.
+- PAGES CoralHydro2k: `CoralHydro2k_SW_1_0_0_20260303` has 18,598 rows and 58
+  columns. `Transect` is populated in all rows with 93 distinct values; the
+  short `reference` field is populated in 15,340 rows; the six documented
+  common-schema placeholders remain empty.
 
 ## NASA GISS workbook
 
@@ -30,9 +48,8 @@ The 11 source fields are retained with common-schema header names:
 with `Salinity`, `d18O`, `dD`, `Year`, `Month`, and `Notes` retained by name.
 All 25,514 source rows match their corresponding bundled values numerically or
 as the original `**` missing-value marker. Project-only common-schema fields
-are otherwise blank, except `Transect` and one manually entered
-`remarks by TI` QC note. No observation-value difference was found in this
-comparison.
+are otherwise blank, except `Transect`. No observation-value difference was
+found in this comparison.
 
 `Cruise` and `Station` are present as common-schema fields but have no values in
 the current NASA workbook. This is a statement about the current workbook, not

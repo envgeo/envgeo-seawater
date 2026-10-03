@@ -3,8 +3,15 @@
 """
 Generate an EnvGeo-Seawater runtime and dependency diagnostic report.
 
+This local-only tool intentionally displays runtime paths and package details.
+Do not include its CSV or PDF output in public releases, Zenodo archives, or
+other shared records.
+
+このローカル専用ツールは実行環境のパスと依存パッケージ詳細を意図的に表示します。
+CSV／PDF出力は公開Release、Zenodo archive、その他の共有記録へ含めません。
+
 Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
 import importlib
@@ -28,7 +35,9 @@ from matplotlib.figure import Figure
 
 st.set_page_config(page_title="Environment Check")
 
-
+# =============================================================================
+# Diagnostic scope and package inventory / 診断対象とパッケージ一覧
+# =============================================================================
 APP_ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_ENV_NAMES = [
     "envgeo_st142_py310_plotly5",
@@ -147,6 +156,9 @@ PACKAGES = [
 ]
 
 
+# =============================================================================
+# Runtime and report helpers / 実行環境・レポート補助関数
+# =============================================================================
 def get_package_version(package_name):
     try:
         return importlib.metadata.version(package_name)
@@ -412,6 +424,7 @@ def render_pip_list():
 
     if st.button("Display detailed package list", key="env_check_display_pip_list"):
         try:
+            # ``pip list`` is a local read-only inventory command. / ``pip list``はローカルの読取り専用一覧コマンド。
             result = subprocess.run(
                 [sys.executable, "-m", "pip", "list"],
                 capture_output=True,
@@ -427,6 +440,9 @@ def render_pip_list():
 
 
 def main():
+    # =============================================================================
+    # Local diagnostic interface / ローカル診断画面
+    # =============================================================================
     st.title("Environment Diagnostic Tool")
     st.caption("Checks the active Python environment and EnvGeo-Seawater dependencies.")
 

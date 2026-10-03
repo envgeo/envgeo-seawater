@@ -3,40 +3,33 @@
 """
 Isotope and hydrographic mapping visualizer for EnvGeo-Seawater data.
 
-Created: 2023-04-22
+EnvGeo-Seawater データの同位体・水理パラメーター地図表示ページです。
+
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
+version = "1.3.4"
+fig_title = "envgeo-seawater-database"
 
-
-
-# --- Version info ---
-version = "1.3.4"  # 2026-09-28
-
-# ToDo
-# このバージョンは補完計算の調整が必要
-
-
-
-fig_title = "envgeo-seawater-database"  # 2026/02/12
-
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-import plotly.express as px
+import io
 import math
-import envgeo_utils
-import envgeo_user_data
-from scipy.interpolate import griddata # コンターマップ用
-import cartopy.io.shapereader as shapereader  # ローカル NE land shapefile 読み込み用
-import io # ファイル処理用
-import pathlib
-import warnings
 
+import cartopy.crs as ccrs
+import cartopy.io.shapereader as shapereader
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+from scipy.interpolate import griddata
+
+import envgeo_assets
+import envgeo_user_data
+import envgeo_utils
 
 MAP_PARAMETER_LABELS = {
     "d18O": r"$\delta^{18}$O (VSMOW)",
@@ -54,7 +47,6 @@ MAP_PARAMETER_PLOTLY_LABELS = {
     "Temperature_degC": "Temperature (degC)",
 }
 
-
 def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_domain_max):
     """
     Return a Cartopy-safe map extent.
@@ -63,6 +55,8 @@ def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_
     the full projection domain, especially on Streamlit Cloud with 0-360 maps.
     This keeps the requested view visually unchanged while nudging the bounds
     slightly inside the projection seam.
+
+    投影境界に触れる範囲をわずかに内側へ調整し、CartopyのNaN軸範囲を防ぎます。
     """
     lon_min = max(float(lon_domain_min), float(lon_min))
     lon_max = min(float(lon_domain_max), float(lon_max))
@@ -85,7 +79,6 @@ def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_
 
     return lon_min, lon_max, lat_min, lat_max
 
-
 def set_cartopy_extent_safely(ax, extent):
     """
     Apply a map extent without crashing on Cartopy projection seam issues.
@@ -93,6 +86,8 @@ def set_cartopy_extent_safely(ax, extent):
     Streamlit Cloud can raise ``ValueError: Axis limits cannot be NaN or Inf``
     for nearly global PlateCarree extents. If that happens, fall back to a
     global view so the figure still renders.
+
+    投影境界の問題で失敗した場合は、全球表示にフォールバックします。
     """
     try:
         ax.set_extent(extent, crs=ccrs.PlateCarree())
@@ -101,13 +96,14 @@ def set_cartopy_extent_safely(ax, extent):
         ax.set_global()
         return False
 
-
 def map_display_preset_bounds(region_label, lon_center):
     """
     Convert a map-region preset to the longitude frame used by the map center.
 
     Map display presets change only the figure view. They do not change the
     sidebar data-filtering result.
+
+    地域プリセットは地図の表示範囲だけを変え、サイドバーの絞り込み結果は変えません。
     """
     if region_label not in envgeo_utils.MAP_REGION_PRESETS:
         return None
@@ -127,7 +123,6 @@ def map_display_preset_bounds(region_label, lon_center):
             lon_max += 360
 
     return (float(lon_min), float(lon_max)), (float(lat_min), float(lat_max))
-
 
 def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
     """
@@ -152,18 +147,18 @@ def get_parameter_color_range_defaults(parameter, ref_data, data_source_global):
 
     return -20.0, 20.0, (-5.0, 5.0), 0.1
 
-
-# ── Local Natural Earth 50m Land shapefile ────────────────────────────────────
+# =============================================================================
+# Bundled Natural Earth land mask / 同梱Natural Earth陸域マスク
+# =============================================================================
 # The shapefile is bundled in the repository so that the land mask can be drawn
 # without any external Natural Earth download, even in offline environments.
 # Path is resolved relative to this script's directory so it works regardless
 # of the working directory when Streamlit launches the page.
-_NE50M_LAND_DIR = (
-    pathlib.Path(__file__).parent.parent / "coastline" / "natural_earth_50m_land"
+_NE50M_LAND_DIR = envgeo_assets.asset_path(
+    "coastline/natural_earth_50m_land", required=False
 )
 _NE50M_LAND_SHP = _NE50M_LAND_DIR / "ne_50m_land.shp"
 _NE50M_LAND_REQUIRED_EXTS = (".shp", ".shx", ".dbf")
-
 
 def _load_ne50m_land_geometries():
     """Return a list of Shapely geometries from the bundled NE 50m land shapefile.
@@ -173,6 +168,8 @@ def _load_ne50m_land_geometries():
 
     Rendering with an empty list degrades gracefully: the land mask is skipped,
     but coastlines and data points are still drawn.
+
+    必要な同梱ファイルがない場合は陸域マスクだけを省略し、海岸線と観測点は表示します。
     """
     missing = [
         _NE50M_LAND_DIR / ("ne_50m_land" + ext)
@@ -196,44 +193,32 @@ def _load_ne50m_land_geometries():
         )
         return []
 
-
 def main():
-    
-        
-    # タイトル
+    # =============================================================================
+    # Page header / ページ見出し
+    # =============================================================================
     st.header(f'Isotope & Hydrographic Mapping ({version})')
     st.caption(
         "Map d18O, dD, d-excess, salinity, temperature, and related seawater parameters."
     )
-  
-    # リロードボタン
     st.button('Reload')
 
-
-    ##############################################################################
-    # データソースの変数、envgeo_utilsから読み出す
-    ##############################################################################
+    # =============================================================================
+    # Data-source selection / データソースの選択
+    # =============================================================================
     data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
 
-    
-    ##############################################################################
-    # データソース選択
-    ##############################################################################
     ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
-
-
-    ##############################################################################
-    # 選択したデータセットの文献表示
-    ##############################################################################
-    
+    # -----------------------------------------------------------------------------
+    # Attribution / 出典表示
+    # -----------------------------------------------------------------------------
     if ref_data == data_source_JAPAN_SEA:
         st.write(envgeo_utils.refs_JAPAN_SEA)
         
     elif ref_data == data_source_AROUND_JAPAN:
-        # st.text('including data from previous reports')
         st.write(envgeo_utils.refs_AROUND_JAPAN)
 
         
@@ -243,19 +228,15 @@ def main():
     else:
         st.warning("Invalid data source selection.")
 
-
-    ##############################################################################
-    # envgeo_utilsからデータフレーム読み込み
-    ##############################################################################
+    # =============================================================================
+    # Data loading and uploaded overlay / データ読込とアップロード重ね表示
+    # =============================================================================
     df1 = envgeo_utils.load_isotope_data(ref_data)
    
     if df1.empty:
         st.warning("No data available for the selected conditions.")
         return
 
-    ##############################################################################
-    # アップロードデータUI（Integrated埋め込み時はファイルアップロードを省略）
-    ##############################################################################
     embedded_in_integrated = (
         st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
         == "32_Isotope_Hydrographic_Mapping.py"
@@ -281,14 +262,9 @@ def main():
         uploaded_df, "iso_map"
     )
 
-    ##############################################################################
-    # サイドバーここから　　df1フィルタリング　も一括で
-    #　2026/03/06　Min-Maxをdfから取得に変更
-    #  緯度経度などは型変換をせず、そのまま最小・最大を取得
-    ##############################################################################
-    
-    # 関数の呼び出し
-    # すべての変数を順番通りに受け取ります
+    # =============================================================================
+    # Shared sidebar filtering / 共通サイドバーによるデータ絞り込み
+    # =============================================================================
     (df1,
      sld_year_min, sld_year_max,
      selected_months,
@@ -307,9 +283,8 @@ def main():
          uploaded_df=uploaded_df, uploaded_filter_key="isotope_mapping",
          uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
      )
-    # Use the selected, integrated table for both scatter and contour
-    # calculations.  Keep a separate uploaded subset only to redraw it above
-    # the calculated layer with the user-selected marker style.
+    # Use the selected integrated table for map and contour calculations.
+    # アップロード行は、選択したマーカー書式で前景に重ね描きするために別途保持する。
     filtered_integrated_df = df1.copy()
     _, uploaded_df = envgeo_utils.split_uploaded_rows(
         filtered_integrated_df, envgeo_utils.UPLOADED_DATA_LABEL
@@ -331,6 +306,9 @@ def main():
         st.warning("No mappable isotope or hydrographic parameters are available.")
         return
 
+    # =============================================================================
+    # Map parameter and type / 地図パラメーターと種類
+    # =============================================================================
     st.subheader("Map")
     parameter_col, map_type_col = st.columns([1, 1])
     with parameter_col:
@@ -352,14 +330,9 @@ def main():
     parameter_label = MAP_PARAMETER_LABELS.get(selected_parameter, selected_parameter)
     parameter_plotly_label = MAP_PARAMETER_PLOTLY_LABELS.get(selected_parameter, selected_parameter)
 
-
-
-
-    ##############################################################################
-    # 図の中心とスケール変更
-    ##############################################################################
-
-    # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
+    # =============================================================================
+    # Map display controls / 地図表示の設定
+    # =============================================================================
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
@@ -523,7 +496,7 @@ def main():
             help="Adjust the label and tick font size of the parameter colorbar.",
         )
 
-        # アップロードデータのうちカラーバー要素が無いポイントの表示切替
+        # Uploaded points without the mapped value / 色分け値がないアップロード地点
         show_nodata_uploaded = st.checkbox(
             f"Show uploaded points without {selected_parameter} values",
             value=True,
@@ -535,39 +508,22 @@ def main():
         colorbar_thickness = colorbar_thickness_value / 100
         colorbar_length = colorbar_length_value / 100
 
-        # 内部計算用に0.001のオフセットを適用
+        # A small offset keeps full-domain Cartopy extents away from the projection seam.
+        # 微小オフセットにより、Cartopy投影の境界線と完全一致する範囲を避ける。
         map_lon_min, map_lon_max = map_lon_raw[0] - 0.001, map_lon_raw[1] + 0.001
         map_lat_min, map_lat_max = map_lat_raw[0] - 0.001, map_lat_raw[1] + 0.001
 
-   
-
-
-
-    ##############################################################################
-    #  ここから図の設定と描画
-    ##############################################################################
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
+    # =============================================================================
+    # Map preparation and drawing / 地図の準備と描画
+    # =============================================================================
 
     st.caption(getattr(envgeo_utils, "MAP_AREA_HELP_TEXT", "Map center, extent, colormap, and figure settings can be adjusted in the sidebar."))
 
-
-
-    
-    ###############################################################################################
-    ###############################################################################################
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
-
-    # 1. 計算する
+    # -----------------------------------------------------------------------------
+    # Parameter availability / 選択パラメーターの有効値
+    # -----------------------------------------------------------------------------
     original_len_df1 = len(df1)
-    # 2. 【追加】計算できなかった行（null）をその場で除外する
     df1 = df1.dropna(subset=[selected_parameter])
-   
-    # 消えた数を出力
     removed_len_df1 = original_len_df1 - len(df1)
     plotted_len_df1 = original_len_df1 - removed_len_df1
 
@@ -580,43 +536,22 @@ def main():
     if df1.empty:
         st.warning(f"No valid {selected_parameter} data are available for the selected conditions.")
         return
-       
-    ###############################################################################################
-    ###############################################################################################
-    
-    
-
-  
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    
-    
-    #ファイル名用の項目
-    
-    #全体のタイトル名
+    # -----------------------------------------------------------------------------
+    # Figure title and file name / 図題とファイル名
+    # -----------------------------------------------------------------------------
     main_title = f"{fig_title} - {selected_parameter}"
     
-    # --- 月 (スライダー用) ---
-    # sub_title = 'Lon:'+str(sld_lon_min)+'-'+str(sld_lon_max)+', Lat:'+str(sld_lat_min)+'-'+str(sld_lat_max)+', Y:'+str(sld_year_min)+'-'+str(sld_year_max)+', M:'+str(sld_month_min)+'-'+str(sld_month_max)+', S:'+str(sld_sal_min)+'-'+str(sld_sal_max)+', D:'+str(sld_depth_min)+'-'+str(sld_depth_max)+'m'
-    # --- 月 (multiselect用) ---
-    ### もし「月が多すぎてサブタイトルが長くなる」のが嫌な場合
-   # 月の表示ロジック
+    # Compact month-range text for the figure title. / 月範囲を図題用に短縮する。
     if len(selected_months) == 12:
         month_display = "All"
     elif len(selected_months) == 0:
         month_display = "None"
     else:
-        # 標準機能だけで「1-3」のように短縮するロジック
         sorted_m = sorted(list(set(selected_months)))
         ranges = []
         if sorted_m:
             start = sorted_m[0]
             for i in range(len(sorted_m)):
-                # 次の要素が連続していない、または最後の要素の場合に書き出し
                 if i + 1 == len(sorted_m) or sorted_m[i+1] != sorted_m[i] + 1:
                     end = sorted_m[i]
                     ranges.append(f"{start}-{end}" if start != end else str(start))
@@ -628,26 +563,16 @@ def main():
 
     sub_title = f"Lon:{sld_lon_min}-{sld_lon_max}, Lat:{sld_lat_min}-{sld_lat_max}, Y:{sld_year_min}-{sld_year_max}, M:{month_display}, S:{sld_sal_min}-{sld_sal_max}, D:{sld_depth_min}-{sld_depth_max}m"
 
-
     main_title2 = sub_title
-    
-    sub_title2 = ''
-    
-    title_head = str(main_title+'\n'+sub_title+'\n'+sub_title2)
-    title_head2 = title_head.replace('_', ' ') #図のタイトル表示用
+    title_head = f"{main_title}\n{sub_title}"
+    title_head2 = title_head.replace('_', ' ')
 
     # File names for downloaded figures / 図保存用のファイル名
     safe_parameter_name = envgeo_utils.safe_filename_text(selected_parameter)
 
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-
-    ##############################################################################
-    # アップロードデータ前処理と品質チェック
-    ##############################################################################
+    # -----------------------------------------------------------------------------
+    # Uploaded-data preparation and quality check / アップロードデータの前処理と品質確認
+    # -----------------------------------------------------------------------------
     uploaded_map_valid = pd.DataFrame()
     if not uploaded_df.empty:
         _has_position = {
@@ -710,8 +635,7 @@ def main():
     plt.rcParams["font.size"] = 15
 
     # Keep the requested extent inside the current longitude domain.
-    # Exact full-globe bounds can fail in Cartopy on Streamlit Cloud, so the
-    # helper nudges them slightly inside the projection seam.
+    # 完全な全球範囲によるCartopyの投影境界エラーを、安全な範囲へ調整して防ぐ。
     map_lon_min, map_lon_max, map_lat_min, map_lat_max = safe_cartopy_extent(
         map_lon_min,
         map_lon_max,
@@ -721,10 +645,13 @@ def main():
         lon_slider_max,
     )
     
+    # =============================================================================
+    # Scatter or contour map / 散布図またはコンター地図
+    # =============================================================================
     if map_type == "Scatter Map":
-        #############################################################
-        # Scatter Map
-        #############################################################
+        # -------------------------------------------------------------------------
+        # Scatter map / 散布図
+        # -------------------------------------------------------------------------
         fig = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
         
         ax = fig.add_subplot(
@@ -758,8 +685,8 @@ def main():
         )
         ax.gridlines(draw_labels=True, zorder=4)
         
-        # Plot sample points in the same longitude frame as the selected map extent.
-        # 観測点も、選択した表示範囲と同じ経度系に変換してから描画する。
+        # Plot points in the longitude frame used by the selected map extent.
+        # 選択した表示範囲と同じ経度系に変換して観測点を描画する。
         lon_wrapped = normalize_lon_to_center(df1["Longitude_degE"].values, lon_center)
         
         ax_scatter = ax.scatter(
@@ -775,21 +702,21 @@ def main():
             zorder=1
         )
         
-        # ---- Scatter Map用のカラーバーを追加 ----
+        # Parameter colorbar / パラメーターのカラーバー
         cbar_scatter = fig.colorbar(
             ax_scatter,
             ax=ax,
-            orientation="horizontal", # 横向き
-            pad=0.08,                  # 地図との隙間
-            fraction=colorbar_thickness, # カラーバーの太さ
-            shrink=colorbar_length,    # カラーバーの長さ
-            aspect=25,                 # カラーバーの細長さ
-            extend="neither"           # 【重要】ここを "neither" にすると両端が□になります
+            orientation="horizontal",
+            pad=0.08,
+            fraction=colorbar_thickness,
+            shrink=colorbar_length,
+            aspect=25,
+            extend="neither",
         )
         cbar_scatter.set_label(parameter_label, fontsize=colorbar_font_size)
         cbar_scatter.ax.tick_params(labelsize=colorbar_font_size)
 
-        # --- Uploaded data overlay (Scatter Map / 最前面) ---
+        # Uploaded overlay, drawn in the foreground / 前景に描くアップロードデータ
         if not uploaded_map_valid.empty:
             _lon_up_sc = normalize_lon_to_center(
                 uploaded_map_valid["Longitude_degE"].values, lon_center
@@ -866,9 +793,9 @@ def main():
         )
     
     else:
-        #############################################################
-        # Contour Map
-        #############################################################
+        # -------------------------------------------------------------------------
+        # Contour map / コンター地図
+        # -------------------------------------------------------------------------
         # ``linear`` interpolation needs at least three non-collinear points.
         # Uploaded-only selections can legitimately contain fewer points, so
         # fall back to nearest-neighbour interpolation rather than erroring.
@@ -890,20 +817,20 @@ def main():
             return
 
         lon_original = contour_df["Longitude_degE"].values
-        # Interpolation also needs the center-adjusted longitude frame to match the displayed window.
-        # 補間計算でも、表示中のウィンドウと同じ経度系を使う必要がある。
+        # Interpolation uses the longitude frame of the displayed window.
+        # 補間計算にも表示ウィンドウと同じ経度系を用いる。
         lon_for_interp = normalize_lon_to_center(lon_original, lon_center)
-        # Build the interpolation grid in the same longitude domain as the slider and set_extent.
-        # 補間グリッドも slider / set_extent と同じ経度範囲で作る。
+        # Build the interpolation grid in the longitude domain used by the slider.
+        # 補間グリッドもsliderと同じ経度範囲で作る。
         grid_lon = np.linspace(lon_slider_min, lon_slider_max, 360)
         lat_vals     = contour_df["Latitude_degN"].values
         val          = contour_df[selected_parameter].values
         
-        # ---- グリッド ----
+        # Interpolation grid / 補間グリッド
         grid_lat = np.linspace(map_lat_min, map_lat_max, 250)
         X, Y = np.meshgrid(grid_lon, grid_lat)
         
-        # ---- 補間 ----
+        # Interpolation / 補間
         Z = None
         if len(contour_df) >= 3:
             try:
@@ -1001,7 +928,7 @@ def main():
         cbar.set_label(parameter_label, fontsize=colorbar_font_size)
         cbar.ax.tick_params(labelsize=colorbar_font_size)
 
-        # --- Uploaded data overlay (Contour Map / 最前面) ---
+        # Uploaded overlay, drawn in the foreground / 前景に描くアップロードデータ
         if not uploaded_map_valid.empty:
             _lon_up_ct = normalize_lon_to_center(
                 uploaded_map_valid["Longitude_degE"].values, lon_center
@@ -1074,26 +1001,12 @@ def main():
             "image/png"
         )
 
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
     
-    # Map section
-    
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-
-    # 選択されたデータの地点プロット
-    # --- Location map / 採取地点の地図表示 ---
+    # =============================================================================
+    # Sampling-location map / 採取地点の地図
+    # =============================================================================
     st.divider()
     st.subheader('Sampling Location Map')
-
-
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
@@ -1110,7 +1023,9 @@ def main():
         )
     st.caption(f"Map style: {map_mode}")
 
-    # 2. データの範囲から中心座標とズームレベルを計算（アップロード地点を含む）
+    # -----------------------------------------------------------------------------
+    # Automatic map extent / 地図範囲の自動計算
+    # -----------------------------------------------------------------------------
     _map_extent_srcs = [df1[["Longitude_degE", "Latitude_degN"]]]
     if not uploaded_map_valid.empty:
         _map_extent_srcs.append(
@@ -1126,37 +1041,32 @@ def main():
         _map_extent_df["Longitude_degE"].max(),
     )
 
-    # 初期値（日本）の設定
+    # Japan-centered fallback when no valid coordinates exist. / 有効座標がない場合の日本中心設定。
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
-    # --- 判定と計算を一本化 ---
     if pd.isna(lat_min) or pd.isna(lon_min):
-        # 【抽出前】データがない場合は日本を中心に固定
         center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
     else:
-        # 【抽出後】データがある場合
         center_lat = (lat_min + lat_max) / 2
         center_lon = (lon_min + lon_max) / 2
         
         lat_diff = max(lat_max - lat_min, 0.1)
         lon_diff = max(lon_max - lon_min, 0.1)
         
-        # 03番準拠のピクセル計算
+        # Pixel dimensions estimate a zoom level that includes the data extent.
+        # ピクセル寸法を用いて、データ範囲を収めるズームを見積もる。
         map_width_px, map_height_px = 1200, 700
         zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
         zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
         
-        # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-        # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+        # Leave margin around the selected extent. / 選択範囲の周囲に余白を確保する。
         auto_zoom = min(zoom_lon, zoom_lat) - 2.0
         auto_zoom = max(1, min(15, auto_zoom))
 
-        # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+        # Use a wide Japan-centered view for near-global longitude spans.
+        # 経度範囲がほぼ全球の場合は、日本中心の広域表示にする。
         if lon_diff > 100:
-              center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
-    
-  
-
+            center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
 
     hover_columns = [
         "Latitude_degN",
@@ -1176,7 +1086,9 @@ def main():
     ]
     hover_data = {column: True for column in hover_columns if column in df1.columns}
 
-    # 3. 地図の作成 (px.scatter_mapbox内ではwidthを指定しない)
+    # -----------------------------------------------------------------------------
+    # Plotly location map / Plotly採取地点地図
+    # -----------------------------------------------------------------------------
     fig_map = px.scatter_mapbox(
         df1,
         lat="Latitude_degN",
@@ -1185,13 +1097,13 @@ def main():
         color_continuous_scale=map_plotly_colorscale,
         hover_data=hover_data,
         opacity=0.6,
-        height=500  # 高さはここで固定
+        height=500,
     )
 
-    # 4. 背景スタイルの適用
+    # Apply the selected background style. / 選択した背景スタイルを適用する。
     fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
 
-    # --- Uploaded overlay (Plotly Sampling Location Map) ---
+    # Uploaded overlay / アップロードデータの重ね表示
     _plotly_color_range = (
         (parameter_min, parameter_max)
         if parameter_min < parameter_max
@@ -1218,11 +1130,8 @@ def main():
                 "map because valid longitude and latitude columns are unavailable.]"
             )
 
-    # 5. レイアウト設定 (ここが幅を広げる決め手)
-    # カラーバーと凡例を地図内オーバーレイにして、外側余白で地図が圧縮されないようにする。
-    # x=1.0 は Plotly が余白を自動追加して地図を圧縮するため使わない。
-    # autoexpand=False で凡例による余白自動拡張を抑制し、
-    # mapbox.domain で地図がフル幅を使うよう明示する。
+    # Keep the colorbar and legend inside the map, preserving map width.
+    # カラーバーと凡例を地図内に置き、外側余白による圧縮を避ける。
     fig_map.update_layout(
         mapbox=dict(
             center=dict(lat=center_lat, lon=center_lon),
@@ -1233,13 +1142,14 @@ def main():
         autosize=True,
         coloraxis_colorbar=dict(
             title=parameter_plotly_label,
-            x=0.98,          # 地図内右端にオーバーレイ（1.0 にすると外側扱いで余白が生じる）
+            x=0.98,
             xanchor='right',
             bgcolor='rgba(255,255,255,0.75)',
             bordercolor='rgba(150,150,150,0.5)',
             borderwidth=1,
         ),
-        # 凡例をツールバー（右上）と重ならないよう左下に配置
+        # Put the legend at lower left to avoid the upper-right toolbar.
+        # 凡例は右上のツールバーを避けて左下に置く。
         legend=dict(
             x=0.01,
             y=0.01,
@@ -1254,36 +1164,22 @@ def main():
     )
     
 
-    # 6. 表示 (use_container_width=True を確実に使う)
-    # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）
-    # マウスホイールでのズームが強制的に有効
+    # The unique key prevents Streamlit element-ID collisions; wheel zoom is enabled.
+    # 一意のkeyでStreamlit要素IDの重複を避け、ホイールズームを有効にする。
     st.plotly_chart(
         fig_map,
         key=f"parameter_map_{selected_parameter}",
-        config={'scrollZoom': True, 'displayModeBar': True}, # ズームを有効化
+        config={'scrollZoom': True, 'displayModeBar': True},
         **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
 
-
-
-
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-        
-    # Sidebar-filtered datasetを読み出し
+    # =============================================================================
+    # Filtered-data table / 絞り込みデータ表
+    # =============================================================================
     envgeo_utils.display_isotope_table(df1)
     
   
     
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
 
 if __name__ == '__main__':
     main()

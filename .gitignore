@@ -6,6 +6,13 @@ __pycache__/
 Thumbs.db
 .streamlit/secrets.toml
 
+# Project-local records and screenshots / プロジェクト内の非公開記録と画面記録
+# Keep request drafts, internal review material, and temporary screenshots out
+# of public clones, releases, and archives.
+# 依頼草案、内部レビュー資料、一時スクリーンショットは公開clone、Release、archiveに含めない。
+/Claude outputs/
+/screenshots/
+
 # Bundled zero-value sample for the always-loaded User Excel data workflow.
 # Researcher-owned measurements must be stored outside this repository and
 # selected with ENVGEO_LOCAL_USER_DATA_PATH.
@@ -218,8 +225,10 @@ marimo/_lsp/
 __marimo__/
 
 # Local developer diagnostic page; never publish with the application.
+# ローカル開発用の診断ページであり、アプリケーションとともに公開しない。
 /pages/99_Environment_Check.py
 
 # Detailed internal Vertical Section review records; retain only in the working copy.
+# Vertical Sectionの詳細な内部レビュー記録は、正規作業フォルダにのみ残す。
 /vertical_section_review_log_2026-09-22.md
 /vertical_section_review_log_2026-09-22_Japanese.md

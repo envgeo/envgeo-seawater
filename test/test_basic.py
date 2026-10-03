@@ -1,33 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Basic import and release-version tests for EnvGeo-Seawater.
+
+pytest loads ``test/conftest.py`` before this module, so the application root
+is already importable here.
+pytestはこのモジュールより先に``test/conftest.py``を読み込むため、アプリのrootは
+ここで既にimport可能である。
 """
-Basic import and version tests for EnvGeo-Seawater.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
-"""
-
-import sys
-import os
-
-# Add the parent directory of the current file to sys.path
-# 現在のファイル（test_basic.py）の1つ上の階層をシステムパスに追加
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import the target module after setting the path
-# パスを通した後に、テスト対象のモジュールをインポートします
 import envgeo_utils
 
-def test_import():
-    """
-    Test if the target module can be imported successfully.
-    対象のモジュールが正しくインポートできるかをテスト
-    """
+def test_envgeo_utils_imports():
+    """Confirm that the shared utility module imports. / 共通utility moduleをimportできることを確認する。"""
     assert envgeo_utils is not None
 
-def test_version():
+def test_release_version_metadata_is_current():
+    """Keep the public module version aligned with the v1.3.4 release candidate.
+
+    公開moduleの版情報がv1.3.4 release candidateと一致することを確認する。
     """
-    Test if the version information exists in the module.
-    モジュール内にバージョン情報が存在するかをテスト
-    """
-    assert hasattr(envgeo_utils, "version")
+    assert envgeo_utils.APP_VERSION == "1.3.4"
+    assert envgeo_utils.version == envgeo_utils.APP_VERSION

@@ -3,6 +3,9 @@
 このドキュメントでは EnvGeo-Seawater リポジトリに同梱されている地理空間・科学アセットを説明します：
 海岸線 CSV ファイル、Natural Earth 50m 陸地ポリゴン シェープファイル、GEBCO 測深グリッドです。
 
+**状態:** 現行同梱ファイルとpackage-data範囲を2026-09-30に再確認した。英語版は
+[`geospatial_assets.md`](geospatial_assets.md)。
+
 ---
 
 ## 1. 海岸線 CSV ファイル
@@ -10,16 +13,19 @@
 | 項目 | 内容 |
 |---|---|
 | 配置場所 | `coastline/`（リポジトリルート） |
-| ファイル | `coastline_50m.csv`、`coastline_110m.csv`（および関連ファイル） |
+| ファイル | `world_coastline_coordinates_50m.csv`、`world_coastline_coordinates_110m.csv` |
 | 用途 | すべてのインタラクティブ Plotly/Mapbox マップおよびページ 32 の Cartopy 静的マップにおけるオフライン海岸線オーバーレイ |
-| 形式 | `lon`・`lat` 列を持つ CSV；ポリゴンセグメントを `None` 行で区切る |
+| 形式 | `Longitude`・`Latitude` 列を持つCSV。存在する場合、欠損座標行でセグメントを区切る。 |
 | 読込み関数 | `envgeo_utils.load_coastline_data()` |
 | 描画関数 | `envgeo_utils.add_coastline_overlay()`（Plotly Scattermapbox）および `envgeo_utils.plot_bundled_coastline()`（Matplotlib/Cartopy） |
 
 ### ライセンス
 
 海岸線データは Natural Earth のパブリックドメインソースから生成されています。
-詳細は `coastline/` 内の `LICENSE_OR_SOURCE.md` 等を参照してください。
+陸域シェープファイルの詳細な来歴・チェックサム記録は、当該資産とともに保存している。
+保持している海岸線source workspaceでは、50m・110mの両coastline shapefileをNatural Earth v4.1.0と
+確認でき、source archiveと対応する座標workbookは2025-01-24に保存されている。現行CSVは、その
+source fileを用いて同workspaceで作成したものである。
 Natural Earth データはパブリックドメインであり、使用にライセンスは不要です。
 
 ### 更新方針
@@ -81,21 +87,26 @@ Natural Earth 50m 陸地リリースにジオメトリの意味ある変更が�
 
 | 項目 | 内容 |
 |---|---|
-| 配置場所 | `data_beta/` |
-| ファイル | `GEBCO_2025_6min.nc`（NetCDF、約 90 MB） |
+| 配置場所 | `bathymetry/` |
+| ファイル | `GEBCO_2025_6min.nc`（派生NetCDF3格子、約13 MB） |
 | 用途 | 鉛直断面ビジュアライザー（`pages/53_Vertical_Section_Visualizer.py`）における深度補間と海底推定 |
-| 読込み | 鉛直断面ページ内の `xarray.open_dataset()` |
+| 読込み | 鉛直断面ページ内の `scipy.io.netcdf_file()` |
 | スコープ | 断面解析専用；マップの陸地マスクとは無関係 |
 
 ### ライセンス
 
-GEBCO（General Bathymetric Chart of the Oceans）データは非商用帰属ライセンスで提供されます。
-出版物で成果を使用する場合は GEBCO を引用してください：
+GEBCO Gridはパブリックドメインであり、出典の帰属、GEBCO/IHO/IOCの公式承認を示唆しないこと、
+および免責条件の下で、複製・改変・配布・商用利用ができる。航海または海上安全に関わる目的には
+使用してはならない。出版物で成果を使用する場合はGEBCOを引用してください：
 
-> GEBCO Compilation Group (2025) GEBCO 2025 Grid.
-> https://doi.org/10.5285/...
+> GEBCO Compilation Group (2025) GEBCO 2025 Grid,
+> doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29.
 
-現在の DOI と完全なライセンス条件については GEBCO ウェブサイト（https://www.gebco.net/）を参照してください。
+現在の利用条件は<https://www.gebco.net/data-products/gridded-bathymetry/terms-of-use>を参照してください。
+
+`GEBCO_2025_6min.nc`は公式GEBCO_2025 NetCDF格子を6 arc-minuteへ間引いたプロジェクト派生物である。
+`bathymetry/make_lightweight_gebco.py`に入力、変換、stride処理を記録している。派生ファイルを再生成する場合は、
+このスクリプトと来歴記録を維持・更新する。
 
 ### 更新方針
 
@@ -106,12 +117,12 @@ GEBCO（General Bathymetric Chart of the Oceans）データは非商用帰属ラ
 
 ---
 
-## 4. 現在のディレクトリ構成
+## 4. 現在のpackage内ディレクトリ構成
 
 ```
 coastline/
-    coastline_50m.csv                # Plotly/Mapbox オフライン海岸線オーバーレイ
-    coastline_110m.csv               # 低解像度版
+    world_coastline_coordinates_50m.csv   # Plotly/Mapbox オフライン海岸線オーバーレイ
+    world_coastline_coordinates_110m.csv  # 低解像度版
     natural_earth_50m_land/          # 静的 Cartopy マップ用陸地マスク（ページ 32）
         ne_50m_land.shp
         ne_50m_land.shx
@@ -121,21 +132,22 @@ coastline/
         LICENSE_OR_SOURCE.md
         LICENSE_OR_SOURCE_Japanese.md
 
-data_beta/
+bathymetry/
     GEBCO_2025_6min.nc               # 鉛直断面用 GEBCO 測深データ（ページ 53）
 ```
 
-**現バージョンではこれらのディレクトリを再編成しないでください。**
-将来の予定レイアウトについてはセクション 5 を参照してください。
+上記の項目はすべて`pyproject.toml`の明示的な`[tool.setuptools.package-data]` allowlistにより、
+現在のwheelへ収録される。GEBCO生成スクリプトは意図的に除外する。**現バージョンではこれらの
+ディレクトリを再編成しないでください。**
 
 ---
 
-## 5. 将来のパッケージ化計画（現時点では実施しない）
+## 5. 将来のアセットローダー改善（現時点では実施しない）
 
-プロジェクトが適切な Python パッケージ（`pyproject.toml` + `package_data`）に移行する際、
-地理空間・科学アセットをより整理された構成に再編することが候補として挙げられています。
-これはあくまで将来の候補レイアウトであり、後方互換性のあるアセットローダーを設計・テストするまで
-パスを変更してはなりません。
+本プロジェクトはすでにインストール可能なPython packageである。`pyproject.toml`は同梱アセットを
+package dataとして列挙し、`envgeo_assets.asset_path()`はインストール済みpackage moduleを基準に
+パスを解決する。より整理したアセット配置は将来の候補にとどめ、後方互換性のあるローダーと
+インストール済みwheelのテストを設計するまでパスを変更してはならない。
 
 ```
 assets/
@@ -146,12 +158,31 @@ assets/
 
 この再編成の前提条件：
 
-- アセットローダーは個々のページスクリプトの `__file__` ではなく、インストール済みパッケージからの相対パスで解決すること（例：`importlib.resources` を使用）。
+- `envgeo_assets.asset_path()`による現在のインストール済みpackage基準の解決（または同等にテストしたresource API）を維持し、個々のページスクリプトやCWDからの相対パスへ戻さないこと。
 - パッケージインストールなしの既存ローカルチェックアウトでも引き続き動作する後方互換フォールバックを設けること。
 - 再編成と同時に `LICENSE_OR_SOURCE.md` / `LICENSE_OR_SOURCE_Japanese.md` を `assets/metadata/` に移動すること。
 - 移行後、Streamlit Cloud とローカル Conda 環境の両方でバンドルファイルが正しく参照されることを確認すること。
 - Natural Earth 陸地（静的マップ陸地マスク）と GEBCO（測深・断面解析）は再編成後も別サブディレクトリに分離して保持すること。
 
+## 6. 現行アセットの再確認（2026-09-30）
+
+正規作業フォルダとstable `seawater_map` cloneについて、2つの海岸線CSV、Natural Earthの5つの
+シェープファイル構成要素、`GEBCO_2025_6min.nc`、`make_lightweight_gebco.py`がbyte単位で一致することを
+確認した。現行snapshotの識別情報は以下のとおりである。
+
+| アセット | 現行確認 |
+|---|---|
+| 50m海岸線CSV | データ行数61,844行；SHA-256 `c3d7bee4fb696b011fa34bb13bed0c335c5250eeaf37d8739d77d29a27fe385c` |
+| 110m海岸線CSV | データ行数5,261行；SHA-256 `a31df3aeee9dc4195af35a31b0605fdb572c7c7dd7cde17f773c9438f5ec7f3f` |
+| Natural Earth陸地 | 構成要素のchecksumは`LICENSE_OR_SOURCE.md`と一致する。同文書には1,420ポリゴンfeatureを記録している。 |
+| GEBCO派生格子 | NetCDF変数は`lon`、`lat`、`Height`；次元は3,600 × 1,800；SHA-256 `0afdf1d0e023b0529c56b69a2684e505c7e2ea28d78a3af8814817af59b09030` |
+
+保持している2025-01-24作成の両解像度の座標workbookは、浮動小数表現による丸め誤差
+（最大絶対差約1.4 × 10⁻¹⁴）を除いて現行CSVの全座標と一致する。行数と欠損座標による
+セグメント区切りも同じである。元source archiveはNatural Earth v4.1.0と示す。将来CSVを更新する前には、
+プロジェクト管理者は、現行CSVが同source workspace内のsource fileから作成されたことを確認している。
+将来CSVを更新する前には、置換ファイルとともに新しいsource version、取得日、変換手順、checksumを記録する。
+
 ---
 
-*最終更新：2026-09-23*
+*最終更新：2026-09-30*

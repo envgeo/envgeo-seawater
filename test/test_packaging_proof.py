@@ -1,8 +1,13 @@
-"""Focused checks for the Sprint 3 non-moving package configuration."""
+"""Focused checks for the installable EnvGeo-Seawater package configuration.
+
+The tests preserve declared runtime dependencies, package data, public launch
+commands, and exclusions for development-only or generated files.
+実行時依存関係、package data、公開用起動command、開発専用・生成物の除外設定を
+確認する。
+"""
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 try:
@@ -12,9 +17,6 @@ except ModuleNotFoundError:  # Python 3.10
 
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
 import envgeo_launcher
 import envgeo_diagnostic_launcher
 
@@ -57,13 +59,14 @@ def test_package_declares_required_asset_families():
     patterns = set(package_data["envgeo_seawater"])
 
     assert {
+        "CITATION.cff",
         "pages/*.py",
         "coastline/*.csv",
         "coastline/natural_earth_50m_land/*",
         "data/d18O_all.mp4",
         "data/sites_20230515.gif",
         "data/year_20230517.gif",
-        "data_beta/*.nc",
+        "bathymetry/*.nc",
         "data_text/*.md",
         "dataset/*.xlsx",
         "images/*",
@@ -77,7 +80,7 @@ def test_package_excludes_local_and_generated_files():
     patterns = set(exclude_data["envgeo_seawater"])
 
     assert "pages/99_Environment_Check.py" in patterns
-    assert "data_beta/*.py" in patterns
+    assert "bathymetry/*.py" in patterns
     assert "docs/wheel_proof_report*.md" in patterns
     assert "**/.DS_Store" in patterns
     assert "**/__pycache__/*" in patterns

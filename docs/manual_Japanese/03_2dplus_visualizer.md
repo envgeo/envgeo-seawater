@@ -1,21 +1,21 @@
-# Interactive 2D/2.5D Visualizer
+# インタラクティブ2Dplus可視化
 
 ## このページでできること
 
-Plotly のインタラクティブ散布図と採水地点マップを連動して確認できます。
+選択した参照データセットについて、Plotlyのインタラクティブな関係図と採水地点マップを連動して確認できます。
 
 ## 基本操作
 
-1. データセットを選択する。
-2. Data filtering を適用する。
-3. Plot type を選ぶ。
-4. Color parameter と Colormap を選ぶ。
-5. Box Select または Lasso Select で点を選択する。
-6. 対応する採水地点を地図で確認する。
+1. 参照データソースを選び、サイドバーで絞り込み条件を設定します。
+2. 水温–塩分、δD–δ¹⁸O、カスタム2D/2.5D、塩分–δ¹⁸Oから表示形式を選びます。
+3. 対応する設定では、色分けのパラメーターとカラーマップを選びます。
+4. 条件を変更した後に**Apply settings**を選びます。
+5. インタラクティブ散布図でBox SelectまたはLasso Selectを使って点を選びます。
+6. 対応する採水地点と選択データ表を確認します。
 
 ## 主な設定
 
-- **Plot type**
+- **Plot type** — 水温–塩分、δD–δ¹⁸O、カスタム2D/2.5D beta、塩分–δ¹⁸O
 - **Color parameter**
 - **Colormap**
 - **Density contour interval (approx. σ0)** — T–S図の近似σ0参照等値線の間隔
@@ -27,8 +27,10 @@ Plotly のインタラクティブ散布図と採水地点マップを連動し�
 
 ## 出力
 
-- Temperature-Salinity のインタラクティブ図
-- Salinity-d18O のインタラクティブ図
+- 水温–塩分のインタラクティブ図
+- δD–δ¹⁸Oのインタラクティブ図
+- カスタム2D/2.5D図 beta
+- 塩分–δ¹⁸Oのインタラクティブ図
 - Sampling Location Map
 - Filtered dataset
 - Box/Lasso-selected dataset
@@ -38,6 +40,7 @@ Plotly のインタラクティブ散布図と採水地点マップを連動し�
 - 回帰線は探索的な目安として使います。
 - Box/Lasso 選択は Plotly の操作仕様に依存します。
 - 点数が多い場合、古いPCでは動作が重くなることがあります。
+- このページでは、ブラウザからのアップロードには対応していません。セッション内でアップロードしたデータを使う場合は、**User Data Check & Quick Visualizer**または**Uploaded data overlay**があるページを使ってください。
 - T–S図の密度等値線は**近似的なσ0参照線**であり、個々の観測値の密度ではありません。
   実用塩分（≈ 絶対塩分）と現場水温（≈ 保存温度）を `gsw.sigma0` に渡して計算しており、
   視覚的な参照用途のみを目的としています。真の TEOS-10 σ0 との差は、データソース、

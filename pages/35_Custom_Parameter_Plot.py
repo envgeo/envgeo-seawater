@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Custom Parameter Plot beta for EnvGeo-Seawater.
+Custom Parameter Plot for EnvGeo-Seawater.
 
 任意の数値パラメーターをX軸、Y軸、色、サイズとして選び、
 海水同位体・水文データの関係を試験的に確認するページです。
 
 Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
 import io
@@ -22,10 +22,15 @@ import envgeo_user_data
 import envgeo_utils
 
 
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
 version = "1.3.4"
 fig_title = "envgeo-seawater-database"
 
-
+# =============================================================================
+# Plot parameter definitions / 描画パラメーターの定義
+# =============================================================================
 PARAMETER_LABELS = {
     "d18O": "δ18O (‰)",
     "dD": "δD (‰)",
@@ -81,7 +86,10 @@ def numeric_parameter_options(*dataframes):
 
 
 def combined_numeric_values(column, *dataframes):
-    """Return valid numeric values for one column across available datasets."""
+    """Return valid numeric values for one column across available datasets.
+
+    利用可能な各データセットから、指定列の有効な数値だけを返します。
+    """
     values = []
     for df in dataframes:
         if df is not None and not df.empty and column in df.columns:
@@ -94,7 +102,10 @@ def combined_numeric_values(column, *dataframes):
 
 
 def prepare_plot_rows(df, required_columns):
-    """Return numeric plot rows only when all selected columns are available."""
+    """Return numeric plot rows only when all selected columns are available.
+
+    選択したすべての列が有効な数値である行だけを描画用に返します。
+    """
     if df is None or df.empty or not set(required_columns).issubset(df.columns):
         return pd.DataFrame(columns=required_columns)
     result = df.copy()
@@ -104,7 +115,10 @@ def prepare_plot_rows(df, required_columns):
 
 
 def scaled_marker_sizes(df, size_by, base_size, size_contrast):
-    """Calculate marker areas for fixed or parameter-scaled plotting."""
+    """Calculate marker areas for fixed or parameter-scaled plotting.
+
+    固定サイズまたは選択パラメーターに比例したマーカー面積を計算します。
+    """
     if size_by == "Fixed size":
         return base_size
     values = pd.to_numeric(df[size_by], errors="coerce")
@@ -164,8 +178,11 @@ def numeric_input_pair(label, default_min, default_max, key_prefix, step=0.1):
 
 
 def main():
-    st.header(f"Custom Parameter Plot beta ({version})")
-    st.caption("Experimental page for flexible 2D plots such as dD x d18O colored by depth.")
+    # =============================================================================
+    # Page header and data source / ページ見出しとデータソース
+    # =============================================================================
+    st.header(f"Custom Parameter Plot ({version})")
+    st.caption("Flexible 2D plots such as dD x d18O coloured by depth.")
     st.button("Reload")
 
     data_source_japan_sea = envgeo_utils.data_source_JAPAN_SEA
@@ -178,6 +195,9 @@ def main():
         horizontal=True,
     )
 
+    # -----------------------------------------------------------------------------
+    # Attribution / 出典表示
+    # -----------------------------------------------------------------------------
     if ref_data == data_source_japan_sea:
         st.write(envgeo_utils.refs_JAPAN_SEA)
     elif ref_data == data_source_around_japan:
@@ -187,6 +207,9 @@ def main():
     else:
         st.warning("Invalid data source selection.")
 
+    # =============================================================================
+    # Data loading and uploaded overlay / データ読込とアップロード重ね表示
+    # =============================================================================
     df_original = envgeo_utils.load_isotope_data(ref_data)
     if df_original.empty:
         st.warning("No data available for the selected conditions.")
@@ -194,7 +217,7 @@ def main():
 
     embedded_in_integrated = (
         st.session_state.get(envgeo_utils.INTEGRATED_EMBEDDED_PAGE_KEY)
-        == "35_Custom_Parameter_Plot_beta.py"
+        == "35_Custom_Parameter_Plot.py"
     )
     if embedded_in_integrated:
         uploaded_df = envgeo_utils.get_uploaded_data()
@@ -222,6 +245,9 @@ def main():
         "custom_plot",
     )
 
+    # =============================================================================
+    # Shared sidebar filtering / 共通サイドバーによるデータ絞り込み
+    # =============================================================================
     (
         df_filtered,
         sld_year_min, sld_year_max,
@@ -245,14 +271,16 @@ def main():
         uploaded_filter_key="custom_plot",
         uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
     )
-    # Plot styling keeps uploaded rows separate so they can be redrawn in the
-    # foreground.  Statistical calculations use the full sidebar-selected
-    # reference-plus-upload table.
+    # Plot styling keeps uploaded rows separate so they can be redrawn in front.
+    # 統計計算には、サイドバーで絞り込んだ参照・アップロード統合テーブルを用いる。
     filtered_integrated_df = df_filtered.copy()
     df_filtered, uploaded_df = envgeo_utils.split_uploaded_rows(
         filtered_integrated_df, envgeo_utils.UPLOADED_DATA_LABEL
     )
 
+    # =============================================================================
+    # Parameter and figure controls / パラメーターと図の設定
+    # =============================================================================
     options = numeric_parameter_options(df_filtered, uploaded_df)
     if len(options) < 2:
         st.warning("At least two numeric parameters are required for this plot.")
@@ -423,6 +451,9 @@ def main():
                 "Y tick count", min_value=3, max_value=30, value=9, step=1
             )
 
+    # =============================================================================
+    # Plot-row preparation and quality display / 描画行の準備と品質表示
+    # =============================================================================
     required_columns = [x_axis, y_axis]
     if size_by != "Fixed size":
         required_columns.append(size_by)
@@ -465,6 +496,9 @@ def main():
         st.warning("No valid data are available for the selected plot settings.")
         return
 
+    # =============================================================================
+    # Custom parameter plot / 任意パラメーター図
+    # =============================================================================
     df_background = prepare_plot_rows(df_original, [x_axis, y_axis])
 
     x_label = PARAMETER_LABELS.get(x_axis, x_axis)
@@ -635,10 +669,12 @@ def main():
                 zorder=10,
             )
 
+    # -----------------------------------------------------------------------------
+    # Regression line / 回帰直線
+    # -----------------------------------------------------------------------------
     if add_regression_line == "Yes":
-        # Regression deliberately uses only the two axis columns.  It should
-        # not discard otherwise valid points merely because a styling column
-        # (colour or marker size) is missing.
+        # Regression uses only the two axes; missing style values do not exclude rows.
+        # 回帰は2軸だけを用い、色やサイズの値がない行を不必要に除外しない。
         regression_source = prepare_plot_rows(
             filtered_integrated_df, [x_axis, y_axis]
         )
@@ -701,6 +737,9 @@ def main():
     fig.suptitle(title.replace("_", " "), fontsize=label_font_size + 4)
     fig.tight_layout()
 
+    # =============================================================================
+    # Image and table export / 図と表の出力
+    # =============================================================================
     fn = envgeo_utils.build_figure_filename(f"Fig_custom_{x_axis}_x_{y_axis}", subtitle)
     img = io.BytesIO()
     fig.savefig(img, format="png", dpi=300, bbox_inches="tight")

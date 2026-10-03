@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Create a lightweight GEBCO NetCDF by subsampling a global GEBCO grid.
+Create the derived lightweight GEBCO NetCDF bundled by EnvGeo-Seawater.
+EnvGeo-Seawaterが同梱する軽量GEBCO NetCDFを生成する開発用スクリプトです。
+
+This script is not imported or executed by the application. It documents the
+derivation of `GEBCO_2025_6min.nc` and is intentionally excluded from wheels.
+アプリはこのスクリプトをimport・実行しません。`GEBCO_2025_6min.nc`の生成手順を
+記録するためにソースへ保持し、wheelからは意図して除外します。
 
 Maintainer: Toyoho Ishimura, Kyoto University
 Last updated: 2026-09-22
 
-Recommended source file:
+Recommended source file / 推奨入力ファイル:
   GEBCO_2025 Grid (ice surface elevation) -> global coverage -> netCDF
   https://www.gebco.net/data-products/gridded-bathymetry-data
 
-Example:
+Example / 実行例:
   python3 make_lightweight_gebco.py \
     --input /path/to/GEBCO_2025.nc \
     --output /path/to/GEBCO_2025_6min.nc \

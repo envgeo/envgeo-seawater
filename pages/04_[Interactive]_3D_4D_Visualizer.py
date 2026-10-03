@@ -3,29 +3,32 @@
 """
 Interactive 3D/4D visualizer for EnvGeo-Seawater data.
 
+EnvGeo-Seawater データの対話型3D/4D可視化ページです。
+
 Created: 2023-05-21
 Author: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Last reviewed: 2026-09-30
 """
 
-# --- Version info ---
-version = "1.3.4"  # 2026-09-28
+import math
 
-# ToDo
-# 最後のマップのカラーバーの初期値を調整必要
-# 最後に，各図を定義して，選ばれたときに個別に実行すれば軽くなるはず
-
-
-import streamlit as st
-import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
+import pandas as pd
 import plotly.express as px
-import envgeo_utils    
+import plotly.graph_objects as go
+import streamlit as st
 
+import envgeo_utils
+
+# =============================================================================
+# Page configuration / ページ設定
+# =============================================================================
+version = "1.3.4"
 
 def main():
-    
+    # -------------------------------------------------------------------------
+    # Page introduction / ページの概要
+    # -------------------------------------------------------------------------
     st.header(f'Interactive 3D/4D Visualizer ({version})')
     st.caption(
         "Use this Plotly page for interactive data exploration. "
@@ -35,6 +38,10 @@ def main():
     st.button('Reload')
 
     def label_for_column(column):
+        """Return a concise label for a data column.
+
+        データ列に対応する簡潔な表示名を返します。
+        """
         labels = {
             "Longitude_degE": "Longitude",
             "Latitude_degN": "Latitude",
@@ -50,34 +57,33 @@ def main():
         return labels.get(column, column)
 
     def available_numeric_columns(df, preferred_columns):
+        """Return preferred numeric columns present in the current data.
+
+        現在のデータに存在する優先順の数値列を返します。
+        """
         return [
             column for column in preferred_columns
             if column in df.columns and pd.api.types.is_numeric_dtype(df[column])
         ]
 
     def safe_option_index(options_list, preferred):
+        """Return an option index, falling back to the first item.
+
+        指定候補がなければ先頭項目のindexを返します。
+        """
         return options_list.index(preferred) if preferred in options_list else 0
 
-
-    ##############################################################################
-    # データソースの変数、envgeo_utilsから読み出す
-    ##############################################################################
+    # -------------------------------------------------------------------------
+    # Data-source selection / データソース選択
+    # -------------------------------------------------------------------------
     data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
     
 
-    ##############################################################################
-    # データソース選択
-    ##############################################################################
     ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
-
-
-    ##############################################################################
-    # 選択したデータセットの文献表示
-    ##############################################################################
-    
+    # Citation display / 引用表示
     if ref_data == data_source_JAPAN_SEA:
         st.write(envgeo_utils.refs_JAPAN_SEA)
         
@@ -90,26 +96,19 @@ def main():
     else:
         st.warning("Invalid data source selection.")
 
-
-
-    ##############################################################################
-    # envgeo_utilsからデータフレーム読み込み
-    ##############################################################################
+    # Reference-data loading / 参照データの読込
     df1 = envgeo_utils.load_isotope_data(ref_data)
    
     if df1.empty:
         st.warning("No data available for the selected conditions.")
         return
 
-    ##############################################################################
-    # d-excessを計算
-    ##############################################################################
+    # Derived isotope parameter / 派生同位体パラメータ
     df1 = envgeo_utils.add_d_excess(df1)
 
-
-    ##############################################################################
-    # サイドバーここから　　df1フィルタリング　も一括で
-    ##############################################################################
+    # -------------------------------------------------------------------------
+    # Shared sidebar filtering / 共通sidebarによる絞り込み
+    # -------------------------------------------------------------------------
 
     (df1,
      sld_year_min, sld_year_max,
@@ -123,15 +122,11 @@ def main():
      selected_cruise,
      submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
 
-
-    ##############################################################################
-    # 後半の定義用
-    ##############################################################################
-        
+    # -------------------------------------------------------------------------
+    # Coordinate helpers / 座標補助処理
+    # -------------------------------------------------------------------------
     df1['lat'] = df1['Latitude_degN']
     df1['lon'] = df1['Longitude_degE']
-    # df1['Depth_m'] = df1['Depth_m']*(-1)
-
     # Re-map longitudes into the visible 360-degree window of the selected map center.
     # 選択した地図中心で見えている 360 度の範囲に経度を並べ替える。
     def normalize_lon_to_center(lon, center):
@@ -194,13 +189,9 @@ def main():
         x_ratio = max((lon_span * np.cos(np.deg2rad(mean_lat))) / lat_span, 0.2)
         return dict(x=x_ratio, y=1.0, z=z_ratio)
 
-
-    ##############################################################################
-    # 図のスケール変更
-    ##############################################################################
-   
-
-   # サイドバーの中にコンテナを作成し、境界線（border）を有効にする
+    # -------------------------------------------------------------------------
+    # Map-depth view controls / 地図・深度表示の操作
+    # -------------------------------------------------------------------------
     with st.sidebar.container(border=True):
         st.subheader(getattr(envgeo_utils, "MAP_DISPLAY_SETTINGS_LABEL", "Map display settings"))
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
@@ -312,57 +303,30 @@ def main():
             map_y_range,
             z_ratio=0.5 if ref_data == data_source_GLOBAL else 1.0
         )
-
-
-
-    ##############################################################################
-    # キャッシュクリア
-    ##############################################################################
+    # -------------------------------------------------------------------------
+    # Cache control / キャッシュ制御
+    # -------------------------------------------------------------------------
 
     if st.sidebar.button("🔄 Clear cache"):
         envgeo_utils.clear_app_cache()
-        st.rerun() 
-    
-    
-    
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
+        st.rerun()
 
-    ##############################################################################
-    #  ここから図の設定と描画
-    ##############################################################################
-        
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
-    
-    
-    
-    ###############################################################################################
-    ###### Fig1 4D salinity-d18O-depth-temperature #######
-    ###############################################################################################
+    # =============================================================================
+    # Standard 4D figure definitions / 標準4D図の定義
+    # =============================================================================
 
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
-    
- 
-
-    # 1. 計算する
+    # -------------------------------------------------------------------------
+    # Fig.1: Salinity–δ18O–depth–temperature / 塩分–δ18O–深度–水温
+    # -------------------------------------------------------------------------
+    # Keep rows that contain all variables required by this figure.
+    # この図に必要な全変数を持つ行だけを描画対象にする。
     original_len_df1 = len(df1)
-    # 2. 【追加】計算できなかった行（null）をその場で除外する
     df_fig1 = df1.dropna(subset=['Temperature_degC','d18O', 'Depth_m', 'Salinity'])
-    # 消えた数を出力
     removed_num_fig1 = original_len_df1 - len(df_fig1)
     plotted_num_fig1 = original_len_df1 - removed_num_fig1
-    # if removed_num_fig1 > 0:
-    #     st.sidebar.info(f"{plotted_num_fig1} samples were plotted and {removed_num_fig1} samples were excluded due to no data.")
 
     fig1=px.scatter_3d(df_fig1, x='Salinity', y='d18O', z='Depth_m',
                     color='Temperature_degC', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
@@ -384,35 +348,34 @@ def main():
                 )
                 
 
-
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig1.update_traces(
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
     )
     
 
     
-    # ---  【重要】レイアウトの一括設定（ここでスライダーを反映） ---
+    # Figure layout / 図のレイアウト
     fig1.update_layout(
         scene=dict(
-            # 軸のタイトル
+            # Axis labels / 軸ラベル
             xaxis_title='Salinity',
             yaxis_title='d18O',
             zaxis_title='Water Depth',
             
-            # Z軸の範囲と反転設定 (スライダーの値をここに集約)
-            # 逆順 [max, min] にすることで自動的に反転（Deepest at bottom）になります
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min], 
                 autorange=False
             ),
             
-            # アスペクト比
+            # Aspect ratio / 縦横比
             aspectmode='manual',
             aspectratio=dict(x=1, y=1, z=1),
             
-            # カメラアングル
+            # Initial camera angle / 初期カメラ角度
             camera=dict(
                 eye=dict(x=-0.6, y=-1.1, z=1.9),
                 center=dict(x=0, y=0, z=-0.1)
@@ -425,41 +388,20 @@ def main():
     fig1.update_traces(marker=dict(size=marker_size))
     
 
-
-    # st.write(fig1)
-    # st.plotly_chart(fig1, 
-        # width="stretch" #Streramlitあげたら復活させる
-        # )  # ブラウザの幅に合わせる
-
-
-    
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-
-    ###############################################################################################
-    ###### Fig2 4D salinity-temperature-depth-d18O #######
-    ###############################################################################################
-        
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
     
 
-
-    # 1. 計算する
+    # -------------------------------------------------------------------------
+    # Fig.2: Salinity–temperature–depth–δ18O / 塩分–水温–深度–δ18O
+    # -------------------------------------------------------------------------
+    # Keep rows that contain all variables required by this figure.
+    # この図に必要な全変数を持つ行だけを描画対象にする。
     original_len_df1 = len(df1)
-    # 【追加】計算できなかった行（null）をその場で除外
     df_fig2 = df1.dropna(subset=['Temperature_degC','d18O', 'Depth_m', 'Salinity'])
-    # 消えた数を出力
     removed_num_fig2 = original_len_df1 - len(df_fig2)
     plotted_num_fig2 = original_len_df1 - removed_num_fig2
-    # if removed_num_fig2 > 0:
-    #     st.sidebar.info(f"{plotted_num_fig2} samples were plotted and {removed_num_fig2} samples were excluded due to no data.")
 
-   # 3. プロット作成
     fig2=px.scatter_3d(df_fig2, x='Salinity', y='Temperature_degC', z='Depth_m',
                     color='d18O', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
@@ -481,31 +423,29 @@ def main():
                 )
                 
 
-
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig2.update_traces(
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
     )
     
 
-
-    # 4. 【重要】レイアウトの一括設定
-    # スライダーの値をここで適用することで、設定がリセットされるのを防ぐ
+    # Figure layout / 図のレイアウト
     fig2.update_layout(
         scene=dict(
-            # 各軸のタイトル
+            # Axis labels / 軸ラベル
             xaxis_title='Salinity',
             yaxis_title='Temperature (C)',
             zaxis_title='Water Depth',
             
-            # Z軸の範囲設定（スライダー値を反映し、逆順 [max, min] で反転表示）
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min],
                 autorange=False
             ),
             
-            # アスペクト比とカメラ角度
+            # Aspect ratio and camera / 縦横比とカメラ
             aspectmode='manual',
             aspectratio=dict(x=1, y=1, z=1),
             camera=dict(
@@ -519,40 +459,20 @@ def main():
     fig2.update_traces(marker=dict(size=marker_size))
     
 
-
-    # st.write(Fig2)
-    # st.plotly_chart(fig2,  
-    #         width="stretch" #Streramlitあげたら復活させる  
-    #         )
+    # -------------------------------------------------------------------------
+    # Fig.3: Map–depth–δ18O / 地図–深度–δ18O
+    # -------------------------------------------------------------------------
     
 
-    
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-
-    ###############################################################################################
-    ###### Fig3 4D map-depth-d18O #######
-    ###############################################################################################
-    
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
-
-    # 1. 計算する
     original_len_df1 = len(df1)
-    # 2. 【追加】計算できなかった行（null）をその場で除外する
     df_fig3 = df1.dropna(subset=['d18O', 'Depth_m']).copy()
     # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
     # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
     df_fig3['lon_plot'] = normalize_lon_to_center(df_fig3['lon'], lon_center_3d)
 
-    # 消えた数を出力
     removed_num_fig3 = original_len_df1 - len(df_fig3)
     plotted_num_fig3 = original_len_df1 - removed_num_fig3
-    # if removed_num_fig3 > 0:
-    #     st.sidebar.info(f"{plotted_num_fig3} samples were plotted and {removed_num_fig3} samples were excluded due to no data.")
 
-    # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
     # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
     # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
@@ -560,7 +480,6 @@ def main():
     
     fig3=px.scatter_3d(df_fig3, x='lon_plot', y='lat', z='Depth_m',
                     color='d18O', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
@@ -583,20 +502,20 @@ def main():
    
 
     
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig3.update_traces(
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
         name='d18O'
         )
     
     fig3.update_traces(marker=dict(size=marker_size))
     
-    # 4. 【重要】レイアウトの一括設定
-    # スライダーの値をここで適用することで、設定がリセットされるのを防ぐ
+    # Figure layout / 図のレイアウト
     fig3.update_layout(
         scene=dict(
-            # Z軸の範囲設定（スライダー値を反映し、逆順 [max, min] で反転表示）
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min],
                 autorange=False
@@ -606,12 +525,10 @@ def main():
     
   
     
-    # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
-     # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
+    # Apply shared map-depth layout / 共通の地図・深度レイアウトを適用する。
     x_range = map_x_range
     y_range = map_y_range
     
-    # 2. その後で共通レイアウトを呼び出す
     fig3 = envgeo_utils.apply_common_layout(
         fig3, 
         ref_data, 
@@ -623,57 +540,33 @@ def main():
     fig3.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
-    # 海岸線を底面に追加する
-    # データの最上部の場合
+    # Coastline guides / 海岸線の補助表示
     fig3.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
-    #スケールの底面の場合
     # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
     # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
     fig3.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
     
     
-    # グラフを表示する
-    # fig.show()
-    # st.write(fig3)
-    # st.plotly_chart(fig3,  
-    #         width="stretch" #Streramlitあげたら復活させる  
-    #         )
+    # -------------------------------------------------------------------------
+    # Fig.4: Map–depth–temperature / 地図–深度–水温
+    # -------------------------------------------------------------------------
         
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
-    ###############################################################################################
-    ###### Fig4 map-depth-temperature #######
-    ###############################################################################################
-        
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
-    # 1. 計算する
     original_len_df1 = len(df1)
-    # # 2. 【追加】計算できなかった行（null）をその場で除外する
     df_fig4 = df1.dropna(subset=['Temperature_degC', 'Depth_m']).copy()
     # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
     # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
     df_fig4['lon_plot'] = normalize_lon_to_center(df_fig4['lon'], lon_center_3d)
     
-    # 消えた数を出力
     removed_num_fig4 = original_len_df1 - len(df_fig4)
     plotted_num_fig4 = original_len_df1 - removed_num_fig4
-    # if removed_num_fig4 > 0:
-    #     st.sidebar.info(f"{plotted_num_fig4} samples were plotted and {removed_num_fig4} samples were excluded due to no data.")
 
-
-    # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
     # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
     # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
@@ -681,7 +574,6 @@ def main():
 
     fig4=px.scatter_3d(df_fig4, x='lon_plot', y='lat', z='Depth_m',
                     color='Temperature_degC', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
@@ -704,9 +596,9 @@ def main():
     
     
     
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig4.update_traces(
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
         name='Temperature'
         )
@@ -715,11 +607,11 @@ def main():
     
     
         
-    # 4. 【重要】レイアウトの一括設定
-    # スライダーの値をここで適用することで、設定がリセットされるのを防ぐ
+    # Figure layout / 図のレイアウト
     fig4.update_layout(
         scene=dict(
-            # Z軸の範囲設定（スライダー値を反映し、逆順 [max, min] で反転表示）
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min],
                 autorange=False
@@ -729,12 +621,10 @@ def main():
 
     
 
-    # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
-     # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
+    # Apply shared map-depth layout / 共通の地図・深度レイアウトを適用する。
     x_range = map_x_range
     y_range = map_y_range
     
-    # 2. その後で共通レイアウトを呼び出す
     fig4 = envgeo_utils.apply_common_layout(
         fig4, 
         ref_data, 
@@ -747,62 +637,37 @@ def main():
     
     
     
-    # 海岸線を底面に追加する
-    # データの最上部の場合
+    # Coastline guides / 海岸線の補助表示
     fig4.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
-    #スケールの底面の場合
     # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
     # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
     fig4.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
     
     
-    # グラフを表示する
-    # fig.show()
-    # st.write(fig4)
-    # st.plotly_chart(fig4,  
-    #         width="stretch" #Streramlitあげたら復活させる  
-    #         )
-    
-    
-        
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
-    ###############################################################################################
-    ###### Fig5 4D map-depth-salinity #######
-    ###############################################################################################
+    # -------------------------------------------------------------------------
+    # Fig.5: Map–depth–salinity / 地図–深度–塩分
+    # -------------------------------------------------------------------------
 
         
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
-    # 1. 計算する
     original_len_df1 = len(df1)
-    # 2. 【追加】計算できなかった行（null）をその場で除外する
     df_fig5 = df1.dropna(subset=['Salinity', 'Depth_m']).copy()
     # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
     # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
     df_fig5['lon_plot'] = normalize_lon_to_center(df_fig5['lon'], lon_center_3d)
 
-    # 消えた数を出力
     removed_num_fig5 = original_len_df1 - len(df_fig5)
     plotted_num_fig5 = original_len_df1 - removed_num_fig5
-    # if removed_num_fig5 > 0:
-    #     st.sidebar.info(f"{plotted_num_fig5} samples were plotted and {removed_num_fig5} samples were excluded due to no data.")
 
      
     
-    # --- envgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
     # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
     # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
@@ -810,12 +675,10 @@ def main():
     
     fig5=px.scatter_3d(df_fig5, x='lon_plot', y='lat', z='Depth_m',
                     color='Salinity', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
                     
-                    #############################ポップアップ情報ここから##########################
                     hover_data={
                         "lat": True,  # 名前を表示
                         "Longitude_degE": True,  # 値を表示
@@ -830,17 +693,14 @@ def main():
                         "Station": True,
                         "Depth_m": True,
                         "reference": True,  # カテゴリを表示
-                        # "x": False,  # X座標はツールチップから除外
-                        # "y": False  # Y座標はツールチップから除外
                     }
-                    #############################ポップアップ情報ここまで##########################
                 )
     
 
     
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig5.update_traces(
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
         name='Salinity'
         )
@@ -848,11 +708,11 @@ def main():
     fig5.update_traces(marker=dict(size=marker_size))
 
         
-    # 4. 【重要】レイアウトの一括設定
-    # スライダーの値をここで適用することで、設定がリセットされるのを防ぐ
+    # Figure layout / 図のレイアウト
     fig5.update_layout(
         scene=dict(
-            # Z軸の範囲設定（スライダー値を反映し、逆順 [max, min] で反転表示）
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min],
                 autorange=False
@@ -862,12 +722,10 @@ def main():
 
     
     
-    # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
-     # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
+    # Apply shared map-depth layout / 共通の地図・深度レイアウトを適用する。
     x_range = map_x_range
     y_range = map_y_range
     
-    # 2. その後で共通レイアウトを呼び出す
     fig5 = envgeo_utils.apply_common_layout(
         fig5, 
         ref_data, 
@@ -880,75 +738,46 @@ def main():
     
     
     
-    # 海岸線を底面に追加する
-    # データの最上部の場合
+    # Coastline guides / 海岸線の補助表示
     fig5.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
-    #スケールの底面の場合
     # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
     # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
     fig5.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
     
     
     
-    # グラフを表示する
-    # fig.show()
-    # st.write(fig5)
-    # st.plotly_chart(fig5,  
-    #         width="stretch" #Streramlitあげたら復活させる  
-    #         )
+    # -------------------------------------------------------------------------
+    # Fig.6: Map–depth–d-excess / 地図–深度–d-excess
+    # -------------------------------------------------------------------------
     
-    
-        
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
-    
-    ##############################################################################################
-    ##### Fig6 4D map-depth-dexcess #######
-    ##############################################################################################
-    
-    # 計算できない，もしくはカラーバー用のデータが無い場合に除外
 
-    # 1. 計算する
     original_len_df1 = len(df1)
-    # df_dexcess['d-excess'] = df_dexcess['dD'] - 8 * df_dexcess['d18O']
     
-    # 2. 【追加】計算できなかった行（null）をその場で除外する
     df_fig6 = df1.dropna(subset=['d-excess','Depth_m']).copy()
     # Use center-adjusted longitude only for plotting; keep original Longitude_degE for hover/readout.
     # 描画用だけ中心に合わせた経度を使い、表示値は元の Longitude_degE を保つ。
     df_fig6['lon_plot'] = normalize_lon_to_center(df_fig6['lon'], lon_center_3d)
 
-    # 消えた数を出力
     removed_num_fig6 = original_len_df1 - len(df_fig6)
     plotted_num_fig6 = original_len_df1 - removed_num_fig6
-    # if removed_num_fig6 > 0:
-    #     st.sidebar.info(f" {plotted_num_fig6} samples were plotted and {removed_num_fig6} samples were excluded due to calculation errors.")
 
         
     
-    # --- 海岸線の座標データをenvgeo_utils を使って読み込み ---
     coastline_x, coastline_y = envgeo_utils.load_coastline_data(ref_data)
     # Coastline segments also need center-adjusted longitude with explicit breaks at wrap boundaries.
     # 海岸線も中心に合わせた経度へ変換し、折り返し境界では明示的に線を切る。
     coastline_x_plot, coastline_y_plot = wrap_coastline_with_breaks(coastline_x, coastline_y, lon_center_3d)
 
-
     fig6=px.scatter_3d(df_fig6, x='lon_plot', y='lat', z='Depth_m',
                     color='d-excess', 
-                    #symbol='species'
                     width=700,
                     height=600,
                     color_continuous_scale=map_colorscale,
@@ -972,12 +801,10 @@ def main():
     
    
     
-    # マーカー、ラインの設定
+    # Marker style / マーカー表示
     fig6.update_traces(
-        # mode = 'markers+lines', # 'markers+lines', 'markers'
-        mode = 'markers', # 'markers+lines', 'markers'
+        mode='markers',
         marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='d-excess'
         )
         
@@ -985,11 +812,11 @@ def main():
     
     
         
-    # 4. 【重要】レイアウトの一括設定
-    # スライダーの値をここで適用することで、設定がリセットされるのを防ぐ
+    # Figure layout / 図のレイアウト
     fig6.update_layout(
         scene=dict(
-            # Z軸の範囲設定（スライダー値を反映し、逆順 [max, min] で反転表示）
+            # Reverse depth so deeper samples are lower in the view.
+            # 深い試料が図の下側になるよう深度軸を反転する。
             zaxis=dict(
                 range=[fig_depth_max, fig_depth_min],
                 autorange=False
@@ -999,12 +826,10 @@ def main():
     
     
     
-    # --- envgeo_utilsから呼び出して，レイアウトの一括更新 ---
-     # 1. まず変数を定義する（NASAなどの場合は None、日本近海なら数値が入るように）
+    # Apply shared map-depth layout / 共通の地図・深度レイアウトを適用する。
     x_range = map_x_range
     y_range = map_y_range
     
-    # 2. その後で共通レイアウトを呼び出す
     fig6 = envgeo_utils.apply_common_layout(
         fig6, 
         ref_data, 
@@ -1016,50 +841,24 @@ def main():
     fig6.update_layout(scene=dict(aspectmode='manual', aspectratio=map_aspectratio))
     
     
-    # 海岸線を底面に追加する
-    # データの最上部の場合
+    # Coastline guides / 海岸線の補助表示
     fig6.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_min] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='blue', width=0.8),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
-    #スケールの底面の場合
     # Place the gray coastline on the figure bottom instead of the dataset deepest sample.
     # 灰色の海岸線はデータ最深点ではなく、図の底面に合わせて描画する。
     fig6.add_traces(go.Scatter3d(x=coastline_x_plot, y=coastline_y_plot, z=[fig_depth_max] * len(coastline_x_plot), mode='lines',     marker = dict(size = 3),
-        # line = dict(width = 2), #color = 'Black',
         name='coastline', line=dict(color='gray', width=0.5),
-        hoverinfo='none' # 海岸線にカーソルが当たっても邪魔しない
+        hoverinfo='none'
         ))
     
     
 
     
-    # グラフを表示する
-    # st.plotly_chart(fig6,  
-    #         width="stretch" #Streramlitあげたら復活させる  
-    #         )
-    
-        
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-
-    # ここから本格的に表示用の図
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
-    
-    
-    # ここから本格的に表示用の図
-    
-    # fig1-fig6を選択して表示
-    # 個別のfigは st.plotly_chartで書き出さず，ここで選ぶようにする
-        
-    # --- 1. 選択肢の定義 ---
-    # リストにしておくことで、if文での判定ミス（一文字違いなど）を物理的に防ぐ
+    # =============================================================================
+    # Figure selection and custom 4D view / 図の選択とカスタム4D表示
+    # =============================================================================
     options = [
         "Salinity-δ18O-depth-temperature (Fig.1)", 
         "Salinity-temperature-depth-δ18O (Fig.2)", 
@@ -1091,14 +890,14 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # --- 2. ラジオボタンの設置 ---
+    # View selector / 表示選択
     display_option = st.radio(
         "4D view",
         options,
         help="Choose one of the standard 4D views or the custom 4D view.",
     )
 
-    # --- 3. 選択された項目に応じて表示するfigとdfを決定する ---
+    # Resolve selected figure and data / 選択した図とデータを決定する。
     custom_mode = None
     custom_x = custom_y = custom_z = custom_color = None
 
@@ -1370,25 +1169,21 @@ def main():
         if removed_num_fig6 > 0:
             st.caption(f":red[{plotted_num_fig6} samples plotted; {removed_num_fig6} rows excluded because d-excess could not be calculated.]")
 
-
-
     
     st.write("---")
     
 
-    st.subheader(display_option) # タイトルを表示
+    st.subheader(display_option)
 
-    
-    
-    # スライダーの設置　2026/03/11改訂
-    import math
-
-    # --- 3D図（Fig1-6）共通：短縮ラベルの設定 ---
+    # =============================================================================
+    # Colorbar controls and figure output / カラーバー操作と図の出力
+    # =============================================================================
+    # Standard figures use these short color-variable labels.
+    # 標準図には以下の短い色変数ラベルを用いる。
     c_int = ["Temperature_degC", "d18O", "d18O", "Temperature_degC", "Salinity", "d-excess"]
     c_lbl = ["Temperature(C)", "d18O", "d18O", "Temperature(C)", "Salinity", "d-excess"]
 
-    # --- 要素ごとのデフォルト・カラーレンジ設定 (外れ値対策) ---
-    # ref_data の条件に合わせて数値を調整
+    # Dataset-specific default color ranges / データセット別の初期色範囲
     if ref_data == data_source_JAPAN_SEA:
         default_ranges = {
             "Temperature_degC": (5.0, 28.0),
@@ -1404,7 +1199,7 @@ def main():
             "d-excess": (-5.0, 20.0)
         }
 
-    # display_option から現在のインデックスを取得して短縮名に変換
+    # Resolve the active color variable / 現在の色変数を決定する。
     if display_option == custom_option:
         t_col = custom_color
         t_lbl = label_for_column(custom_color)
@@ -1413,33 +1208,33 @@ def main():
         t_col = c_int[idx]
         t_lbl = c_lbl[idx]
 
-    # --- 3D図専用のスライダー ---
-    # データの絶対的な最小・最大
+    # Active colorbar range / 現在のカラーバー範囲
     v_min_actual = float(df_map[t_col].min())
     v_max_actual = float(df_map[t_col].max())
 
-    # スライダーの初期位置を辞書から取得（辞書にない場合はデータの最小・最大）
+    # Fall back to data limits when no default range is defined.
+    # 初期範囲が未定義ならデータの最小・最大値を用いる。
     d_range = default_ranges.get(t_col, (v_min_actual, v_max_actual))
 
     r_3d = st.slider(
         f"Colorbar range: {t_lbl}",
         min_value=float(math.floor(v_min_actual * 10) / 10),
         max_value=float(math.ceil(v_max_actual * 10) / 10),
-        value=d_range, # ここに自動設定された初期値が入る
+        value=d_range,
         step=0.1,
         key=f"c3_slider_{envgeo_utils.safe_filename_text(t_col)}_{envgeo_utils.safe_filename_text(display_option)}"
     )
 
-    # --- 各Figの更新と反映 ---
+    # Apply colorbar settings to standard figures / 標準図へカラーバー設定を適用する。
     for f_idx, f_name in enumerate(['fig1', 'fig2', 'fig3', 'fig4', 'fig5', 'fig6']):
         if f_name in locals() and locals()[f_name] is not None:
             f = locals()[f_name]
             
-            # この図が担当しているカラムとラベルを取得
+            # Color variable for this standard figure / この標準図の色変数
             current_fig_col = c_int[f_idx]
             current_fig_lbl = c_lbl[f_idx]
 
-            # レイアウト更新
+            # Update colorbar layout / カラーバー配置を更新する。
             f.update_layout(
                 coloraxis_colorbar=dict(
                     title=current_fig_lbl,
@@ -1453,11 +1248,12 @@ def main():
                 margin=dict(b=100)
             )
 
-            # 現在表示対象(t_col)の図、または同じ要素の図にはスライダー値を反映
+            # Apply the active range to figures using the same color variable.
+            # 同じ色変数を用いる図へ現在の範囲を適用する。
             if current_fig_col == t_col:
                 f.update_coloraxes(cmin=r_3d[0], cmax=r_3d[1])
             else:
-                # それ以外の図はデフォルトレンジを適用
+                # Keep defaults for other color variables / 他の色変数は初期範囲を使う。
                 c_min, c_max = default_ranges.get(current_fig_col, (None, None))
                 if c_min is not None:
                     f.update_coloraxes(cmin=c_min, cmax=c_max)
@@ -1477,10 +1273,9 @@ def main():
         )
         target_fig.update_coloraxes(cmin=r_3d[0], cmax=r_3d[1])
 
-    # --- 5. 最後に一回だけ表示を実行 ---
+    # Render selected 3D/4D figure / 選択した3D/4D図を描画する。
     st.plotly_chart(
         target_fig,
-        # width="stretch" #Streramlitあげたら復活させる
         key=plot_key,
         config={'scrollZoom': True}
     )
@@ -1492,27 +1287,15 @@ def main():
         key=f"{plot_key}_html_dl",
     )
 
-
-
-    ###############################################################################################
-    ############################################################################################### 
-    ###############################################################################################
-    ###############################################################################################
     
     
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
 
-
-    # 選択されたデータの地点プロット
-    # --- Location map / 採取地点の地図表示 ---
+    # =============================================================================
+    # Linked sampling-location map / 連動する採水地点地図
+    # =============================================================================
     st.divider()
-    # st.subheader('Location Map')
     st.subheader("Sampling Location Map")
     st.caption("Map detail settings below apply only to this sampling-location map.")
-    import math
 
     # Keep map controls compact so the map remains visible after Streamlit reruns.
     # Streamlitの再実行後も地図が見つけやすいよう、地図設定をポップオーバーに集約する。
@@ -1529,36 +1312,33 @@ def main():
         )
     st.caption(f"Map style: {map_mode}")
 
-    # データの範囲から中心座標とズームレベルを計算
+    # Map extent and zoom / 地図範囲とズーム
     lat_min, lat_max = df_map["Latitude_degN"].min(), df_map["Latitude_degN"].max()
     lon_min, lon_max = df_map["Longitude_degE"].min(), df_map["Longitude_degE"].max()
 
-    # 初期値（日本）の設定
+    # Fallback location / データがない場合の既定位置
     default_lat, default_lon, default_zoom = 36.0, 138.0, 4.0
 
-    # --- 判定と計算を一本化 ---
     if pd.isna(lat_min) or pd.isna(lon_min):
-        # 【抽出前】データがない場合は日本を中心に固定
         center_lat, center_lon, auto_zoom = default_lat, default_lon, default_zoom
     else:
-        # 【抽出後】データがある場合
         center_lat = (lat_min + lat_max) / 2
         center_lon = (lon_min + lon_max) / 2
         
         lat_diff = max(lat_max - lat_min, 0.1)
         lon_diff = max(lon_max - lon_min, 0.1)
         
-        # 03番準拠のピクセル計算
+        # Calculate zoom from data extent / データ範囲からズームを計算する。
         map_width_px, map_height_px = 1200, 700
         zoom_lon = math.log2((map_width_px * 360) / (lon_diff * 256))
         zoom_lat = math.log2((map_height_px * 180) / (lat_diff * 256))
         
-        # 東西に広範囲な場合に全プロットを収めるため、マージンを少し多めに引く (-1.8)
-        # この 1.5 を 1.8 や 2.0 にすると、さらに一歩「引いた」視点になります。
+        # Leave margin around the selected extent / 選択範囲の周囲に余白を残す。
         auto_zoom = min(zoom_lon, zoom_lat) - 2.0
         auto_zoom = max(1, min(15, auto_zoom))
 
-        # もしデータが世界規模（100度以上）に広がっているなら、日本中心の引きの絵にする
+        # Use a broad fallback view for globally distributed points.
+        # 全球規模に分布する点では広域の既定表示を用いる。
         if lon_diff > 100:
               center_lat, center_lon, auto_zoom = default_lat, default_lon, 1.5
     
@@ -1566,13 +1346,12 @@ def main():
     
 
     
-    # --- Map 専用設定 ---
-    # 内部列名と短縮ラベルのリスト（Map側で独自に定義）
+    # Map color settings / 地図の色設定
 
     m_cols = ["Temperature_degC", "d18O", "d18O", "Temperature_degC", "Salinity", "d-excess"]
     m_lbls = ["Temperature(C)", "d18O", "d18O", "Temperature(C)", "Salinity", "d-excess"]
     
-    # 現在の選択から項目を特定
+    # Resolve the active map color variable / 地図の色変数を決定する。
     if display_option == custom_option:
         m_target = custom_color
         m_label = label_for_column(custom_color)
@@ -1581,8 +1360,7 @@ def main():
         m_target = m_cols[m_idx]
         m_label = m_lbls[m_idx]
     
-    # Map専用スライダーの作成（ここで r_map を定義）
-    # st.write(f"### Map Scale Control ({m_label})")
+    # Map colorbar range / 地図カラーバー範囲
     mv1, mv2 = float(df_map[m_target].min()), float(df_map[m_target].max())
     r_map = st.slider(
         f"Map colorbar range: {m_label}", 
@@ -1590,14 +1368,13 @@ def main():
         0.1, key=f"slider_map_{envgeo_utils.safe_filename_text(m_target)}_{envgeo_utils.safe_filename_text(display_option)}"
     )
     
-    # 地図作成 (color="d18O" 固定を解除)
-    # 地図の作成
+    # Build the sampling-location map / 採水地点地図を作成する。
     # Reuse the sidebar colormap choice for the final 2D location map as well.
     # 最後の 2D 地図でも、サイドバーで選んだカラーマップを共通利用する。
     c_scale_map = map_colorscale
     fig_map = px.scatter_mapbox(
         df_map, lat="Latitude_degN", lon="Longitude_degE",
-        color=m_target,                   # 選択項目で色付け
+        color=m_target,
         color_continuous_scale=c_scale_map,
         hover_data={
             "lat": True,  
@@ -1613,26 +1390,25 @@ def main():
             "Station": True,
             "Depth_m": True,
             "reference": True, 
-            "d-excess": True, # d-excess用
+            "d-excess": True,
         },
         opacity=0.6, height=500
     )
     
     
 
-
-    # 背景スタイルの適用
+    # Apply the selected background style / 選択した背景スタイルを適用する。
     fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
     
     
 
     
-    # 地図のレイアウト設定（カラーバーを水平に下配置）
+    # Map layout / 地図レイアウト
     fig_map.update_layout(
         coloraxis_colorbar=dict(
             title=m_label,
-            orientation="h",       # 水平
-            yanchor="top", y=-0.15, # 図の下
+            orientation="h",
+            yanchor="top", y=-0.15,
             x=0.5, xanchor="center",
             thickness=15
         ),
@@ -1641,21 +1417,15 @@ def main():
         autosize=True
     )
     
-    # スライダー r_map の値を地図に反映
+    # Apply the selected colorbar range / 選択したカラーバー範囲を適用する。
     fig_map.update_coloraxes(cmin=r_map[0], cmax=r_map[1])
 
-
-
-
-
-    # 表示 
-    # ID重複を割けるために，Keyを追加。　修正後（一意のキーを追加）　
-    # マウスホイールでのズームが強制的に有効
+    # Use a unique widget key and enable wheel zoom.
+    # 一意のwidget keyを用い、マウスホイールズームを有効にする。
 
     st.plotly_chart(
         fig_map,
-        # width="stretch" #Streramlitあげたら復活させる
-        key="dynamic_map_final", # キーも一応ユニークに
+        key="dynamic_map_final",
         config={'scrollZoom': True, 'displayModeBar': True}
     )
     st.download_button(
@@ -1666,17 +1436,9 @@ def main():
         key="p04_map_html_dl",
     )
 
-
-
-
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-
-    ##フィルタ後・現在表示中のデータを表示
-    # 例：特定の列だけを選択して新しいデータフレームを作成
-        
+    # -------------------------------------------------------------------------
+    # Current-view data table / 現在の表示対象データ表
+    # -------------------------------------------------------------------------
 
     with st.expander("Filtered dataset for current view (CSV)", expanded=False):
         
@@ -1688,7 +1450,7 @@ def main():
             envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
         ]
 
-        # d-excess が使える時だけ追加
+        # Add d-excess when available / 使用可能な場合だけd-excessを追加する。
         if 'd-excess' in df_map.columns:
             table_columns.append('d-excess')
 
@@ -1696,20 +1458,14 @@ def main():
         df1_table = df_map[available_columns].copy()
 
       
-        # 【重要】表示直前に全列を文字列化（これでArrowエラーは100%消えます）
+        # Convert mixed columns to strings for Streamlit-table compatibility.
+        # Streamlit表での混在型互換性のため、列を文字列へ変換する。
         df1_table = df1_table.astype(str) 
         
-        # 最新の width='stretch' を使用しない　1.42まで
-        st.dataframe(df1_table, 
-                     # width="stretch" #Streramlitあげたら復活させる
-                     )
+        st.dataframe(df1_table)
         
     
     
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
-    ###############################################################################################
 
 if __name__ == '__main__':
     main()

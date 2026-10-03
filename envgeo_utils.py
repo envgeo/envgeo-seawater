@@ -12,10 +12,11 @@ EnvGeo-Seawater 共通処理モジュールです。
 d-excess 計算、地図表示設定、共通テーブル表示をここに集約します。
 
 Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
 """
 
-# --- App version / バージョン情報 ---
+# =============================================================================
+# Version metadata / バージョン情報
+# =============================================================================
 APP_VERSION = "1.3.4"
 APP_VERSION_DATE = "2026-09-28"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
@@ -24,7 +25,9 @@ APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 # 既存ページとの互換性を保つため、従来の version 変数も残します。
 version = APP_VERSION
 
+# =============================================================================
 # Shared UI labels / 共通UIラベル
+# =============================================================================
 FIGURE_CONTROLS_LABEL = "Figure controls"
 FIGURE_SCALE_SETTINGS_LABEL = "Figure scale settings"
 MAP_DISPLAY_SETTINGS_LABEL = "Map display settings"
@@ -72,7 +75,7 @@ import math
 import re
 import unicodedata
 from pathlib import Path
-import envgeo_assets  # CWD-independent asset resolver (Sprint 1)
+import envgeo_assets  # CWD-independent bundled-asset resolver
 from datetime import datetime
 
 import warnings # for M1/M2 Mac
@@ -82,11 +85,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning, module="shapely")
 warnings.filterwarnings("ignore", message="invalid value encountered in") # メッセージ指定でも念押し
 
 
-"""
-##############################################################################
-# PANDAS CONFIGURATION: Optimized Memory Management
-##############################################################################
-"""
+# =============================================================================
+# Pandas compatibility / Pandas互換性設定
+# =============================================================================
 
 def _major_version(version_text):
     """Return the leading numeric component of a package version."""
@@ -105,6 +106,9 @@ def configure_pandas_compatibility():
         pd.set_option("future.no_silent_downcasting", True)
 
 
+# =============================================================================
+# Streamlit display compatibility / Streamlit表示互換性
+# =============================================================================
 def stretch_width_kwargs(widget):
     """Return full-width arguments compatible with old and new Streamlit APIs.
 
@@ -138,8 +142,11 @@ def arrow_display_dataframe(df):
     return display_df
 
 
-def render_earthquake_tab_style():
-    """Render the shared blue card-style tabs used by Earthquake Advanced.
+# =============================================================================
+# Shared card-tab styling / 共通カード型タブのスタイル設定
+# =============================================================================
+def render_card_tab_style():
+    """Render shared blue card-style tabs across the Seawater interface.
 
     Streamlit 1.63 changed tabs from BaseWeb controls to React Aria controls.
     Keep both selector families here so public pages retain the same appearance
@@ -306,12 +313,14 @@ def render_earthquake_tab_style():
         }
         </style>
         """
-    # The original Earthquake page injects page-wide styles through Markdown.
-    # This also works in both supported Streamlit lines, whereas st.html()
+    # Page-wide Markdown CSS works in both supported Streamlit lines, whereas st.html()
     # may isolate the style node from sibling elements in newer releases.
     st.markdown(tab_css, unsafe_allow_html=True)
 
 
+# =============================================================================
+# Responsive container helper / 可変幅コンテナ補助
+# =============================================================================
 def bounded_container(max_width=850):
     """Return a container capped on desktop and fluid on narrow screens.
 
@@ -330,11 +339,9 @@ configure_pandas_compatibility()
 
 
 
-"""
-##############################################################################
-# --- Common filename helpers / ファイル名の共通整形 ---
-##############################################################################
-"""
+# =============================================================================
+# Common filename helpers / ファイル名の共通整形
+# =============================================================================
 
 
 def safe_filename_text(value, fallback="figure", max_length=180):
@@ -372,13 +379,13 @@ def build_figure_filename(prefix, subtitle=None, extension="png"):
 
 
 
-"""
-##############################################################################
-# --- 0. Common definitions for dataset ---
-##############################################################################
-"""
+# =============================================================================
+# Dataset definitions and upload helpers / データセット定義とアップロード補助
+# =============================================================================
 
-# --- Radio button selections / ラジオボタン選択肢 ---
+# -------------------------------------------------------------------
+# Data-source selector labels / データソース選択ラベル
+# -------------------------------------------------------------------
 
 data_source_JAPAN_SEA    = "Kodama et al. (2024) [ECS - Japan Sea]"
 data_source_AROUND_JAPAN = "with [Around Japan]"
@@ -391,7 +398,40 @@ DATA_SOURCES = [
     data_source_GLOBAL,
 ]
 
+# =============================================================================
+# Data attribution and citations / データ出典と引用表示
+# =============================================================================
 
+# -------------------------------------------------------------------
+# Japan Sea / 日本海
+# -------------------------------------------------------------------
+# Planned EnvGeo Data expansion: update the public label only after additional
+# source-cited datasets are released and their provenance is recorded.
+# EnvGeo Dataへの拡張は、追加データ公開と来歴記録の後に表示ラベルを更新する。
+refs_JAPAN_SEA= ':blue[Data source:]  Kodama et al. (2024)'
+
+# -------------------------------------------------------------------
+# EnvGeo Data + Around Japan / EnvGeo Dataと日本周辺比較データ
+# -------------------------------------------------------------------
+# EnvGeo Data currently contains Kodama et al. (2024); additional laboratory
+# datasets will be added only after publication and provenance recording.
+# 現時点のEnvGeo DataはKodama et al. (2024)であり、研究室データの追加は
+# 公表と来歴記録の後に行う。Around Japanは比較用の外部地域データである。
+refs_AROUND_JAPAN = ':blue[Data source:]Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).'
+
+# -------------------------------------------------------------------
+# Global data / 全球データ
+# -------------------------------------------------------------------
+# NASA GISS + CoralHydro2k + recent regional reports
+refs_GLOBAL = ':blue[Data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).\
+                Sakamoto et al. (2022).\
+                :blue[Integrated with:] NASA GISS Global Seawater d18O Database (Jan 23, 2025)\
+                :blue[and] CoralHydro2k d18O Database (Atwood et al., 2026; v1.0.0)'
+
+
+# =============================================================================
+# Upload data schema and session keys / アップロードデータの列構成とセッションキー
+# =============================================================================
 STANDARD_UPLOAD_COLUMNS = [
     "Dataset",
     "reference",
@@ -428,6 +468,9 @@ DEFAULT_LOCAL_USER_DATA_PATH = envgeo_assets.asset_path("local_data/user_data.xl
 INTEGRATED_EMBEDDED_PAGE_KEY = "envgeo_integrated_embedded_page"
 
 
+# -------------------------------------------------------------------
+# Upload-column aliases / アップロード列名の別名
+# -------------------------------------------------------------------
 UPLOAD_COLUMN_ALIASES = {
     "Month": [
         "month",
@@ -510,6 +553,9 @@ UPLOAD_COLUMN_ALIASES = {
 }
 
 
+# =============================================================================
+# Uploaded-column normalization / アップロード列名の標準化
+# =============================================================================
 def _normalize_column_label(label):
     """
     Normalize a column label for alias matching.
@@ -559,6 +605,9 @@ def standardize_uploaded_column_names(df):
     return df
 
 
+# =============================================================================
+# Uploaded and local data reading / アップロード・ローカルデータの読込
+# =============================================================================
 def read_uploaded_table(uploaded_file):
     """Read an uploaded CSV or Excel table without saving it to disk."""
     suffix = Path(getattr(uploaded_file, "name", "")).suffix.lower()
@@ -610,6 +659,9 @@ def load_local_user_data(path, dataset_label=USER_EXCEL_DATA_LABEL):
     return prepared
 
 
+# =============================================================================
+# Upload template generation / アップロード用テンプレート作成
+# =============================================================================
 def build_upload_template_csv():
     """Return a small seawater upload template for spreadsheet applications."""
     template = pd.DataFrame(
@@ -764,6 +816,9 @@ MAP_REGION_PRESETS = {
 }
 
 
+# =============================================================================
+# Map region presets / 地図表示海域プリセット
+# =============================================================================
 def map_region_view(region_label):
     """
     Return map center and approximate zoom for a named lon/lat region preset.
@@ -842,6 +897,9 @@ def area_filter_bounds(region_label, lon_min, lon_max, lat_min, lat_max):
     return selected_lon_min, selected_lon_max, selected_lat_min, selected_lat_max
 
 
+# =============================================================================
+# Longitude and dateline handling / 経度・日付変更線の処理
+# =============================================================================
 def normalize_longitude_deg(lon):
     """
     経度を -180..180 と 0..360 のどちらの表記で受け取っても、
@@ -912,6 +970,9 @@ def region_preset_longitude_mask(lon_values, region_label):
     return (lon_norm >= normalize_longitude_deg(lon_min)) & (lon_norm <= normalize_longitude_deg(lon_max))
 
 
+# =============================================================================
+# Quality control and isotope calculations / 品質管理と同位体計算
+# =============================================================================
 QUALITY_FLAG_COLUMN = "Quality_Flags"
 QUALITY_ORIGINAL_VALUE_COLUMN = "Quality_Original_Values"
 
@@ -1049,6 +1110,9 @@ def coerce_numeric_values(values):
     return pd.to_numeric(cleaned, errors="coerce")
 
 
+# =============================================================================
+# Uploaded-data preparation / アップロードデータの整形
+# =============================================================================
 def prepare_uploaded_data(df, dataset_label=UPLOADED_DATA_LABEL):
     """Prepare uploaded seawater data for quality review and plotting.
 
@@ -1146,6 +1210,9 @@ def get_quality_rows(df):
     return df.loc[flags.ne("")].copy()
 
 
+# =============================================================================
+# Uploaded-data session state / アップロードデータのセッション管理
+# =============================================================================
 def store_uploaded_data(df, filename=None, state=None):
     """Keep prepared upload data in the current Streamlit session only."""
     state = st.session_state if state is None else state
@@ -1176,31 +1243,10 @@ def clear_uploaded_data(state=None):
 
 
 
-# DATA ATTRIBUTION & CITATIONS (For UI Display) / データ出典と引用表示
-
-# --- Japan Sea: Samples analyzed by T. Ishimura using unified methods/standards ---
-# Kodama et al.(2024) + upcoming reports
-refs_JAPAN_SEA= ':blue[Data source:]  Kodama et al. (2024)' # To be updated
-
-# --- Around Japan: Regional compilation ---
-# Kodama et al.(2024) + around Japan 
-refs_AROUND_JAPAN = ':blue[Data source:]Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).'
-
-# --- Global: Comprehensive integration of international databases ---
-# NASA GISS + CoralHydro2k + recent regional reports
-refs_GLOBAL = ':blue[Data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).\
-                Sakamoto et al. (2022).\
-                :blue[Integrated with:] NASA GISS Global Seawater d18O Database (Jan 23, 2025)\
-                :blue[and] CoralHydro2k d18O Database (Atwood et al., 2026; v1.0.0)'
-
-
-
-"""
-##############################################################################
-# --- 1. Load main dataset ---
-# Cache isotope data for rapid access (Japan/Global)
-##############################################################################
-"""
+# =============================================================================
+# Main dataset loading / 主データセットの読込
+# Cache isotope data for rapid access. / 同位体データを高速表示用にcacheする。
+# =============================================================================
 @st.cache_data
 def load_isotope_data(ref_data, sheet_num=0): 
     """
@@ -1215,9 +1261,9 @@ def load_isotope_data(ref_data, sheet_num=0):
 
     
     # Select the source file by dataset / データセットに応じて読み込みファイルを選択
-    #############################################################
-    # Excel FIle
-    #############################################################
+    # -------------------------------------------------------------------
+    # Bundled workbook paths / 同梱workbookのパス
+    # -------------------------------------------------------------------
     
     # ECS-Japan Sea
     file_01 = envgeo_assets.asset_path('dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx')
@@ -1233,11 +1279,11 @@ def load_isotope_data(ref_data, sheet_num=0):
     # ローカル実行時に常時読み込む任意のユーザー表
     file_user_excel = resolve_local_user_data_path()
     
-    #########################################################################
-    # DATA INGESTION & CATEGORIZATION
-    # Define 'Dataset' column for UI filtering.
-    # Note: 'Dataset' refers to the UI category, not necessarily the original source.
-    #########################################################################
+    # -------------------------------------------------------------------
+    # Data ingestion and UI categorisation / データ読込とUI分類
+    # `Dataset` is a UI category and may differ from the original source.
+    # `Dataset`はUI用の分類であり、元の出典とは一致しない場合がある。
+    # -------------------------------------------------------------------
     df1 = pd.read_excel(file_01)
     df1['Dataset'] = 'Around Japan'
     
@@ -1275,14 +1321,14 @@ def load_isotope_data(ref_data, sheet_num=0):
     # always-loaded dataset, matching the former local-workbook workflow.
     if ref_data == data_source_JAPAN_SEA:
         frames = [df1]
-        
+
     elif ref_data == data_source_AROUND_JAPAN:
         frames = [df1, df2]
 
-        
+
     elif ref_data == data_source_GLOBAL:
         frames = [df1, df2, df3, df4, df5]
-        
+
     else:
         return pd.DataFrame()  # Return empty DF as fallback
 
@@ -1296,10 +1342,9 @@ def load_isotope_data(ref_data, sheet_num=0):
 
 
 
-    #########################################################################
-    # DATA LOADING & CLEANING
-    # Update (2026/02/23): Enhanced compatibility for depth profiles
-    #########################################################################
+    # -------------------------------------------------------------------
+    # Data cleaning / データの整形
+    # -------------------------------------------------------------------
     try:
         # Replace placeholders ('**') with NaN / プレースホルダ ('**') をNaNへ置換する
         df = df.mask(df.eq('**'), np.nan)
@@ -1332,12 +1377,9 @@ def load_isotope_data(ref_data, sheet_num=0):
 
 
 
-"""
-##############################################################################
-# --- 2. LOAD COASTLINE DATA (Global or Japan) ---
-# Fetch geographic boundaries for mapping based on the selected data source.
-##############################################################################
-"""
+# =============================================================================
+# Coastline loading / 海岸線データの読込
+# =============================================================================
 @st.cache_data
 def load_coastline_data(ref_data, resolution="50m"):
     """Load shared Natural Earth coastline coordinates from CSV.
@@ -1371,12 +1413,9 @@ def load_coastline_data(ref_data, resolution="50m"):
 
 
 
-"""
-##############################################################################
-# --- 3. UNIFIED LAYOUT CONFIGURATION ---
-# Apply consistent styling and region-specific perspectives to Plotly figures.
-##############################################################################
-"""
+# =============================================================================
+# Shared Plotly layout / 共通Plotlyレイアウト
+# =============================================================================
 
 def apply_common_layout(fig, ref_data, z_min, z_max, x_range=None, y_range=None):
     """
@@ -1385,7 +1424,9 @@ def apply_common_layout(fig, ref_data, z_min, z_max, x_range=None, y_range=None)
     """
     is_Global = (ref_data == data_source_GLOBAL)
     
-    # --- 1. Perspective & Aspect Ratio Configuration --- / 視点とアスペクト比の設定 ---
+    # -------------------------------------------------------------------
+    # Perspective and aspect ratio / 視点とアスペクト比
+    # -------------------------------------------------------------------
     if is_Global:
         # [Global View] High-altitude perspective overlooking Japan from the Pacific
         camera_setting = dict(
@@ -1401,7 +1442,9 @@ def apply_common_layout(fig, ref_data, z_min, z_max, x_range=None, y_range=None)
         )
         target_aspectratio = dict(x=1, y=1, z=1)
 
-    # --- 2. Scene Definition ---
+    # -------------------------------------------------------------------
+    # Scene configuration / Scene設定
+    # -------------------------------------------------------------------
     scene_dict = dict(
         aspectmode='manual',
         aspectratio=target_aspectratio,
@@ -1418,7 +1461,9 @@ def apply_common_layout(fig, ref_data, z_min, z_max, x_range=None, y_range=None)
     if y_range:
         scene_dict['yaxis'] = dict(range=y_range)
         
-    # --- 3. Final Layout Update ---
+    # -------------------------------------------------------------------
+    # Final layout update / 最終レイアウト設定
+    # -------------------------------------------------------------------
     fig.update_layout(
         scene=scene_dict,
         width=700,
@@ -1431,13 +1476,9 @@ def apply_common_layout(fig, ref_data, z_min, z_max, x_range=None, y_range=None)
 
 
 
-"""
-##############################################################################
-# --- 4. DYNAMIC COLORSCALE SELECTION ---
-# Automatically apply depth-optimized colorscales when depth-related 
-# keywords (e.g., 'Depth_m') are detected in the data.
-##############################################################################
-"""
+# =============================================================================
+# Colourscale selection / カラースケール選択
+# =============================================================================
 
 
 
@@ -1448,13 +1489,14 @@ def get_custom_colorscale(selected_item):
     variations in shallow layers.
     """
     
-    # 1. Standard colorscale (Default for non-depth parameters) / 1. 標準カラースケール（深度以外の既定値）
+    # Standard colourscale for non-depth parameters. / 深度以外の既定カラースケール。
     standard_scale = [
         'darkblue', 'blue', 'lightblue', 'lightgreen', 
         'green', 'yellow', 'orange', 'red'
     ]
 
-    # 2. Depth-optimized scale with enhanced resolution for shallow waters / 2. 浅海の変化を見やすくした深度用カラースケール
+    # Depth-optimised scale with enhanced shallow-water resolution.
+    # 浅海の変化を見やすくした深度用カラースケール。
     # Colors are mapped to normalized values (0.0 to 1.0) / 色は0.0から1.0の正規化値に対応させる
     # The gradients are compressed between 0.0 and 0.3 to maximize / 0.0から0.3に勾配を圧縮して
     # visual contrast in the upper water column (shallow layers) / 表層から浅層のコントラストを強める
@@ -1602,12 +1644,9 @@ def get_matplotlib_colormap(selected_item=None, colormap_label=None):
 
 
 
-"""
-##############################################################################
-# --- 5. MAP STYLE CONFIGURATION ---
-# Apply background tile layers to the Plotly Mapbox figure.
-##############################################################################
-"""
+# =============================================================================
+# Map style configuration / 地図スタイル設定
+# =============================================================================
 
 # Offline mode is listed first; pages must pass index=MAP_MODE_DEFAULT_INDEX to the widget.
 # オフラインを先頭に置きつつ、既定値は "Standard" を維持する。
@@ -1632,8 +1671,9 @@ MAP_MODE_DESCRIPTIONS_JA = {
     "Contour (GSI)": "国土地理院の標準地図タイルを使います。",
 }
 
-# --- Connectivity check and offline fallback ---
-# 通信確認とオフライン縮退
+# -------------------------------------------------------------------
+# Connectivity check and offline fallback / 通信確認とオフライン縮退
+# -------------------------------------------------------------------
 
 _CONNECTIVITY_CACHE_INTERVAL_S = 60  # re-check at most once per minute / 1分以内に重複確認しない
 _CONNECTIVITY_TIMEOUT_S = 3
@@ -1695,6 +1735,9 @@ def resolve_map_mode(map_mode: str):
     return map_mode, False
 
 
+# -------------------------------------------------------------------
+# Coastline overlays / 海岸線オーバーレイ
+# -------------------------------------------------------------------
 # Warning message displayed when falling back to offline mode.
 # オフライン縮退時に表示する警告文。
 OFFLINE_FALLBACK_WARNING = (
@@ -1779,9 +1822,9 @@ def plot_bundled_coastline(ax, *, transform=None, zorder=None, resolution="50m",
     return True
 
 
-# ---------------------------------------------------------------------------
-# Self-contained Plotly HTML export
-# ---------------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Self-contained Plotly HTML export / 自己完結Plotly HTML出力
+# -------------------------------------------------------------------
 
 _PLOTLY_HTML_CONFIG = {
     "scrollZoom": True,
@@ -1817,6 +1860,9 @@ def figure_to_self_contained_html(fig) -> bytes:
     return html_str.encode("utf-8")
 
 
+# -------------------------------------------------------------------
+# Plotly map layout and tiles / Plotly地図レイアウトとタイル
+# -------------------------------------------------------------------
 def add_graticule_overlay(fig, lat_step: int = 30, lon_step: int = 30) -> None:
     """Add lat/lon graticule lines to the Plotly Mapbox figure.
 
@@ -1961,30 +2007,21 @@ def apply_standard_map_layout(fig, height=480):
 
 
 
-"""
-##############################################################################
-# --- 6. CACHE MANAGEMENT ---
-# Utility functions to manage and reset Streamlit's data cache.
-##############################################################################
-"""
+# =============================================================================
+# Cache management / キャッシュ管理
+# =============================================================================
 
-# 暫定版
-# Provisional implementation
 def clear_app_cache():
-    """
-    Clears all cached data across the application to ensure data consistency.
-    """
+    """Clear Streamlit data caches for the current process. / 現在のプロセスのStreamlitデータキャッシュを消去する。"""
     st.cache_data.clear()
 
 
 
-"""
-##############################################################################
-# --- 7. DATA SEGMENTATION FOR DEPTH PROFILES ---
-# Group data by coordinates and date, then insert NaN rows to break 
-# line connections in 3D visualizations. CRITICAL STEP.
-##############################################################################
-"""
+# =============================================================================
+# Depth-profile segmentation / 深度プロファイルの分割
+# Insert NaN rows between observation groups to prevent false line connections.
+# 観測群の間にNaN行を入れ、誤った線の接続を防ぐ。
+# =============================================================================
 
 def insert_gap_rows(df):
     """
@@ -2028,6 +2065,9 @@ def insert_gap_rows(df):
 
    
 
+# =============================================================================
+# Filtered-data statistics and reports / 絞り込みデータの統計とレポート
+# =============================================================================
 def summarize_filtered_data(df):
     """
     Return compact statistics for sidebar-filtered data.
@@ -2171,12 +2211,9 @@ def render_filtered_report_download(
 
 
 
-"""
-##############################################################################
-# --- 8. DATA TABLE VISUALIZATION ---
-# Formats and displays the filtered dataframe within a Streamlit expander.
-##############################################################################
-"""
+# =============================================================================
+# Data-table display / データ表の表示
+# =============================================================================
 
 
 def display_isotope_table(df, title="Filtered dataset (CSV)"):
@@ -2197,69 +2234,32 @@ def display_isotope_table(df, title="Filtered dataset (CSV)"):
         available_cols = [c for c in target_cols if c in df.columns]
         df_display = df[available_cols].copy()
         
-        # 年と月を整数型に変換
-        # Convert Year and Month to nullable integers
+        # Convert date fields to nullable integers. / 年月をnullable整数へ変換する。
         for col in ['Year', 'Month']:
             if col in df_display.columns:
-                # 数値化できないものはNaNにし、その上でInt64型へ
                 df_display[col] = pd.to_numeric(df_display[col], errors='coerce').astype('Int64')
         
-        # Arrowエラー対策：全列を文字列化
-        # [Arrow Serialization Fix] Cast all columns to strings to ensure UI stability
+        # Cast values for stable Streamlit Arrow display. / Arrow表示を安定させるため文字列化する。
         df_display = df_display.astype(str)
-        
-        # Cleanup visual representation of missing values
-        # df_display = df_display.replace('<NA>', '')
+
+        # Show missing values as blank cells. / 欠損値は空欄として表示する。
         df_display = df_display.replace(['<NA>', 'nan', 'None'], '')
-        
-        # Render table 
-        st.dataframe(df_display,
-                # use_container_width=True
-                )
+
+        st.dataframe(df_display)
         render_quality_flag_criteria_note()
 
 
+# =============================================================================
+# Data filtering and selection summary / データ絞り込みと選択結果の要約
+# Figure styling remains in individual page scripts. / 図の調整は各ページで行う。
+# =============================================================================
+# Preserve NaN gap rows in every filter condition to maintain depth-profile segmentation.
+# 各フィルター条件で`df[col].isna()`を残し、深度プロファイルのgap rowを保持する。
 
 
-
-
-        # =============================================================================
-        # USAGE EXAMPLES (External Module Calls)
-        # =============================================================================
-        # Import this utility via: import envgeo_utils as utils
-        
-        #
-        # Note: Specialized visualizers (e.g., 4D or Depth Profile) may require 
-        # custom handling for derived parameters like d-excess or gap rows.
-        # 
-        
-        # 1. Standard dataset preview:
-        # 各ファイルでの呼び出し例は以下
-        # utils.display_isotope_table(df1)
-        
-        # 2. 4D Visualizer: 
-        # Requires specific handling for derived parameters (e.g., d-excess calculation).
-        # 4D visualizerは個別対応必要，d-exessを追加してあるので
-        
-        # 3. Depth Profile Visualizer: 
-        # Note that gap rows (NaN rows) are utilized to prevent line connections, 
-        # and empty rows may be filtered out before rendering.
-        # depth_profileも個別対応必要。空いている行を削除しているので
-        
-
-
-"""
-##############################################################################
-# --- 9. DATA FILTERING & STATISTICAL SUMMARY ---
-# Handle sidebar-driven data extraction and display selection metrics.
-# Note: Visual styling for figures is managed in the main script.
-# --- 図の調整はメインスクリプトに記載 ---
-##############################################################################
-"""
-# ポイントは | df[col].isna() を加えることで、フィルタリング時に空白行を常に救い出す点
-# Apply filters while exempting NaN rows (Gap Rows) to preserve data segmentation.
-
-
+# -------------------------------------------------------------------
+# Uploaded-data filter support / アップロードデータの絞り込み補助
+# -------------------------------------------------------------------
 def _uploaded_filter_state_key(filter_key):
     """Return the session-state key used by a page's uploaded-data filter."""
     return f"uploaded_data_filter::{filter_key}"
@@ -2281,13 +2281,42 @@ def combine_reference_and_uploaded_for_filtering(reference_df, uploaded_df):
     This does not modify the loaded reference data or the session upload.  It
     simply lets the Dataset selector and range controls operate on both row
     sources during the current page run.
+    読み込んだ参照データやセッション内アップロードは変更せず、現在のページ実行時だけ
+    Dataset選択と範囲指定を両方の行に適用できるDataFrameを作る。
     """
     reference_copy = reference_df.copy()
     if uploaded_df is None or uploaded_df.empty:
         return reference_copy
-    return pd.concat(
-        [reference_copy, uploaded_df.copy()], ignore_index=True, sort=False
-    )
+
+    uploaded_copy = uploaded_df.copy()
+    # A frame containing only empty/all-NA rows contributes no observations.
+    # Excluding it avoids Pandas' future dtype-inference warning while keeping
+    # ordinary gap rows in a non-empty frame unchanged.
+    # 空行・全NA行だけのDataFrameは観測値を持たない。これを結合対象から外すことで、
+    # Pandasの将来のdtype推論警告を避けつつ、データを持つDataFrame内のgap rowは保持する。
+    frames = [
+        frame
+        for frame in (reference_copy, uploaded_copy)
+        if not frame.dropna(how="all").empty
+    ]
+    if not frames:
+        return reference_copy
+    if len(frames) == 1:
+        return frames[0]
+
+    # Pandas also warns when an otherwise non-empty input has a column that is
+    # entirely NA while another input contributes values for that column. Drop
+    # such columns only for the concat operation, then restore the complete
+    # input schema and its original order afterwards.
+    # Pandasは、片方の入力に全NAの列があり他方が同じ列へ値を持つ場合にも警告する。
+    # 結合時だけその列を外し、後から元の列集合と順番を復元する。
+    column_order = list(dict.fromkeys(column for frame in frames for column in frame.columns))
+    concat_frames = [frame.dropna(axis=1, how="all") for frame in frames]
+    combined = pd.concat(concat_frames, ignore_index=True, sort=False)
+    for column in column_order:
+        if column not in combined.columns:
+            combined[column] = pd.NA
+    return combined.reindex(columns=column_order)
 
 
 def split_uploaded_rows(filtered_df, dataset_label=UPLOADED_DATA_LABEL):
@@ -2355,6 +2384,9 @@ def filter_uploaded_data_for_sidebar(
     return result
 
 
+# -------------------------------------------------------------------
+# Shared sidebar filter / 共通サイドバー絞り込み
+# -------------------------------------------------------------------
 def sidebar_filter_and_display(
     df1,
     ref_data,
@@ -2364,22 +2396,10 @@ def sidebar_filter_and_display(
     uploaded_filter_key=None,
     uploaded_dataset_label=None,
 ):
-    """
-    サイドバーのフィルター設定、データ抽出、および選択データの統計表示を一括で行う関数。
-    引数:
-        df1: 元のDataFrame
-        ref_data: 現在選択されているデータソース
-        data_source_JAPAN_SEA: 日本海ソースの識別値
-        data_source_AROUND_JAPAN: 日本周辺ソースの識別値
-    戻り値:
-        フィルタリング後のdf1, および地図・カラーバー用の各設定値
-    """
-    """
-    Executes sidebar-based filtering, data extraction, and summary statistics.
-    
-    CRITICAL LOGIC: 
-    Filter conditions include 'df[col].isna()' to preserve placeholder blank rows,
-    ensuring depth profiles remain correctly segmented in 3D visualizations.
+    """Render shared sidebar filters and return filtered data plus UI settings.
+
+    NaN rows are retained by filters so depth-profile gap rows remain separated.
+    フィルター後もNaN行を残し、深度プロファイルのgap rowを維持する。
 
     Args:
         df1 (pd.DataFrame): The original dataset.
@@ -2393,14 +2413,9 @@ def sidebar_filter_and_display(
     Returns:
         tuple: (filtered_df, map_settings, colorscale_configs)
     """
-    
 
-    ##############################################################################
-    # --- SIDEBAR CONFIGURATION AND INTEGRATED FILTERING / サイドバー設定と統合フィルタリング ---
-    # Update (2026/03/06): switched to dynamic min-max acquisition directly / 最小値・最大値をDataFrameから動的取得する方式へ変更
-    # from the dataframe to define filter ranges / フィルタ範囲をDataFrameから直接決める
-    # Note: spatial coordinates (Lat/Lon) are kept in raw form to maintain precision / 注: 緯度経度は精度保持のため元の値で扱う
-    ##############################################################################
+    # Filter ranges follow the available data; latitude/longitude retain raw precision.
+    # 範囲は利用可能なデータから決め、緯度経度は元の精度で扱う。
 
 
     with st.sidebar.form("parameter", clear_on_submit=False):
@@ -2413,42 +2428,24 @@ def sidebar_filter_and_display(
             "Apply settings", **stretch_width_kwargs(st.form_submit_button)
         )
 
-        # Two buttons can be placed at the top and bottom if needed / 必要ならsubmitボタンを上下に配置できる
-        # In Streamlit 1.42, form submit buttons do not support key, so labels must be unique.
-        # Streamlit 1.42 では form submit button に key が使えないため、ラベルを変えて重複を避ける。
+        # Streamlit 1.42 does not support keys on form submit buttons; labels differ.
+        # Streamlit 1.42ではform submit buttonにkeyを使えないため、ラベルを区別する。
 
-        #　一つだけの時は以下
-        # submitted = st.form_submit_button("Apply settings")
+        # -------------------------------------------------------------------
+        # Dataset filtering / データセットの絞り込み
+        # -------------------------------------------------------------------
         
-        
-
-        ##########################
-        # Dataset filtering
-        ##########################
-        # st.sidebar.subheader('航海区の範囲')dfから要素抽出
-        
-        # 1. 空欄（欠損値）を "no_name" に置き換える
         df1["Dataset"] = df1["Dataset"].fillna("no_name")
-        
-        # ※もし前の処理で 'nan' や 'None' という「文字列」になっている場合の念押し安全対策
         df1["Dataset"] = df1["Dataset"].replace({'nan': 'no_name', 'None': 'no_name', '': 'no_name'})
-
-        # 2. 【変更】 .dropna() をしない、"no_name" もリストに含めるようにする
         Transect_list = df1["Dataset"].unique().tolist()
-        # print(Transect_list, "<< Dataset list")
-        
-        
-        # 3. マルチセレクトの作成
+
         with st.expander("Select sub-dataset", expanded=False):
-            # st.sidebar.subheader('航海区の範囲')dfから要素抽出
             Transect_list = df1["Dataset"].dropna().unique().tolist()
             if (
                 uploaded_dataset_label is not None
                 and uploaded_dataset_label not in Transect_list
             ):
                 Transect_list.append(uploaded_dataset_label)
-            # print(Transect_list,"<<< Dataset list")
-            
             selected_dataset = st.multiselect('Choose datasets', Transect_list,default=Transect_list)
             user_excel_count = int(
                 df1["Dataset"].eq(USER_EXCEL_DATA_LABEL).sum()
@@ -2460,46 +2457,28 @@ def sidebar_filter_and_display(
                 )
 
             
-        # datasetのフィルタリング　2026/03/09追加
         # When a page supplies uploaded rows in its local filter dataframe,
         # Uploaded data behaves exactly like any other sub-dataset.
         df1 = df1[df1["Dataset"].isin(selected_dataset)
-                   | df1['Dataset'].isna()]  # ← 【修正】Datasetが空欄（または空白行）なら残す
+                   | df1['Dataset'].isna()]
         
         if df1.empty:
             st.warning("⚠️ no data found.")
             st.stop()
             
         
-        ##########################
-        # Transect filtering
-        ##########################
-        # st.sidebar.subheader('航海区の範囲')dfから要素抽出
-        
-        # 1. 【追加】Transect列の空欄（欠損値）を "no_name" に置き換える
+        # -------------------------------------------------------------------
+        # Transect filtering / 航海区の絞り込み
+        # -------------------------------------------------------------------
         df1["Transect"] = df1["Transect"].fillna("no_name")
-        
-        # ※もし前の処理で 'nan' や 'None' という「文字列」になっている場合の念押し安全対策
         df1["Transect"] = df1["Transect"].replace({'nan': 'no_name', 'None': 'no_name', '': 'no_name'})
-
-        # 2. 【変更】 .dropna() をしない、"no_name" もリストに含めるようにする
         Transect_list = df1["Transect"].unique().tolist()
-        # print(Transect_list, "AAA")
-        
-        
-        # 3. マルチセレクトの作成
-        with st.expander("Area / Transect", expanded=False):
-            # st.sidebar.subheader('航海区の範囲')dfから要素抽出
-            Transect_list = df1["Transect"].dropna().unique().tolist()
-            # print(Transect_list,"<<< Transect list")
-            
-            selected_cruise = st.multiselect('Cruise / Area / Transect', Transect_list,default=Transect_list)
-        
 
-        # --- 航海区（Transect）の範囲 ---　2026/03/06修正済み
-        # #streamlitのマルチ選択用
+        with st.expander("Area / Transect", expanded=False):
+            Transect_list = df1["Transect"].dropna().unique().tolist()
+            selected_cruise = st.multiselect('Cruise / Area / Transect', Transect_list,default=Transect_list)
         df1 = df1[(df1['Transect'].isin(selected_cruise))
-                   | df1['Transect'].isna()]  # ← 【修正】Transectが空欄（または空白行）なら残す
+                   | df1['Transect'].isna()]
     
         if df1.empty:
             st.warning("⚠️ no data found.")
@@ -2507,9 +2486,9 @@ def sidebar_filter_and_display(
             
     
   
-        ##########################
-        # Map of Transects in Kodama et al (2024)
-        ##########################
+        # -------------------------------------------------------------------
+        # Survey-area map for Kodama et al. (2024) / Kodama et al.（2024）の調査海域地図
+        # -------------------------------------------------------------------
         with st.expander("Area map: Kodama et al.(2024)", expanded=False):
             st.write('Cruise tracks and study area (2015–2021)')
             st.caption('Click top right to expand.')
@@ -2518,17 +2497,9 @@ def sidebar_filter_and_display(
 
             
 
-        ##########################
-        # Year filtering
-        ##########################
-        # max_df_year = int(df1['Year'].max())
-        # min_df_year = int(df1['Year'].min())
-        # sld_year_min, sld_year_max = st.slider(label='Year',
-        #                             min_value=min_df_year,
-        #                             max_value=max_df_year,
-        #                             value=(min_df_year, max_df_year),
-        #                             )
-        
+        # -------------------------------------------------------------------
+        # Year filtering / 年の絞り込み
+        # -------------------------------------------------------------------
         year_values = pd.to_numeric(df1['Year'], errors='coerce').dropna()
         if year_values.empty:
             min_df_year, max_df_year = 0, 0
@@ -2536,7 +2507,8 @@ def sidebar_filter_and_display(
             min_df_year = int(year_values.min())
             max_df_year = int(year_values.max())
         
-        # 最小と最大が同じ場合、エラー回避のために範囲を広げる
+        # Expand a single-value range so the slider remains valid.
+        # 値が一つだけの場合は、スライダーが有効になるよう範囲を広げる。
         if min_df_year == max_df_year:
             slider_min = min_df_year - 1
             slider_max = max_df_year + 1
@@ -2552,7 +2524,7 @@ def sidebar_filter_and_display(
         )
         
 
-        # --- 年の範囲 --- 修正済み
+        # Apply year range and retain missing values / 年の範囲を適用し、欠損値を保持する
         df1 = df1[
             ((df1['Year'] >= sld_year_min) & (df1['Year'] <= sld_year_max))
             | df1['Year'].isna()
@@ -2562,18 +2534,12 @@ def sidebar_filter_and_display(
             st.warning("⚠️ no data found.")
             st.stop()
 
-        ##########################
-        # Month filtering ---multiselect---
-        ##########################
-        # selected_months = st.multiselect(
-        #     label='Month',
-        #     options=list(range(1, 13)),  # 1〜12の選択肢
-        #     default=list(range(1, 13))   # 初期状態は全選択
-        # )
-        
+        # -------------------------------------------------------------------
+        # Month filtering / 月の絞り込み
+        # -------------------------------------------------------------------
         month_list = list(range(1, 13))
         
-        # セグメントコントロールの設定
+        # Multi-select segmented control / 複数選択セグメントコントロール
         selected_months = st.segmented_control(
             label="Month",
             options=month_list,
@@ -2584,18 +2550,10 @@ def sidebar_filter_and_display(
         
   
             
-        # --- 月 (スライダー用) ---　2026/03/06修正済み
-        # df1 = df1[(df1['Month'] == 'xxx')
-                    
-        #             |(df1['Month'] <= sld_month_max) & (df1['Month'] >= sld_month_min)
-        #             | df1['Month'].isna()]  # ← 【修正】
-          
-        
-        # --- 月 (multiselect用) ---　2026/03/06修正済み
+        # Apply selected months and retain missing values / 選択月を適用し、欠損値を保持する
         if selected_months:
-            # isin で選ばれた月を抽出
-            # | (または)
-            # df1['Month'].isna() でMonthが空の行（挿入した空白行 ＋ 月が不明なNASAデータ）を抽出
+            # Keep inserted gap rows and observations with an unknown month.
+            # 挿入したgap rowと、月が不明な観測値を保持する。
             df1 = df1[df1['Month'].isin(selected_months) | df1['Month'].isna()]
         else:
             # 月が一つも選ばれていない場合でも、空白行や月不明データだけは残す
@@ -2607,13 +2565,12 @@ def sidebar_filter_and_display(
     
     
 
-        ##########################
-        # Longitude filtering
-        ##########################
+        # -------------------------------------------------------------------
+        # Longitude filtering / 経度の絞り込み
+        # -------------------------------------------------------------------
         
-        # Safely compute the minimum and maximum, then floor/ceil them / 最小値・最大値を安全に取得し、切り下げ・切り上げする
-        # 1. データの最小値・最大値を安全に取得し、切り下げ・切り上げを行う
-        # 経度は範囲が広いため、整数(int)にしておくとユーザーが操作しやすくなる
+        # Determine integer slider bounds from numeric coordinates.
+        # 数値化した座標から、操作しやすい整数のスライダー範囲を求める。
         lon_values = pd.to_numeric(df1['Longitude_degE'], errors='coerce').dropna()
         lat_values = pd.to_numeric(df1['Latitude_degN'], errors='coerce').dropna()
         if lon_values.empty:
@@ -2655,7 +2612,7 @@ def sidebar_filter_and_display(
         default_lat_min = int(math.floor(default_lat_min))
         default_lat_max = int(math.ceil(default_lat_max))
         
-        # 2. スライダーの設定
+        # Slider configuration / スライダー設定
         sld_lon_min, sld_lon_max = st.slider(
             label='Longitude',  # ラベルを少し自然に
             min_value=min_df_lon,
@@ -2666,7 +2623,7 @@ def sidebar_filter_and_display(
             # formatは指定しないことでエラーを回避
         )
 
-        # --- 経度(Longitude)の範囲 --- 修正済み
+        # Apply longitude range and retain missing values / 経度範囲を適用し、欠損値を保持する
         if region_preset_crosses_dateline(area_filter_preset):
             # 単一の Longitude range スライダーでは日付変更線をまたぐ範囲を
             # 表現できないため、このプリセットではスライダー値ではなく
@@ -2698,11 +2655,11 @@ def sidebar_filter_and_display(
             st.stop()
 
 
-        ##########################
-        # Latitude filtering
-        ##########################
+        # -------------------------------------------------------------------
+        # Latitude filtering / 緯度の絞り込み
+        # -------------------------------------------------------------------
         
-        # 2. スライダーの設定
+        # Slider configuration / スライダー設定
         sld_lat_min, sld_lat_max = st.slider(
             label='Latitude',
             min_value=min_df_lat,
@@ -2713,7 +2670,7 @@ def sidebar_filter_and_display(
         )
         
 
-        # --- 緯度(Latitude)の範囲 --- 修正済み
+        # Apply latitude range and retain missing values / 緯度範囲を適用し、欠損値を保持する
         df1 = df1[
             ((df1['Latitude_degN'] >= sld_lat_min) & (df1['Latitude_degN'] <= sld_lat_max))
             | df1['Latitude_degN'].isna()
@@ -2724,12 +2681,12 @@ def sidebar_filter_and_display(
             st.stop()
         
 
-        ##########################
-        # water depth filtering
-        ##########################
+        # -------------------------------------------------------------------
+        # Water-depth filtering / 水深の絞り込み
+        # -------------------------------------------------------------------
 
-        # Floor the minimum and ceil the maximum, then use integer steps / 最小値は切り下げ、最大値は切り上げた上で整数刻みにする
-        # 水深は範囲が広いため、int型に変換してスッキリ
+        # Use floor/ceiling bounds and integer steps for broad depth ranges.
+        # 広い水深範囲を扱いやすくするため、切り下げ・切り上げした整数刻みを使う。
         depth_values = pd.to_numeric(df1['Depth_m'], errors='coerce').dropna()
         if depth_values.empty:
             min_depth, max_depth = 0, 0
@@ -2737,7 +2694,7 @@ def sidebar_filter_and_display(
             min_depth = int(math.floor(depth_values.min()))
             max_depth = int(math.ceil(depth_values.max()))
         
-        # 2. スライダーの設定
+        # Slider configuration / スライダー設定
         if min_depth == max_depth:
             slider_max = max_depth + 1
         else:
@@ -2773,9 +2730,9 @@ def sidebar_filter_and_display(
 
 
 
-        ##########################
-        # salinity filtering
-        ##########################
+        # -------------------------------------------------------------------
+        # Salinity filtering / 塩分の絞り込み
+        # -------------------------------------------------------------------
         # Use integer bounds for a simpler salinity slider / 塩分スライダーを簡潔に保つため整数範囲を使う
         
         salinity_values = pd.to_numeric(df1['Salinity'], errors='coerce').dropna()
@@ -2786,7 +2743,7 @@ def sidebar_filter_and_display(
             max_df_sal = int(math.ceil(salinity_values.max()))
 
         
-        # 2. スライダーの設定
+        # Slider configuration / スライダー設定
         if min_df_sal == max_df_sal:
             slider_max_sal = max_df_sal + 1
         else:
@@ -2804,8 +2761,6 @@ def sidebar_filter_and_display(
             min_value=min_df_sal,
             max_value=slider_max_sal,
             value=default_sal,
-            # step=0.1,
-            # format="%0.1f"  # SyntaxErrorを避けるため %0.1f と書くか、不安ならformatを消す
         )
         
         df1 = df1[
@@ -2819,14 +2774,16 @@ def sidebar_filter_and_display(
             st.stop()
 
         
-        ##########################
-        # d18O filtering (2026/03/09 最終修正)
-        ##########################
+        # -------------------------------------------------------------------
+        # d18O filtering / d18Oの絞り込み
+        # -------------------------------------------------------------------
         
-        # 1. データの型を強制的に「数値」に洗い直す (重要：空欄を本物のNaNに変換)
+        # 1. Normalize values to numeric values and convert blanks to NaN.
+        #    数値へ正規化し、空欄をNaNへ変換する。
         df1['d18O'] = pd.to_numeric(df1['d18O'], errors='coerce')
         
-        # 2. スライダー用の最小・最大値を取得 (NaNを除外して計算)
+        # 2. Determine slider bounds from non-missing values.
+        #    NaNを除いた値からスライダー範囲を求める。
         d18o_data = df1['d18O'].dropna()
         if not d18o_data.empty:
             min_df_d18O = float(math.floor(d18o_data.min() * 10) / 10.0)
@@ -2834,7 +2791,7 @@ def sidebar_filter_and_display(
         else:
             min_df_d18O, max_df_d18O = -10.0, 10.0
 
-        # 3. スライダーの作成
+        # 3. Create the slider / スライダーを作成する
         sld_d18O_min, sld_d18O_max = st.slider(
             label='d18O (VSMOW)',
             min_value=float(min_df_d18O - 2.0),
@@ -2844,8 +2801,8 @@ def sidebar_filter_and_display(
             format="%.1f"
         )
 
-        # 4. フィルタリングの実行 (カッコの組み合わせを厳密に)
-        # 「範囲内」か「欠損値」のどちらかであれば残す
+        # 4. Apply the range while retaining missing values.
+        #    範囲内の値と欠損値を保持する。
         mask_d18O = (
             ((df1['d18O'] >= sld_d18O_min) & (df1['d18O'] <= sld_d18O_max))
             | (df1['d18O'].isna())
@@ -2856,52 +2813,34 @@ def sidebar_filter_and_display(
             st.warning("⚠️ no data found.")
             st.stop()
 
-        # ##########################
-        # # temperature filtering
-        # ##########################
-        # min_df_temp = float(df1['Temperature_degC'].min())
-        # max_df_temp = float(df1['Temperature_degC'].max())
-        
-        # sld_temp_min, sld_temp_max = st.slider(
-        #     label='Temperature (C)',
-        #     min_value=min_df_temp,
-        #     max_value=max_df_temp,
-        #     value=(min_df_temp, max_df_temp),
-        #     format="%.1f", # 小数点第1位まで表示する場合
-        #     step=0.1  # 1刻みにすることで整数のみの選択になる
-        # )
-
-        # # --- 水温の範囲 --- 修正済み
-        # df1 = df1[
-        #     ((df1['Temperature_degC'] >= sld_temp_min) & (df1['Temperature_degC'] <= sld_temp_max))
-        #     | df1['Temperature_degC'].isna()
-        # ]
-        
-        
-        ##########################
-        # Temperature filtering with integrated safety guards / 安全対策込みの水温フィルタリング
-        # (Prevents errors from missing values or non-numeric entries)
-        ##########################
-        # 1. 念のため数値型に変換
+        # -------------------------------------------------------------------
+        # Temperature filtering / 水温の絞り込み
+        # Non-numeric values are converted to NaN before the range is calculated.
+        # 数値以外はNaNへ変換してから範囲を計算する。
+        # -------------------------------------------------------------------
+        # 1. Normalize values to numeric values / 数値へ正規化する
         df1['Temperature_degC'] = pd.to_numeric(df1['Temperature_degC'], errors='coerce')
 
-        # 2. 有効な数値データだけを取り出す
+        # 2. Select valid numeric values / 有効な数値だけを取り出す
         temp_valid = df1['Temperature_degC'].dropna()
 
-        # 3. データが存在するかチェックして最小・最大を決める
+        # 3. Determine bounds, including a safe empty-data fallback.
+        #    空データ時の安全な既定値を含めて範囲を決める。
         if not temp_valid.empty:
             min_df_temp = float(temp_valid.min())
             max_df_temp = float(temp_valid.max())
         else:
-            # データが1件もない場合のデフォルト値 (エラー回避用)
+            # Safe fallback when no valid temperature is available.
+            # 有効な水温がない場合の安全な既定値。
             min_df_temp, max_df_temp = 0.0, 40.0
 
-        # 4. 万が一、minとmaxが同じ値（データが1種類だけ）だとスライダーが壊れるので微調整
+        # 4. Expand a single-value range so the slider remains valid.
+        #    値が一つだけの場合は、スライダーが有効になるよう範囲を広げる。
         if min_df_temp == max_df_temp:
             min_df_temp -= 0.1
             max_df_temp += 0.1
 
-        # 5. スライダー作成
+        # 5. Create the slider / スライダーを作成する
         sld_temp_min, sld_temp_max = st.slider(
             label='Temperature (C)',
             min_value=min_df_temp,
@@ -2911,7 +2850,8 @@ def sidebar_filter_and_display(
             step=0.1
         )
 
-        # 6. フィルタリングの実行（NaNは救う）
+        # 6. Apply the range while retaining missing values.
+        #    範囲内の値と欠損値を保持する。
         df1 = df1[
             ((df1['Temperature_degC'] >= sld_temp_min) & (df1['Temperature_degC'] <= sld_temp_max))
             | df1['Temperature_degC'].isna()
@@ -2986,21 +2926,20 @@ def sidebar_filter_and_display(
         )
         submitted = submit_top or submit_bottom
         
-    # ----------------サイドバーここまで------------------------
+    # -------------------------------------------------------------------
+    # Sidebar form complete / サイドバーフォーム終了
+    # -------------------------------------------------------------------
     
     
     
     
 
-    ##############################################################################
-    # --- DATA SELECTION METRICS (Part 1) ---
-    # 選択データ統計表示 1
-    ##############################################################################
-    # --- バリデーション ---
-    #df1が空になっているかどうかを確認する
+    # -------------------------------------------------------------------
+    # Data-selection status / 選択データの状態
+    # -------------------------------------------------------------------
+    # Validate the filtered result / 絞り込み結果を検証する
     df_empty = df1.empty
 
-    # st.write(df_empty)
     data_found_num = str(len(df1["Dataset"]))
     uploaded_filtered_count = 0
     if uploaded_dataset_label is not None and "Dataset" in df1.columns:
@@ -3009,12 +2948,10 @@ def sidebar_filter_and_display(
         )
 
     
-    # バリデーション処理
-    if df_empty:  #データが無かったとき
+    if df_empty:
         st.warning('no data found')
-        # 条件を満たないときは処理を停止する
         st.stop()
-    else: #データがあったとき
+    else:
         if uploaded_dataset_label is not None:
             st.write(
                 f"{data_found_num} data found "
@@ -3028,36 +2965,14 @@ def sidebar_filter_and_display(
         
 
 
-    ##############################################################################
-    # --- DATA SELECTION METRICS (Part 2) --- (simple)
-    ##############################################################################
-    # with st.expander("selected data", expanded=False):
-    #     month_disp = ", ".join(map(str, sorted(selected_months))) if selected_months else "None"
-    #     st.write(f':green[YEAR]:{sld_year_min}-{sld_year_max}, :green[MONTH]:[{month_disp}], '
-    #              f':green[Lon]:{sld_lon_min}-{sld_lon_max}, :green[Lat]:{sld_lat_min}-{sld_lat_max}, '
-    #              f':green[Depth]:{sld_depth_min}-{sld_depth_max}, :green[Sal]:{sld_sal_min}-{sld_sal_max}')
-    #     st.write(':green[Selected Data (Cruise)]', list(selected_cruise))
-    #     st.write(':green[Selected Data (detail)]', df1["Transect"].value_counts().to_dict())
-        
-    #     for lbl, col, dcm in [("d18O _ave", "d18O", 3), ("Sal_ave", "Salinity", 2), ("Temp_ave", "Temperature_degC", 2)]:
-    #         c1, c2, c3, c4 = st.columns(4)
-    #         with c2: st.write(f'{lbl}: {round(np.nanmean(df1[col]), dcm)}')
-    #         with c3: st.write(f'stdev: ± {round(np.nanstd(df1[col]), dcm)}')
-
-
-
-    ##############################################################################
-    # --- DATA SELECTION METRICS (Part 3) --- (original)
-    ##############################################################################
+    # -------------------------------------------------------------------
+    # Filtered-data report / 絞り込みデータのレポート
+    # -------------------------------------------------------------------
 
     selected_row = "Transect"
 
-    #列の要素を表示
+    # Count rows by transect for the report / レポート用にTransect別の行数を数える
     d_select_add2 = df1[selected_row].value_counts().to_dict()
-    # d_select_add2_sum = df1[selected_row].count().sum()
-    # print('要素と出現数:', d_select_add2)
-    # print('要素と出現数:', d_select_add2_sum)
-    # print('---------------')
                         
     with st.expander("📊 Details and statistics of filtered data", expanded=False):
         # 月を複数選択した場合は、表示・レポート・図タイトルで使いやすい文字列へ整形する
@@ -3114,18 +3029,12 @@ def sidebar_filter_and_display(
             key_prefix="sidebar_filtered_data",
         )
                 
-    ##############################################################################
-
-    
-
-
-    ##############################################################################
-    # RETURN ALL PROCESSED VARIABLES
-    # 最後にすべての変数を網羅して返す（呼び出し側との順序不整合に注意）
-    ##############################################################################
+    # -------------------------------------------------------------------
+    # Returned filter settings / 返却するフィルター設定
+    # -------------------------------------------------------------------
     return (
         df1,                   # フィルタリング後のデータフレーム
-        # --- フィルタリング条件（後で表示や計算に使う用） ---
+        # Filter settings for subsequent display and calculation / 後の表示・計算に使うフィルター設定
         sld_year_min, sld_year_max, 
         selected_months, 
         sld_lon_min, sld_lon_max, 
@@ -3137,38 +3046,3 @@ def sidebar_filter_and_display(
         selected_cruise, 
         submitted                        # フォームの送信状態
     )
-
-
-
-
-    """
-    # -------------------------------------------------------------------------
-    # MAIN SCRIPT IMPLEMENTATION: One-stop Filtering & Sidebar Execution
-    # ---- メインの各ぺーじのスクリプトでは以下のコードで呼び出すだけ -----------
-    # -------------------------------------------------------------------------
-    """
-    
-    # Utilizing envgeo_utils for integrated filtering and sidebar UI generation.
-    # envgeo_utils を使って一括フィルタリングとサイドバー生成
-    # import envgeo_utils
-    
-    
-    # Execute the function and unpack the filtered results.
-    # The variables are returned in the exact order defined in the utility module.
-
-
-    
-    # # 関数の呼び出し
-    # # すべての変数を順番通りに受け取り
-    
-    # (df1, 
-    #  sld_year_min, sld_year_max, 
-    #  selected_months, 
-    #  sld_lon_min, sld_lon_max, 
-    #  sld_lat_min, sld_lat_max, 
-    #  sld_depth_min, sld_depth_max, 
-    #  sld_sal_min, sld_sal_max, 
-    #  sld_d18O_min, sld_d18O_max, 
-    #  sld_temp_min, sld_temp_max, 
-    #  selected_cruise,
-    #  submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)

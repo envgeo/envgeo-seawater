@@ -2,28 +2,42 @@
 
 Japanese version: [TODO_Japanese.md](TODO_Japanese.md)
 
-This file records development notes that should not be forgotten during local
-cleanup and refactoring. Items here can be moved into README, documentation, or
-GitHub issues when they become stable enough.
+This file is a historical and forward-looking development backlog. Some items
+have been completed in 1.3.4; use the release checklist and stable publication
+notes for current release decisions. Items here can be moved into README,
+documentation, or GitHub issues when they become stable enough.
 
 As a general project policy, keep user-facing UI text, README files, manuals,
 testing guides, release notes, and major development policies available in both
 English and Japanese. Keep this file aligned with `TODO_Japanese.md`.
 
-## Priority Roadmap
+## Current v1.3.4 release work
 
-Updated: 2026-09-23
+Use `docs/release_checklist.md` as the operational checklist. Complete the
+following work before creating a public tag.
+
+1. Finish the public-content review: root documents, data/assets, stable-page
+   boundaries, and the planned bilingual static documentation website.
+2. Complete the manual release checks in the supported Python 3.10 and 3.12
+   environments, including pages, filtering, user data, map behaviour, and
+   offline degradation where applicable.
+3. Finalize `paper.md` / `paper.bib` wording and data provenance records;
+   create `CITATION.cff` without a DOI until Zenodo issues one.
+4. From a clean tagged stable checkout, rebuild the wheel and record its commit
+   ID, Python version, dependency resolution, SHA-256, and CI evidence.
+5. Create the GitHub Release, archive it with Zenodo, then add the issued DOI
+   consistently to citation, README, manuscript, and release records.
+
+Do not begin MapLibre migration, cross-application core extraction, or broad
+refactoring as part of the 1.3.4 release.
+
+## Future development roadmap (after v1.3.4)
+
+Updated: 2026-10-03
 
 Work in this order to avoid repeating page-level changes.
 
-1. Complete the compatibility patch releases.
-   - Finish manual checks with Python 3.10 / Streamlit 1.42 / Plotly 5.24 and
-     Python 3.12 / Streamlit 1.63 / Plotly 5.24.
-   - Check Plotly selection, Cartopy maps, forms, uploads/downloads, Vertical
-     Section, and Earthquake Simple/Advanced interactions.
-   - Fix only reproducible compatibility problems and add focused tests.
-   - Treat Seawater 1.3.2 and Earthquake 0.3.2 as the current local release boundary; complete the remaining visual checks before any public release/tag.
-2. Migrate maps from Mapbox to MapLibre.
+1. Migrate maps from Mapbox to MapLibre.
    - Inventory shared and page-specific Mapbox usage.
    - Convert one representative page while still using Plotly 5.24.
    - Move reusable map behavior into shared helpers.
@@ -31,22 +45,22 @@ Work in this order to avoid repeating page-level changes.
      Python 3.10 / Streamlit 1.63 / Plotly 7.
    - Review native `st.plotly_chart` selection as a replacement for
      `streamlit-plotly-events`.
-3. Build the shared user-data core.
+2. Build the shared user-data core.
    - Add pure, tested CSV/XLSX loading, column auto-detection and manual mapping,
      validation, quality flags, d-excess, source labels, and memory-only state.
    - Keep Streamlit widgets separate from the reusable data-processing logic.
-4. Roll user-data overlay plotting out to active individual pages.
+3. Roll user-data overlay plotting out to active individual pages.
    - Start with T-S, Salinity-d18O, Mapping, and Depth Profile.
    - Continue with Custom Parameter Plot, Interactive Visualizers, and Vertical
      Section after the first pages are stable.
    - Keep Correlation Overview as an archive display and exclude it from new
      feature work.
-5. Consolidate the public application and documentation.
+4. Consolidate the public application and documentation.
    - Decide the final Integrated Visualizer role and which individual pages are
      public, advanced, beta, local-only, or retired.
    - Complete English/Japanese UI review, help text, manuals, screenshots,
      installation documentation, packaging, and the JOSS resubmission checklist.
-6. Apply final source-code polish after the features and public structure are stable.
+5. Apply final source-code polish after the features and public structure are stable.
    - Review `envgeo_utils.py` section by section without changing scientific or
      user-visible behavior.
    - Standardize section headings, spacing, function ordering, and comment style.
@@ -117,7 +131,7 @@ Do not try to complete this distribution work and a large shared-core split
 change. First stabilize an application distribution path; then extract shared
 core pieces in small, independently verified steps.
 
-### Seawater / Earthquake shared-core extraction
+### Future shared-core extraction (not part of the Seawater release)
 
 Long term, do not merge the two applications into one large application.
 Instead, extract only shared capabilities incrementally into `envgeo4d` (or an
@@ -131,16 +145,14 @@ and scientific calculations in each application.
   coastline layer construction.
 - `envgeo4d/seawater`: seawater aliases, valid ranges, d-excess, and
   oceanographic figure requirements and quality rules.
-- `envgeo4d/earthquake`: catalog schemas, depth/magnitude rules, USGS or other
-  acquisition, and earthquake-specific quality rules.
 
 Start with the 50 m / 110 m coastline CSV assets and their loading, caching,
 resolution validation, licence/attribution metadata, and tests. Then extract
 Map controls/layout and shared longitude/map helpers, followed by a generic
 upload/validation model. The common layer owns external-service configuration
 and safe local fallbacks, not domain-specific scientific interpretation. Do not
-remove an application's existing local assets or functions until both
-applications have migrated and passed screen-level checks. Never accept an
+remove a future adopting application's existing local assets or functions
+until it has migrated and passed screen-level checks. Never accept an
 unknown column name solely through speculative matching: display the mapping
 and allow explicit user correction.
 `docs/integrated_visualizer_strategy.md` remains the detailed source of truth
@@ -153,9 +165,8 @@ Date adopted: 2026-09-22
 Treat offline operation as a long-term core requirement for EnvGeo-Seawater.
 After the required Python dependencies and data have been installed locally,
 users should be able to perform the principal data search, filtering, analysis,
-and visualization workflows without an internet connection. EnvGeo-Earthquake
-may continue to require internet access for USGS catalog retrieval, but the
-Seawater core must not depend on the availability of external services.
+and visualization workflows without an internet connection. The Seawater core
+must not depend on the availability of external services.
 
 A representative use case is immediate shipboard quality control and
 exploration. Research vessels may have limited, unstable, or unavailable
@@ -242,12 +253,13 @@ Documentation policy:
 - Improve the content of the existing English and Japanese Markdown manuals
   first: installation, quick start, page workflows, user-data import, quality
   control, troubleshooting, testing, contribution, and support information.
-- Use MkDocs as the leading candidate for a future standalone documentation
-  site on GitHub Pages. Sphinx is not currently necessary for this
+- Before the stable public release, create a bilingual, figure-supported
+  documentation website as static HTML in the repository and publish it with
+  GitHub Pages. Use the reviewed Markdown manuals as the content source; the
+  website must not introduce separate, unverified instructions.
+- MkDocs is the leading implementation candidate because it can generate the
+  static HTML site from Markdown. Sphinx is not currently necessary for this
   Markdown-centered, user-facing Streamlit project.
-- Introduce MkDocs after the manual structure is reasonably stable. A generated
-  website should organize good documentation rather than replace missing
-  content.
 - Add API reference pages for the stable public functions in the future shared
   core (`envgeo4d` / `envgeo_utils`), especially data loading, validation,
   quality flags, d-excess, region presets, and export helpers. Do not attempt to
@@ -289,9 +301,62 @@ JOSS note:
 
 ## High Priority
 
-### Claude review follow-ups
+### EnvGeo Data dataset scope and source presentation
+
+Keep the currently published Kodama et al. (2024) dataset distinct from
+future datasets while establishing a clear long-term data model.
+
+- Define `EnvGeo Data` as the top-level collection for seawater isotope and
+  hydrographic datasets analyzed using harmonized procedures in the Ishimura
+  Laboratory.
+- Describe the currently available Kodama et al. (2024) collection accurately:
+  extensive multi-year observations primarily from the East China Sea and the
+  Japan Sea.
+- When the corresponding research outputs are public, add the Pacific-side
+  and broader northwestern-Pacific datasets as individually identified
+  collection members. Do not expose unpublished data details, counts, or
+  sampling locations beforehand.
+- Keep every member's publication, DOI, geographic scope, acquisition and
+  transformation provenance, version, citation, and terms of use separate;
+  `EnvGeo Data` is an umbrella label, not a replacement for source citations.
+- Refine the dataset selector and Source details after the data-model decision:
+  show `EnvGeo Data` separately from comparison datasets such as NASA GISS,
+  PAGES CoralHydro2k, and other cited external sources.
+- Update the Home page, README, manuals, source details, and English/Japanese
+  data documentation together. State that the harmonized collection is
+  intended to support rigorous cross-dataset comparison, without claiming that
+  unpublished collections are already available.
+
+### Future data-source configuration and loading
+
+When the dataset collection is next expanded or a bundled workbook name changes,
+centralize the data-source configuration without changing scientific content by
+default.
+
+- Keep the configuration after imports in a clearly labelled module-level
+  section, not before imports and not embedded in a loader function.
+- Define each published source once with its UI collection, workbook path,
+  `Dataset` display label, citation/provenance identifier, and any applicable
+  sheet information.
+- Make `load_isotope_data()` select and read only the workbooks required for
+  the active collection; do not load every bundled workbook on the first
+  request when a smaller selection is sufficient.
+- Move fixed bundled coastline filenames to the same configuration area when
+  that map-asset configuration is revised.
+- Before changing labels, explicitly review the distinction between the
+  Japan Sea collection, Around Japan comparison data, global external data,
+  and the future EnvGeo Data umbrella. In particular, confirm that each
+  workbook's assigned `Dataset` display label matches its intended UI group.
+- Treat this as a focused, tested data-configuration change. Do not combine it
+  with new scientific transformations, provenance changes, or broad refactoring.
+
+### Historical code-review record and future refactoring ideas
 
 Date added: 2026-09-17
+
+Status (2026-10-03): the low-risk cleanup and the page-by-page source review
+relevant to v1.3.4 are complete. The proposed helpers below are post-release
+ideas, not requirements for the current release.
 
 Current status:
 - Claude review comments were checked against the current codebase.
@@ -334,7 +399,11 @@ Planned direction:
   with an explicit loader override or injected data object so multi-user
   behavior is easier to reason about.
 
-JOSS/package follow-ups from the full-file review:
+Historical JOSS/package findings from the full-file review:
+
+CI, package metadata, and `requirements-dev.txt` are now in place. Treat the
+remaining manuscript, citation, tagged-release, and DOI work as the current
+release tasks listed at the top of this file.
 - Add research-impact citations to `paper.md` and `paper.bib`, including Aono,
   Sakamoto, and Kuroki studies that used seawater d18O data.
 - Add at least one figure/screenshot to the JOSS paper.
@@ -347,13 +416,18 @@ JOSS/package follow-ups from the full-file review:
 - Create `requirements-dev.txt` for pytest-related development dependencies.
 - Revisit strict `==` dependency pins after the Streamlit 1.6x migration test.
 
-### JOSS readiness audit follow-up
+### Historical JOSS readiness audit follow-up
 
 Date added: 2026-09-19
 
-An external review identified four critical release items. The review counted
-four test files and about 46 tests, but the current project has five
-`test_*.py` files and 60 tests. `envgeo_utils.py` is currently about 78 KB.
+This audit is retained as historical context. Its early test-file counts and
+module-size observations are not current measurements. CI and installable-wheel
+work are complete; use the current release section and `docs/release_checklist.md`
+for the remaining citation, release, and archival steps.
+
+An external review identified four critical release items. At that time, the
+review discussed four test files, about 46 tests, and an approximately 78 KB
+`envgeo_utils.py`; those figures are retained only as a snapshot of the review.
 
 Complete the critical items in dependency order:
 
@@ -364,8 +438,8 @@ Complete the critical items in dependency order:
    the DOI absent or clearly pending until Zenodo issues the final identifier.
 3. Add the canonical repository URL and software version to `paper.md`; complete
    the Availability wording and research-impact references before release.
-4. Finish the 1.3.2 compatibility checks and create the final tagged GitHub
-   release.
+4. Finish the then-current 1.3.2 compatibility checks and create the final
+   tagged GitHub release.
 5. Archive that release with Zenodo, then add the issued DOI consistently to
    `paper.md`, `CITATION.cff`, README citation guidance, and release records.
 
@@ -394,8 +468,8 @@ Planned direction:
   `envgeo_user_data.py` before expanding it to individual pages. Reuse existing
   `envgeo_utils.py` functions without continuing to enlarge that module.
 - Treat user-data upload support as a core EnvGeo utility, not only as a
-  seawater-specific feature. The same foundation should eventually support other
-  EnvGeo applications, such as earthquake and other geoscience visualizers.
+  seawater-specific feature. The same foundation may later support other
+  geoscience visualizers after independent review.
 - The shared workflow should handle CSV/XLSX reading, column-name
   auto-detection, manual column correction, required-column checks, d-excess
   calculation, quality flags, source labels, and session-only memory handling.
@@ -423,11 +497,13 @@ Planned direction:
   Keep its session-only data model, shared Data filtering, and clear division
   of responsibility from the specialist analysis pages while page 90 remains
   available during the migration.
-- [x] Replace the fixed legacy workbook with a configurable always-loaded local
-  user table. CSV/XLSX/XLS data from the Git-ignored
-  `local_data/user_data.xlsx` path or `ENVGEO_LOCAL_USER_DATA_PATH` are labeled
-  `User Excel data` and appended to every selected reference source. Browser
-  `Uploaded data` remain a separate session-only category.
+- [x] Replace the fixed legacy workbook with a configurable always-loaded user
+  table. The tracked, zero-value public sample at `local_data/user_data.xlsx`,
+  or an external CSV/XLSX/XLS selected with `ENVGEO_LOCAL_USER_DATA_PATH`, is
+  labeled `User Excel data` and appended to every selected reference source.
+  Researchers may edit the local workbook or choose an external file, but must
+  restore the zero-value sample before committing or public synchronization.
+  Browser `Uploaded data` remain a separate session-only category.
 
 Notes:
 - Uploaded user data should remain in memory only and should not be saved to the
@@ -455,7 +531,6 @@ Current status:
   scikit-learn 1.9.1, and gsw 3.6.23.
 - `pip check` reports no broken requirements.
 - EnvGeo-Seawater tests: 57 passed.
-- EnvGeo-Earthquake tests: 9 passed and 4 skipped.
 - The Seawater Home page starts successfully with Streamlit 1.63 at
   `http://localhost:8503` and returns HTTP 200.
 - The current `requirements.txt` allows Streamlit 1.42-1.63 while retaining
@@ -465,7 +540,6 @@ Current status:
 Remaining checks:
 - Visually test representative Seawater pages, including Plotly selection,
   Cartopy mapping, file upload/download, forms, and Vertical Section tools.
-- Visually test the Earthquake Simple and Advanced pages.
 - The repeated Pandas future-option and Streamlit full-width deprecation
   warnings have been resolved with shared compatibility helpers.
 - Follow the Plotly 5.24-to-MapLibre strategy recorded in
@@ -563,7 +637,7 @@ compatibility has been designed and tested.
 ```
 assets/
   geospatial/       ← coastline CSVs + Natural Earth land shapefile
-  bathymetry/       ← GEBCO data (currently under data_beta/)
+  bathymetry/       ← GEBCO data (currently under bathymetry/)
   metadata/         ← source records, licences, checksums for bundled assets
 ```
 
@@ -571,7 +645,7 @@ assets/
 
 - `coastline/` — 50m and 110m coastline CSV files + `natural_earth_50m_land/`
   (land mask for static Cartopy maps on page 32; bundled 2026-09-23)
-- `data_beta/` — GEBCO bathymetry (used by Vertical Section page 53)
+- `bathymetry/` — GEBCO bathymetry (used by Vertical Section page 53)
 
 Keep Natural Earth land (static map land mask) and GEBCO (bathymetry / section
 analysis) separated and in their current locations until the asset loader and

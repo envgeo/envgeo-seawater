@@ -1,5 +1,7 @@
 # Citation and License Plan
 
+[日本語版](citation_and_license_plan_Japanese.md)
+
 This is a release-readiness checklist and provenance record for
 EnvGeo-Seawater. It does not replace verification of source licences or legal
 advice. Complete the applicable items before a public GitHub release, Zenodo
@@ -17,12 +19,27 @@ archive, Streamlit deployment, or JOSS submission.
 - A dependency's open-source licence does not by itself grant redistribution
   rights for its data products.
 
+## Current data-distribution scope
+
+All current `dataset/*.xlsx` workbooks remain included under the project's
+documented scholarly-use decision. Preserve the source citation, DOI or
+canonical source where available, access date, and project-side transformation
+record for each workbook; do not describe third-party records as
+project-owned. This is the project’s current distribution decision, not a
+general claim that citation alone grants reuse rights. See
+[`dataset_redistribution_audit.md`](dataset_redistribution_audit.md) and
+[`provenance_inventory.md`](provenance_inventory.md) for the file-level
+records and conditions for reassessment.
+
 ## Release checklist
 
 ### Project and release
 
-- [ ] Add `CITATION.cff` with author, title, repository URL, version, release
-      date, and DOI after Zenodo archival.
+- [x] Added `CITATION.cff` with author, title, repository URL, version, and
+      the documented 1.3.4 release-candidate date. It intentionally has no DOI
+      before archival publication; see `release_metadata_draft.md`.
+- [ ] Replace the candidate date with the final tag date and add the versioned
+      DOI after the Zenodo archive has been created.
 - [ ] Replace the provisional README citation with the versioned DOI citation.
 - [ ] Tag the release and preserve its dependency lock/requirements record.
 - [ ] Add a `LICENSE` notice for the project and a third-party notices document
@@ -31,7 +48,8 @@ archive, Streamlit deployment, or JOSS submission.
 ### Scientific data
 
 - [ ] For every file in `dataset/`, record its source publication/data DOI,
-      dataset version, retrieval date, licence or reuse permission, and any
+      dataset version, retrieval date, stated licence or terms where
+      available, required citation, documented scholarly-use decision, and any
       filtering, column normalization, or aggregation applied by this project.
 - [ ] Keep CoralHydro2k, NASA GISS, Kodama et al., and each regional source
       individually traceable; do not rely only on a collective README list.
@@ -45,18 +63,20 @@ archive, Streamlit deployment, or JOSS submission.
 
 ### Map and geospatial assets
 
-- [ ] Retain the Natural Earth credit, “Made with Natural Earth
-      (https://www.naturalearthdata.com/)”. Natural Earth data are public
-      domain; the bundled land shapefile provenance and checksums are recorded
-      in `coastline/natural_earth_50m_land/LICENSE_OR_SOURCE.md`.
+- [ ] Retain the project’s chosen Natural Earth credit, “Made with Natural
+      Earth (https://www.naturalearthdata.com/)”, in the documented
+      provenance and relevant outputs. Natural Earth data are public domain;
+      the bundled land shapefile provenance and checksums are recorded in
+      `coastline/natural_earth_50m_land/LICENSE_OR_SOURCE.md`.
 - [ ] Cite the GEBCO 2025 Grid in Vertical Section outputs and documentation:
       `GEBCO Compilation Group (2025) GEBCO 2025 Grid,
       doi:10.5285/37c52e96-24ea-67ce-e063-7086abc05f29`.
 - [ ] Describe `GEBCO_2025_6min.nc` as a derived, downsampled product and
       preserve the script and parameters used to create it.
-- [ ] Before release, correct and verify the GEBCO terms note: the official
-      terms place the grid in the public domain, permit commercial use, require
-      attribution, and state that it is not for navigation. See
+- [ ] Recheck the GEBCO terms at the tagged release. The official terms place
+      the grid in the public domain, permit commercial use, require
+      attribution, prohibit misleading endorsement claims, and state that it
+      is not for navigation. See
       https://www.gebco.net/data-products/gridded-bathymetry/terms-of-use
 
 ### Methods and software
@@ -70,7 +90,7 @@ archive, Streamlit deployment, or JOSS submission.
       29(3), 9–13, doi:10.5670/oceanog.2016.66.
 - [ ] Acknowledge Streamlit and Plotly as core framework and interactive
       visualization software, with versions used for the release. Their
-      existing entries in `paper_revised.bib` can be reused for papers.
+      entries in `paper.bib` can be reused for papers.
 - [ ] Record Cartopy, Matplotlib, Folium, NumPy, pandas, SciPy,
       scikit-learn, openpyxl, and other runtime dependencies with versions and
       licences in third-party notices. Cite a package or method in scientific
@@ -87,9 +107,11 @@ archive, Streamlit deployment, or JOSS submission.
 
 ## Current known follow-ups
 
-- The README already lists major isotope datasets and Natural Earth, but should
-  add concise GEBCO, TEOS-10/GSW, cmocean, Streamlit, and Plotly acknowledgements.
-- `docs/geospatial_assets.md` currently describes GEBCO as non-commercial;
-  update it to match the official terms above before public release.
-- `paper_revised.bib` already contains Streamlit, Plotly, and cmocean entries;
-  add and verify TEOS-10/GSW and GEBCO entries when preparing the paper.
+- README files now name the roles of GEBCO, TEOS-10/GSW, cmocean, Streamlit,
+  Plotly, and Natural Earth. This concise acknowledgement does not replace the
+  source-specific citation, provenance record, or future third-party notices.
+- `docs/geospatial_assets.md` already records the current GEBCO terms. Recheck
+  that wording and the source citation at the tagged release.
+- `paper.bib` contains verified entries for Streamlit, Plotly, cmocean,
+  TEOS-10/GSW, and the GEBCO 2025 Grid. Recheck each citation at the tagged
+  release if the referenced software, data version, or manuscript scope changes.

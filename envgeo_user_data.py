@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Shared Streamlit controls for memory-only uploaded user data.
+"""Shared Streamlit controls for memory-only uploaded user data.
 
-Maintainer: Toyoho Ishimura, Kyoto University
-Last updated: 2026-09-22
+Browser uploads remain in the current Streamlit session and are not written by
+this module to local or server storage.
+
+ブラウザからのアップロードは現在のStreamlit session内だけで扱い、この
+モジュールはローカルまたはserver storageへ保存しません。
 """
 
 import math
@@ -16,6 +18,9 @@ import streamlit as st
 import envgeo_utils
 
 
+# =============================================================================
+# Upload-control constants / アップロード操作の定数
+# =============================================================================
 COLUMN_NOT_ASSIGNED = "Not assigned"
 MARKER_OPTIONS = {
     "Diamond": "D",
@@ -46,8 +51,14 @@ BROWSER_UPLOAD_NOTE = (
 )
 
 
+# =============================================================================
+# Upload and column controls / アップロードと列対応の操作
+# =============================================================================
 def render_upload_panel(page_key, requirement_text):
-    """Load or reuse shared session data without changing reference filters."""
+    """Load or reuse shared session data without changing reference filters.
+
+    参照データの絞り込みを変えず、session内のアップロードデータを扱う。
+    """
     uploaded_df = envgeo_utils.get_uploaded_data()
 
     with st.sidebar.expander("Uploaded data overlay", expanded=False):
@@ -120,7 +131,10 @@ def render_column_controls(
     page_key,
     optional_roles=None,
 ):
-    """Render editable assignments for required and optional plot roles."""
+    """Render editable assignments for required and optional plot roles.
+
+    必須・任意の図示列について、編集可能な対応付けを表示する。
+    """
     optional_roles = optional_roles or {}
     missing_roles = [
         target for target in required_roles.values() if target not in uploaded_df.columns
@@ -203,14 +217,24 @@ def render_column_controls(
 
 
 def _without_required_roles(uploaded_df, required_columns):
+    """Return uploaded data without incomplete required plotting roles.
+
+    必須の図示列が不足する場合に、その列を除いたデータを返す。
+    """
     return uploaded_df.drop(
         columns=[column for column in required_columns if column in uploaded_df],
         errors="ignore",
     )
 
 
+# =============================================================================
+# Uploaded-data map overlays / アップロードデータの地図オーバーレイ
+# =============================================================================
 def uploaded_map_hover_text(uploaded_df):
-    """Build bounded hover text while retaining arbitrary uploaded fields."""
+    """Build bounded hover text while retaining arbitrary uploaded fields.
+
+    任意のアップロード列を保ちつつ、長さを制限したhover表示を作る。
+    """
     excluded_columns = {
         envgeo_utils.QUALITY_FLAG_COLUMN,
         envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
@@ -253,7 +277,10 @@ def render_marker_style_controls(
     marker_size_min=10,
     marker_size_step=10,
 ):
-    """Render common uploaded-marker controls and optional line controls."""
+    """Render common uploaded-marker controls and optional line controls.
+
+    アップロード点の共通marker設定と、必要時のline設定を表示する。
+    """
     controls_disabled = uploaded_df.empty
     with st.sidebar.expander("Uploaded marker style", expanded=False):
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
@@ -368,7 +395,10 @@ def add_uploaded_map_overlay(
     color_range=None,
     show_nodata=True,
 ):
-    """Add uploaded locations as frontmost outlined Scattermapbox traces."""
+    """Add uploaded locations as frontmost outlined Scattermapbox traces.
+
+    アップロード位置を前面の縁取り付きScattermapbox traceとして追加する。
+    """
     required = {"Longitude_degE", "Latitude_degN"}
     if uploaded_df.empty or not required.issubset(uploaded_df.columns):
         return fig, 0
@@ -389,7 +419,11 @@ def add_uploaded_map_overlay(
     outline_size = marker_size + 2.0 * float(style["outline_width"])
     hover_text = uploaded_map_hover_text(map_df)
 
-    # --- カラーバー共有の判定（アウトライン前に確定させる）---
+    # -------------------------------------------------------------------------
+    # Shared-color eligibility / 既存カラーバーの共有可否
+    # Determine this before creating the outline trace. /
+    # outline traceを作る前に共有可否を確定する。
+    # -------------------------------------------------------------------------
     use_shared_color = (
         style["color_mode"] == "Use current colorbar when possible"
         and color_column
@@ -408,7 +442,10 @@ def add_uploaded_map_overlay(
 
     show_fixed = fixed_color_rows.any() and (not use_shared_color or show_nodata)
 
-    # アウトライン：実際に描画される行のみ対象にする
+    # -------------------------------------------------------------------------
+    # Outline rows / 縁取りを描画する行
+    # Include only rows that will be rendered. / 実際に描画される行だけを含める。
+    # -------------------------------------------------------------------------
     if use_shared_color:
         outline_rows = valid_color | (fixed_color_rows & show_fixed)
     else:
@@ -431,7 +468,9 @@ def add_uploaded_map_overlay(
             )
         )
 
-    # カラーバー共有トレース
+    # -------------------------------------------------------------------------
+    # Shared-color trace / カラーバー共有trace
+    # -------------------------------------------------------------------------
     if use_shared_color and valid_color.any():
         fig.add_trace(
             go.Scattermapbox(
@@ -455,7 +494,10 @@ def add_uploaded_map_overlay(
             )
         )
 
-    # 固定カラートレース（show_nodataがFalseのとき非表示）
+    # -------------------------------------------------------------------------
+    # Fixed-color trace / 固定色trace
+    # Hide no-data rows when requested. / 指定時はno-data行を表示しない。
+    # -------------------------------------------------------------------------
     if show_fixed:
         fill_color = style["color"]
         fig.add_trace(
