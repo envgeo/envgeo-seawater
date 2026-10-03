@@ -21,8 +21,6 @@ EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic da
 4. Explore maps, T–S space, depth profiles, and other views.
 5. Optionally upload a CSV or XLSX file in pages that provide the user-data workflow; uploaded data remain in the current session.
 
-![Example geographic selection map](assets/images/selection_map.png)
-
 ## Choose a guide
 
 ### Start here
@@ -38,16 +36,12 @@ EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic da
 - [Isotope & Hydrographic Mapping](manual/32_isotope_hydrographic_mapping.html)
 - [Temperature–Salinity Diagram](manual/34_ts_diagram.html)
 
-![Example temperature–salinity diagram](assets/images/ts_diagram.png)
-
 ### Analytical views
 
 - [Salinity–δ18O Relationship](manual/31_salinity_d18o.html)
 - [Custom Parameter Plot](manual/35_custom_parameter_plot.html)
 - [Depth Profile](manual/37_depth_profile.html)
 - [Vertical Section Visualizer](manual/53_vertical_section.html)
-
-![Example 3D/4D view](assets/images/4d_d18O.png)
 
 ## Data, citation, and support
 
@@ -56,6 +50,42 @@ EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic da
 - [Offline and degraded-network operation](offline_operation_log.html)
 - [Testing and supported environment](testing.html)
 - [Stable-release scope](stable_release_publication_notes.html)
+
+## Examples
+
+The following figures illustrate the range of supported exploratory views.
+
+### Global isotope distribution
+
+This contour map shows global seawater δ18O using the integrated reference
+datasets (approximately 50,000 records). Contour interpolation is intended to
+help explore broad oceanographic patterns and basin-scale variability.
+
+![Global isotope distribution contour map](assets/images/contour_map.png)
+
+### Temperature–salinity diagram
+
+The T–S view overlays approximate σ0 reference contours. Practical Salinity is
+used as an approximation of Absolute Salinity, and in-situ temperature as an
+approximation of Conservative Temperature; the contours are reference guides,
+not a substitute for a full TEOS-10 calculation.
+
+![Temperature–salinity diagram](assets/images/ts_diagram.png)
+
+### 4D visualization
+
+Longitude, latitude, depth, and isotope information can be explored together
+to inspect spatial gradients and vertical structure.
+
+![4D visualization](assets/images/4d_d18O.png)
+
+### Linked interactive selection
+
+Selection in T–S space can be linked to sampling locations on the map, helping
+users examine the geographic context of a selected water-mass subset.
+
+![Geographic selection map](assets/images/selection_map.png)
+![Selected locations linked from T–S space](assets/images/selection_ts.png)
 
 ## Scope of this website
 

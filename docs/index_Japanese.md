@@ -21,8 +21,6 @@ EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー�
 4. 地図、T–S空間、深度プロファイルなどを探索します。
 5. 対応ページではCSVまたはXLSXをuploadできます。uploadしたデータは、そのsession内だけで扱われます。
 
-![地理的選択の例](assets/images/selection_map.png)
-
 ## 操作ガイドを選ぶ
 
 ### まずはこちら
@@ -38,16 +36,12 @@ EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー�
 - [同位体・水文マッピング](manual_Japanese/32_isotope_hydrographic_mapping.html)
 - [水温–塩分図](manual_Japanese/34_ts_diagram.html)
 
-![水温–塩分図の例](assets/images/ts_diagram.png)
-
 ### 解析ビュー
 
 - [塩分–δ18O 関係](manual_Japanese/31_salinity_d18o.html)
 - [カスタムパラメータプロット](manual_Japanese/35_custom_parameter_plot.html)
 - [深度プロファイル](manual_Japanese/37_depth_profile.html)
 - [鉛直断面可視化](manual_Japanese/53_vertical_section.html)
-
-![3D/4D表示の例](assets/images/4d_d18O.png)
 
 ## データ・引用・サポート
 
@@ -56,6 +50,35 @@ EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー�
 - [オフライン・通信不安定時の動作](offline_operation_log_Japanese.html)
 - [テストと対応環境](testing_Japanese.html)
 - [安定版の公開範囲](stable_release_publication_notes_Japanese.html)
+
+## 図の例
+
+以下の図は、安定版で利用できる探索的な表示例です。
+
+### 全球同位体分布
+
+統合した参照データセット（約50,000件）を用いた全球海水δ18Oのコンター図です。コンター補間は、海洋の大きな分布パターンや海盆スケールの変動を探索するための補助として用います。
+
+![全球同位体分布のコンター図](assets/images/contour_map.png)
+
+### 水温–塩分図
+
+T–S図には近似的なσ0参照等値線を重ねます。実用塩分を絶対塩分の近似、現場水温を保存温度の近似として用いるため、等値線は完全なTEOS-10計算の代替ではなく、参照のためのガイドです。
+
+![水温–塩分図](assets/images/ts_diagram.png)
+
+### 4D可視化
+
+経度、緯度、水深、同位体情報を組み合わせ、空間勾配と鉛直構造をあわせて探索できます。
+
+![4D可視化](assets/images/4d_d18O.png)
+
+### 連動するインタラクティブ選択
+
+T–S空間で選択したデータ群を地図上の採水位置と連動させ、選択した水塊の地理的な文脈を確認できます。
+
+![地理的選択地図](assets/images/selection_map.png)
+![T–S空間の選択と連動した採水位置](assets/images/selection_ts.png)
 
 ## 本サイトの対象範囲
 
