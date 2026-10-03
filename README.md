@@ -5,10 +5,11 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [日本語版 README](https://github.com/envgeo/envgeo-seawater/blob/main/README_Japanese.md)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10--3.12%20tested-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
-**Current release-candidate version:** 1.3.4 (2026-09-28)
+**Current stable release:** 1.3.4 (2026-10-03)
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -191,8 +192,8 @@ and remaining interactive checks.
 
 ### Install the published package
 
-Once v1.3.4 has been published to PyPI, install and launch the application
-without cloning the source repository:
+Install and launch the published application without cloning the source
+repository:
 
 ```bash
 python -m pip install envgeo-seawater
@@ -488,15 +489,20 @@ The data model can accommodate additional datasets after their sources,
 provenance, and redistribution status have been recorded. Reusable
 visualization, asset-resolution, and distribution components may support future
 related EnvGeo applications. These are future directions, not functions or
-datasets included in the v1.3.4 release candidate.
+datasets included in the stable v1.3.4 release.
 
 ---
 
 ## Citation
 
-Ishimura, T. (2026).  
-EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data.  
-Archival citation details will be added after release.
+Ishimura, T. (2026).
+
+*EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.4). Zenodo.
+https://doi.org/10.5281/zenodo.23117784
+
+The DOI badge above resolves to the all-versions concept DOI
+(`10.5281/zenodo.23117783`). Cite the version DOI above for work using v1.3.4.
+Please also cite the original providers of every dataset used in an analysis.
 
 ---
 

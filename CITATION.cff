@@ -3,13 +3,16 @@ message: "If you use EnvGeo-Seawater, please cite the software and the original 
 type: software
 title: "EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data"
 version: 1.3.4
-date-released: 2026-09-28
+date-released: 2026-10-03
 authors:
   - family-names: Ishimura
     given-names: Toyoho
     orcid: "https://orcid.org/0000-0001-9708-3743"
     affiliation: "Graduate School of Human and Environmental Studies, Kyoto University, Japan"
 license: MIT
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23117784"
 repository-code: "https://github.com/envgeo/seawater_map"
 url: "https://github.com/envgeo/seawater_map"
 keywords:

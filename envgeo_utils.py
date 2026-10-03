@@ -18,7 +18,7 @@ Maintainer: Toyoho Ishimura, Kyoto University
 # Version metadata / バージョン情報
 # =============================================================================
 APP_VERSION = "1.3.4"
-APP_VERSION_DATE = "2026-09-28"
+APP_VERSION_DATE = "2026-10-03"
 APP_VERSION_LABEL = f"{APP_VERSION} ({APP_VERSION_DATE})"
 
 # Backward-compatible alias used by older pages.

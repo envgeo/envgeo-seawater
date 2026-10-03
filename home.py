@@ -212,9 +212,9 @@ def render_update_history() -> None:
     """Render the concise public update history. / 簡潔な公開更新履歴を表示する。"""
     st.markdown(
         """
-### Version 1.3.4 (2026-09-28)
+### Version 1.3.4 (2026-10-03)
 
-- Prepared the installable release candidate: package metadata, application and page version labels now agree on 1.3.4.
+- Released the installable stable version through PyPI and the v1.3.4 GitHub Release; the archived version DOI is <https://doi.org/10.5281/zenodo.23117784>.
 - Verified the test suite, wheel build, and isolated wheel installation on Python 3.10 and 3.12 in CI.
 - Retained the complete current cited dataset collection with documented provenance and source-to-workbook transformations.
 - Published figure-supported English and Japanese user guides through GitHub Pages; the Manual and Japanese tabs link to the stable guide.
@@ -276,7 +276,10 @@ def main() -> None:
     st.subheader("An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data")
     st.write("Interactive 3D/4D Seawater Isotope and Hydrographic Database – Japan Marginal Seas and Global Ocean")
     st.write(":blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]")
-    st.write(f"Version {envgeo_utils.APP_VERSION_LABEL}")
+    st.markdown(
+        f"Version {envgeo_utils.APP_VERSION_LABEL} · "
+        "[DOI: 10.5281/zenodo.23117784](https://doi.org/10.5281/zenodo.23117784)"
+    )
     render_tab_style()
     envgeo_utils.render_card_tab_style()
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(

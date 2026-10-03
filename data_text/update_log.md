@@ -2,16 +2,25 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## Unreleased maintenance for v1.3.4
+## Version 1.3.4 — Stable release (2026-10-03)
 
-This section records work completed after v1.3.3 and before the formal v1.3.4
-release. The short summary below describes the current release-candidate
-scope; the following notes retain dated technical and documentation history.
+- Released the reviewed stable commit `948b384` as Git tag `v1.3.4` and as the
+  GitHub Release **EnvGeo-Seawater v1.3.4**.
+- Published the installable package `envgeo-seawater` 1.3.4 on
+  [PyPI](https://pypi.org/project/envgeo-seawater/1.3.4/) after a separate
+  [TestPyPI](https://test.pypi.org/project/envgeo-seawater/1.3.4/) check.
+  Both the wheel and source distribution passed `twine check`.
+- Repeated installation from the public PyPI index on a clean Apple Silicon
+  macOS Conda Python 3.12 environment. After installing the documented
+  conda-forge geospatial prerequisites, `pip check` passed and
+  `envgeo-seawater` started successfully.
+- Archived the GitHub Release in Zenodo as
+  [record 23117784](https://zenodo.org/records/23117784). Cite the fixed
+  version DOI, <https://doi.org/10.5281/zenodo.23117784>, for work using
+  v1.3.4. The all-versions concept DOI is
+  <https://doi.org/10.5281/zenodo.23117783>.
 
-### Current release-candidate summary
-
-- Set version 1.3.4 as the release candidate. GitHub Actions builds and checks
-  isolated wheels with Python 3.10 and 3.12.
+### Release-preparation history
 - Defined the stable public scope as the 10 Seawater pages in `seawater_map`.
   Development Pages 90 and 91, and local diagnostic Page 99, are excluded from
   the stable release, GitHub Release, and Zenodo archive.

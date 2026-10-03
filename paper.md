@@ -146,9 +146,9 @@ with `envgeo-seawater`.
 # Availability
 
 The stable public source repository is
-https://github.com/envgeo/seawater_map. Version 1.3.4 is the current release
-candidate. A tagged GitHub Release and Zenodo archival DOI will be created only
-after the release checklist has been completed; no DOI is claimed here.
+https://github.com/envgeo/seawater_map. Version 1.3.4 was released on 3 October
+2026 and archived in Zenodo at https://doi.org/10.5281/zenodo.23117784. The
+all-versions concept DOI is https://doi.org/10.5281/zenodo.23117783.
 
 # Example Use Case
 

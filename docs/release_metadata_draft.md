@@ -19,8 +19,11 @@ been tagged and archived.
 | Affiliation | Graduate School of Human and Environmental Studies, Kyoto University, Japan |
 | License | MIT |
 | Source repository | <https://github.com/envgeo/seawater_map> |
-| Release date | Set from the final Git tag; do not reuse the release-candidate date automatically. |
-| Version DOI | Not yet assigned. Add only after the Zenodo archive is published. |
+| Release date | 2026-10-03 |
+| Release commit | `948b384455480f06b7a9b6b0a7a3e53af7135e35` |
+| Version DOI | <https://doi.org/10.5281/zenodo.23117784> |
+| Concept DOI (all versions) | <https://doi.org/10.5281/zenodo.23117783> |
+| Zenodo record | <https://zenodo.org/records/23117784> |
 
 ## Short description
 

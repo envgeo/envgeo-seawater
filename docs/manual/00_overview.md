@@ -22,8 +22,8 @@ using results.
 
 ## Local Installation
 
-Once the v1.3.4 package is published to PyPI, install and start the local app
-without cloning the source repository:
+Install and start the published local app without cloning the source
+repository:
 
 ```bash
 python -m pip install envgeo-seawater

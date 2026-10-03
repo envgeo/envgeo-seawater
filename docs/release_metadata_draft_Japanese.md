@@ -18,8 +18,11 @@ tag日、clean buildしたwheelのchecksum、Zenodoのversion DOIは、review済
 | Affiliation | Graduate School of Human and Environmental Studies, Kyoto University, Japan |
 | License | MIT |
 | Source repository | <https://github.com/envgeo/seawater_map> |
-| Release date | 最終Git tagから設定する。Release candidateの日付を自動で再利用しない。 |
-| Version DOI | 未取得。Zenodo archive公開後にだけ追記する。 |
+| Release date | 2026-10-03 |
+| Release commit | `948b384455480f06b7a9b6b0a7a3e53af7135e35` |
+| Version DOI | <https://doi.org/10.5281/zenodo.23117784> |
+| Concept DOI（全version） | <https://doi.org/10.5281/zenodo.23117783> |
+| Zenodo record | <https://zenodo.org/records/23117784> |
 
 ## 短い説明文
 

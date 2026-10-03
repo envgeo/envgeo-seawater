@@ -3,10 +3,11 @@
 EnvGeo-Seawater は、海水の安定同位体・水文データを探索するためのインタラクティブ可視化プラットフォームです。
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10--3.12%20tested-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
-**現在のRelease候補バージョン:** 1.3.4（2026-09-28）
+**現在の安定版:** 1.3.4（2026-10-03）
 
 **海水同位体・水文データを、地図・断面・T-S図・3D/4D表示で探索する研究用Webアプリです。**
 
@@ -172,7 +173,7 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 
 ### 公開パッケージの導入
 
-v1.3.4をPyPIで公開した後は、ソースリポジトリをcloneせずに次のように導入・起動できます。
+公開パッケージは、ソースリポジトリをcloneせずに次のように導入・起動できます。
 
 ```bash
 python -m pip install envgeo-seawater
@@ -425,16 +426,20 @@ EnvGeo-SeawaterがソフトウェアとしてのアーカイブDOIを取得す�
 
 データモデルは、出典、来歴、再配布上の位置づけが記録された後に、追加データセットを統合できるように
 設計しています。再利用可能な可視化、資産パス解決、配布の構成要素は、将来の関連EnvGeoアプリケーションを
-支えることも想定しています。これらは将来の方向性であり、v1.3.4 Release candidateに含まれる機能や
+支えることも想定しています。これらは将来の方向性であり、安定版v1.3.4に含まれる機能や
 データセットではありません。
 
 ---
 
 ## 引用
 
-Ishimura, T. (2026).  
-EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data.  
-正式なアーカイブ公開後に引用情報を更新します。
+Ishimura, T. (2026).
+
+*EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.4). Zenodo.
+https://doi.org/10.5281/zenodo.23117784
+
+上部の DOI バッジは全版共通の concept DOI（`10.5281/zenodo.23117783`）を示します。v1.3.4を
+利用した成果では、上記の version DOI を引用してください。解析で利用した各元データ提供者も併せて引用してください。
 
 ---
 
