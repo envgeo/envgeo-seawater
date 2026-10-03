@@ -733,6 +733,12 @@ def main():
     with tab_3d:
         figure, count = create_3d(displayed_df, x_column, y_column, z_column, color_column, style, reverse_z, palette_label)
         st.caption(f"{count:,} valid rows plotted using {x_column}, {y_column}, and {z_column}.")
+        st.caption(
+            "3D camera controls: drag to rotate. Use the Plotly toolbar at the upper "
+            "right to switch rotation, pan, zoom, or reset the camera. Modifier keys "
+            "(Shift, Control, or Command) can change drag behavior; details vary by "
+            "browser and operating system."
+        )
         st.plotly_chart(figure, **envgeo_utils.stretch_width_kwargs(st.plotly_chart))
         download_figure(figure, "integrated_data_3d_4d", "quick_visualizer_download_3d")
     with tab_map_2d:
@@ -782,6 +788,12 @@ def main():
                 st.warning(f"Geographic 3D view could not be created: {exc}")
             else:
                 st.caption(f"{count:,} valid longitude-latitude-depth rows plotted.")
+                st.caption(
+                    "3D camera controls: drag to rotate. Use the Plotly toolbar at the upper "
+                    "right to switch rotation, pan, zoom, or reset the camera. Modifier keys "
+                    "(Shift, Control, or Command) can change drag behavior; details vary by "
+                    "browser and operating system."
+                )
                 st.plotly_chart(figure, **envgeo_utils.stretch_width_kwargs(st.plotly_chart))
                 download_figure(figure, "integrated_data_geographic_3d", "quick_visualizer_download_geographic")
     with tab_data:

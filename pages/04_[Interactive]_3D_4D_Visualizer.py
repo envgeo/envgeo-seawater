@@ -1274,6 +1274,12 @@ def main():
         target_fig.update_coloraxes(cmin=r_3d[0], cmax=r_3d[1])
 
     # Render selected 3D/4D figure / 選択した3D/4D図を描画する。
+    st.caption(
+        "3D camera controls: drag to rotate. Use the Plotly toolbar at the upper "
+        "right to switch rotation, pan, zoom, or reset the camera. Modifier keys "
+        "(Shift, Control, or Command) can change drag behavior; details vary by "
+        "browser and operating system."
+    )
     st.plotly_chart(
         target_fig,
         key=plot_key,

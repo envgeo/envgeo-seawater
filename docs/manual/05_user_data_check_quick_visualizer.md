@@ -22,6 +22,14 @@ shared Data filtering, and simple 2D--4D exploration.
 6. Download filtered CSV data or interactive figures where the relevant
    control is provided.
 
+## 3D Camera Controls
+
+The **3D / 4D** and **3D Map** tabs use the same camera controls as the main
+3D/4D visualizer: drag to rotate and use the Plotly toolbar at the upper right
+to switch rotation, pan, zoom, or reset the camera. Holding **Shift**,
+**Control**, or **Command** can change drag behavior; the exact behavior
+depends on the browser and operating system.
+
 ## Upload Handling
 
 The application recognizes common English and unambiguous Japanese column

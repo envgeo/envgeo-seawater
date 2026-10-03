@@ -17,6 +17,14 @@ fourth variable shown by color. It includes hydrographic and map-depth views.
 6. Inspect the 3D/4D figure and linked sampling-location map.
 7. Download interactive HTML or current-view CSV data where provided.
 
+## 3D Camera Controls
+
+- Drag within a 3D figure to rotate the view.
+- Use the Plotly toolbar at the upper right of the figure to switch rotation,
+  pan, zoom, or reset the camera to its initial view.
+- Holding **Shift**, **Control**, or **Command** can change drag behavior. The
+  exact behavior depends on the browser and operating system.
+
 ## Standard Views
 
 - Salinity--δ18O--depth, colored by temperature (Fig. 1)
