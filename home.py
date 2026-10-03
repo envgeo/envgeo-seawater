@@ -20,6 +20,17 @@ import envgeo_utils
 # =============================================================================
 BASE_DIR = Path(__file__).resolve().parent
 
+
+# =============================================================================
+# Online documentation / オンライン利用ガイド
+# =============================================================================
+# The stable site is the canonical public manual. Development clones may use a
+# clone-specific URL when they publish the same reviewed guide for testing.
+# 安定版siteを正規の公開マニュアルとする。開発cloneでは、同じ確認済みガイドを
+# テスト公開する場合にclone固有のURLへ差し替えられる。
+ONLINE_MANUAL_EN_URL = "https://envgeo.github.io/envgeo-seawater/"
+ONLINE_MANUAL_JA_URL = "https://envgeo.github.io/envgeo-seawater/index_Japanese.html"
+
 st.set_page_config(
     page_title="EnvGeo Seawater Isotope Database",
     initial_sidebar_state="auto",
@@ -396,6 +407,13 @@ def main() -> None:
     # -------------------------------------------------------------------------
     with tab4:
         st.header("User Manual")
+        st.markdown(
+            "**For a detailed, figure-based, page-by-page guide, visit the "
+            f"[English user guide]({ONLINE_MANUAL_EN_URL}) or the "
+            f"[日本語利用ガイド]({ONLINE_MANUAL_JA_URL}).**"
+        )
+        st.divider()
+        st.subheader("Quick guide / 簡易ガイド")
         manual_file = resolve_path("data_text", "manual.md")
         render_markdown_file(manual_file, f"Information: {manual_file.name} was not found.")
         manual_japanese_file = resolve_path("data_text", "manual_Japanese.md")
@@ -404,14 +422,6 @@ def main() -> None:
                 manual_japanese_file,
                 f"情報: {manual_japanese_file.name} が見つかりません。",
             )
-        st.markdown(
-            "For page-by-page guidance, see the "
-            "[full user manual on GitHub](https://github.com/envgeo/seawater_map/tree/main/docs/manual)."
-        )
-        st.markdown(
-            "ページ別の詳しい説明は、GitHubの"
-            "[詳細ユーザーマニュアル](https://github.com/envgeo/seawater_map/tree/main/docs/manual_Japanese)を参照してください。"
-        )
         st.video(
             'https://envgeo.h.kyoto-u.ac.jp/wp-content/uploads/2024/10/envgeo20241016-HD-720p.mp4',
             format="video/mp4",
@@ -451,6 +461,11 @@ def main() -> None:
     # -------------------------------------------------------------------------
     with tab6:
         st.header("EnvGeo-Seawaterについて")
+        st.markdown(
+            "**図付きの詳細なページ別操作手順は、"
+            f"[オンライン日本語利用ガイド]({ONLINE_MANUAL_JA_URL})をご覧ください。**"
+        )
+        st.divider()
         japanese_file = resolve_path("data_text", "japanese.md")
         render_markdown_file(japanese_file, f"情報: {japanese_file.name} が見つかりません。")
         st.divider()
