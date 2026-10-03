@@ -251,6 +251,8 @@ pytest
 
 公開前チェックリストや開発メモなど、READMEより詳しい補助ドキュメントは `docs/` にまとめます。
 
+- [図付きオンライン利用ガイド](https://envgeo.github.io/seawater_map/): 安定版向けの英日ページ別操作手順を公開しています。
+
 - `docs/release_checklist.md`  
   ローカル確認、Streamlit公開、GitHubリリース、Zenodoアーカイブ前の確認リスト。
 
@@ -258,7 +260,7 @@ pytest
   pytest 群の内容、現在のテスト範囲、限界、今後の拡充予定の説明。
 
 - `docs/manual_Japanese/`  
-  各ページの詳細マニュアルを今後整備するための日本語マニュアル骨組み。
+  オンライン利用ガイドで公開する、日本語ページ別マニュアルのMarkdown原稿。
 
 ---
 

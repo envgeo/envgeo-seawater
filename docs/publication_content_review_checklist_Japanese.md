@@ -150,7 +150,9 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
 - [x] `code_guide.md` / `code_guide_Japanese.md` — source／module・ページ一覧、
   安定版／開発版の境界、Page 80のアーカイブ方針、Page 90/91/99の範囲、文書化基準、
   英日リンクを確認済み（焦点テスト23件成功）。
-- [ ] 残るレビュー文書：本チェックリスト。
+- [x] `publication_content_review_checklist*` — 2026-10-03に最終文書精査を完了した。
+  公開向け表現、履歴文書の境界、英日link、現行Release candidateの範囲、GitHub Pagesの状態、
+  引用key、機微情報の走査を確認した。Releaseの実行は別のchecklist段階で扱う。
 - [x] `citation_and_license_plan.md` / `citation_and_license_plan_Japanese.md`
   — 現行の学術利用データ範囲、プロジェクトと第三者データ所有の区別、
   `CITATION.cff`とZenodo DOIの段階的な順序、Natural Earthの帰属方針、現在のGEBCO利用条件、

@@ -143,17 +143,18 @@ pytest
 
 ## 9. Documentation
 
-- [ ] Confirm `README.md` reflects the current public-facing state.
-- [ ] Confirm `README_Japanese.md` reflects the current public-facing state.
-- [ ] Confirm `data_text/update_log.md` includes the latest unreleased changes.
-- [ ] Confirm `data_text/update_log_Japanese.md` includes the latest unreleased changes.
-- [ ] Confirm beta and local-development pages are clearly described.
-- [ ] Confirm citation and data-source guidance are understandable.
-- [ ] Create or update the bilingual, figure-supported static documentation
-  website from the reviewed manuals; verify that it describes the stable public
-  scope only and contains no private paths, data, tokens, or internal records.
-- [ ] Publish the documentation website through GitHub Pages and verify the
-  public URLs, navigation, images, and links.
+- [x] Confirmed `README.md` reflects the current public-facing state.
+- [x] Confirmed `README_Japanese.md` reflects the current public-facing state.
+- [x] Confirmed `data_text/update_log.md` includes the latest unreleased changes.
+- [x] Confirmed `data_text/update_log_Japanese.md` includes the latest unreleased changes.
+- [x] Confirmed beta, archive, and local-development pages are clearly described.
+- [x] Confirmed citation and data-source guidance are understandable.
+- [x] Created the bilingual, figure-supported static documentation website from
+  the reviewed manuals. It documents the stable public scope only and contains
+  no private paths, data, tokens, or internal records.
+- [x] Published the documentation website through GitHub Pages and verified the
+  public URLs, navigation, images, and links:
+  <https://envgeo.github.io/envgeo-seawater/>.
 - [ ] Update the laboratory website after the stable URL, release version,
   public-page scope, documentation URL, and Zenodo DOI are final. Keep its
   description aligned with the stable `seawater_map` release: approximately
@@ -189,17 +190,36 @@ pytest
   - Depth Profile opens.
   - Integrated Visualizer beta opens if included.
 
-## 12. Zenodo / DOI Preparation
+## 12. Package-index publication (PyPI)
 
+- [ ] Build and run `twine check` on the intended final distribution artifact.
+- [ ] Upload the intended artifact to TestPyPI and install it in a new macOS
+      environment. Use conda-forge only for compiled geospatial prerequisites
+      where required, then install this package with `pip`.
+- [ ] Confirm the TestPyPI installation can launch the application and repeat
+      the short smoke test.
+- [ ] After the final tag is verified, publish the same reviewed artifact to
+      PyPI as `envgeo-seawater`, using Trusted Publishing or a secure manual
+      upload; never commit a PyPI token.
+- [ ] Repeat the clean macOS `pip install envgeo-seawater` and launch check.
+- [ ] A conda-forge recipe/feedstock is a useful later improvement, but is not
+      a v1.3.4 blocker once the PyPI path is verified.
+
+## 13. Zenodo / DOI Preparation
+
+- [ ] Enable the `seawater_map` GitHub repository in Zenodo before creating the
+      GitHub Release, so that the tagged release is automatically archived.
 - [ ] Confirm the GitHub release is final before creating the Zenodo archive.
 - [ ] Confirm title, authors, affiliations, license, and description.
 - [ ] Confirm the archived version matches the release tag.
 - [ ] Record a wheel SHA-256 only for a wheel rebuilt from the clean tagged
       checkout. CI wheel artifacts are inspection evidence, not release or
       Zenodo distribution files.
-- [ ] Record the DOI in the README and citation files after the archive is created.
+- [ ] Record the version DOI and concept DOI in the README and citation files
+      after the archive is created. This follow-up documentation commit is not
+      part of the immutable tagged archive unless a DOI was reserved in advance.
 
-## 13. JOSS-Oriented Follow-Up
+## 14. JOSS-Oriented Follow-Up
 
 - [ ] Prepare a separate `docs/joss_checklist.md` before resubmission.
 - [ ] Confirm pytest coverage is meaningful and not only superficial.

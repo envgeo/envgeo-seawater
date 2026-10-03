@@ -8,7 +8,7 @@ release approval or a statement of the stable public scope.
 
 For the public, task-oriented documentation entry point, start with the
 [User Guide](index.md). It links only to the supported stable workflows and is
-the source directory for the planned GitHub Pages website.
+the source directory for the published [GitHub Pages website](https://envgeo.github.io/envgeo-seawater/).
 
 ## Current Documents
 
@@ -79,7 +79,7 @@ the source directory for the planned GitHub Pages website.
 
 - `manual/` / `manual_Japanese/`  
   Page-by-page bilingual user manuals for the stable public workflows. They are
-  the content source for the planned static documentation website and may also
+  the content source for the published static documentation website and may also
   be reused for laboratory-web guidance.
 
 ## Planned Documents

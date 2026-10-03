@@ -79,6 +79,9 @@ interactive interface remains the primary analysis route.
 
 The interactive web interface is implemented using Streamlit, which provides an accessible platform for exploratory analysis. The application supports multiple visualization types, including map-based exploration, temperature–salinity diagrams, depth profiles, and regression analyses.
 
+A figure-supported, page-by-page user guide is available in English and
+Japanese at <https://envgeo.github.io/seawater_map/>.
+
 Oceanographic colour scales follow the cmocean design guidance [@thyng2016].
 T–S diagrams include approximate $\sigma_0$ reference contours calculated
 with the Gibbs SeaWater (GSW) implementation of TEOS-10 [@mcdougall2011],

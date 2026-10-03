@@ -6,7 +6,7 @@
 [English version](README.md)
 
 利用者向けの操作案内は、サポート対象の安定版workflowだけへ案内する
-[利用ガイド](index_Japanese.md)から始める。このページは、予定するGitHub Pages websiteの入口でもある。
+[利用ガイド](index_Japanese.md)から始める。このページは、公開済みの[GitHub Pages website](https://envgeo.github.io/envgeo-seawater/)の入口でもある。
 
 ## 現在の文書
 
@@ -64,7 +64,7 @@
   オフライン／通信不安定時の地図動作、自己完結HTML出力、既知の制約、検証範囲。
 
 - `manual/` / `manual_Japanese/`
-  安定版の公開ワークフローを対象とした、ページ別の英日ユーザーマニュアル。今後作成する静的
+  安定版の公開ワークフローを対象とした、ページ別の英日ユーザーマニュアル。公開済みの静的
   ドキュメントサイトの内容正本であり、研究室Webサイトの案内にも再利用できます。
 
 ## 今後作成する文書

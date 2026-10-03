@@ -217,6 +217,7 @@ def render_update_history() -> None:
 - Prepared the installable release candidate: package metadata, application and page version labels now agree on 1.3.4.
 - Verified the test suite, wheel build, and isolated wheel installation on Python 3.10 and 3.12 in CI.
 - Retained the complete current cited dataset collection with documented provenance and source-to-workbook transformations.
+- Published figure-supported English and Japanese user guides through GitHub Pages; the Manual and Japanese tabs link to the stable guide.
 
 ### Post-v1.3.3 maintenance updates (2026-09-24)
 

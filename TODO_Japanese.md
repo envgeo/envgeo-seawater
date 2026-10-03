@@ -82,7 +82,7 @@ v1.3.3後に、UIや配布作業とは切り分けたレビュー可能な単位
 2. **インストール可能なアプリの基盤を作る。** `pyproject.toml`、パッケージデータ定義、実行場所に依存しない同梱資産のパス解決、必要なら `envgeo-seawater` の起動コマンドを導入する。目標は `pip install git+https://...` と、明確な起動手順で利用できる状態とする。この配布作業の一部として、閉域網・調査船向けに接続確認や外部サービスへの接続試行を起動時から抑止する明示的オフライン設定（例: `ENVGEO_OFFLINE=1`）を設計する。
 3. **再現可能な環境を配布する。** 正式にサポートするPython / Streamlit / Plotlyの組合せを決め、固定方針を見直した`requirements.txt`、開発用`requirements-dev.txt`、地理空間依存を含む`environment.yml`を整備する。MapLibre移行は、実装と対象バージョンでの視覚・操作確認が済んだ時点でこの基準へ反映する。
 4. **継続的検証とリリースを整える。** GitHub Actionsでpytestをpush/PRごとに実行し、`CITATION.cff`、タグ付きGitHub Release、Zenodoアーカイブ、DOIの一貫した反映を行う。
-5. **JOSS・利用者向け公開資料を仕上げる。** `paper.md`のURL・版・利用実績引用、ODVとの差別化、図、インストール・貢献・サポート文書を完成させる。PyPI / conda-forgeは、上記のパッケージと環境が安定した後に必要性を判断する。
+5. **JOSS・利用者向け公開資料を仕上げる。** `paper.md`のURL・版・利用実績引用、ODVとの差別化、図、インストール・貢献・サポート文書を完成させる。パッケージと環境はpackage index公開へ進める段階まで安定したため、JOSS再投稿前にTestPyPIとmacOSのclean environmentでのinstallation確認を行った上で、review済みversionをPyPIへ公開する。conda-forge feedstockは次段階の望ましい作業とし、macOSのgeospatial dependencyには当面conda-forgeを使用する。
 
 この配布作業と、共通コア（海岸線資産、データ読込、品質チェック、経度処理）の大規模な分離は同時に完了させようとしない。まずアプリとして動作する配布経路を固定し、共通コア化は小さく検証可能な単位で進める。
 

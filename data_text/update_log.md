@@ -26,6 +26,10 @@ scope; the following notes retain dated technical and documentation history.
 - Updated public Home text, English/Japanese manuals, dataset guidance,
   release checks, and code comments. Browser uploads remain session-only, and
   the bundled User Excel workbook remains a zero-row public sample.
+- Published bilingual, figure-supported user guides through GitHub Pages at
+  <https://envgeo.github.io/envgeo-seawater/>. Home now links directly to the
+  detailed guides from the Manual and Japanese tabs while retaining its short
+  in-app guide.
 
 ### Historical preparation notes
 

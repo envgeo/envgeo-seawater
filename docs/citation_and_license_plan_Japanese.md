@@ -36,6 +36,21 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
 - [ ] リリースタグを付け、対応する依存関係の記録を保存する。
 - [ ] プロジェクトの `LICENSE` と、再配布資産・必要なライセンス文をまとめた第三者通知文書を整備する。
 
+### Package indexでの公開（JOSS再投稿前）
+
+- [ ] review済みの安定版sourceから最終artifactをbuildし、distribution fileに対して
+      `twine check`を実行する。
+- [ ] そのartifactをTestPyPIへuploadし、新しいmacOS test environmentでinstallする。
+      必要なcompiled geospatial prerequisiteはconda-forgeから入れ、その後に`pip`で
+      EnvGeo-Seawaterをinstallする。
+- [ ] TestPyPI確認後、review済みの最終artifactをPyPIの`envgeo-seawater`として公開する。
+      PyPI Trusted Publishingまたは安全な手動uploadを使い、upload tokenをrepositoryへ
+      保存しない。
+- [ ] 新しいmacOS environmentで`pip install envgeo-seawater`を再現し、起動確認の結果を
+      release recordに記録する。
+- [ ] conda-forge recipe/feedstockはv1.3.4後の独立した改善作業とする。PyPIからの
+      installationが動作すれば、現releaseおよびJOSS再投稿のblockerとはしない。
+
 ### 科学データ
 
 - [ ] `dataset/` の各ファイルについて、元論文／データDOI、データ版、取得日、明示されている場合の

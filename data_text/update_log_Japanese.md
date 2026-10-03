@@ -20,6 +20,8 @@
   Vertical Sectionで引き続き利用し、開発用の生成スクリプトはwheelに含めない。
 - Home本文、英日manual、データ案内、Release確認、コードコメントを更新した。ブラウザuploadは
   セッション限定であり、同梱User Excel workbookはデータ行0件の公開sampleとして維持する。
+- 図付きの英日利用ガイドをGitHub Pagesで公開した：<https://envgeo.github.io/envgeo-seawater/>。
+  HomeのManual tabと日本語tabから詳細ガイドへ直接移動できるようにし、短いアプリ内ガイドも維持した。
 
 ### 準備作業の履歴
 

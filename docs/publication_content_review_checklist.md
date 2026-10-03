@@ -174,7 +174,11 @@ shared.
   inventory, stable/development boundary, Page 80 archive policy, Page 90/91/99
   scope, documentation convention, and English/Japanese links reviewed
   (23 focused tests passed).
-- [ ] Remaining review document: this checklist.
+- [x] `publication_content_review_checklist*` — completed the final document
+  pass on 2026-10-03: public wording, historical boundaries, bilingual links,
+  current release-candidate scope, GitHub Pages status, citation keys, and
+  sensitive-information scans were reviewed. Release execution remains a
+  separate checklist stage.
 - [x] `citation_and_license_plan.md` / `citation_and_license_plan_Japanese.md`
   — current scholarly-use dataset scope, project-versus-third-party ownership,
   staged `CITATION.cff`/Zenodo DOI sequence, Natural Earth attribution policy,

@@ -45,6 +45,21 @@ records and conditions for reassessment.
 - [ ] Add a `LICENSE` notice for the project and a third-party notices document
       covering redistributed assets and any required licence texts.
 
+### Package-index publication (before JOSS resubmission)
+
+- [ ] Build the intended final artifact from the reviewed stable source and run
+      `twine check` on the distribution files.
+- [ ] Upload that artifact to TestPyPI, then install it in a new macOS test
+      environment. Install compiled geospatial prerequisites from conda-forge
+      where needed, then install EnvGeo-Seawater through `pip`.
+- [ ] After the TestPyPI check succeeds, publish the reviewed final artifact as
+      `envgeo-seawater` on PyPI. Use PyPI Trusted Publishing or a secure manual
+      upload process; never store an upload token in the repository.
+- [ ] Reproduce a `pip install envgeo-seawater` installation and launch in a
+      new macOS environment; record the result in the release record.
+- [ ] Treat a conda-forge recipe/feedstock as a separate post-v1.3.4
+      improvement, not a blocker once the PyPI installation path works.
+
 ### Scientific data
 
 - [ ] For every file in `dataset/`, record its source publication/data DOI,

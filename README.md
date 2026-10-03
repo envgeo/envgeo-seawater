@@ -277,6 +277,8 @@ The current test suite and its limitations are described in `docs/testing.md`.
 
 Project checklists and longer development notes are kept under `docs/`.
 
+- [Figure-supported online user guide](https://envgeo.github.io/seawater_map/): public English and Japanese, page-by-page operating guidance for the stable release.
+
 - `docs/release_checklist.md`  
   Release and deployment checklist for local testing, Streamlit deployment,
   GitHub release preparation, and Zenodo archiving.
@@ -285,7 +287,7 @@ Project checklists and longer development notes are kept under `docs/`.
   Overview of the pytest suite, current coverage, limitations, and planned test expansion.
 
 - `docs/manual/`  
-  Page-by-page user manual skeletons for future detailed documentation and website reuse.
+  Source Markdown for the page-by-page manual published through the online user guide.
 
 ---
 

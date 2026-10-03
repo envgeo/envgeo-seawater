@@ -124,7 +124,11 @@ Use this sequence as the default.
 5. **Finish JOSS and user-facing release material.** Complete the URL, version,
    research-impact citations, ODV comparison, figures, installation,
    contribution, and support material in `paper.md` and user documentation.
-   Assess PyPI / conda-forge only after the package and environment are stable.
+   The package and environment are now stable enough for a package-index
+   release: publish the reviewed version to PyPI before JOSS resubmission,
+   after a TestPyPI and macOS clean-environment installation check. Treat a
+   conda-forge feedstock as a desirable follow-up; conda-forge remains the
+   current source for macOS geospatial dependencies.
 
 Do not try to complete this distribution work and a large shared-core split
 (coastline assets, loading, quality checks, and longitude handling) in the same
