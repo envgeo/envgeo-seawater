@@ -2,11 +2,11 @@
 
 EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hydrographic data.
 
-[日本語版 README](README_Japanese.md)
+[日本語版 README](https://github.com/envgeo/envgeo-seawater/blob/main/README_Japanese.md)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 
 **Current release-candidate version:** 1.3.4 (2026-09-28)
 
@@ -172,9 +172,9 @@ The bundled datasets are public source records or project-derived workbooks
 included under the project's documented scholarly-use distribution decision.
 This does not make third-party records project-owned or assert a general
 redistribution licence beyond the source-specific records. See
-[`docs/dataset_redistribution_audit.md`](docs/dataset_redistribution_audit.md),
-[`docs/provenance_inventory.md`](docs/provenance_inventory.md), and
-[`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).
+[`docs/dataset_redistribution_audit.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/dataset_redistribution_audit.md),
+[`docs/provenance_inventory.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/provenance_inventory.md), and
+[`docs/THIRD_PARTY_NOTICES.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/THIRD_PARTY_NOTICES.md).
 
 - Provided in a standardized format for immediate use
 
@@ -189,32 +189,46 @@ Compatibility checks currently cover **Python 3.10.15 / Streamlit 1.42** and
 baseline. See `docs/streamlit_migration.md` for the tested environment matrix
 and remaining interactive checks.
 
+### Install the published package
+
+Once v1.3.4 has been published to PyPI, install and launch the application
+without cloning the source repository:
+
+```bash
+python -m pip install envgeo-seawater
+envgeo-seawater
+```
+
 ### 💡 Special Note for macOS (Apple Silicon) Users:
-To avoid build errors with geospatial libraries, it is highly recommended to use **Conda** to install core dependencies before running pip:
+To avoid build errors with geospatial libraries, create a Conda environment and
+install the compiled geospatial prerequisites from conda-forge before installing
+the published package with pip:
 
 ```bash
 # 1. Create and activate environment
-conda create -n envgeo python=3.10
+conda create -n envgeo python=3.12
 conda activate envgeo
 
 # 2. Install pre-built geospatial binaries
-conda install -c conda-forge proj pyproj cartopy -y
+conda install -c conda-forge proj pyproj=3.6.1 cartopy=0.25.0 -y
 
-# 3. Install remaining requirements
-pip install -r requirements.txt
+# 3. Install and launch EnvGeo-Seawater
+python -m pip install envgeo-seawater
+envgeo-seawater
 ```
 
 ---
 
-## Quick Start
+## Source checkout (development)
 
 ```bash
 git clone https://github.com/envgeo/seawater_map.git
 cd seawater_map
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 streamlit run home.py
 ```
-Then open the local URL shown in the terminal (typically http://localhost:8501).
+Use this route only when developing, inspecting, or testing the source. Then
+open the local URL shown in the terminal (typically http://localhost:8501).
 
 ---
 
@@ -497,7 +511,7 @@ EnvGeo-Seawater enables multi-scale exploration of seawater isotope and hydrogra
 Spatial distribution of seawater δ18O at the global scale, based on integrated datasets (approximately 50,000 records).  
 Contour interpolation highlights large-scale oceanographic patterns and basin-scale variability.
 
-![Global map](images/contour_map.png)
+![Global map](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/contour_map.png)
 
 ---
 
@@ -506,7 +520,7 @@ Contour interpolation highlights large-scale oceanographic patterns and basin-sc
 Temperature–salinity (T–S) relationships with overlaid approximate σ0 reference contours (Practical Salinity ≈ Absolute Salinity; in-situ temperature ≈ Conservative Temperature).
 This visualization supports identification of water masses and examination of isotope–hydrography relationships.
 
-![TS diagram](images/ts_diagram.png)
+![TS diagram](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/ts_diagram.png)
 
 ---
 
@@ -515,7 +529,7 @@ This visualization supports identification of water masses and examination of is
 Multi-dimensional visualization of seawater isotope data, incorporating spatial coordinates and depth.  
 This allows exploration of vertical structure and spatial gradients simultaneously.
 
-![4D](images/4d_d18O.png)
+![4D](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/4d_d18O.png)
 
 ---
 
@@ -525,8 +539,8 @@ Linked visualization between T–S space and geographic location.
 Selected subsets in the T–S diagram are dynamically highlighted on the map, enabling intuitive interpretation of water mass origins.
 
 
-![](images/selection_map.png)
-![Highlight the corresponding sampling locations on the map.](images/selection_ts.png)
+![](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_map.png)
+![Highlight the corresponding sampling locations on the map.](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_ts.png)
 
 
 ---

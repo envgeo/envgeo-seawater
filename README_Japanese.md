@@ -4,7 +4,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 
 **現在のRelease候補バージョン:** 1.3.4（2026-09-28）
 
@@ -155,9 +155,9 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 同梱データは公開出典の記録、またはプロジェクトが記録した学術利用方針に基づく派生workbookです。
 これは第三者データをプロジェクト所有とするものでも、出典ごとの記録を超える一般的な再配布ライセンスを
 主張するものでもありません。詳細は
-[`docs/dataset_redistribution_audit_Japanese.md`](docs/dataset_redistribution_audit_Japanese.md)、
-[`docs/provenance_inventory_Japanese.md`](docs/provenance_inventory_Japanese.md)、
-[`docs/THIRD_PARTY_NOTICES_Japanese.md`](docs/THIRD_PARTY_NOTICES_Japanese.md)を参照してください。
+[`docs/dataset_redistribution_audit_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/dataset_redistribution_audit_Japanese.md)、
+[`docs/provenance_inventory_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/provenance_inventory_Japanese.md)、
+[`docs/THIRD_PARTY_NOTICES_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/THIRD_PARTY_NOTICES_Japanese.md)を参照してください。
 
 - アプリで直接利用できる標準化済み形式で提供
 - 未公表データや制限付きデータは含めない方針
@@ -170,34 +170,44 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 
 現在は **Python 3.10.15 / Streamlit 1.42** と **Python 3.12.14 / Streamlit 1.63** の両環境で互換性を確認し、Plotly 5.24をリリース基準として維持しています。検証環境の組合せと残りの対話操作確認は `docs/streamlit_migration_Japanese.md` を参照してください。
 
+### 公開パッケージの導入
+
+v1.3.4をPyPIで公開した後は、ソースリポジトリをcloneせずに次のように導入・起動できます。
+
+```bash
+python -m pip install envgeo-seawater
+envgeo-seawater
+```
+
 ### macOS Apple Silicon ユーザー向けメモ
 
-`pyproj` や `cartopy` などのビルドエラーを避けるため、macOS Apple Silicon 環境では、先に Conda で地理空間系ライブラリを入れる方法を推奨します。
+`pyproj` や `cartopy` などのビルドエラーを避けるため、macOS Apple Silicon環境では、Conda環境を作成し、先にconda-forgeから地理空間系ライブラリを導入してから、公開パッケージをpipで導入する方法を推奨します。
 
 ```bash
 # 1. 環境を作成して有効化
-conda create -n envgeo python=3.10
+conda create -n envgeo python=3.12
 conda activate envgeo
 
 # 2. geospatial 系ライブラリを conda-forge から入れる
-conda install -c conda-forge proj pyproj cartopy -y
+conda install -c conda-forge proj pyproj=3.6.1 cartopy=0.25.0 -y
 
-# 3. 残りの依存関係を入れる
-pip install -r requirements.txt
+# 3. EnvGeo-Seawaterを導入して起動する
+python -m pip install envgeo-seawater
+envgeo-seawater
 ```
 
 ---
 
-## クイックスタート
+## ソースチェックアウト（開発用）
 
 ```bash
 git clone https://github.com/envgeo/seawater_map.git
 cd seawater_map
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 streamlit run home.py
 ```
 
-ターミナルに表示されるローカルURLをブラウザで開きます。通常は次のURLです。
+この経路は、ソースの開発、確認、試験用です。ターミナルに表示されるローカルURLをブラウザで開きます。通常は次のURLです。
 
 ```text
 http://localhost:8501
@@ -436,7 +446,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 統合データセットに基づく全球スケールの海水 δ18O 分布です。コンター補間により、海盆規模の大きな分布パターンを確認できます。
 
-![Global map](images/contour_map.png)
+![Global map](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/contour_map.png)
 
 ---
 
@@ -444,7 +454,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 近似的な σ0 参照等値線（実用塩分 ≈ 絶対塩分；現場水温 ≈ 保存温度）を重ねた T-S 図です。水塊の識別や、同位体と水文構造の関係を調べるために利用できます。
 
-![TS diagram](images/ts_diagram.png)
+![TS diagram](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/ts_diagram.png)
 
 ---
 
@@ -452,7 +462,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 経度、緯度、水深、δ18O などの変数を組み合わせた多次元可視化です。空間勾配と鉛直構造を同時に探索できます。
 
-![4D](images/4d_d18O.png)
+![4D](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/4d_d18O.png)
 
 ---
 
@@ -460,8 +470,8 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 T-S 空間と地理的位置を連動させた可視化です。T-S図で選択したデータ群に対応する採水地点を地図上で確認できます。
 
-![](images/selection_map.png)
-![Highlight the corresponding sampling locations on the map.](images/selection_ts.png)
+![](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_map.png)
+![Highlight the corresponding sampling locations on the map.](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_ts.png)
 
 ---
 

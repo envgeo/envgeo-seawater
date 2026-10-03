@@ -193,6 +193,11 @@ pytest
 ## 12. Package-index publication (PyPI)
 
 - [ ] Build and run `twine check` on the intended final distribution artifact.
+- [ ] Inspect the TestPyPI project page for README rendering. Before the PyPI
+      upload, replace README links and image references that are relative to the
+      repository with durable absolute GitHub or GitHub Pages URLs as needed.
+      TestPyPI files are immutable; a broken relative link found there must be
+      corrected in the final source before the separate PyPI upload.
 - [ ] Upload the intended artifact to TestPyPI and install it in a new macOS
       environment. Use conda-forge only for compiled geospatial prerequisites
       where required, then install this package with `pip`.

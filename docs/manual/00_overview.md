@@ -20,6 +20,21 @@ using results.
 - Oceanography students
 - Users who want to compare local seawater data with curated reference datasets
 
+## Local Installation
+
+Once the v1.3.4 package is published to PyPI, install and start the local app
+without cloning the source repository:
+
+```bash
+python -m pip install envgeo-seawater
+envgeo-seawater
+```
+
+On macOS Apple Silicon, install `proj`, `pyproj`, and `cartopy` from
+conda-forge in a Python 3.12 Conda environment before the pip command. The
+[stable README](https://github.com/envgeo/seawater_map/blob/main/README.md)
+contains the complete platform-specific instructions.
+
 ## Basic Workflow
 
 1. Choose a page from the sidebar. For a one-time file, open **User Data Check

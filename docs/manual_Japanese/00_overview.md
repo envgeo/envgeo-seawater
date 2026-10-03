@@ -14,6 +14,17 @@ EnvGeo-Seawaterは、海水の安定同位体・水文データを探索する�
 - 海洋学を学ぶ学生
 - 自分の海水データを参照データセットと比較したいユーザー
 
+## ローカル導入
+
+v1.3.4パッケージをPyPIで公開した後は、ソースリポジトリをcloneせずに、次のようにローカルアプリを導入・起動できます。
+
+```bash
+python -m pip install envgeo-seawater
+envgeo-seawater
+```
+
+macOS Apple Siliconでは、pipコマンドの前に、Python 3.12のConda環境で`proj`、`pyproj`、`cartopy`をconda-forgeから導入してください。プラットフォーム別の完全な手順は[安定版README](https://github.com/envgeo/seawater_map/blob/main/README_Japanese.md)に記載します。
+
 ## 基本的な流れ
 
 1. サイドバーからページを選びます。一時的なファイルを使う場合は、**User Data Check & Quick Visualizer**でCSV/XLSXをアップロードします。ファイルは現在のブラウザセッション内だけで扱われます。

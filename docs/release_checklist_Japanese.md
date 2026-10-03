@@ -172,6 +172,10 @@ pytest
 ## 12. Package indexでの公開（PyPI）
 
 - [ ] 想定した最終distribution artifactをbuildし、`twine check`を実行する。
+- [ ] TestPyPI project pageでREADMEの表示を確認する。PyPI upload前に、repository内では
+      有効でもpackage index上では切れる相対link・画像参照を、必要に応じて永続的な
+      GitHubまたはGitHub Pagesの絶対URLへ置換する。TestPyPIの配布fileはimmutableなので、
+      そこで見つかった相対linkの不備は、別サービスであるPyPI upload前に最終sourceで修正する。
 - [ ] 想定artifactをTestPyPIへuploadし、新しいmacOS environmentでinstallする。
       必要なcompiled geospatial prerequisiteだけをconda-forgeから入れ、その後に
       `pip`で本packageをinstallする。

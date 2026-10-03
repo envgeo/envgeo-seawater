@@ -138,7 +138,10 @@ The software is implemented in Python using Streamlit [@streamlit] for the web i
 
 The bundled application data and assets occupy less than 30 MB. Local execution
 requires installation of the declared Python dependencies; wheel builds and
-isolated installs are verified in continuous integration.
+isolated installs are verified in continuous integration. The v1.3.4 release
+artifact is prepared for package-index distribution: once published, users can
+install it with `pip install envgeo-seawater` and start the local application
+with `envgeo-seawater`.
 
 # Availability
 
