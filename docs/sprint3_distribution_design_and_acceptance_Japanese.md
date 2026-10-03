@@ -27,8 +27,9 @@
 
 ## production package-dataの方針
 
-アプリモジュール、現在の公開12ページ、実行時の媒体・テキスト、海岸線、Natural Earth、
-GEBCO、ゼロ値User Excelテンプレート、診断ツール本体だけを収録する。
+アプリモジュール、サポート対象の安定版10ページ、実行時の媒体・テキスト、海岸線、Natural Earth、
+GEBCO、ゼロ値User Excelテンプレート、診断ツール本体だけを収録する。開発用source cloneには
+事前検証のためPage 90・91を残すが、wheelには収録しない。
 
 - `dataset/*.xlsx`の技術的な収録確認と再配布／公開判断を分離し、このpackage作業を理由に
   データを無断で除外・公開しない。
@@ -51,7 +52,7 @@ Sprint 3Cでは、system-site-packagesなし、user site-packagesなし、checko
 
 1. wheel metadataから宣言済みruntime依存関係を導入できる。
 2. import先がcheckoutではなく新規環境内である。
-3. 公開12ページが存在し、99ページと内部資料は存在しない。
+3. サポート対象の10ページが存在し、Page 90・91・99と内部資料は存在しない。
 4. Homeと代表的なPage 32、34、53が例外なく起動し、必要な同梱資産を読める。
 5. dataset workbook、海岸線CSV、Natural Earth sidecar、GEBCO、実行時媒体・テキスト、
    ゼロ値User Excelテンプレートを利用できる。
@@ -72,8 +73,8 @@ source treeとwheelステージング領域の外側とした。検証したwhee
 - `pip check`は依存関係破損なしだった。`pyproject.toml`のlicenseは移植性のある明示table形式を
   用い、Python 3.12 Apple Silicon向けwheelを選べる`pyproj==3.6.1`を宣言した。これにより、
   互換しないsource-onlyの最新版へ解決される状態を回避した。
-- 新規環境のインストール先からpackageを読み込み、公開12ページと診断ツールが存在し、99ページと
-  GEBCO生成scriptがないことを確認した。checkout外CWDから両console commandがStreamlit起動引数を
+- 新規環境のインストール先からpackageを読み込み、サポート対象の10ページと診断ツールが存在し、
+  Page 90・91・99とGEBCO生成scriptがないことを確認した。checkout外CWDから両console commandがStreamlit起動引数を
   受け付け、診断ツール本体もアプリ例外なしで実行した。
 - インストール済みファイルを使い、Home、Page 32、34、53をアプリ例外なしで実行した。個別ページには
   checkout互換のtop-level importが残るため、従来どおりlauncherが設定する互換import pathが必要である。

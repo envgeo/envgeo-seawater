@@ -34,9 +34,10 @@ not a release approval. The corresponding Japanese record is
 
 ## Production package-data policy
 
-Include application modules, the 12 current public pages, runtime media/text,
+Include application modules, the 10 supported stable pages, runtime media/text,
 coastline and Natural Earth assets, GEBCO, the zero-value User Excel template,
-and the diagnostic tool implementation.
+and the diagnostic tool implementation. The development source clone retains
+Pages 90 and 91 separately for pre-release testing, but the wheel excludes them.
 
 - Keep the technical inclusion of `dataset/*.xlsx` separate from any
   redistribution or public-release decision; do not silently exclude or
@@ -62,7 +63,8 @@ installs the final wheel, not the source tree.
 
 1. Wheel metadata installs declared runtime dependencies.
 2. Installed imports resolve under the fresh environment, not the checkout.
-3. All 12 public pages are present; page 99 and internal material are absent.
+3. All 10 supported pages are present; Pages 90, 91, 99, and internal material
+   are absent.
 4. Home and representative Pages 32, 34, and 53 start without application
    exceptions and read their required assets.
 5. Dataset workbooks, coastline CSVs, Natural Earth sidecars, GEBCO, runtime

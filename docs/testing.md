@@ -23,9 +23,10 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 `.github/workflows/ci.yml` runs on Linux with Python 3.10 and 3.12 for pushes,
 pull requests, and manual dispatch. It installs `requirements-dev.txt`, runs
 the pytest suite, builds a wheel, then installs that wheel in a separate venv
-from outside the checkout. For this development/pre-release repository, the
-final check verifies the installed package location, 12 packaged pages, the
-diagnostic tool, and the absence of Page 99 and the GEBCO-generation script.
+from outside the checkout. The development source clone retains 12 pages,
+including Pages 90 and 91 for pre-release work. The final wheel check verifies
+the installed package location, the 10 supported packaged pages, the diagnostic
+tool, and the absence of Pages 90, 91, 99, and the GEBCO-generation script.
 
 Dependency installation necessarily uses the package index during CI setup.
 The test and application checks themselves must not require external tiles,

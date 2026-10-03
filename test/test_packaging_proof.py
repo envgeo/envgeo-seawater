@@ -79,7 +79,11 @@ def test_package_excludes_local_and_generated_files():
     exclude_data = _pyproject()["tool"]["setuptools"]["exclude-package-data"]
     patterns = set(exclude_data["envgeo_seawater"])
 
-    assert "pages/99_Environment_Check.py" in patterns
+    assert {
+        "pages/90_Integrated_Visualizer_beta.py",
+        "pages/91_EnvGeo_Earthquake.py",
+        "pages/99_Environment_Check.py",
+    } <= patterns
     assert "bathymetry/*.py" in patterns
     assert "docs/wheel_proof_report*.md" in patterns
     assert "**/.DS_Store" in patterns

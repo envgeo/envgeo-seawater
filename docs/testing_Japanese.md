@@ -22,8 +22,9 @@ pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 
 `.github/workflows/ci.yml`は、push、pull request、手動起動時にLinux／Python 3.10と3.12で動作する。
 `requirements-dev.txt`を導入してpytestを実行し、wheelを作成した後、checkout外の別venvへそのwheelを
-導入する。開発／公開前repositoryでは最後に、インストール先、packageに収録する12ページ、診断ツール、
-Page 99とGEBCO生成scriptの非収録を確認する。
+導入する。開発／公開前repositoryのsource cloneには、事前検証用のPage 90・91を含む12ページを残す。
+一方、最後のwheel検査では、インストール先、packageに収録するサポート対象の10ページ、診断ツール、
+Page 90・91・99とGEBCO生成scriptの非収録を確認する。
 
 CIの環境構築時にはパッケージindexから宣言済み依存関係を取得する。一方、テストとアプリ確認そのものは
 外部タイル、外部download、実ネットワークサービスを必要としないことを原則とする。ブラウザ上の視覚確認と
