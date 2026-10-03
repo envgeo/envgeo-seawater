@@ -168,7 +168,13 @@ This ensures that observed patterns reflect environmental signals rather than me
 
 ## Data Availability
 
-All datasets included in this repository are either publicly available or redistributed in accordance with their respective licenses.
+The bundled datasets are public source records or project-derived workbooks
+included under the project's documented scholarly-use distribution decision.
+This does not make third-party records project-owned or assert a general
+redistribution licence beyond the source-specific records. See
+[`docs/dataset_redistribution_audit.md`](docs/dataset_redistribution_audit.md),
+[`docs/provenance_inventory.md`](docs/provenance_inventory.md), and
+[`docs/THIRD_PARTY_NOTICES.md`](docs/THIRD_PARTY_NOTICES.md).
 
 - Provided in a standardized format for immediate use
 
@@ -278,6 +284,8 @@ The current test suite and its limitations are described in `docs/testing.md`.
 Project checklists and longer development notes are kept under `docs/`.
 
 - [Figure-supported online user guide](https://envgeo.github.io/seawater_map/): public English and Japanese, page-by-page operating guidance for the stable release.
+
+- `docs/THIRD_PARTY_NOTICES.md`: concise source, attribution, and scope notice for bundled third-party data and geospatial assets.
 
 - `docs/release_checklist.md`  
   Release and deployment checklist for local testing, Streamlit deployment,

@@ -34,7 +34,8 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
 - [ ] 最終tag日へ更新し、Zenodo archive作成後に版付きDOIを追記する。
 - [ ] READMEの暫定引用を、版付きDOIの正式引用へ置き換える。
 - [ ] リリースタグを付け、対応する依存関係の記録を保存する。
-- [ ] プロジェクトの `LICENSE` と、再配布資産・必要なライセンス文をまとめた第三者通知文書を整備する。
+- [x] プロジェクトの `LICENSE` と`THIRD_PARTY_NOTICES.md`／日本語版を追加した。通知文書では、
+      MITのcode licenseと同梱する第三者データ・地理空間資産の記録を区別し、出典ごとの記録を正本とする。
 
 ### Package indexでの公開（JOSS再投稿前）
 

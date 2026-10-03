@@ -42,8 +42,10 @@ records and conditions for reassessment.
       DOI after the Zenodo archive has been created.
 - [ ] Replace the provisional README citation with the versioned DOI citation.
 - [ ] Tag the release and preserve its dependency lock/requirements record.
-- [ ] Add a `LICENSE` notice for the project and a third-party notices document
-      covering redistributed assets and any required licence texts.
+- [x] Added the project `LICENSE` and `THIRD_PARTY_NOTICES.md` / Japanese
+      counterpart. The notices distinguish the MIT code licence from bundled
+      third-party data and geospatial asset records; source-specific records
+      remain authoritative.
 
 ### Package-index publication (before JOSS resubmission)
 

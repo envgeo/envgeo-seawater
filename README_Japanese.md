@@ -152,7 +152,12 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 
 ## データ公開方針
 
-このリポジトリに含まれるデータは、公開データ、または各データ提供元の条件に沿って再配布可能なデータです。
+同梱データは公開出典の記録、またはプロジェクトが記録した学術利用方針に基づく派生workbookです。
+これは第三者データをプロジェクト所有とするものでも、出典ごとの記録を超える一般的な再配布ライセンスを
+主張するものでもありません。詳細は
+[`docs/dataset_redistribution_audit_Japanese.md`](docs/dataset_redistribution_audit_Japanese.md)、
+[`docs/provenance_inventory_Japanese.md`](docs/provenance_inventory_Japanese.md)、
+[`docs/THIRD_PARTY_NOTICES_Japanese.md`](docs/THIRD_PARTY_NOTICES_Japanese.md)を参照してください。
 
 - アプリで直接利用できる標準化済み形式で提供
 - 未公表データや制限付きデータは含めない方針
@@ -252,6 +257,8 @@ pytest
 公開前チェックリストや開発メモなど、READMEより詳しい補助ドキュメントは `docs/` にまとめます。
 
 - [図付きオンライン利用ガイド](https://envgeo.github.io/seawater_map/): 安定版向けの英日ページ別操作手順を公開しています。
+
+- `docs/THIRD_PARTY_NOTICES_Japanese.md`: 同梱する第三者データ・地理空間資産の出典、帰属表示、適用範囲をまとめた簡潔な通知。
 
 - `docs/release_checklist.md`  
   ローカル確認、Streamlit公開、GitHubリリース、Zenodoアーカイブ前の確認リスト。
