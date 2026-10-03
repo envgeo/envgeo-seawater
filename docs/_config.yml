@@ -1,0 +1,9 @@
+title: EnvGeo-Seawater User Guide
+description: Interactive seawater isotope and hydrographic data exploration
+theme: jekyll-theme-cayman
+show_downloads: false
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

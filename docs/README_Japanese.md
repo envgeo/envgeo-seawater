@@ -5,6 +5,9 @@
 
 [English version](README.md)
 
+利用者向けの操作案内は、サポート対象の安定版workflowだけへ案内する
+[利用ガイド](index_Japanese.md)から始める。このページは、予定するGitHub Pages websiteの入口でもある。
+
 ## 現在の文書
 
 - `release_checklist.md` / `release_checklist_Japanese.md`

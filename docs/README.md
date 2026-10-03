@@ -6,6 +6,10 @@ release approval or a statement of the stable public scope.
 
 [日本語版](README_Japanese.md)
 
+For the public, task-oriented documentation entry point, start with the
+[User Guide](index.md). It links only to the supported stable workflows and is
+the source directory for the planned GitHub Pages website.
+
 ## Current Documents
 
 - `release_checklist.md` / `release_checklist_Japanese.md`
