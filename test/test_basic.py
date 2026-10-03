@@ -15,9 +15,9 @@ def test_envgeo_utils_imports():
     assert envgeo_utils is not None
 
 def test_release_version_metadata_is_current():
-    """Keep the public module version aligned with the v1.3.4 release candidate.
+    """Keep the public module version aligned with the v1.3.4 stable release.
 
-    公開moduleの版情報がv1.3.4 release candidateと一致することを確認する。
+    公開moduleの版情報がv1.3.4安定版と一致することを確認する。
     """
     assert envgeo_utils.APP_VERSION == "1.3.4"
     assert envgeo_utils.version == envgeo_utils.APP_VERSION
