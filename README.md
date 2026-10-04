@@ -5,7 +5,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [日本語版 README](https://github.com/envgeo/envgeo-seawater/blob/main/README_Japanese.md)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.10--3.12%20tested-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10--3.13%20tested-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
@@ -185,10 +185,11 @@ Unpublished or restricted datasets are **not included**.
 
 ## Installation & Requirements
 
-Compatibility checks currently cover **Python 3.10.15 / Streamlit 1.42** and
-**Python 3.12.14 / Streamlit 1.63**, with Plotly 5.24 retained as the release
-baseline. See `docs/streamlit_migration.md` for the tested environment matrix
-and remaining interactive checks.
+Published-package installation and launcher checks have been completed on
+Apple Silicon macOS with **Python 3.10--3.13**. The release baseline remains
+**Python 3.10.15 / Streamlit 1.42** and **Python 3.12.14 / Streamlit 1.63**,
+with Plotly 5.24. See `docs/streamlit_migration.md` for the tested environment
+matrix and remaining interactive checks.
 
 ### Install the published package
 
@@ -200,23 +201,30 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-### 💡 Special Note for macOS (Apple Silicon) Users:
-To avoid build errors with geospatial libraries, create a Conda environment and
-install the compiled geospatial prerequisites from conda-forge before installing
-the published package with pip:
+### 💡 macOS (Apple Silicon): standard installation and fallback
+
+Use the standard pip command above first. It has been verified on Apple Silicon
+macOS with Python 3.10--3.13. With Python 3.13, NumPy and PyProj may be built
+from source, so installation can take several minutes and requires a working
+native build toolchain.
+
+If installation specifically fails while installing `pyproj` or `cartopy`, use
+the following Conda fallback (Python 3.12 is recommended for this route):
 
 ```bash
-# 1. Create and activate environment
+# 1. Create and activate a fallback environment
 conda create -n envgeo python=3.12
 conda activate envgeo
 
-# 2. Install pre-built geospatial binaries
+# 2. Install the geospatial prerequisites
 conda install -c conda-forge proj pyproj=3.6.1 cartopy=0.25.0 -y
 
 # 3. Install and launch EnvGeo-Seawater
 python -m pip install envgeo-seawater
 envgeo-seawater
 ```
+
+Python 3.14 is not supported by the fixed dependencies in v1.3.4.
 
 ---
 

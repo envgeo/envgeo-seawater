@@ -2,6 +2,12 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
+## 未リリース — 導入文書の更新（2026-10-04）
+
+- 英日README、overview manual、実行時依存関係コメントを更新し、`python -m pip install envgeo-seawater`を標準導入手順とした。Apple Silicon向けのConda手順は、PyProjまたはCartopyの導入に失敗した場合だけ使うfallbackへ変更した。
+- Apple Silicon MacStudioの新規環境で、Python 3.10--3.13に公開済みv1.3.4を導入し、launcher起動まで確認した。Python 3.13では固定したNumPyとPyProjがソースからビルドされるため、導入に数分かかる場合がある。Python 3.14はv1.3.4の固定依存関係では未対応である。
+- これは文書と検証記録だけの更新であり、immutableなv1.3.4 tag、PyPI artifact、GitHub Release、Zenodo archiveを置き換えない。
+
 ## v1.3.4 — 安定版リリース（2026-10-03）
 
 - review済みstable commit `948b384`をGit tag `v1.3.4`として作成し、GitHub Release

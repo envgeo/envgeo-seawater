@@ -23,7 +23,7 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-macOS Apple Siliconでは、pipコマンドの前に、Python 3.12のConda環境で`proj`、`pyproj`、`cartopy`をconda-forgeから導入してください。プラットフォーム別の完全な手順は[安定版README](https://github.com/envgeo/seawater_map/blob/main/README_Japanese.md)に記載します。
+Apple Silicon macOSでは、この標準pip導入をPython 3.10--3.13で確認しています。Python 3.13ではNumPyとPyProjがソースからビルドされ、数分かかる場合があります。PyProjまたはCartopyの導入で失敗した場合は、[安定版README](https://github.com/envgeo/seawater_map/blob/main/README_Japanese.md)にあるConda fallbackを使ってください。Python 3.14はv1.3.4で固定している依存関係では未対応です。
 
 ## 基本的な流れ
 

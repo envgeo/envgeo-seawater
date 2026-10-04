@@ -30,10 +30,12 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-On macOS Apple Silicon, install `proj`, `pyproj`, and `cartopy` from
-conda-forge in a Python 3.12 Conda environment before the pip command. The
-[stable README](https://github.com/envgeo/seawater_map/blob/main/README.md)
-contains the complete platform-specific instructions.
+On Apple Silicon macOS, this standard pip installation has been checked with
+Python 3.10--3.13. Python 3.13 may build NumPy and PyProj from source and can
+therefore take several minutes. If installation fails while installing PyProj
+or Cartopy, use the Conda fallback in the
+[stable README](https://github.com/envgeo/seawater_map/blob/main/README.md).
+Python 3.14 is not supported by the fixed dependencies in v1.3.4.
 
 ## Basic Workflow
 

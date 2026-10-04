@@ -2,6 +2,21 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — Installation documentation update (2026-10-04)
+
+- Updated the English and Japanese README files, overview manuals, and runtime
+  dependency comments to make `python -m pip install envgeo-seawater` the
+  standard installation path. The Apple Silicon Conda procedure is now a
+  fallback only for a PyProj or Cartopy installation failure.
+- Recorded Apple Silicon MacStudio clean-environment checks: Python 3.10--3.13
+  installed the published v1.3.4 package and started its launcher. Python 3.13
+  builds the pinned NumPy and PyProj from source, so installation can take
+  several minutes. Python 3.14 remains unsupported by the v1.3.4 fixed
+  dependencies.
+- This is a documentation and verification-record update only. It does not
+  replace the immutable v1.3.4 tag, PyPI artifacts, GitHub Release, or Zenodo
+  archive.
+
 ## Version 1.3.4 — Stable release (2026-10-03)
 
 - Released the reviewed stable commit `948b384` as Git tag `v1.3.4` and as the

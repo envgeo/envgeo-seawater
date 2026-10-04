@@ -12,6 +12,22 @@ Streamlit 1.42 / Plotly 5.24 and Python 3.12 / Streamlit 1.63 / Plotly 5.24.
 Plotly 7, Pandas 3, and NumPy 2 results below are forward-looking experiments,
 not supported release configurations.
 
+## Post-release package-installation checks (2026-10-04)
+
+On an Apple Silicon MacStudio, new Conda environments installed the published
+v1.3.4 package with `python -m pip install envgeo-seawater`; `pip check` and
+the `envgeo-seawater` launcher then succeeded on Python 3.10, 3.11, 3.12, and
+3.13. Python 3.13 built the pinned `numpy==1.26.4` and `pyproj==3.6.1` from
+source. This succeeded both with pip 26.2.1 and with pip 24.3.1 using
+`--no-cache-dir`, but may take several minutes and depends on a working native
+build environment.
+
+Python 3.9 is intentionally rejected by `Requires-Python >=3.10`. Python 3.14
+is not supported by the fixed v1.3.4 dependencies: the observed installation
+attempt stopped while building SciPy. These are package-installation and
+launcher checks, not replacements for the CI wheel checks or full interactive
+application validation.
+
 ## Environment Matrix
 
 | Purpose | Conda environment | Python | Streamlit | Pandas | NumPy | Plotly |

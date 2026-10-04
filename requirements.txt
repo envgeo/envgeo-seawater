@@ -7,10 +7,10 @@
 #   Streamlit 1.63で、どちらもPlotly 5.24を使用する。
 # - A fresh test-site installation resolves to Streamlit 1.63.
 # - 新規のテストサイト導入ではStreamlit 1.63が解決される。
-# - Apple Silicon (M1/M2) users: to avoid build errors, especially for
-#   pyproj/cartopy, follow the Conda-first installation steps in README.md.
-# - Apple Silicon（M1/M2）では、とくにpyproj/cartopyのbuild errorを避けるため、
-#   README.mdのCondaを先に用いる導入手順に従う。
+# - Apple Silicon macOS: standard pip installation is checked on Python 3.10--3.13.
+#   Use the README Conda fallback only if pyproj/cartopy installation fails.
+# - Apple Silicon macOSでは、標準pip導入をPython 3.10--3.13で確認済み。
+#   pyproj/cartopyの導入に失敗した場合だけREADMEのConda fallbackを用いる。
 # ==============================================================================
 
 # --- Core framework / 基盤フレームワーク ---
@@ -31,14 +31,10 @@ streamlit-folium==0.26.1
 cmocean==4.0.3
 
 # --- Geospatial and oceanography / 地理空間・海洋学 ---
-# NOTE: For macOS (M1/M2), install 'proj' and 'cartopy' via Conda first:
-# 注記：macOS（M1/M2）では、先にCondaで'proj'と'cartopy'を導入する。
-# conda install -c conda-forge proj pyproj cartopy -y
-# Pin pyproj to a Python 3.12 Apple Silicon wheel release. Leaving it
-# unconstrained currently resolves a source-only release that requires a newer
-# system PROJ than the clean-venv baseline provides.
-# pyprojはPython 3.12 Apple Silicon用wheelのある版に固定する。固定しない場合、
-# 新規venvの基準より新しいsystem PROJを必要とするsource-only版に解決される。
+# Pin pyproj to the release used for the stable package. On Python 3.13 it may
+# be built from source; if that or Cartopy fails, use the README Conda fallback.
+# pyprojは安定パッケージで使用した版に固定する。Python 3.13ではソースから
+# ビルドされる場合がある。これまたはCartopyで失敗した場合はREADMEのConda fallbackを用いる。
 pyproj==3.6.1
 gsw==3.6.20
 cartopy==0.25.0

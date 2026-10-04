@@ -3,7 +3,7 @@
 EnvGeo-Seawater は、海水の安定同位体・水文データを探索するためのインタラクティブ可視化プラットフォームです。
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.10--3.12%20tested-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10--3.13%20tested-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
@@ -169,7 +169,7 @@ EnvGeo-Seawater は、同位体データと水文データを統合的に探索�
 
 ## インストールと必要環境
 
-現在は **Python 3.10.15 / Streamlit 1.42** と **Python 3.12.14 / Streamlit 1.63** の両環境で互換性を確認し、Plotly 5.24をリリース基準として維持しています。検証環境の組合せと残りの対話操作確認は `docs/streamlit_migration_Japanese.md` を参照してください。
+公開パッケージの導入とlauncherの起動は、Apple Silicon macOS上の **Python 3.10--3.13** で確認しています。リリース基準は引き続き **Python 3.10.15 / Streamlit 1.42** と **Python 3.12.14 / Streamlit 1.63**、Plotly 5.24です。検証環境の組合せと残りの対話操作確認は `docs/streamlit_migration_Japanese.md` を参照してください。
 
 ### 公開パッケージの導入
 
@@ -180,12 +180,14 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-### macOS Apple Silicon ユーザー向けメモ
+### macOS Apple Silicon：標準手順とfallback
 
-`pyproj` や `cartopy` などのビルドエラーを避けるため、macOS Apple Silicon環境では、Conda環境を作成し、先にconda-forgeから地理空間系ライブラリを導入してから、公開パッケージをpipで導入する方法を推奨します。
+まず上記の標準pipコマンドを試してください。Apple Silicon macOSではPython 3.10--3.13で確認済みです。Python 3.13ではNumPyとPyProjがソースからビルドされる場合があり、導入に数分かかることや、ネイティブのビルド環境が必要になることがあります。
+
+`pyproj`または`cartopy`の導入時に失敗する場合だけ、次のConda fallbackを使ってください。この経路ではPython 3.12を推奨します。
 
 ```bash
-# 1. 環境を作成して有効化
+# 1. fallback用の環境を作成して有効化
 conda create -n envgeo python=3.12
 conda activate envgeo
 
@@ -196,6 +198,8 @@ conda install -c conda-forge proj pyproj=3.6.1 cartopy=0.25.0 -y
 python -m pip install envgeo-seawater
 envgeo-seawater
 ```
+
+Python 3.14は、v1.3.4で固定している依存関係では未対応です。
 
 ---
 

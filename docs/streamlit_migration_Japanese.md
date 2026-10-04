@@ -8,6 +8,19 @@ v1.3.4はPython >=3.10を宣言し、CIでは最終wheelをPython 3.10と3.12で
 アプリ基準は、Python 3.10／Streamlit 1.42／Plotly 5.24、およびPython 3.12／Streamlit 1.63／Plotly 5.24です。
 以下のPlotly 7、Pandas 3、NumPy 2に関する結果は将来向けの実験であり、対応を表明するRelease構成ではありません。
 
+## Release後のpackage導入確認（2026-10-04）
+
+Apple Silicon MacStudioで新しいConda環境を作成し、公開済みv1.3.4を
+`python -m pip install envgeo-seawater`で導入した。その後の`pip check`と
+`envgeo-seawater` launcherの起動は、Python 3.10、3.11、3.12、3.13で成功した。
+Python 3.13では固定している`numpy==1.26.4`と`pyproj==3.6.1`がソースからビルドされた。
+pip 26.2.1と、`--no-cache-dir`を指定したpip 24.3.1の両方で成功したが、数分かかる場合があり、
+ネイティブのビルド環境に依存する。
+
+Python 3.9は`Requires-Python >=3.10`により意図して拒否される。Python 3.14はv1.3.4で固定した
+依存関係では未対応であり、観察した導入試行はSciPyのビルド段階で停止した。ここでの記録はpackageの
+導入・launcher起動確認であり、CIによるwheel確認や全対話機能の検証を置き換えるものではない。
+
 ## 環境構成
 
 | 目的 | Conda環境 | Python | Streamlit | Pandas | NumPy | Plotly |
