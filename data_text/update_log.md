@@ -4,6 +4,9 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased — Installation documentation update (2026-10-04)
 
+- Reclassified Isotope & Hydrographic Mapping and the Temperature–Salinity
+  Diagram under analysis and figure generation, rather than interactive
+  exploration, in the English and Japanese online-manual navigation.
 - Updated the English and Japanese README files, overview manuals, and runtime
   dependency comments to make `python -m pip install envgeo-seawater` the
   standard installation path. The Apple Silicon Conda procedure is now a

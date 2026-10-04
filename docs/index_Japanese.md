@@ -33,11 +33,11 @@ EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー�
 
 - [Interactive 2Dplus Visualizer](manual_Japanese/03_2dplus_visualizer.html)
 - [Interactive 3D/4D Visualizer](manual_Japanese/04_3d_4d_visualizer.html)
+
+### 解析・図版作成
+
 - [同位体・水文マッピング](manual_Japanese/32_isotope_hydrographic_mapping.html)
 - [水温–塩分図](manual_Japanese/34_ts_diagram.html)
-
-### 解析ビュー
-
 - [塩分–δ18O 関係](manual_Japanese/31_salinity_d18o.html)
 - [カスタムパラメータプロット](manual_Japanese/35_custom_parameter_plot.html)
 - [深度プロファイル](manual_Japanese/37_depth_profile.html)

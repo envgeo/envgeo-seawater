@@ -33,11 +33,11 @@ EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic da
 
 - [Interactive 2Dplus Visualizer](manual/03_2dplus_visualizer.html)
 - [Interactive 3D/4D Visualizer](manual/04_3d_4d_visualizer.html)
+
+### Analysis and figure generation
+
 - [Isotope & Hydrographic Mapping](manual/32_isotope_hydrographic_mapping.html)
 - [Temperature–Salinity Diagram](manual/34_ts_diagram.html)
-
-### Analytical views
-
 - [Salinity–δ18O Relationship](manual/31_salinity_d18o.html)
 - [Custom Parameter Plot](manual/35_custom_parameter_plot.html)
 - [Depth Profile](manual/37_depth_profile.html)
