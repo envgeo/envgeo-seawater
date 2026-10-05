@@ -181,6 +181,37 @@ redistribution licence beyond the source-specific records. See
 
 Unpublished or restricted datasets are **not included**.
 
+### Cross-dataset overlap screening
+
+NASA GISS and PAGES CoralHydro2k are independently curated compilations and
+can include observations inherited from the same original source. A read-only
+initial screen on 2026-10-05 identified **4,068 NASA GISS--CoralHydro2k
+candidate record pairs** at a review threshold; **2,463 pairs** met a stricter
+spatial, depth, salinity, and δ18O screen. These are candidate pairs, not
+confirmed unique duplicate observations.
+
+The Around Japan collection also has **139 strict candidate pairs** with NASA
+GISS, covering 131 of its 419 rows. These records are principally labelled
+`Yamamoto et al. (2001)` / `PI=KAWAI`; they require source-level confirmation
+before any record is treated as a duplicate. No source workbook records are
+removed in v1.3.4. A future release will publish an auditable candidate table,
+document the final criteria, and provide an optional exclusion for only
+review-confirmed overlaps in combined-dataset statistics and figures.
+
+The resulting source-preserving audit pattern—candidate identification,
+documented criteria, optional analytical suppression, and retained
+provenance—is intended to provide a reusable foundation when additional global
+reference datasets are integrated. It does not replace source-level review or
+claim that every candidate is a duplicate.
+
+A time-aware screen using a matching valid year and month, horizontal distance
+≤15 km, salinity difference ≤0.1, and δ18O difference ≤0.1‰ identifies 1,730
+NASA--Coral candidate pairs at a ≤1 m depth difference (1,764 at ≤3 m), and
+55 Around Japan--NASA pairs at either threshold. Depth recording precision
+varies across sources; broader depth tolerances are therefore review settings,
+not automatic deletion criteria. The detailed threshold table is maintained in
+the provenance inventory.
+
 ---
 
 ## Installation & Requirements

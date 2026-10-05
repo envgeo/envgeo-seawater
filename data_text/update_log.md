@@ -2,8 +2,28 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — Cross-dataset overlap screening (2026-10-05)
+
+- Recorded a read-only initial overlap screen for the bundled NASA GISS,
+  PAGES CoralHydro2k, and Around Japan collections. It found 4,068 NASA--Coral
+  candidate pairs at a review threshold (2,463 at a stricter threshold), and
+  139 strict Around Japan--NASA candidate pairs involving 131 rows principally
+  labelled `Yamamoto et al. (2001)` / `PI=KAWAI`.
+- Clarified that candidate-pair counts are not confirmed unique duplicate
+  observations and that v1.3.4 removes no source records. A future release
+  will publish an audit table and provide optional exclusion only for
+  review-confirmed overlaps in combined-dataset statistics and figures.
+- Added a time-aware candidate table for the v1.3.5 design: matching valid
+  year/month, distance ≤15 km, salinity and δ18O differences ≤0.1, and depth
+  tolerances from 1 to 50 m. The table explicitly distinguishes candidate
+  pairs from distinct source rows and from future one-to-one suppressions.
+
 ## Unreleased — Installation documentation update (2026-10-04)
 
+- Added a bilingual **Cite** tab next to About in Home. It provides the fixed
+  v1.3.4 software citation and explains that each dataset used in an analysis,
+  figure, table, or presentation must also be cited from its original provider
+  record.
 - Reclassified Isotope & Hydrographic Mapping and the Temperature–Salinity
   Diagram under analysis and figure generation, rather than interactive
   exploration, in the English and Japanese online-manual navigation.

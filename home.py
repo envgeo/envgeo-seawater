@@ -282,15 +282,23 @@ def main() -> None:
     )
     render_tab_style()
     envgeo_utils.render_card_tab_style()
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-        ["🏠 Main", "ℹ️ About", "📚 Data Sources", "📖 Manual", "📝 Updates", "🇯🇵 日本語"]
+    tab_main, tab_about, tab_citation, tab_sources, tab_manual, tab_updates, tab_japanese = st.tabs(
+        [
+            "🏠 Main",
+            "ℹ️ About",
+            "✍️ Cite",
+            "📚 Data Sources",
+            "📖 Manual",
+            "📝 Updates",
+            "🇯🇵 日本語",
+        ]
     )
     
     
     # -------------------------------------------------------------------------
     # Main tab / メインタブ
     # -------------------------------------------------------------------------
-    with tab1:
+    with tab_main:
         def display_autoplay_video(video_path_or_url):
             """Render a bundled or remote looping video. / 同梱または外部のループ動画を表示する。"""
             import base64
@@ -343,7 +351,7 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # About tab / Aboutタブ
     # -------------------------------------------------------------------------
-    with tab2:
+    with tab_about:
         st.header("About")
         about_file = resolve_path('data_text', 'about.md')
         render_markdown_file(about_file)
@@ -375,9 +383,28 @@ def main() -> None:
     
 
     # -------------------------------------------------------------------------
+    # Citation tab / 引用タブ
+    # -------------------------------------------------------------------------
+    with tab_citation:
+        citation_file = resolve_path("data_text", "citation.md")
+        render_markdown_file(
+            citation_file,
+            f"Information: {citation_file.name} was not found.",
+        )
+        with st.expander("日本語版 / Japanese", expanded=True):
+            citation_japanese_file = resolve_path("data_text", "citation_Japanese.md")
+            render_markdown_file(
+                citation_japanese_file,
+                f"情報: {citation_japanese_file.name} が見つかりません。",
+            )
+        st.divider()
+        render_external_link("Go to Lab.", "https://envgeo.h.kyoto-u.ac.jp/sw_jpn/")
+
+
+    # -------------------------------------------------------------------------
     # Data-sources tab / データソースタブ
     # -------------------------------------------------------------------------
-    with tab3:
+    with tab_sources:
         st.header("Data Sources")
         ref_file_main = resolve_path('data_text', 'main_references.md')
         render_markdown_file(ref_file_main)
@@ -409,7 +436,7 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # Manual tab / マニュアルタブ
     # -------------------------------------------------------------------------
-    with tab4:
+    with tab_manual:
         st.header("User Manual")
         st.markdown(
             "**For a detailed, figure-based, page-by-page guide, visit the "
@@ -441,7 +468,7 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # Updates tab / 更新履歴タブ
     # -------------------------------------------------------------------------
-    with tab5:
+    with tab_updates:
         st.header("Update History")
         render_update_history()
 
@@ -463,7 +490,7 @@ def main() -> None:
     # -------------------------------------------------------------------------
     # Japanese tab / 日本語タブ
     # -------------------------------------------------------------------------
-    with tab6:
+    with tab_japanese:
         st.header("EnvGeo-Seawaterについて")
         st.markdown(
             "**図付きの詳細なページ別操作手順は、"

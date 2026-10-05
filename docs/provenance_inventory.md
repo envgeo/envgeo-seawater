@@ -2,7 +2,8 @@
 
 **Status:** release-readiness inventory; source evidence audited 2026-09-25,
 bundled-workbook snapshot verified 2026-09-30, and derived-asset records
-verified 2026-10-03.
+verified 2026-10-03, and initial cross-dataset overlap screening recorded
+2026-10-05.
 This record identifies what is bundled and what still needs evidence. “Publicly
 available” is not treated as proof that redistribution in a software release is
 permitted.
@@ -20,6 +21,57 @@ permitted.
 | `dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | Global loader | Project compilation currently containing 35 Sakamoto et al. (2022) records; source citation and current workbook fingerprint verified. | Included in the current scholarly-use package. | Preserve source mapping, citations, and transformations for report-derived records. |
 | Archived `d18O_upload_data_tmp_seawater.xlsx` | Not used by the application. | Legacy source-only workbook; no code, test, or public-clone reference was found. | Not part of the application or a future package-data manifest. | Retained in the parent workspace archive (`過去のパーツ/`), outside the application tree; review separately only if reuse is proposed. |
 | `data/` media and `data_text/` references/manuals | Home and in-app documentation | `d18O_all.mp4` is the Home animation labelled as created with GMT. `sites_20230515.gif` and `year_20230517.gif` are project map visualizations used by the application/documentation. The three assets are packaged; no third-party media asset requiring a separate license record was identified in this review. `data_text/*.md` is likewise bundled. The unused legacy spreadsheets formerly in `data/` were moved to a local historical archive outside the application and public-release trees on 2026-10-03. | Project documentation/media can remain bundled; historical spreadsheets are excluded from public releases. | Retain any future source or reuse record when adding non-project media; do not reintroduce archived spreadsheets without a separate review. |
+
+## Initial cross-dataset overlap screening (2026-10-05)
+
+This is a read-only candidate screen, not a deduplication operation. It does
+not alter bundled workbooks, change source attribution, or establish that any
+candidate pair is the same physical observation. The current NASA and
+CoralHydro2k workbooks have no sufficiently complete shared date field for
+sample-identifier matching, and nearby profile observations can produce more
+than one candidate pair.
+
+| Comparison | Review threshold | Strict threshold | Result of initial screen |
+|---|---|---|---|
+| NASA GISS × PAGES CoralHydro2k | horizontal distance ≤30 km; depth difference ≤10 m; salinity difference ≤0.20; δ18O difference ≤0.10‰ | ≤15 km; ≤3 m; ≤0.10; ≤0.05‰ | 4,068 candidate pairs at the review threshold; 2,463 pairs at the strict threshold. Pair counts are not counts of unique duplicate observations. |
+| Around Japan × NASA GISS | same review threshold | same strict threshold | 139 strict candidate pairs, involving 131 of 419 Around Japan rows. The Japan records are principally `Yamamoto et al. (2001)` / `PI=KAWAI`; NASA labels include Yamamoto et al. (2001) and (2002). |
+| Around Japan × PAGES CoralHydro2k | same review threshold | same strict threshold | No candidate pairs under either threshold in this initial screen. |
+
+Before a future analytical exclusion feature is enabled, the project will
+publish a row-level audit table (source row identifiers, coordinates, variable
+deltas, and reference metadata), review original source/sample or campaign
+identifiers where available, and establish one-to-one, review-confirmed pairs.
+The feature will be optional and will suppress only the selected duplicate
+representation in combined-dataset statistics and figures; source records and
+their required citations will remain available and unchanged.
+
+### Time-aware candidate screen for the v1.3.5 design
+
+The following additional read-only screen requires a valid matching collection
+year and month, horizontal distance ≤15 km, salinity difference ≤0.1, and
+δ18O difference ≤0.1‰. It excludes withheld/non-numeric month values. NASA
+does not provide a usable collection day in this workbook, so this is a
+same-year-and-month criterion, not a same-day confirmation. Counts are
+candidate pairs; the parenthesized values are distinct source rows on the left
+and right, respectively.
+
+| Comparison | Depth difference ≤1 m | ≤3 m | ≤10 m | ≤50 m |
+|---|---:|---:|---:|---:|
+| NASA GISS × PAGES CoralHydro2k | 1,730 (1,644 / 1,654) | 1,764 (1,670 / 1,680) | 1,897 (1,704 / 1,712) | 2,389 (1,805 / 1,777) |
+| Around Japan × NASA GISS | 55 (55 / 55) | 55 (55 / 55) | 62 (55 / 55) | 91 (55 / 55) |
+
+The 55 Around Japan--NASA pairs are a same-year-and-month September 1996
+profile associated with `Yamamoto et al. (2001)` / `PI=KAWAI`. The Japan and
+NASA coordinates differ by up to approximately 11 km because of coordinate
+rounding, while the profile depth sequence and salinity/δ18O values agree to
+their recorded precision. This is a particularly strong candidate group, but
+it remains an audit finding until source-level assignment is recorded.
+
+At broad depth tolerances, a single profile observation can form several
+candidate pairs. Consequently, the ≤10 m and ≤50 m columns are appropriate for
+review and candidate marking; they must not be interpreted as counts of rows
+to suppress. The planned UI will retain an "exclude none" default and permit
+suppression only for review-confirmed, one-to-one pairs.
 
 ## Verified bundled-workbook snapshot (2026-09-30)
 
