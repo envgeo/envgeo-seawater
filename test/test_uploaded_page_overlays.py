@@ -631,6 +631,7 @@ def test_vertical_section_sidebar_uses_shared_upload_and_filter_layout():
     assert [item.value for item in app.sidebar.header] == ["Data filtering"]
     assert [item.label for item in app.sidebar.multiselect] == [
         "Choose datasets",
+        "Reference",
         "Cruise / Area / Transect",
     ]
     dataset_selector = next(
