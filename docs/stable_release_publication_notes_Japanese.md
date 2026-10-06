@@ -11,11 +11,12 @@ JOSS向けsoftware recordの正規sourceとして扱います。この文書は�
 ## 安定版の範囲
 
 安定版packageには、`home.py`、共通アプリmodule、runtime asset、出典を記録したdatasetと、
-次の10個のStreamlitページを収録します。
+次の11個のStreamlitページを収録します。
 
 - 03 Interactive 2Dplus Visualizer
 - 04 Interactive 3D/4D Visualizer
 - 05 User Data Check & Quick Visualizer
+- 06 Data Overlap Check
 - 31 Salinity-d18O Relationship
 - 32 Isotope Hydrographic Mapping
 - 34 T-S Diagram

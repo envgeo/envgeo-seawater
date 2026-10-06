@@ -6,7 +6,7 @@ Most EnvGeo-Seawater pages use a shared sidebar filter to select the data shown 
 
 ## Basic Workflow
 
-1. Choose datasets and, where available, transects.
+1. Choose datasets, source references, and, where available, transects.
 2. Select year and month ranges.
 3. Choose an Area filter preset if useful.
 4. Fine-tune longitude and latitude.
@@ -51,6 +51,21 @@ as numbers remain missing and are handled by the normal quality checks.
 - **Area filter preset**  
   Initializes longitude and latitude ranges using common ocean-region presets.
 
+- **Reference / Citation**
+  Filters bundled seawater records by their source-reference label.
+  It is useful for comparing or plotting one cited source within an integrated
+  collection. Some legacy source labels retain cruise or processing context;
+  the full citation remains in dataset metadata and source documentation. This
+  control does not filter browser-uploaded rows, whose reference field is
+  optional.
+
+- **Duplicate-candidate display / 重複候補の表示**
+  Leaves all rows visible by default. When selected and applied, it can hide
+  only bundled-data overlap candidates from the Data Overlap Check: the
+  recommended one-to-one rounding-compatible subset, or the broader Strong
+  screen for a sensitivity check. This is reversible and never edits source
+  workbooks or uploaded rows.
+
 - **Longitude / Latitude**  
   Manually adjusts the geographic range.
 
@@ -70,6 +85,10 @@ as numbers remain missing and are handled by the normal quality checks.
 ## Notes And Limitations
 
 - Changing filters does not update figures until **Apply settings** is clicked.
+- The reference filter is applied before **Area / Transect**, so the latter
+  lists only locations available in the selected source records.
+- The duplicate-candidate screen is calculated only when it is selected. Use
+  **Show all records (default)** to restore all bundled rows immediately.
 - Area presets initialize the filter range; users can still fine-tune sliders afterward.
 - Some filters retain missing values so that gap rows used to preserve data
   segmentation are not removed unintentionally.

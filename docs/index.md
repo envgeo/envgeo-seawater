@@ -11,7 +11,7 @@ title: EnvGeo-Seawater User Guide
 
 EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic data, including regional and global reference datasets, alongside their own uploaded observations. This guide documents the supported stable workflows.
 
-> The application is intended for interactive exploration and quality checking. Please cite both EnvGeo-Seawater and the original data providers used in an analysis.
+> The application is intended for interactive exploration and quality checking. For analysis, figures, publications, or presentations, cite both EnvGeo-Seawater and the original data providers used.
 
 ## A first workflow
 
@@ -28,6 +28,7 @@ EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic da
 - [Overview](manual/00_overview.html)
 - [Data filtering](manual/01_data_filtering.html)
 - [User Data Check & Quick Visualizer](manual/05_user_data_check_quick_visualizer.html)
+- [Data Overlap Check](manual/06_data_overlap_check.html)
 
 ### Interactive exploration
 

@@ -8,7 +8,7 @@ release approval or a statement of the stable public scope.
 
 For the public, task-oriented documentation entry point, start with the
 [User Guide](index.md). It links only to the supported stable workflows and is
-the source directory for the published [GitHub Pages website](https://envgeo.github.io/envgeo-seawater/).
+the source directory for the published [GitHub Pages website](https://envgeo.github.io/seawater_map/).
 
 ## Current Documents
 

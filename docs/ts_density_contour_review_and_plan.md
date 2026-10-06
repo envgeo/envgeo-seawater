@@ -43,7 +43,7 @@ quality-cleaning rules:
 | `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | 2,222 / 2,221 | Complete |
 | `11_AROUND_JAPAN_PUB_20260305.xlsx` | 419 / 416 | Complete |
 | `71_GLOBA_NASA_20260226.xlsx` | 23,246 / 20,605 | Complete |
-| `71_GLOBAL_Atwood_et_al_2026.xlsx` | 16,098 / 13,871 | Complete |
+| `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | 16,098 / 13,871 | Complete |
 | `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | 35 / 35 | Complete |
 
 For rows in a conservative physical screening range, comparing the current

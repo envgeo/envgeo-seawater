@@ -51,7 +51,7 @@ shared.
 - [x] `pages/04_[Interactive]_3D_4D_Visualizer.py` — imports, bilingual
   section/comment format, Fig.1–Fig.6 and custom-view structure, map-depth
   controls, historical commented code, and focused tests reviewed.
-- [x] `pages/05_User_Data_Check_Quick_Visualizer.py` — session-only upload
+- [x] `pages/05_[Utils]_User_Data_Check_Quick_Visualizer.py` — session-only upload
   boundary, internal-origin exclusion, 2D/3D/map helpers, bilingual
   docstrings/section format, and focused tests reviewed (7 + 5 passed).
 - [x] `pages/31_Salinity-d18O_Relationship.py` — imports, bilingual

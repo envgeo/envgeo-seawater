@@ -1,9 +1,9 @@
 # Bundled Asset and Data Provenance Inventory
 
 **Status:** release-readiness inventory; source evidence audited 2026-09-25,
-bundled-workbook snapshot verified 2026-09-30, and derived-asset records
-verified 2026-10-03, and initial cross-dataset overlap screening recorded
-2026-10-05.
+bundled-workbook snapshot verified 2026-09-30, derived-asset records verified
+2026-10-03, initial cross-dataset overlap screening recorded 2026-10-05, and
+the CoralHydro2k short-reference completion recorded 2026-10-06.
 This record identifies what is bundled and what still needs evidence. “Publicly
 available” is not treated as proof that redistribution in a software release is
 permitted.
@@ -17,7 +17,7 @@ permitted.
 | `dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | Japan Sea / global loader | Kodama et al. (2024), with DOI and analytical record in `data_text/main_references.md`; current workbook fingerprint is recorded below. | Included in the current scholarly-use package. | Preserve the canonical source, citation, available version/access record, and transformation record. |
 | `dataset/11_AROUND_JAPAN_PUB_20260305.xlsx` | Around Japan / global loader | Regional compilation of Yamamoto, Sakamoto, Kodaira, and Horikawa records; four source labels and current workbook fingerprint verified. | Included in the current scholarly-use package. | Preserve row/source mapping, citations, and transformations for each incorporated source. |
 | `dataset/71_GLOBA_NASA_20260226.xlsx` | Global loader | NASA GISS Global Seawater Oxygen-18 Database; `data_text/NASA_references.md` records v1.22, source URLs, citation, and access date 2026-03-01. The source-to-workbook correspondence (25,514 rows) and project `Transect = Nasa_database` convention are documented. | Approved for the current scholarly-use distribution; retain source attribution and do not describe as project-owned. | Preserve the existing version/access record, citation, and transformation record; reassess only for an explicit restriction, rights-holder request, or concrete reviewer concern. |
-| `dataset/71_GLOBAL_Atwood_et_al_2026.xlsx` | Global loader | PAGES CoralHydro2k Seawater δ18O Database; `data_text/CoralHydro2_references.md` records study URL, DOI, citation, and access date 2026-03-16. The source-to-workbook correspondence (18,598 rows), citation preservation, short-reference labels, and `Transect` schema mapping are documented. | Approved for the current scholarly-use distribution; retain source attribution and do not describe as project-owned. | Preserve the existing DOI/access record, citation, and transformation record; reassess only for an explicit restriction, rights-holder request, or concrete reviewer concern. |
+| `dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | Global loader | PAGES CoralHydro2k Seawater δ18O Database; `data_text/CoralHydro2_references.md` records study URL, DOI, citation, and access date 2026-03-16. The source-to-workbook correspondence (18,598 rows), citation preservation, `Transect` mapping, and the 2026-10-06 completion of 3,258 project-added short `reference` cells from retained `Dataset citation` values are documented. | Approved for the current scholarly-use distribution; retain source attribution and do not describe as project-owned. | At the next public synchronization, update the package checksum table and release records with this v02 snapshot. |
 | `dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | Global loader | Project compilation currently containing 35 Sakamoto et al. (2022) records; source citation and current workbook fingerprint verified. | Included in the current scholarly-use package. | Preserve source mapping, citations, and transformations for report-derived records. |
 | Archived `d18O_upload_data_tmp_seawater.xlsx` | Not used by the application. | Legacy source-only workbook; no code, test, or public-clone reference was found. | Not part of the application or a future package-data manifest. | Retained in the parent workspace archive (`過去のパーツ/`), outside the application tree; review separately only if reuse is proposed. |
 | `data/` media and `data_text/` references/manuals | Home and in-app documentation | `d18O_all.mp4` is the Home animation labelled as created with GMT. `sites_20230515.gif` and `year_20230517.gif` are project map visualizations used by the application/documentation. The three assets are packaged; no third-party media asset requiring a separate license record was identified in this review. `data_text/*.md` is likewise bundled. The unused legacy spreadsheets formerly in `data/` were moved to a local historical archive outside the application and public-release trees on 2026-10-03. | Project documentation/media can remain bundled; historical spreadsheets are excluded from public releases. | Retain any future source or reuse record when adding non-project media; do not reintroduce archived spreadsheets without a separate review. |
@@ -37,13 +37,15 @@ than one candidate pair.
 | Around Japan × NASA GISS | same review threshold | same strict threshold | 139 strict candidate pairs, involving 131 of 419 Around Japan rows. The Japan records are principally `Yamamoto et al. (2001)` / `PI=KAWAI`; NASA labels include Yamamoto et al. (2001) and (2002). |
 | Around Japan × PAGES CoralHydro2k | same review threshold | same strict threshold | No candidate pairs under either threshold in this initial screen. |
 
-Before a future analytical exclusion feature is enabled, the project will
-publish a row-level audit table (source row identifiers, coordinates, variable
-deltas, and reference metadata), review original source/sample or campaign
-identifiers where available, and establish one-to-one, review-confirmed pairs.
-The feature will be optional and will suppress only the selected duplicate
-representation in combined-dataset statistics and figures; source records and
-their required citations will remain available and unchanged.
+The current application publishes row-level audit evidence (source row
+identifiers, coordinates, variable deltas, and reference metadata) and keeps
+every source record available and unchanged. Its shared filter sidebar is
+optional and defaults to retaining all rows. The recommended display screen
+suppresses only deterministic one-to-one Strong candidates whose differences
+are compatible with inferred rounding precision; the retained row is selected
+from metadata completeness with a documented tie-breaker. A broader Strong
+screen is available solely for sensitivity checks and is not a
+confirmed-de-duplication result.
 
 ### Time-aware candidate screen for the v1.3.5 design
 
@@ -70,10 +72,11 @@ it remains an audit finding until source-level assignment is recorded.
 At broad depth tolerances, a single profile observation can form several
 candidate pairs. Consequently, the ≤10 m and ≤50 m columns are appropriate for
 review and candidate marking; they must not be interpreted as counts of rows
-to suppress. The planned UI will retain an "exclude none" default and permit
-suppression only for review-confirmed, one-to-one pairs.
+to suppress. The current UI retains an "all records" default and presents the
+broader Strong screen as a sensitivity check, while the recommended display
+screen remains limited to deterministic one-to-one, rounding-compatible pairs.
 
-## Verified bundled-workbook snapshot (2026-09-30)
+## Verified bundled-workbook snapshot (2026-09-30; historical baseline)
 
 This read-only check confirmed that the following five files are present in
 both the canonical working folder and the stable `seawater_map` clone, with
@@ -85,14 +88,16 @@ this audit.
 |---|---|---:|---:|---|
 | `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | `Kodam_et_al_2024` | 2,222 | 22 | `8184016fe53fb3b537b5ca60061b2e3d798f69b63534ffea6d6a11d9904d2962` |
 | `11_AROUND_JAPAN_PUB_20260305.xlsx` | `for_streamlit_YSKH_20260227` | 419 | 22 | `ac49cf552e88caff1d294bbcbff978b8ea72faa31c7fc1f698456ea978663dd0` |
-| `71_GLOBAL_Atwood_et_al_2026.xlsx` | `CoralHydro2k_SW_1_0_0_20260303` | 18,598 | 58 | `27aa53ac15867d571a5efd94aa63403bf60718d6bc6881ef2c8e7a92960b6a15` |
+| `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | `CoralHydro2k_SW_1_0_0_20260303` | 18,598 | 58 | `50c7cbc27140edabfac42fa8004725228054931671035285073354b829939514` |
 | `71_GLOBA_NASA_20260226.xlsx` | `NASA_20260227` | 25,514 | 22 | `13cccbffa3948a2570fd7c6faa342a888d1e14d3bb076f48d520564a25c85840` |
 | `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | `20260303` | 35 | 23 | `d8027747739247601bfbc9ae8ffc2c9b9036edfaaa83b7f84972e28b9f84a565` |
 
 The tracked `local_data/user_data.xlsx` public sample was also verified as a
-zero-row, 22-column template in both locations. A release that changes any
-listed workbook must update this snapshot, its source-level provenance record,
-and the release checksum record together.
+zero-row, 22-column template in both locations. The CoralHydro2k row now
+records the versioned v02 workbook and its 2026-10-06 checksum in the
+canonical working folder; it has not yet been synchronized to the public
+clones. A release that changes any listed workbook must update this snapshot,
+its source-level provenance record, and the release checksum record together.
 
 ## Verified derived-asset snapshot (2026-10-03)
 

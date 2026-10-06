@@ -12,11 +12,12 @@ the [release checklist](release_checklist.md) for the detailed checks.
 ## Stable scope
 
 The stable package contains `home.py`, shared application modules, runtime
-assets and cited datasets, and these ten Streamlit pages:
+assets and cited datasets, and these eleven Streamlit pages:
 
 - 03 Interactive 2Dplus Visualizer
 - 04 Interactive 3D/4D Visualizer
 - 05 User Data Check & Quick Visualizer
+- 06 Data Overlap Check
 - 31 Salinity-d18O Relationship
 - 32 Isotope Hydrographic Mapping
 - 34 T-S Diagram

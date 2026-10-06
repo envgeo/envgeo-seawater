@@ -36,6 +36,7 @@ The platform is designed to support both **exploratory data analysis** and **rep
 - 🧭 3D / 4D visualization of spatial–temporal structures  
 - 📂 Session-only browser uploads and optional persistent local `User Excel data` for comparison with reference datasets
 - 🧾 Transparent data handling (filtered / excluded samples clearly reported)  
+- 🔎 Provenance-aware overlap screening plus reversible duplicate-candidate display modes for sensitivity checks
 - 🖼️ Export of publication-quality figures  
 
 ---
@@ -52,8 +53,11 @@ main visualization tools, along with selected beta and local-development pages:
 - `pages/04_[Interactive]_3D_4D_Visualizer.py`
   Interactive 3D/4D seawater visualizer for longitude, latitude, depth, and selected variables.
 
-- `pages/05_User_Data_Check_Quick_Visualizer.py`
+- `pages/05_[Utils]_User_Data_Check_Quick_Visualizer.py`
   User Data Check & Quick Visualizer for reference and CSV/XLSX upload data. It combines shared filtering, missing-value and quality review, 2D Map, Salinity-d18O, Temperature-Salinity, arbitrary 2D/3D/4D, geographic 3D, and filtered CSV export.
+
+- `pages/06_[Utils]_Data_Overlap_Check.py`
+  Read-only cross-dataset overlap screening for bundled reference datasets and one session-only uploaded table. It separates Strong and Review candidates, exports matching evidence, and supports optional reversible display screening while preserving all source records.
 
 - `pages/31_Salinity-d18O_Relationship.py`  
   Salinity-δ18O relationship plots with optional regression lines.
@@ -184,33 +188,46 @@ Unpublished or restricted datasets are **not included**.
 ### Cross-dataset overlap screening
 
 NASA GISS and PAGES CoralHydro2k are independently curated compilations and
-can include observations inherited from the same original source. A read-only
-initial screen on 2026-10-05 identified **4,068 NASA GISS--CoralHydro2k
-candidate record pairs** at a review threshold; **2,463 pairs** met a stricter
-spatial, depth, salinity, and δ18O screen. These are candidate pairs, not
-confirmed unique duplicate observations.
+can include observations inherited from the same original source. The **Data
+overlap check** page provides a read-only, provenance-aware screen for these
+and other bundled dataset pairs, as well as one session-only uploaded table
+against a selected bundled reference dataset. It requires matching valid
+sampling year and month, then evaluates latitude, longitude, depth, salinity,
+and δ18O against user-visible thresholds. Latitude and longitude are assessed
+separately so that the matching rationale remains inspectable.
 
-The Around Japan collection also has **139 strict candidate pairs** with NASA
-GISS, covering 131 of its 419 rows. These records are principally labelled
-`Yamamoto et al. (2001)` / `PI=KAWAI`; they require source-level confirmation
-before any record is treated as a duplicate. No source workbook records are
-removed in v1.3.4. A future release will publish an auditable candidate table,
-document the final criteria, and provide an optional exclusion for only
-review-confirmed overlaps in combined-dataset statistics and figures.
+Results are reported as disjoint **Strong** and **Review** candidate classes.
+Strong candidates meet all strict thresholds: the current provisional defaults
+are ≤0.1° latitude, ≤0.1° longitude, ≤5 m depth, ≤0.1 salinity, and ≤0.1‰
+δ18O difference. Review candidates meet broader provisional defaults (≤0.2°,
+≤0.2°, ≤10 m, ≤0.2, and ≤0.2‰, respectively) but differ on one or more
+strict fields; their audit output identifies whether the difference is in
+coordinates/depth, salinity, δ18O, or multiple fields. These are adjustable
+screening criteria, not universal measurement-error thresholds. A candidate is
+not a confirmed duplicate: rounding, transcription, revised source versions,
+analytical normalization, or genuinely nearby samples can produce similar
+records.
 
-The resulting source-preserving audit pattern—candidate identification,
-documented criteria, optional analytical suppression, and retained
-provenance—is intended to provide a reusable foundation when additional global
-reference datasets are integrated. It does not replace source-level review or
-claim that every candidate is a duplicate.
+The screen never changes source workbooks or removes records. It produces
+downloadable audit tables and side-by-side source-row inspection to support
+source-level confirmation. The common data-filter sidebar retains all rows by
+default, but offers two optional and reversible bundled-data display screens:
+the recommended **one-to-one rounding-compatible** subset, and a broader
+**Strong** screen for sensitivity checks. The recommended mode calculates only
+after it is selected, hides one row per deterministic one-to-one candidate
+pair, and retains the row with more populated provenance/analytical metadata
+(with a documented tie-breaker). The broader Strong mode can include
+one-to-many candidates and must not be interpreted as confirmed
+de-duplication. Uploaded user data are not automatically suppressed;
+comparisons between two independently uploaded tables are not currently
+provided.
 
-A time-aware screen using a matching valid year and month, horizontal distance
-≤15 km, salinity difference ≤0.1, and δ18O difference ≤0.1‰ identifies 1,730
-NASA--Coral candidate pairs at a ≤1 m depth difference (1,764 at ≤3 m), and
-55 Around Japan--NASA pairs at either threshold. Depth recording precision
-varies across sources; broader depth tolerances are therefore review settings,
-not automatic deletion criteria. The detailed threshold table is maintained in
-the provenance inventory.
+This source-preserving workflow—explicit criteria, candidate classes,
+inspectable evidence, retained provenance, and reversible display
+sensitivity checks—addresses a common quality-assurance problem when global
+reference datasets are combined. It is intended as a reusable foundation for
+transparent multi-dataset integration rather than a claim that every candidate
+is a duplicate.
 
 ---
 

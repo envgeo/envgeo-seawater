@@ -114,7 +114,7 @@ def p05():
 
     # Locate and load the actual page file
     page_path = (
-        Path(__file__).parent.parent / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+        Path(__file__).parent.parent / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
     )
     if not page_path.exists():
         # Restore before skipping so other tests aren't affected

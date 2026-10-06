@@ -1,7 +1,8 @@
 # External Dataset Workbook Notes
 
 **Status:** source-to-workbook comparison, 2026-09-25; current bundled
-workbook structure rechecked, 2026-09-30. This note compares the bundled
+workbook structure rechecked, 2026-09-30; CoralHydro2k citation-helper
+metadata completed, 2026-10-06. This note compares the bundled
 workbooks with the locally retained source snapshots supplied for the audit. It
 records observed differences only; it does not alter either source or bundled
 data. The corresponding Japanese record is
@@ -27,8 +28,8 @@ listed in [`provenance_inventory.md`](provenance_inventory.md).
   empty.
 - PAGES CoralHydro2k: `CoralHydro2k_SW_1_0_0_20260303` has 18,598 rows and 58
   columns. `Transect` is populated in all rows with 93 distinct values; the
-  short `reference` field is populated in 15,340 rows; the six documented
-  common-schema placeholders remain empty.
+  project-added short `reference` field is now populated in all rows; the six
+  documented common-schema placeholders remain empty.
 
 ## NASA GISS workbook
 
@@ -59,7 +60,7 @@ an assertion about the original database.
 
 | Item | Current record |
 |---|---|
-| Bundled file | `dataset/71_GLOBAL_Atwood_et_al_2026.xlsx` |
+| Bundled file | `dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx` |
 | Worksheet | `CoralHydro2k_SW_1_0_0_20260303` |
 | Source / citation | `data_text/CoralHydro2_references.md`: PAGES CoralHydro2k Seawater δ18O Database, NCEI study URL, dataset DOI, Atwood et al. (2026), accessed 2026-03-16. |
 | Source snapshot | `CoralHydro2k_Seawater_1_0_0.xlsx` (retained outside the application tree) |
@@ -73,16 +74,27 @@ include `Cruise ID` → `Cruise`, `Station ID` → `Station`, collection year/mo
 their corresponding common fields, and `Publication citation` →
 `reference_full`. The current workbook additionally contains blank
 common-schema placeholders (`Date`, `TargetDepth_m`, `Bottle`, `d13C`, `PI`,
-and `Vertical`) and an added short `reference` field (15,340 populated rows).
-That short field is extracted from the longer source `Publication citation` as
-an author-and-year form for application display and selection; the original
-long citation is retained as `reference_full`. A project-side Python
-transformation extracts a four-digit parenthesized year and the first author's
-family name. It writes `Surname (year)` for one author and `Surname et al.
-(year)` for multiple authors; its intermediate output field is named
-`reference_short`, corresponding to the current workbook's short
-`reference` field. This is a display/classification aid, not a replacement for
-the full citation.
+and `Vertical`) and a project-added short `reference` field for application
+display and selection. It follows `Surname (year)` for one author and
+`Surname et al. (year)` for multiple authors; a corporate author remains the
+author label. This is a display/classification aid, not a replacement for the
+full citation.
+
+On 2026-10-06, the 3,258 previously blank short-reference cells were completed
+without changing any observation or source-provenance field. Those rows lacked
+`Publication citation`/`reference_full` but retained a non-empty source
+`Dataset citation`. Seven source-specific mappings were reviewed explicitly:
+`GEOTRACES Intermediate Data Product Group (2021)`, `Lamb et al. (2014)`,
+`Dickson (2016)`, `Schmidt et al. (1999)`, `Lo Monaco et al. (2013)`,
+`Henley et al. (2020)`, and `Stoll et al. (2013)`. Compound and particle-based
+names are not inferred by a general surname parser. The full source citation
+remains in `reference_full` or `Dataset citation`; the project-added
+`reference` value only supports compact display and grouping.
+
+The edited workbook is versioned as `71_GLOBAL_Atwood_et_al_2026_v02.xlsx`.
+Before the next public repository synchronization, update the loader, page
+catalogue, provenance records, package checksum table, and release notes in
+the same change set.
 
 Observed metadata-format differences are limited to two date-formatted source
 fields: 5,969 `Water isotope analysis date` cells and 9 `Station ID` cells are

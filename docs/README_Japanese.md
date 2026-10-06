@@ -6,7 +6,7 @@
 [English version](README.md)
 
 利用者向けの操作案内は、サポート対象の安定版workflowだけへ案内する
-[利用ガイド](index_Japanese.md)から始める。このページは、公開済みの[GitHub Pages website](https://envgeo.github.io/envgeo-seawater/)の入口でもある。
+[利用ガイド](index_Japanese.md)から始める。このページは、公開済みの[GitHub Pages website](https://envgeo.github.io/seawater_map/)の入口でもある。
 
 ## 現在の文書
 

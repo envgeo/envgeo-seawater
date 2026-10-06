@@ -28,8 +28,8 @@ BASE_DIR = Path(__file__).resolve().parent
 # clone-specific URL when they publish the same reviewed guide for testing.
 # 安定版siteを正規の公開マニュアルとする。開発cloneでは、同じ確認済みガイドを
 # テスト公開する場合にclone固有のURLへ差し替えられる。
-ONLINE_MANUAL_EN_URL = "https://envgeo.github.io/envgeo-seawater/"
-ONLINE_MANUAL_JA_URL = "https://envgeo.github.io/envgeo-seawater/index_Japanese.html"
+ONLINE_MANUAL_EN_URL = "https://envgeo.github.io/seawater_map/"
+ONLINE_MANUAL_JA_URL = "https://envgeo.github.io/seawater_map/index_Japanese.html"
 
 st.set_page_config(
     page_title="EnvGeo Seawater Isotope Database",
@@ -212,6 +212,12 @@ def render_update_history() -> None:
     """Render the concise public update history. / 簡潔な公開更新履歴を表示する。"""
     st.markdown(
         """
+### Unreleased — v1.3.5 development updates (2026-10-06)
+
+- Added the read-only **Data Overlap Check** utility for auditing possible repeated observations across bundled datasets or one session-only uploaded table. Strong and Review candidate tables are exportable; no source workbook or observation is changed.
+- Added optional, reversible duplicate-candidate display modes and a shared **Reference / Citation** filter. The default continues to display all records, and uploads without a reference field remain supported.
+- Grouped User Data Check & Quick Visualizer and Data Overlap Check under **[Utils]** in the sidebar. Updated bilingual manuals, provenance notes, and citation guidance for analyses, figures, publications, and presentations.
+
 ### Version 1.3.4 (2026-10-03)
 
 - Released the installable stable version through PyPI and the v1.3.4 GitHub Release; the archived version DOI is <https://doi.org/10.5281/zenodo.23117784>.

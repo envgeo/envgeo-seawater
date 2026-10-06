@@ -45,7 +45,7 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
 - [x] `pages/04_[Interactive]_3D_4D_Visualizer.py` — import配置、英日併記の
   見出し・注記、Fig.1–Fig.6とカスタム表示の構造、地図・深度操作、旧コメントアウトコード、
   焦点テストを確認済み。
-- [x] `pages/05_User_Data_Check_Quick_Visualizer.py` — セッション内だけの
+- [x] `pages/05_[Utils]_User_Data_Check_Quick_Visualizer.py` — セッション内だけの
   アップロード境界、内部出所列の除外、2D/3D/地図補助処理、英日docstring・見出し、
   焦点テスト（7 + 5 passed）を確認済み。
 - [x] `pages/31_Salinity-d18O_Relationship.py` — import配置、英日併記の

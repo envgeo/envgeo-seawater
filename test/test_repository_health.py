@@ -315,7 +315,7 @@ def test_integrated_beta_excludes_user_data_quick_visualizer_from_full_page_work
     )
     workflow_block = page_text.split("FULL_PAGE_WORKFLOWS = {", 1)[1].split("}", 1)[0]
 
-    assert "05_User_Data_Check_Quick_Visualizer.py" not in workflow_block
+    assert "05_[Utils]_User_Data_Check_Quick_Visualizer.py" not in workflow_block
     assert "User Data Check & Quick Visualizer" not in workflow_block
 
 

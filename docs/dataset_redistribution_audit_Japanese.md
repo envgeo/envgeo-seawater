@@ -44,7 +44,7 @@ archiveだけに保管する。wheel、GitHub Release、Zenodoの入力にはし
 | `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | 論文DOI／引用、分析記録、現行行数、出力チェックサムを記録している。 | 利用可能な出典位置、版・取得日、引用、変換記録を維持する。 | 記録済み学術利用方針により現行packageへ含める。 |
 | `11_AROUND_JAPAN_PUB_20260305.xlsx` | 4つの地域出典label、引用、現行行数、出力チェックサムを記録している。 | 寄与する記録の行／出典対応、引用、変換を維持する。 | 記録済み学術利用方針により現行packageへ含める。 |
 | `71_GLOBA_NASA_20260226.xlsx` | `data_text/NASA_references.md`に、GISSの参照URL、database v1.22の引用、取得元URL、アクセス日**2026-03-01**が記録されている。`external_dataset_workbook_notes_Japanese.md`には、25,514行の照合、共通スキーマラベル、`Transect = Nasa_database`を記録した。 | 出典・版・取得日、`Transect`の規約、変更記録を維持する。明示的な制限、査読者からの指摘、権利者からの要請があった場合にのみ見直す。 | 引用を伴う現在の学術利用としての配布を維持し、プロジェクト所有データとは表現しない。 |
-| `71_GLOBAL_Atwood_et_al_2026.xlsx` | `data_text/CoralHydro2_references.md`に、NCEI study URL、プロジェクトDOI、Atwood et al.の引用、アクセス日**2026-03-16**が記録されている。`external_dataset_workbook_notes_Japanese.md`には、18,598行の照合、元列の対応、短縮reference、`Transect`、日付形式表現を記録した。 | DOI、取得元・取得日、求められる引用、変更記録を維持する。study固有の明示的な制限が見つかった場合に確認する。 | 引用を伴う現在の学術利用としての配布を維持し、プロジェクト所有データとは表現しない。 |
+| `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | `data_text/CoralHydro2_references.md`に、NCEI study URL、プロジェクトDOI、Atwood et al.の引用、アクセス日**2026-03-16**が記録されている。`external_dataset_workbook_notes_Japanese.md`には、18,598行の照合、元列の対応、2026-10-06の短縮reference補完、`Transect`、日付形式表現を記録した。 | DOI、取得元・取得日、求められる引用、変更記録を維持する。study固有の明示的な制限が見つかった場合に確認する。 | 引用を伴う現在の学術利用としての配布を維持し、プロジェクト所有データとは表現しない。 |
 | `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | 現在はSakamoto et al. (2022) labelの35行からなるプロジェクト統合で、出力チェックサムを記録している。 | 報告由来の記録について、行／出典対応、引用、変換を維持する。 | 記録済み学術利用方針により現行packageへ含める。 |
 
 ## T–S Stage 2への科学的な含意

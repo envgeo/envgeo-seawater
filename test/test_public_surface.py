@@ -64,7 +64,8 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
         "34_T-S_diagram.py",
         "35_Custom_Parameter_Plot.py",
         "37_Depth_Profile.py",
-        "05_User_Data_Check_Quick_Visualizer.py",
+        "05_[Utils]_User_Data_Check_Quick_Visualizer.py",
+        "06_[Utils]_Data_Overlap_Check.py",
         "80_Correlation_Overview.py",
         "53_Vertical_Section_Visualizer.py",
         "90_Integrated_Visualizer_beta.py",
@@ -78,3 +79,46 @@ def test_pages_directory_contains_only_stable_or_explicit_beta_pages():
 
 def test_retired_pages_are_not_kept_in_public_source_tree():
     assert not (ROOT / "archived_pages").exists()
+
+
+def test_overlap_check_page_is_a_public_audit_tool_not_an_auto_deleter():
+    page_text = (ROOT / "pages" / "06_[Utils]_Data_Overlap_Check.py").read_text(encoding="utf-8")
+
+    assert "Run overlap screen" in page_text
+    assert "Download Strong candidate audit CSV" in page_text
+    assert "Download Review candidate audit CSV" in page_text
+    assert "Download provisional one-to-one candidate CSV" in page_text
+    assert 'f"Inspect one {key} candidate pair"' in page_text
+    assert 'render_candidate_inspector(strong_audit' in page_text
+    assert 'render_candidate_inspector(review_audit' in page_text
+    assert '"Provisional one-to-one"' in page_text
+    assert "Record a provisional-candidate decision" in page_text
+    assert "Download provisional review decisions CSV" in page_text
+    assert "Display action after confirmation" in page_text
+    assert "Strong candidates (" in page_text
+    assert "Review candidates (" in page_text
+    assert "Unique {left_source} rows" in page_text
+    assert "Source rows loaded for this screen" in page_text
+    assert "Review difference category" in page_text
+    assert "does not remove records" in page_text
+    assert "screen_dataset_pair_for_overlaps" in page_text
+    assert "Uploaded data ×" in page_text
+    assert "two uploaded tables are not compared" in page_text
+    assert "render_upload_panel" in page_text
+    assert "How to read the audit table" in page_text
+    assert "監査表の読み方" in page_text
+    assert "Download English audit-column guide CSV" in page_text
+    assert "監査列ガイドCSVをダウンロード（日本語）" in page_text
+    assert "Strong and Review candidates" in page_text
+    assert "The two classes are disjoint" in page_text
+    assert 'layout="centered"' in page_text
+
+
+def test_shared_sidebar_offers_reference_filter_before_transect_filter():
+    """All bundled seawater rows carry a source-reference label."""
+    utils_text = (ROOT / "envgeo_utils.py").read_text(encoding="utf-8")
+
+    assert 'with st.expander("Reference / Citation", expanded=False)' in utils_text
+    assert '"Reference"' in utils_text
+    assert "default=reference_list" in utils_text
+    assert utils_text.index("Reference filtering") < utils_text.index("Transect filtering")

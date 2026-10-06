@@ -64,7 +64,8 @@ streamlit run home.py
 
 - [ ] `03_[Interactive]_2Dplus_Visualizer.py`
 - [ ] `04_[Interactive]_3D_4D_Visualizer.py`
-- [ ] `05_User_Data_Check_Quick_Visualizer.py`
+- [ ] `05_[Utils]_User_Data_Check_Quick_Visualizer.py`
+- [ ] `06_[Utils]_Data_Overlap_Check.py` — 監査を実行し、Strong／Review結果と3種類の監査CSV downloadを確認する。
 - [ ] `31_Salinity-d18O_Relationship.py`
 - [ ] `32_Isotope_Hydrographic_Mapping.py`
 - [ ] `34_T-S_diagram.py`
@@ -105,7 +106,7 @@ streamlit run home.py
 ## 7. ローカル専用・開発ページ
 
 - [x] `pages/99_Environment_Check.py`を公開repository・deploymentから除外し、ローカル開発作業コピーにだけ残す。
-- [x] `pages/05_User_Data_Check_Quick_Visualizer.py`は、アップロード起点の品質確認と2D/3D/4D探索用の公開User Data Check & Quick Visualizerである。
+- [x] `pages/05_[Utils]_User_Data_Check_Quick_Visualizer.py`は、アップロード起点の品質確認と2D/3D/4D探索用の公開User Data Check & Quick Visualizerである。
 - [ ] 開発／テストdeploymentを確認する場合は、`pages/90_Integrated_Visualizer_beta.py`が
       実験的機能として明確に表示されることを別途確認する。これは安定版の受入項目ではなく、
       安定版`seawater_map`アプリケーションと利用者向けドキュメントwebsiteから除外する。
@@ -138,7 +139,7 @@ pytest
 - [x] beta、archive、ローカル開発ページが明確に説明されていることを確認した。
 - [x] 引用・データソースの案内が理解できることを確認した。
 - [x] 精査済みmanualを基に、図付きの英日静的ドキュメントwebsiteを作成した。安定版の公開範囲だけを説明し、private path、個人データ、token、内部記録を含めないことを確認した。
-- [x] GitHub Pagesでドキュメントwebsiteを公開し、公開URL、navigation、図、linkを確認した：<https://envgeo.github.io/envgeo-seawater/>。
+- [x] GitHub Pagesでドキュメントwebsiteを公開し、公開URL、navigation、図、linkを確認した：<https://envgeo.github.io/seawater_map/>。
 - [ ] 安定版URL、release version、公開ページ範囲、ドキュメントURL、Zenodo DOIが確定した後に、研究室websiteを更新する。安定版`seawater_map`の説明と一致させ、NASA GISSとPAGES CoralHydro2kを含む引用付き約50,000件のデータ、ユーザーデータのアップロード／プロット機能を記載する。旧いversion番号、DOIの保留表現、安定版から除外したページの説明を残さない。
 
 ## 10. GitHub Release準備

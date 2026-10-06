@@ -187,7 +187,7 @@ def test_mapping_contour_uses_uploaded_only_selected_data_without_error():
 
 def test_quick_visualizer_supports_shared_uploaded_4d_data():
     app = _run_page(
-        "05_User_Data_Check_Quick_Visualizer.py",
+        "05_[Utils]_User_Data_Check_Quick_Visualizer.py",
         {
             "Longitude_degE": [135.0, 136.0, 137.0],
             "Latitude_degN": [35.0, 36.0, 37.0],
@@ -225,7 +225,7 @@ def test_quick_visualizer_supports_shared_uploaded_4d_data():
 
 def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
     page_text = (
-        ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+        ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
     ).read_text(encoding="utf-8")
 
     assert 'config={"scrollZoom": True, "displayModeBar": True}' in page_text
@@ -233,7 +233,7 @@ def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
 
 def test_quick_visualizer_marker_style_precedes_data_filtering():
     page_text = (
-        ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+        ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
     ).read_text(encoding="utf-8")
 
     assert page_text.index("style = envgeo_user_data.render_marker_style_controls") < page_text.index(
@@ -242,7 +242,7 @@ def test_quick_visualizer_marker_style_precedes_data_filtering():
 
 
 def test_quick_visualizer_geographic_scene_has_page04_style_projection(monkeypatch):
-    page_path = ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+    page_path = ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
     spec = importlib.util.spec_from_file_location("quick_visualizer", page_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -276,7 +276,7 @@ def test_quick_visualizer_geographic_scene_has_page04_style_projection(monkeypat
 
 
 def test_quick_visualizer_hover_includes_station_and_oceanographic_fields():
-    page_path = ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+    page_path = ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
     spec = importlib.util.spec_from_file_location("quick_visualizer_hover", page_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

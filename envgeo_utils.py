@@ -1211,6 +1211,560 @@ def get_quality_rows(df):
 
 
 # =============================================================================
+# Dataset-overlap screening / データセット間の重複候補スクリーニング
+# =============================================================================
+# These columns deliberately remain separate from QUALITY_FLAG_COLUMN.  A
+# possible duplicate is not an invalid measurement: it is a provenance and
+# integration question that requires review of the source records.
+OVERLAP_FLAG_COLUMN = "Overlap_Flag"
+OVERLAP_CANDIDATE_COUNT_COLUMN = "Overlap_Candidate_Count"
+OVERLAP_CANDIDATE_IDS_COLUMN = "Overlap_Candidate_IDs"
+OVERLAP_CANDIDATE_DATASETS_COLUMN = "Overlap_Candidate_Datasets"
+# Display-only provenance keys / 表示専用の来歴キー
+# Keep a stable link from the combined display table back to its immutable
+# bundled source row. They are intentionally not shown in normal figures or
+# exports. / 統合表示表と変更しない元行を結び、通常の図や出力には表示しない。
+OVERLAP_SOURCE_COLUMN = "_EnvGeo_Overlap_Source"
+OVERLAP_SOURCE_ROW_COLUMN = "_EnvGeo_Overlap_Source_Row"
+
+OVERLAP_DISPLAY_ALL = "Show all records (default)"
+OVERLAP_DISPLAY_ONE_TO_ONE = "Hide one-to-one rounding-compatible candidates (recommended)"
+OVERLAP_DISPLAY_STRONG = "Hide Strong candidates broadly (screening use)"
+
+OVERLAP_BUNDLED_SOURCE_FILES = {
+    "Around Japan": "dataset/11_AROUND_JAPAN_PUB_20260305.xlsx",
+    "NASA GISS global": "dataset/71_GLOBA_NASA_20260226.xlsx",
+    "CoralHydro2k global": "dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx",
+}
+OVERLAP_BUNDLED_SOURCE_PAIRS = (
+    ("Around Japan", "NASA GISS global"),
+    ("Around Japan", "CoralHydro2k global"),
+    ("NASA GISS global", "CoralHydro2k global"),
+)
+
+OVERLAP_DEFAULT_CRITERIA = {
+    # Compare recorded coordinates directly, rather than a distance conversion:
+    # source files commonly preserve location only to one decimal degree.
+    "max_latitude_difference_deg": 0.1,
+    "max_longitude_difference_deg": 0.1,
+    # Source workbooks may record the same bottle/depth at different precision
+    # (for example 20.1 m versus 20 m).  ±5 m is the initial strong-screen
+    # setting; the audit UI permits a stricter ±1 m screen when required.
+    "max_depth_difference_m": 5.0,
+    "max_salinity_difference": 0.1,
+    "max_d18o_difference": 0.1,
+    # A broader screen is useful for human review, but is never a basis for
+    # automatic exclusion.  The UI will expose these values in v1.3.5.
+    "review_max_latitude_difference_deg": 0.2,
+    "review_max_longitude_difference_deg": 0.2,
+    "review_max_depth_difference_m": 10.0,
+    "review_max_salinity_difference": 0.2,
+    "review_max_d18o_difference": 0.2,
+}
+
+OVERLAP_AUDIT_COLUMNS = [
+    "Candidate_ID", "Candidate_Class", "Review_Difference_Category", "Difference_Fields", "Candidate_Reason",
+    "Left_Source", "Left_Reference", "Left_Citation", "Left_Citation_Field", "Left_Row",
+    "Right_Source", "Right_Reference", "Right_Citation", "Right_Citation_Field", "Right_Row",
+    "Year", "Month", "Latitude_Difference_deg", "Longitude_Difference_deg", "Depth_Difference_m",
+    "Salinity_Difference", "d18O_Difference",
+    "Latitude_Rounding_Allowance_deg", "Longitude_Rounding_Allowance_deg",
+    "Depth_Rounding_Allowance_m", "Salinity_Rounding_Allowance", "d18O_Rounding_Allowance",
+    "Rounding_Compatible", "One_to_One_Rounding_Match",
+    "Coordinate_Depth_Strong_Exceeded", "Salinity_Strong_Exceeded", "d18O_Strong_Exceeded",
+    "Salinity_Right_minus_Left", "d18O_Right_minus_Left", "Salinity_d18O_Change_Direction",
+]
+
+
+def _observed_rounding_half_unit(value):
+    """Estimate half a displayed decimal unit from a numeric source value.
+
+    Spreadsheet readers usually preserve the numeric value but not every Excel
+    display-format detail.  This deliberately conservative estimate uses the
+    visible decimal places of the supplied value: 36.3 implies ±0.05, while
+    0.18 implies ±0.005.  It is an audit aid, never a measurement-uncertainty
+    model or a replacement for source documentation.
+    """
+    if pd.isna(value):
+        return np.nan
+    text = format(float(value), ".12f").rstrip("0").rstrip(".")
+    decimals = len(text.partition(".")[2])
+    return 0.5 * (10.0 ** (-decimals))
+
+
+def _rounding_compatible(difference, left_value, right_value):
+    """Return whether a difference can be explained by both reported precisions."""
+    allowance = _observed_rounding_half_unit(left_value) + _observed_rounding_half_unit(right_value)
+    return _within_overlap_limit(difference, allowance), allowance
+
+
+def overlap_criteria_text(criteria=None):
+    """Return a compact, auditable description of an overlap screen.
+
+    Only pairs with usable, equal Year and Month are considered.  This is
+    intentionally conservative: rows without time metadata may be shown in a
+    future manual-review workflow, but are never silently treated as matches.
+    """
+    values = _resolved_overlap_criteria(criteria)
+    return (
+        "Overlap candidates require the same valid Year and Month; "
+        f"strong candidates are within {values['max_latitude_difference_deg']:g}° latitude, "
+        f"{values['max_longitude_difference_deg']:g}° longitude, "
+        f"{values['max_depth_difference_m']:g} m depth, "
+        f"{values['max_salinity_difference']:g} salinity, and "
+        f"{values['max_d18o_difference']:g}‰ d18O. "
+        "Candidates require provenance review and are not automatically removed."
+    )
+
+
+def _resolved_overlap_criteria(criteria=None):
+    """Merge caller-supplied screening values with documented defaults."""
+    values = OVERLAP_DEFAULT_CRITERIA.copy()
+    if criteria:
+        unknown = set(criteria).difference(values)
+        if unknown:
+            raise KeyError(f"Unknown overlap criterion: {sorted(unknown)}")
+        values.update(criteria)
+    for key, value in values.items():
+        if float(value) < 0:
+            raise ValueError(f"Overlap criterion {key} must be non-negative")
+    for strict_key, review_key in (
+        ("max_latitude_difference_deg", "review_max_latitude_difference_deg"),
+        ("max_longitude_difference_deg", "review_max_longitude_difference_deg"),
+        ("max_depth_difference_m", "review_max_depth_difference_m"),
+        ("max_salinity_difference", "review_max_salinity_difference"),
+        ("max_d18o_difference", "review_max_d18o_difference"),
+    ):
+        if float(values[review_key]) < float(values[strict_key]):
+            raise ValueError(f"{review_key} must be at least {strict_key}")
+    return values
+
+
+def _overlap_screen_frame(df):
+    """Create a numeric working frame without altering the source DataFrame."""
+    required = ["Latitude_degN", "Longitude_degE", "Year", "Month", "Depth_m", "Salinity", "d18O"]
+    missing = [column for column in required if column not in df.columns]
+    if missing:
+        raise KeyError("Overlap screening requires columns: " + ", ".join(missing))
+
+    work = pd.DataFrame({"Source_Row": df.index.to_numpy(), "_position": np.arange(len(df))})
+    # Citation fields are retained for source-level review but never used as a
+    # matching criterion. Some CoralHydro2k rows have no shortened `reference`
+    # value while retaining a full `Dataset citation`; keep both raw reference
+    # and a non-destructive, clearly-labelled citation fallback.
+    if "reference" in df.columns:
+        work["Reference"] = df["reference"].fillna("").astype(str).to_numpy()
+    else:
+        work["Reference"] = ""
+    citation = pd.Series("", index=df.index, dtype="object")
+    citation_field = pd.Series("", index=df.index, dtype="object")
+    for field in ("reference", "reference_full", "Dataset citation"):
+        if field not in df.columns:
+            continue
+        values = df[field].fillna("").astype(str).str.strip()
+        use_values = citation.eq("") & values.ne("")
+        citation.loc[use_values] = values.loc[use_values]
+        citation_field.loc[use_values] = field
+    work["Citation"] = citation.to_numpy()
+    work["Citation_Field"] = citation_field.to_numpy()
+    for column in required:
+        work[column] = coerce_numeric_values(df[column]).to_numpy()
+
+    work["Year"] = work["Year"].where(work["Year"].between(1, 9999))
+    work["Month"] = work["Month"].where(work["Month"].between(1, 12))
+    work["Longitude_degE"] = normalize_longitude_deg(work["Longitude_degE"])
+    return work
+
+
+def _longitude_difference_deg(left_lon, right_lon):
+    """Return the smallest absolute longitude difference across the dateline."""
+    return abs(((left_lon - right_lon + 180.0) % 360.0) - 180.0)
+
+
+def _within_overlap_limit(value, limit):
+    """Compare a measured difference with an inclusive user-facing limit."""
+    return bool(value <= float(limit) or np.isclose(value, float(limit), rtol=0.0, atol=1e-12))
+
+
+def _classify_overlap_differences(latitude_difference, longitude_difference, depth_difference,
+                                  salinity_difference, d18o_difference, criteria):
+    """Classify review candidates by value differences and retain location flags.
+
+    Salinity and δ18O exceedance form the mutually exclusive category.  A
+    coordinate/depth exceedance is deliberately a separate flag: it can occur
+    together with any value category and should not turn a salinity-only case
+    into an opaque ``Multiple differences`` result.  All outputs are
+    descriptive only and do not decide whether a pair is a duplicate.
+    """
+    coordinate_depth_exceeded = any(
+        not _within_overlap_limit(difference, criteria[criterion_name])
+        for difference, criterion_name in (
+            (latitude_difference, "max_latitude_difference_deg"),
+            (longitude_difference, "max_longitude_difference_deg"),
+            (depth_difference, "max_depth_difference_m"),
+        )
+    )
+    salinity_exceeded = not _within_overlap_limit(
+        salinity_difference, criteria["max_salinity_difference"]
+    )
+    d18o_exceeded = not _within_overlap_limit(
+        d18o_difference, criteria["max_d18o_difference"]
+    )
+    exceeded = []
+    for label, difference, criterion_name in (
+        ("Latitude", latitude_difference, "max_latitude_difference_deg"),
+        ("Longitude", longitude_difference, "max_longitude_difference_deg"),
+        ("Depth", depth_difference, "max_depth_difference_m"),
+        ("Salinity", salinity_difference, "max_salinity_difference"),
+        ("δ18O", d18o_difference, "max_d18o_difference"),
+    ):
+        if not _within_overlap_limit(difference, criteria[criterion_name]):
+            exceeded.append(label)
+
+    if not salinity_exceeded and not d18o_exceeded:
+        category = (
+            "Coordinate/depth difference only"
+            if coordinate_depth_exceeded
+            else "All strong criteria met"
+        )
+    elif salinity_exceeded and not d18o_exceeded:
+        category = "Salinity difference"
+    elif d18o_exceeded and not salinity_exceeded:
+        category = "δ18O difference"
+    else:
+        category = "Multiple differences"
+    return category, "; ".join(exceeded), {
+        "Coordinate_Depth_Strong_Exceeded": coordinate_depth_exceeded,
+        "Salinity_Strong_Exceeded": salinity_exceeded,
+        "d18O_Strong_Exceeded": d18o_exceeded,
+    }
+
+
+def _salinity_d18o_change_direction(salinity_right_minus_left, d18o_right_minus_left):
+    """Describe pairwise change direction without inferring a mixing process."""
+    if np.isclose(salinity_right_minus_left, 0.0) or np.isclose(d18o_right_minus_left, 0.0):
+        return "One or both changes are zero"
+    if np.sign(salinity_right_minus_left) == np.sign(d18o_right_minus_left):
+        return "Same signed changes"
+    return "Opposite signed changes"
+
+
+def screen_dataset_pair_for_overlaps(left_df, right_df, left_source, right_source, criteria=None):
+    """Return an audit table of possible cross-dataset duplicate records.
+
+    The function is read-only with respect to both input tables.  It compares
+    only rows sharing a valid Year--Month, evaluates the recorded latitude and
+    longitude differences, then evaluates depth, salinity and d18O.  ``Strong
+    candidate`` means every strict criterion is met; ``Review candidate``
+    satisfies only the broader review envelope.  Neither class asserts that
+    records are duplicates or removes a row.
+    """
+    values = _resolved_overlap_criteria(criteria)
+    if left_df is None or right_df is None or left_df.empty or right_df.empty:
+        return pd.DataFrame(columns=OVERLAP_AUDIT_COLUMNS)
+
+    left = _overlap_screen_frame(left_df)
+    right = _overlap_screen_frame(right_df)
+    required_fields = ["Latitude_degN", "Longitude_degE", "Year", "Month", "Depth_m", "Salinity", "d18O"]
+    left = left.dropna(subset=required_fields)
+    right = right.dropna(subset=required_fields)
+    if left.empty or right.empty:
+        return pd.DataFrame(columns=OVERLAP_AUDIT_COLUMNS)
+
+    rows = []
+    for (year, month), left_group in left.groupby(["Year", "Month"], sort=True):
+        right_group = right[(right["Year"] == year) & (right["Month"] == month)]
+        if right_group.empty:
+            continue
+
+        for _, left_row in left_group.iterrows():
+            latitude_differences = abs(right_group["Latitude_degN"] - left_row["Latitude_degN"])
+            longitude_differences = ((right_group["Longitude_degE"] - left_row["Longitude_degE"] + 180.0) % 360.0 - 180.0).abs()
+            geographic_candidates = right_group.loc[
+                (latitude_differences <= values["review_max_latitude_difference_deg"] + 1e-12)
+                & (longitude_differences <= values["review_max_longitude_difference_deg"] + 1e-12)
+            ]
+            for _, right_row in geographic_candidates.iterrows():
+                latitude_difference = abs(left_row["Latitude_degN"] - right_row["Latitude_degN"])
+                longitude_difference = _longitude_difference_deg(left_row["Longitude_degE"], right_row["Longitude_degE"])
+                depth_difference = abs(left_row["Depth_m"] - right_row["Depth_m"])
+                salinity_right_minus_left = right_row["Salinity"] - left_row["Salinity"]
+                d18o_right_minus_left = right_row["d18O"] - left_row["d18O"]
+                salinity_difference = abs(salinity_right_minus_left)
+                d18o_difference = abs(d18o_right_minus_left)
+                strict = (
+                    _within_overlap_limit(latitude_difference, values["max_latitude_difference_deg"])
+                    and _within_overlap_limit(longitude_difference, values["max_longitude_difference_deg"])
+                    and _within_overlap_limit(depth_difference, values["max_depth_difference_m"])
+                    and _within_overlap_limit(salinity_difference, values["max_salinity_difference"])
+                    and _within_overlap_limit(d18o_difference, values["max_d18o_difference"])
+                )
+                review = (
+                    _within_overlap_limit(latitude_difference, values["review_max_latitude_difference_deg"])
+                    and _within_overlap_limit(longitude_difference, values["review_max_longitude_difference_deg"])
+                    and _within_overlap_limit(depth_difference, values["review_max_depth_difference_m"])
+                    and _within_overlap_limit(salinity_difference, values["review_max_salinity_difference"])
+                    and _within_overlap_limit(d18o_difference, values["review_max_d18o_difference"])
+                )
+                if not review:
+                    continue
+                candidate_class = "Strong candidate" if strict else "Review candidate"
+                latitude_rounding_compatible, latitude_rounding_allowance = _rounding_compatible(
+                    latitude_difference, left_row["Latitude_degN"], right_row["Latitude_degN"]
+                )
+                longitude_rounding_compatible, longitude_rounding_allowance = _rounding_compatible(
+                    longitude_difference, left_row["Longitude_degE"], right_row["Longitude_degE"]
+                )
+                depth_rounding_compatible, depth_rounding_allowance = _rounding_compatible(
+                    depth_difference, left_row["Depth_m"], right_row["Depth_m"]
+                )
+                salinity_rounding_compatible, salinity_rounding_allowance = _rounding_compatible(
+                    salinity_difference, left_row["Salinity"], right_row["Salinity"]
+                )
+                d18o_rounding_compatible, d18o_rounding_allowance = _rounding_compatible(
+                    d18o_difference, left_row["d18O"], right_row["d18O"]
+                )
+                rounding_compatible = all((
+                    latitude_rounding_compatible, longitude_rounding_compatible,
+                    depth_rounding_compatible, salinity_rounding_compatible,
+                    d18o_rounding_compatible,
+                ))
+                rounding_score = sum((
+                    latitude_difference / latitude_rounding_allowance,
+                    longitude_difference / longitude_rounding_allowance,
+                    depth_difference / depth_rounding_allowance,
+                    salinity_difference / salinity_rounding_allowance,
+                    d18o_difference / d18o_rounding_allowance,
+                ))
+                difference_category, difference_fields, exceeded_flags = _classify_overlap_differences(
+                    latitude_difference, longitude_difference, depth_difference,
+                    salinity_difference, d18o_difference, values,
+                )
+                left_position = int(left_row["_position"])
+                right_source_position = int(right_row["_position"])
+                rows.append({
+                    "Candidate_ID": f"{left_source}:{left_position}--{right_source}:{right_source_position}",
+                    "Candidate_Class": candidate_class,
+                    "Review_Difference_Category": difference_category,
+                    "Difference_Fields": difference_fields,
+                    "Candidate_Reason": "same valid Year-Month; recorded coordinates and measurement values within screening criteria",
+                    "Left_Source": str(left_source), "Left_Reference": left_row["Reference"],
+                    "Left_Citation": left_row["Citation"], "Left_Citation_Field": left_row["Citation_Field"],
+                    "Left_Row": left_row["Source_Row"],
+                    "Right_Source": str(right_source), "Right_Reference": right_row["Reference"],
+                    "Right_Citation": right_row["Citation"], "Right_Citation_Field": right_row["Citation_Field"],
+                    "Right_Row": right_row["Source_Row"],
+                    "Year": int(year), "Month": int(month),
+                    "Latitude_Difference_deg": latitude_difference, "Longitude_Difference_deg": longitude_difference,
+                    "Depth_Difference_m": depth_difference,
+                    "Salinity_Difference": salinity_difference, "d18O_Difference": d18o_difference,
+                    "Latitude_Rounding_Allowance_deg": latitude_rounding_allowance,
+                    "Longitude_Rounding_Allowance_deg": longitude_rounding_allowance,
+                    "Depth_Rounding_Allowance_m": depth_rounding_allowance,
+                    "Salinity_Rounding_Allowance": salinity_rounding_allowance,
+                    "d18O_Rounding_Allowance": d18o_rounding_allowance,
+                    "Rounding_Compatible": rounding_compatible,
+                    "One_to_One_Rounding_Match": False,
+                    "_Rounding_Match_Score": rounding_score,
+                    **exceeded_flags,
+                    "Salinity_Right_minus_Left": salinity_right_minus_left,
+                    "d18O_Right_minus_Left": d18o_right_minus_left,
+                    "Salinity_d18O_Change_Direction": _salinity_d18o_change_direction(
+                        salinity_right_minus_left, d18o_right_minus_left
+                    ),
+                })
+
+    audit = pd.DataFrame(rows, columns=OVERLAP_AUDIT_COLUMNS + ["_Rounding_Match_Score"])
+    if audit.empty:
+        return audit
+    eligible = audit.loc[
+        audit["Candidate_Class"].eq("Strong candidate")
+        & audit["Rounding_Compatible"].eq(True)
+    ].sort_values(["Year", "Month", "_Rounding_Match_Score", "Candidate_ID"], kind="stable")
+    used_left, used_right = set(), set()
+    for index, candidate in eligible.iterrows():
+        left_key = (candidate["Year"], candidate["Month"], candidate["Left_Source"], candidate["Left_Row"])
+        right_key = (candidate["Year"], candidate["Month"], candidate["Right_Source"], candidate["Right_Row"])
+        if left_key in used_left or right_key in used_right:
+            continue
+        audit.loc[index, "One_to_One_Rounding_Match"] = True
+        used_left.add(left_key)
+        used_right.add(right_key)
+    return audit.drop(columns="_Rounding_Match_Score").sort_values(
+        ["Candidate_Class", "Year", "Month", "Latitude_Difference_deg", "Longitude_Difference_deg", "Depth_Difference_m"],
+        kind="stable",
+    ).reset_index(drop=True)
+
+
+def annotate_overlap_candidates(df, audit_table, source_label):
+    """Return a copy of ``df`` annotated from an overlap audit table.
+
+    This is an explanatory flag only.  It never drops, changes or de-duplicates
+    measurements; a later review and display-control step will decide whether
+    confirmed pairs are hidden for a particular analysis.
+    """
+    annotated = df.copy()
+    annotated[OVERLAP_FLAG_COLUMN] = ""
+    annotated[OVERLAP_CANDIDATE_COUNT_COLUMN] = 0
+    annotated[OVERLAP_CANDIDATE_IDS_COLUMN] = ""
+    annotated[OVERLAP_CANDIDATE_DATASETS_COLUMN] = ""
+    if audit_table is None or audit_table.empty:
+        return annotated
+
+    is_left = audit_table["Left_Source"].astype(str).eq(str(source_label))
+    is_right = audit_table["Right_Source"].astype(str).eq(str(source_label))
+    relevant = audit_table.loc[is_left | is_right].copy()
+    if relevant.empty:
+        return annotated
+
+    for row_index, group in relevant.groupby(
+        np.where(is_left.loc[relevant.index], relevant["Left_Row"], relevant["Right_Row"]), sort=False
+    ):
+        # Source index values may be strings or non-consecutive spreadsheet IDs.
+        mask = annotated.index == row_index
+        if not mask.any():
+            continue
+        classes = group["Candidate_Class"].astype(str)
+        other_sources = np.where(
+            group["Left_Source"].astype(str).eq(str(source_label)),
+            group["Right_Source"].astype(str), group["Left_Source"].astype(str),
+        )
+        annotated.loc[mask, OVERLAP_FLAG_COLUMN] = (
+            "Strong candidate" if (classes == "Strong candidate").any() else "Review candidate"
+        )
+        annotated.loc[mask, OVERLAP_CANDIDATE_COUNT_COLUMN] = len(group)
+        annotated.loc[mask, OVERLAP_CANDIDATE_IDS_COLUMN] = "; ".join(group["Candidate_ID"].astype(str))
+        annotated.loc[mask, OVERLAP_CANDIDATE_DATASETS_COLUMN] = "; ".join(sorted(set(other_sources)))
+    return annotated
+
+
+# =============================================================================
+# Reversible overlap-candidate display / 可逆的な重複候補表示
+# =============================================================================
+# These helpers calculate candidates only when a user selects a display mode.
+# They never modify source workbooks or measurements. / 利用者が表示モードを
+# 選んだ時だけ候補を計算し、元workbook・測定値は変更しない。
+
+# Metadata-completeness tie-breaker / メタデータ充実度による残存行の選択
+# This is a deterministic display rule, not a scientific quality ranking.
+# 科学的な品質順位ではなく、表示用に残す行を一定にするための規則。
+def _overlap_information_score(record):
+    """Return a transparent completeness score for reversible display choices.
+
+    The score is not a scientific quality score.  It only supplies a stable
+    tie-breaker when an overlap candidate must have one display row retained.
+    Source records are never edited or deleted.
+    """
+    fields = (
+        "reference", "reference_full", "Dataset citation",
+        "Publication DOI or URL", "Data provenance notes", "Cruise",
+        "Station", "Date", "Day", "Bottle", "Temperature_degC", "dD",
+        "Notes", "PI", "remarks by TI",
+    )
+    return sum(
+        field in record.index
+        and pd.notna(record[field])
+        and str(record[field]).strip().lower() not in {"", "nan", "none"}
+        for field in fields
+    )
+
+
+def _overlap_retained_source(left_source, left_record, right_source, right_record):
+    """Choose the more completely documented row for a display-only screen."""
+    left_score = _overlap_information_score(left_record)
+    right_score = _overlap_information_score(right_record)
+    if left_score > right_score:
+        return "left"
+    if right_score > left_score:
+        return "right"
+
+    # A deterministic tie-breaker prevents a changing result between runs.
+    # The curated Around Japan table is preferred, then CoralHydro2k, then
+    # NASA GISS; this precedence has no effect when metadata differs.
+    priority = {"Around Japan": 0, "CoralHydro2k global": 1, "NASA GISS global": 2}
+    return "left" if priority.get(left_source, 99) <= priority.get(right_source, 99) else "right"
+
+
+# Cached bundled-source audit / 同梱データ監査のキャッシュ
+# The potentially expensive cross-source screen starts only after a display
+# mode is selected, then its result is reused during the current app session.
+# 計算負荷のある候補抽出は表示モード選択後だけ行い、そのセッション中は再利用する。
+@st.cache_data(show_spinner=False)
+def bundled_overlap_display_candidates():
+    """Build cached display-only candidates for the three bundled core sources.
+
+    This expensive audit is intentionally called only after a user opts into a
+    duplicate-display mode.  It reads source workbooks without writing to them.
+    """
+    sources = {
+        label: pd.read_excel(envgeo_assets.asset_path(filename))
+        for label, filename in OVERLAP_BUNDLED_SOURCE_FILES.items()
+    }
+    audit_tables = [
+        screen_dataset_pair_for_overlaps(sources[left], sources[right], left, right)
+        for left, right in OVERLAP_BUNDLED_SOURCE_PAIRS
+    ]
+    audit_tables = [table for table in audit_tables if not table.empty]
+    audit = pd.concat(audit_tables, ignore_index=True) if audit_tables else pd.DataFrame()
+    if audit.empty:
+        return pd.DataFrame(columns=[OVERLAP_SOURCE_COLUMN, OVERLAP_SOURCE_ROW_COLUMN, "Display_Mode"])
+
+    results = []
+    for _, candidate in audit.iterrows():
+        left_source, right_source = candidate["Left_Source"], candidate["Right_Source"]
+        left_row, right_row = candidate["Left_Row"], candidate["Right_Row"]
+        retained = _overlap_retained_source(
+            left_source, sources[left_source].loc[left_row],
+            right_source, sources[right_source].loc[right_row],
+        )
+        hidden_source, hidden_row = (
+            (right_source, right_row) if retained == "left" else (left_source, left_row)
+        )
+        common = {
+            OVERLAP_SOURCE_COLUMN: hidden_source,
+            OVERLAP_SOURCE_ROW_COLUMN: hidden_row,
+            "Retained_Source": left_source if retained == "left" else right_source,
+            "Candidate_ID": candidate["Candidate_ID"],
+        }
+        if bool(candidate["One_to_One_Rounding_Match"]):
+            results.append({**common, "Display_Mode": OVERLAP_DISPLAY_ONE_TO_ONE})
+        if candidate["Candidate_Class"] == "Strong candidate":
+            results.append({**common, "Display_Mode": OVERLAP_DISPLAY_STRONG})
+    return pd.DataFrame(results).drop_duplicates(
+        subset=[OVERLAP_SOURCE_COLUMN, OVERLAP_SOURCE_ROW_COLUMN, "Display_Mode"]
+    )
+
+
+# Display-only row filtering / 表示だけを対象とした行フィルタリング
+# Return a copy with selected bundled candidates hidden. Source workbooks,
+# uploaded data, and original measurement values are not changed.
+# 選んだ同梱候補だけをコピー上で非表示にし、元workbook・アップロード・測定値は変更しない。
+def filter_bundled_overlap_display_rows(df, display_mode):
+    """Hide opted-in overlap candidates without mutating any source values.
+
+    Returns ``(filtered_dataframe, hidden_row_count)``.  Browser-uploaded and
+    other untracked rows remain visible because they have no bundled provenance
+    key.  The broad Strong mode is deliberately labelled as a screen, not a
+    confirmed duplicate decision.
+    """
+    result = df.copy()
+    if (
+        display_mode == OVERLAP_DISPLAY_ALL
+        or OVERLAP_SOURCE_COLUMN not in result.columns
+        or OVERLAP_SOURCE_ROW_COLUMN not in result.columns
+    ):
+        return result, 0
+    candidates = bundled_overlap_display_candidates()
+    targets = candidates.loc[candidates["Display_Mode"].eq(display_mode)]
+    if targets.empty:
+        return result, 0
+    target_keys = set(zip(targets[OVERLAP_SOURCE_COLUMN], targets[OVERLAP_SOURCE_ROW_COLUMN]))
+    row_keys = list(zip(result[OVERLAP_SOURCE_COLUMN], result[OVERLAP_SOURCE_ROW_COLUMN]))
+    keep = ~pd.Series(row_keys, index=result.index).isin(target_keys)
+    return result.loc[keep].copy(), int((~keep).sum())
+
+
+# =============================================================================
 # Uploaded-data session state / アップロードデータのセッション管理
 # =============================================================================
 def store_uploaded_data(df, filename=None, state=None):
@@ -1272,7 +1826,7 @@ def load_isotope_data(ref_data, sheet_num=0):
     
     # Global
     file_03 = envgeo_assets.asset_path('dataset/71_GLOBA_NASA_20260226.xlsx')
-    file_04 = envgeo_assets.asset_path('dataset/71_GLOBAL_Atwood_et_al_2026.xlsx')
+    file_04 = envgeo_assets.asset_path('dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx')
     file_05 = envgeo_assets.asset_path('dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx')
 
     # Optional always-loaded user table for local operation.
@@ -1284,20 +1838,33 @@ def load_isotope_data(ref_data, sheet_num=0):
     # `Dataset` is a UI category and may differ from the original source.
     # `Dataset`はUI用の分類であり、元の出典とは一致しない場合がある。
     # -------------------------------------------------------------------
+    # Preserve bundled-source identity for the optional overlap display screen.
+    # UI Dataset labels remain separate. / 任意の重複候補表示用に元データセットと
+    # 元行を保持し、画面用のDataset分類とは分ける。
     df1 = pd.read_excel(file_01)
     df1['Dataset'] = 'Around Japan'
+    df1[OVERLAP_SOURCE_COLUMN] = 'ECS-Japan Sea (Kodama et al. 2024)'
+    df1[OVERLAP_SOURCE_ROW_COLUMN] = df1.index
     
     df2 = pd.read_excel(file_02)
     df2['Dataset'] = 'Around Japan'
+    df2[OVERLAP_SOURCE_COLUMN] = 'Around Japan'
+    df2[OVERLAP_SOURCE_ROW_COLUMN] = df2.index
     
     df3 = pd.read_excel(file_03)
     df3['Dataset'] = 'Global (NASA GISS)'
+    df3[OVERLAP_SOURCE_COLUMN] = 'NASA GISS global'
+    df3[OVERLAP_SOURCE_ROW_COLUMN] = df3.index
     
     df4 = pd.read_excel(file_04)
     df4['Dataset'] = 'Global (CoralHydro2k)'
+    df4[OVERLAP_SOURCE_COLUMN] = 'CoralHydro2k global'
+    df4[OVERLAP_SOURCE_ROW_COLUMN] = df4.index
     
     df5 = pd.read_excel(file_05)
     df5['Dataset'] = 'Global (other reports)'
+    df5[OVERLAP_SOURCE_COLUMN] = 'Global other reports'
+    df5[OVERLAP_SOURCE_ROW_COLUMN] = df5.index
 
     df_user_excel = None
     if file_user_excel is not None:
@@ -1312,6 +1879,8 @@ def load_isotope_data(ref_data, sheet_num=0):
             # change, while the table contributes no observations.
             if not candidate_user_excel.dropna(how="all").empty:
                 candidate_user_excel['Dataset'] = USER_EXCEL_DATA_LABEL
+                candidate_user_excel[OVERLAP_SOURCE_COLUMN] = USER_EXCEL_DATA_LABEL
+                candidate_user_excel[OVERLAP_SOURCE_ROW_COLUMN] = candidate_user_excel.index
                 df_user_excel = candidate_user_excel
         except Exception as exc:
             # A local configuration error must not prevent public data loading.
@@ -2358,10 +2927,11 @@ def filter_uploaded_data_for_sidebar(
     if not settings.get("apply_reference_filters", False) and not include_uploaded_dataset:
         return result
 
-    # Dataset and Transect choices identify reference cruises.  Uploads are
-    # normally labelled "Uploaded data", so applying those choices would hide
-    # every overlay by default.  Month is a shared physical field and is safe
-    # to apply when it is supplied by the upload.
+    # Dataset, reference, and Transect choices identify bundled reference
+    # records. Uploads are normally labelled "Uploaded data" and can omit a
+    # reference field, so applying those choices would hide every overlay by
+    # default. Month is a shared physical field and is safe to apply when it is
+    # supplied by the upload.
     categorical_filters = {"Month": settings.get("selected_months")}
     for column, selected_values in categorical_filters.items():
         if column in result.columns and selected_values is not None:
@@ -2423,9 +2993,47 @@ def sidebar_filter_and_display(
         
         st.header(DATA_FILTERING_LABEL)
         st.caption(MANUAL_FILTER_APPLY_NOTE)
+
+        # ---------------------------------------------------------------
+        # Duplicate-candidate display / 重複候補の表示
+        # Default keeps every record. Opt-in modes are display-only and use
+        # cached bundled-source audits; no source workbook is altered.
+        # 既定では全記録を保持し、選択時だけキャッシュ済み監査を使う表示処理。
+        # ---------------------------------------------------------------
+        with st.expander("Duplicate-candidate display", expanded=False):
+            st.caption(
+                "Fixed screening criteria — Strong: latitude/longitude ≤0.1°, "
+                "depth ≤5 m, salinity difference ≤0.1, δ18O difference ≤0.1‰. "
+                "Review: latitude/longitude ≤0.2°, depth ≤10 m, salinity "
+                "difference ≤0.2, δ18O difference ≤0.2‰."
+            )
+            overlap_display_mode = st.radio(
+                "Bundled-data overlap display",
+                options=(
+                    OVERLAP_DISPLAY_ALL,
+                    OVERLAP_DISPLAY_ONE_TO_ONE,
+                    OVERLAP_DISPLAY_STRONG,
+                ),
+                index=0,
+                help=(
+                    "This is a reversible display filter for bundled datasets only. "
+                    "It never edits, deletes, or changes source measurements."
+                ),
+            )
+            st.caption(
+                "Recommended: hide only one-to-one candidates whose recorded "
+                "differences are compatible with inferred rounding precision."
+            )
+            if overlap_display_mode == OVERLAP_DISPLAY_STRONG:
+                st.warning(
+                    "Strong screening can include one-to-many candidates. Use it "
+                    "for sensitivity checks, not as a confirmed de-duplication result."
+                )
         
         submit_top = st.form_submit_button(
-            "Apply settings", **stretch_width_kwargs(st.form_submit_button)
+            "Apply settings",
+            type="primary",
+            **stretch_width_kwargs(st.form_submit_button),
         )
 
         # Streamlit 1.42 does not support keys on form submit buttons; labels differ.
@@ -2434,6 +3042,14 @@ def sidebar_filter_and_display(
         # -------------------------------------------------------------------
         # Dataset filtering / データセットの絞り込み
         # -------------------------------------------------------------------
+        df1, hidden_overlap_rows = filter_bundled_overlap_display_rows(
+            df1, overlap_display_mode
+        )
+        if overlap_display_mode != OVERLAP_DISPLAY_ALL:
+            st.caption(
+                f"Display-only overlap screen: {hidden_overlap_rows:,} bundled rows hidden. "
+                "Choose ‘Show all records’ to restore them immediately."
+            )
         
         df1["Dataset"] = df1["Dataset"].fillna("no_name")
         df1["Dataset"] = df1["Dataset"].replace({'nan': 'no_name', 'None': 'no_name', '': 'no_name'})
@@ -2467,6 +3083,38 @@ def sidebar_filter_and_display(
             st.stop()
             
         
+        # -------------------------------------------------------------------
+        # Reference filtering / 出典の絞り込み
+        # -------------------------------------------------------------------
+        # Bundled seawater records retain their original source-reference
+        # labels. Keep a visible fallback for optional local/browser uploads
+        # that do not provide a reference.
+        if "reference" not in df1.columns:
+            df1["reference"] = "No reference recorded"
+        df1["reference"] = df1["reference"].fillna("No reference recorded")
+        df1["reference"] = df1["reference"].replace(
+            {"nan": "No reference recorded", "None": "No reference recorded", "": "No reference recorded"}
+        )
+        reference_list = sorted(df1["reference"].dropna().unique().tolist())
+
+        with st.expander("Reference / Citation", expanded=False):
+            selected_references = st.multiselect(
+                "Reference",
+                reference_list,
+                default=reference_list,
+                help=(
+                    "Filter bundled seawater records by their original source "
+                    "reference label. Full citations remain available in the "
+                    "source metadata and documentation."
+                ),
+            )
+        df1 = df1[df1["reference"].isin(selected_references)]
+
+        if df1.empty:
+            st.warning("⚠️ no data found.")
+            st.stop()
+
+
         # -------------------------------------------------------------------
         # Transect filtering / 航海区の絞り込み
         # -------------------------------------------------------------------
@@ -2922,7 +3570,9 @@ def sidebar_filter_and_display(
  
         
         submit_bottom = st.form_submit_button(
-            "Apply settings!", **stretch_width_kwargs(st.form_submit_button)
+            "Apply settings!",
+            type="primary",
+            **stretch_width_kwargs(st.form_submit_button),
         )
         submitted = submit_top or submit_bottom
         

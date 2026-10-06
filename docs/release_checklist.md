@@ -72,7 +72,8 @@ Open each page and perform a light visual check.
 
 - [ ] `03_[Interactive]_2Dplus_Visualizer.py`
 - [ ] `04_[Interactive]_3D_4D_Visualizer.py`
-- [ ] `05_User_Data_Check_Quick_Visualizer.py`
+- [ ] `05_[Utils]_User_Data_Check_Quick_Visualizer.py`
+- [ ] `06_[Utils]_Data_Overlap_Check.py` — run the audit, inspect Strong and Review results, and verify all three audit CSV downloads.
 - [ ] `31_Salinity-d18O_Relationship.py`
 - [ ] `32_Isotope_Hydrographic_Mapping.py`
 - [ ] `34_T-S_diagram.py`
@@ -116,7 +117,7 @@ For each page:
 ## 7. Local-Only And Development Pages
 
 - [x] Exclude `pages/99_Environment_Check.py` from the public repository and deployment; retain it only in the local development working copy.
-- [x] `pages/05_User_Data_Check_Quick_Visualizer.py` is the public User Data Check & Quick Visualizer for upload-first quality review and 2D/3D/4D exploration.
+- [x] `pages/05_[Utils]_User_Data_Check_Quick_Visualizer.py` is the public User Data Check & Quick Visualizer for upload-first quality review and 2D/3D/4D exploration.
 - [ ] If reviewing the development/test deployment, separately confirm that
       `pages/90_Integrated_Visualizer_beta.py` remains clearly experimental.
       It is not a stable-release acceptance item and is excluded from the
@@ -154,7 +155,7 @@ pytest
   no private paths, data, tokens, or internal records.
 - [x] Published the documentation website through GitHub Pages and verified the
   public URLs, navigation, images, and links:
-  <https://envgeo.github.io/envgeo-seawater/>.
+  <https://envgeo.github.io/seawater_map/>.
 - [ ] Update the laboratory website after the stable URL, release version,
   public-page scope, documentation URL, and Zenodo DOI are final. Keep its
   description aligned with the stable `seawater_map` release: approximately

@@ -949,3 +949,230 @@ def test_load_isotope_data_includes_d_excess_column():
     df = envgeo_utils.load_isotope_data(envgeo_utils.data_source_GLOBAL)
 
     assert "d-excess" in df.columns
+
+
+def test_overlap_screening_flags_strong_and_review_candidates_without_mutating_sources():
+    """Same Year--Month candidates are flagged, never removed or rewritten."""
+    japan = pd.DataFrame(
+        {
+            "Latitude_degN": [35.0, 35.0, 36.0],
+            "Longitude_degE": [140.0, 140.0, 141.0],
+            "Year": [1996, 1996, 1996],
+            "Month": [9, 9, 9],
+            "Depth_m": [20.1, 120.0, 10.0],
+            "Salinity": [34.1, 34.5, 33.0],
+            "d18O": [0.2, 0.3, -0.1],
+            "reference": ["Japan reference", "Japan reference", "Japan reference"],
+        },
+        index=["japan-a", "japan-b", "japan-c"],
+    )
+    nasa = pd.DataFrame(
+        {
+            "Latitude_degN": [35.02, 35.0, 36.0],
+            "Longitude_degE": [140.02, 140.0, 141.0],
+            "Year": [1996, 1996, 1996],
+            "Month": [9, 9, 10],
+            "Depth_m": [20.0, 127.0, 10.0],
+            "Salinity": [34.0, 34.5, 33.0],
+            "d18O": [0.25, 0.3, -0.1],
+            "reference": ["NASA reference", "NASA reference", "NASA reference"],
+        },
+        index=["nasa-a", "nasa-review", "nasa-wrong-month"],
+    )
+    japan_before = japan.copy(deep=True)
+    nasa_before = nasa.copy(deep=True)
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(japan, nasa, "Japan", "NASA")
+    annotated = envgeo_utils.annotate_overlap_candidates(japan, audit, "Japan")
+
+    pd.testing.assert_frame_equal(japan, japan_before)
+    pd.testing.assert_frame_equal(nasa, nasa_before)
+    assert len(audit) == 2
+    assert set(audit["Candidate_Class"]) == {"Strong candidate", "Review candidate"}
+    assert annotated.loc["japan-a", envgeo_utils.OVERLAP_FLAG_COLUMN] == "Strong candidate"
+    assert annotated.loc["japan-b", envgeo_utils.OVERLAP_FLAG_COLUMN] == "Review candidate"
+    assert annotated.loc["japan-c", envgeo_utils.OVERLAP_FLAG_COLUMN] == ""
+    assert annotated.loc["japan-a", envgeo_utils.OVERLAP_CANDIDATE_COUNT_COLUMN] == 1
+    assert audit.loc[audit["Candidate_ID"] == "Japan:1--NASA:1", "Review_Difference_Category"].item() == "Coordinate/depth difference only"
+    assert set(audit["Left_Reference"]) == {"Japan reference"}
+    assert set(audit["Right_Reference"]) == {"NASA reference"}
+    assert set(audit["Left_Citation"]) == {"Japan reference"}
+    assert set(audit["Right_Citation_Field"]) == {"reference"}
+
+
+def test_overlap_screening_uses_dataset_citation_when_reference_is_blank():
+    left = pd.DataFrame({
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0], "reference": ["Japan reference"],
+    })
+    right = pd.DataFrame({
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0], "reference": [None],
+        "Dataset citation": ["Coral dataset citation"],
+    })
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(left, right, "Japan", "Coral")
+
+    assert audit.loc[0, "Right_Reference"] == ""
+    assert audit.loc[0, "Right_Citation"] == "Coral dataset citation"
+    assert audit.loc[0, "Right_Citation_Field"] == "Dataset citation"
+
+
+def test_overlap_screening_marks_only_rounding_compatible_one_to_one_strong_matches():
+    """Near candidates are not silently treated as duplicate links."""
+    base = {
+        "Latitude_degN": [35.0, 35.0], "Longitude_degE": [140.0, 140.0],
+        "Year": [2020, 2020], "Month": [1, 1], "Depth_m": [10.0, 10.0],
+        "Salinity": [34.3, 34.3], "d18O": [0.18, 0.18],
+    }
+    left = pd.DataFrame(base)
+    right = pd.DataFrame({
+        **base,
+        "Salinity": [34.4, 34.3],
+        "d18O": [0.18, 0.27],
+    })
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(left, right, "A", "B")
+
+    # 34.3 and 34.4 can differ by the combined ±0.05 rounding allowance,
+    # but 0.18 and 0.27 cannot be explained by hundredth-place rounding.
+    # Both left records can reach the same rounded right record, but the
+    # one-to-one selector retains only one deterministic link.
+    assert audit["Rounding_Compatible"].sum() == 2
+    assert audit["One_to_One_Rounding_Match"].sum() == 1
+    selected = audit.loc[audit["One_to_One_Rounding_Match"]].iloc[0]
+    assert selected["Salinity_Rounding_Allowance"] == pytest.approx(0.1)
+    assert selected["d18O_Rounding_Allowance"] == pytest.approx(0.01)
+
+
+def test_overlap_display_filter_is_reversible_and_leaves_untracked_rows_visible(monkeypatch):
+    source_column = envgeo_utils.OVERLAP_SOURCE_COLUMN
+    row_column = envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN
+    source = pd.DataFrame(
+        {
+            source_column: ["NASA GISS global", "CoralHydro2k global", "Uploaded data"],
+            row_column: [4, 9, 0],
+            "d18O": [0.1, 0.2, 0.3],
+        }
+    )
+    candidates = pd.DataFrame(
+        {
+            source_column: ["NASA GISS global", "CoralHydro2k global"],
+            row_column: [4, 9],
+            "Display_Mode": [
+                envgeo_utils.OVERLAP_DISPLAY_ONE_TO_ONE,
+                envgeo_utils.OVERLAP_DISPLAY_STRONG,
+            ],
+        }
+    )
+    monkeypatch.setattr(envgeo_utils, "bundled_overlap_display_candidates", lambda: candidates)
+
+    all_rows, all_hidden = envgeo_utils.filter_bundled_overlap_display_rows(
+        source, envgeo_utils.OVERLAP_DISPLAY_ALL
+    )
+    one_to_one, one_to_one_hidden = envgeo_utils.filter_bundled_overlap_display_rows(
+        source, envgeo_utils.OVERLAP_DISPLAY_ONE_TO_ONE
+    )
+    strong, strong_hidden = envgeo_utils.filter_bundled_overlap_display_rows(
+        source, envgeo_utils.OVERLAP_DISPLAY_STRONG
+    )
+
+    assert all_rows.equals(source)
+    assert all_hidden == 0
+    assert one_to_one_hidden == 1
+    assert one_to_one[source_column].tolist() == ["CoralHydro2k global", "Uploaded data"]
+    assert strong_hidden == 1
+    assert strong[source_column].tolist() == ["NASA GISS global", "Uploaded data"]
+
+
+def test_overlap_screening_requires_valid_matching_year_and_month():
+    row = {
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0],
+    }
+    left = pd.DataFrame({**row, "Year": [2020], "Month": [9]})
+    missing_month = pd.DataFrame({**row, "Year": [2020], "Month": [None]})
+    different_month = pd.DataFrame({**row, "Year": [2020], "Month": [10]})
+
+    assert envgeo_utils.screen_dataset_pair_for_overlaps(left, missing_month, "A", "B").empty
+    assert envgeo_utils.screen_dataset_pair_for_overlaps(left, different_month, "A", "B").empty
+
+
+def test_overlap_screening_uses_separate_coordinate_differences_and_wraps_dateline():
+    left = pd.DataFrame({
+        "Latitude_degN": [10.0], "Longitude_degE": [179.95], "Year": [2020], "Month": [1],
+        "Depth_m": [5.0], "Salinity": [34.0], "d18O": [0.0],
+    })
+    right = pd.DataFrame({
+        "Latitude_degN": [10.05], "Longitude_degE": [-179.95], "Year": [2020], "Month": [1],
+        "Depth_m": [5.0], "Salinity": [34.0], "d18O": [0.0],
+    })
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(left, right, "A", "B")
+
+    assert len(audit) == 1
+    assert audit.loc[0, "Candidate_Class"] == "Strong candidate"
+    assert audit.loc[0, "Latitude_Difference_deg"] == pytest.approx(0.05)
+    assert audit.loc[0, "Longitude_Difference_deg"] == pytest.approx(0.1)
+
+
+def test_overlap_screening_classifies_review_value_disagreements():
+    base = {
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0],
+    }
+    left = pd.DataFrame(base)
+    salinity_only = pd.DataFrame({**base, "Salinity": [34.15]})
+    isotope_only = pd.DataFrame({**base, "d18O": [0.15]})
+    multiple = pd.DataFrame({**base, "Salinity": [34.15], "d18O": [0.15]})
+
+    assert envgeo_utils.screen_dataset_pair_for_overlaps(left, salinity_only, "A", "B").loc[0, "Review_Difference_Category"] == "Salinity difference"
+    assert envgeo_utils.screen_dataset_pair_for_overlaps(left, isotope_only, "A", "B").loc[0, "Review_Difference_Category"] == "δ18O difference"
+    assert envgeo_utils.screen_dataset_pair_for_overlaps(left, multiple, "A", "B").loc[0, "Review_Difference_Category"] == "Multiple differences"
+
+
+def test_overlap_review_category_keeps_coordinate_depth_exceedance_separate_from_value_category():
+    left = pd.DataFrame({
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0],
+    })
+    right = pd.DataFrame({
+        "Latitude_degN": [35.15], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.15], "d18O": [-0.15],
+    })
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(left, right, "A", "B")
+
+    assert audit.loc[0, "Review_Difference_Category"] == "Multiple differences"
+    assert audit.loc[0, "Coordinate_Depth_Strong_Exceeded"]
+    assert audit.loc[0, "Salinity_Strong_Exceeded"]
+    assert audit.loc[0, "d18O_Strong_Exceeded"]
+    assert audit.loc[0, "Salinity_d18O_Change_Direction"] == "Opposite signed changes"
+
+
+def test_overlap_review_category_is_salinity_when_coordinate_and_salinity_exceed():
+    left = pd.DataFrame({
+        "Latitude_degN": [35.0], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.0], "d18O": [0.0],
+    })
+    right = pd.DataFrame({
+        "Latitude_degN": [35.15], "Longitude_degE": [140.0], "Year": [2020], "Month": [1],
+        "Depth_m": [10.0], "Salinity": [34.15], "d18O": [0.0],
+    })
+
+    audit = envgeo_utils.screen_dataset_pair_for_overlaps(left, right, "A", "B")
+
+    assert audit.loc[0, "Review_Difference_Category"] == "Salinity difference"
+    assert audit.loc[0, "Coordinate_Depth_Strong_Exceeded"]
+    assert audit.loc[0, "Salinity_Strong_Exceeded"]
+    assert not audit.loc[0, "d18O_Strong_Exceeded"]
+
+
+def test_overlap_criteria_text_describes_review_not_automatic_deletion():
+    text = envgeo_utils.overlap_criteria_text()
+
+    assert "Year and Month" in text
+    assert "latitude" in text
+    assert "longitude" in text
+    assert "not automatically removed" in text
+    assert "5 m depth" in text

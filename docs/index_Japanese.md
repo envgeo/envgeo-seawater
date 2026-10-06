@@ -11,7 +11,7 @@ title: EnvGeo-Seawater 利用ガイド
 
 EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー自身の観測データをあわせて、海水安定同位体と水文データを探索するためのアプリケーションです。本サイトでは、安定版でサポートする操作方法を説明します。
 
-> 本アプリケーションは、対話的な探索と品質確認を目的としています。解析では、EnvGeo-Seawaterと利用した元データ提供者の両方を引用してください。
+> 本アプリケーションは、対話的な探索と品質確認を目的としています。解析、図版作成、論文、学会発表で利用する場合は、EnvGeo-Seawaterと利用した元データ提供者の両方を引用してください。
 
 ## 最初の操作
 
@@ -28,6 +28,7 @@ EnvGeo-Seawaterは、地域・全球の参照データセットとユーザー�
 - [概要](manual_Japanese/00_overview.html)
 - [データの絞り込み](manual_Japanese/01_data_filtering.html)
 - [User Data Check & Quick Visualizer](manual_Japanese/05_user_data_check_quick_visualizer.html)
+- [データ重複チェック](manual_Japanese/06_data_overlap_check.html)
 
 ### インタラクティブな探索
 

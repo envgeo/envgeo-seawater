@@ -26,7 +26,7 @@ For the distribution plan, see
 |---|---|---|
 | `03_[Interactive]_2Dplus_Visualizer.py` | Interactive 2-D comparison views, including the optional approximate σ0 T–S reference-contour pilot. | Preserve Plotly Box/Lasso behaviour and the distinction between data and reference contours. |
 | `04_[Interactive]_3D_4D_Visualizer.py` | Interactive 3-D/4-D visualisation. | Main Plotly workflow; HTML export is self-contained except for online map tiles. |
-| `05_User_Data_Check_Quick_Visualizer.py` | Public upload-first quality check and simple 2-D–4-D exploration. | Keep `Uploaded marker style` before filtering and retain data-origin distinctions. |
+| `05_[Utils]_User_Data_Check_Quick_Visualizer.py` | Public upload-first quality check and simple 2-D–4-D exploration. | Keep `Uploaded marker style` before filtering and retain data-origin distinctions. |
 | `31_Salinity-d18O_Relationship.py` | Salinity–δ18O relationships. | Uses shared filtering and optional uploaded overlays. |
 | `32_Isotope_Hydrographic_Mapping.py` | Plotly and Cartopy mapping. | Uses bundled Natural Earth 50m land; never reintroduce Cartopy's automatic Natural Earth download. |
 | `34_T-S_diagram.py` | T–S diagram and approximate σ0 reference contours. | Present contours are not pointwise density. Future TEOS-10 work is defined in the T–S review plan. |

@@ -24,7 +24,7 @@ EnvGeo-Seawaterのソース構成を、開発者・レビュー担当者向け�
 |---|---|---|
 | `03_[Interactive]_2Dplus_Visualizer.py` | 対話的2-D比較。任意表示の近似σ0 T–S参照等値線パイロットを含む。 | PlotlyのBox/Lasso選択と、観測データと参照等値線の区別を維持する。 |
 | `04_[Interactive]_3D_4D_Visualizer.py` | 対話的3-D／4-D可視化。 | 主なPlotlyワークフロー。HTMLは地図タイル以外を自己完結で出力する。 |
-| `05_User_Data_Check_Quick_Visualizer.py` | 公開向けのアップロード優先QCと簡易2-D–4-D探索。 | `Uploaded marker style`をフィルターより前に保ち、データ出所の区別を維持する。 |
+| `05_[Utils]_User_Data_Check_Quick_Visualizer.py` | 公開向けのアップロード優先QCと簡易2-D–4-D探索。 | `Uploaded marker style`をフィルターより前に保ち、データ出所の区別を維持する。 |
 | `31_Salinity-d18O_Relationship.py` | 塩分–δ18O関係。 | 共通フィルターと任意のアップロードオーバーレイを使う。 |
 | `32_Isotope_Hydrographic_Mapping.py` | Plotly／Cartopy地図。 | 同梱Natural Earth 50m陸域を使う。Cartopyの自動Natural Earthダウンロードを再導入しない。 |
 | `34_T-S_diagram.py` | T–S図と近似σ0参照等値線。 | 現在の等値線は各点の密度ではない。将来のTEOS-10対応はT–S計画書に従う。 |

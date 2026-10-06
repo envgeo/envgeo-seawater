@@ -1,6 +1,6 @@
 # 外部データworkbookの取扱いメモ
 
-**状態:** 2026-09-25時点の元データ対workbook照合記録、および2026-09-30時点の同梱workbook構造再確認。この文書は、監査用に提供されたローカル元データスナップショットと同梱workbookを比較し、確認できた差分だけを記録する。元データ・同梱データはいずれも変更しない。英語版は[`external_dataset_workbook_notes.md`](external_dataset_workbook_notes.md)。
+**状態:** 2026-09-25時点の元データ対workbook照合記録、2026-09-30時点の同梱workbook構造再確認、および2026-10-06のCoralHydro2k引用補助メタデータの補完記録。この文書は、監査用に提供されたローカル元データスナップショットと同梱workbookを比較し、確認できた差分だけを記録する。英語版は[`external_dataset_workbook_notes.md`](external_dataset_workbook_notes.md)。
 
 ## 目的
 
@@ -11,7 +11,7 @@ NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用い
 この読み取り専用の再確認では、現在同梱しているファイルとworkbook構造を確認した。元データスナップショットは意図的にアプリケーションツリー外で管理しているため、2026-09-25の元ファイル照合自体を繰り返したものではない。2つのworkbookのSHA-256値と安定版cloneとの関係は[`provenance_inventory_Japanese.md`](provenance_inventory_Japanese.md)に記録する。
 
 - NASA GISS：`NASA_20260227`は25,514行・22列である。全行が`Transect = Nasa_database`であり、`Cruise`、`Station`、`remarks by TI`は空欄である。
-- PAGES CoralHydro2k：`CoralHydro2k_SW_1_0_0_20260303`は18,598行・58列である。`Transect`は全行に入り93種類あり、短縮`reference`は15,340行に入り、記録済みの共通スキーマ用プレースホルダー6列は空欄のままである。
+- PAGES CoralHydro2k：`CoralHydro2k_SW_1_0_0_20260303`は18,598行・58列である。`Transect`は全行に入り93種類あり、プロジェクト側で追加した短縮`reference`は全行に入り、記録済みの共通スキーマ用プレースホルダー6列は空欄のままである。
 
 ## NASA GISS workbook
 
@@ -36,7 +36,7 @@ NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用い
 
 | 項目 | 現行記録 |
 |---|---|
-| 同梱ファイル | `dataset/71_GLOBAL_Atwood_et_al_2026.xlsx` |
+| 同梱ファイル | `dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx` |
 | worksheet | `CoralHydro2k_SW_1_0_0_20260303` |
 | 出典／引用 | `data_text/CoralHydro2_references.md`：PAGES CoralHydro2k Seawater δ18O Database、NCEI study URL、データセットDOI、Atwood et al. (2026)、アクセス日2026-03-16。 |
 | 元データスナップショット | `CoralHydro2k_Seawater_1_0_0.xlsx`（アプリケーションツリー外で保持） |
@@ -44,7 +44,11 @@ NASA GISSおよびPAGES CoralHydro2kのworkbookは、比較・可視化に用い
 | 共通アプリ列 | `Cruise`、`Station`、`Transect`、位置・深度・日時、`Temperature_degC`、`Salinity`、`d18O`、`dD`、`reference`、および詳細な出典来歴列。 |
 | 現行のグループ化列 | `Transect`は全行で値を持ち、このworkbook内には93種類の値がある。元データの`Site name or geographic area`を共通スキーマ名へ対応付けた列である。 |
 
-元データの50列は保持または共通スキーマ名へ対応付けている。例として、`Cruise ID` → `Cruise`、`Station ID` → `Station`、collection year/month/day → `Year`/`Month`/`Day`、位置・深度・水温・塩分・同位体の列は対応する共通列、`Publication citation` → `reference_full`である。現行workbookには、空欄の共通スキーマ用プレースホルダー（`Date`、`TargetDepth_m`、`Bottle`、`d13C`、`PI`、`Vertical`）と、短縮`reference`列（15,340行で値あり）が追加されている。この短縮列は、長い`Publication citation`から著者名と年を抽出し、アプリ内の表示・選択に使うものとする。プロジェクト側のPython処理では、括弧内の4桁年と第1著者の姓を抽出し、単著は`Surname (year)`、複数著者は`Surname et al. (year)`の形にする。処理時の中間出力列名は`reference_short`であり、現行workbookの短縮`reference`列に対応する。これは表示・分類用の補助であり、完全な引用を置き換えない。元の長い引用は`reference_full`として保持する。
+元データの50列は保持または共通スキーマ名へ対応付けている。例として、`Cruise ID` → `Cruise`、`Station ID` → `Station`、collection year/month/day → `Year`/`Month`/`Day`、位置・深度・水温・塩分・同位体の列は対応する共通列、`Publication citation` → `reference_full`である。現行workbookには、空欄の共通スキーマ用プレースホルダー（`Date`、`TargetDepth_m`、`Bottle`、`d13C`、`PI`、`Vertical`）と、アプリ内の表示・選択に使うプロジェクト側の短縮`reference`列がある。短縮表記は、単著を`Surname (year)`、複数著者を`Surname et al. (year)`とし、団体著者は団体名を著者表記として残す。これは表示・分類用の補助であり、完全な引用を置き換えない。
+
+2026-10-06に、短縮`reference`が空欄だった3,258行を補完した。これらの行では`Publication citation`／`reference_full`が空欄でも、元データの`Dataset citation`には完全な出典情報が残っていた。観測値および出典来歴列は変更せず、7つの出典ごとに短縮表記を確認して追加した：`GEOTRACES Intermediate Data Product Group (2021)`、`Lamb et al. (2014)`、`Dickson (2016)`、`Schmidt et al. (1999)`、`Lo Monaco et al. (2013)`、`Henley et al. (2020)`、`Stoll et al. (2013)`。複合姓や接頭辞を持つ姓は一般的な自動判定に任せない。完全な出典は引き続き`reference_full`または`Dataset citation`に保持し、プロジェクト側の`reference`は簡潔な表示・グループ化だけに使う。
+
+編集済みworkbookは`71_GLOBAL_Atwood_et_al_2026_v02.xlsx`として版を示すファイル名にした。次回の公開repository同期では、loader、ページ側catalogue、来歴文書、package checksum表、release notesを一体として更新する。
 
 確認できたメタデータ形式上の違いは2種類の日付形式に限られる。元データの`Water isotope analysis date` 5,969セルと`Station ID` 9セルは、同梱workbookではExcel日付シリアル値として保存されている。この監査では元の日付を編集せず、形式変更の理由も推測しない。その他の対応付けた元データ列は、数値表記上等価な差を除いて同梱workbookと一致した。
 

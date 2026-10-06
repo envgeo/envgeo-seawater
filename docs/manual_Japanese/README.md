@@ -8,6 +8,7 @@ Markdown形式のファイルを、repository文書および今後作成する�
 
 - [概要](00_overview.md)
 - [データの絞り込み](01_data_filtering.md)
+- [データ重複チェック](06_data_overlap_check.md)
 - [ユーザーデータ確認・簡易可視化](05_user_data_check_quick_visualizer.md)
 - [インタラクティブ2Dplus可視化](03_2dplus_visualizer.md)
 - [インタラクティブ3D/4D可視化](04_3d_4d_visualizer.md)

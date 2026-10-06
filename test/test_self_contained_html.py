@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).parent.parent
 UTILS_PY   = REPO_ROOT / "envgeo_utils.py"
 PAGE_03    = REPO_ROOT / "pages" / "03_[Interactive]_2Dplus_Visualizer.py"
 PAGE_04    = REPO_ROOT / "pages" / "04_[Interactive]_3D_4D_Visualizer.py"
-PAGE_05    = REPO_ROOT / "pages" / "05_User_Data_Check_Quick_Visualizer.py"
+PAGE_05    = REPO_ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
 
 
 # ---------------------------------------------------------------------------

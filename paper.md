@@ -46,6 +46,27 @@ reference data, and an internally consistent Japan-region core collection.
 Source-specific citations and provenance remain visible so that comparisons can
 be interpreted in light of their respective sampling and analytical contexts.
 
+Integrating independently curated reference datasets also creates a practical
+quality-assurance challenge: records inherited from a common original source,
+or records affected by rounding and revised metadata, can resemble duplicates.
+EnvGeo-Seawater therefore provides a provenance-aware, read-only
+cross-dataset overlap screen. It uses explicit user-visible criteria for
+matching sampling time and for comparing coordinates, depth, salinity, and
+$\delta^{18}$O; it separates strong candidates from cases requiring review and
+exports the matching evidence for inspection. Source records are preserved and
+candidate status is not treated as confirmation of duplication. The shared
+filter sidebar retains all records by default and offers reversible,
+opt-in sensitivity screens: a deterministic one-to-one subset whose recorded
+differences are compatible with inferred rounding precision, and a broader
+Strong-candidate screen that is explicitly not a confirmed de-duplication
+result. Current provisional Strong defaults are ≤0.1° for latitude and
+longitude, ≤5 m for depth, ≤0.1 for salinity, and ≤0.1‰ for $\delta^{18}$O;
+the broader Review defaults are ≤0.2°, ≤10 m, ≤0.2, and ≤0.2‰, respectively.
+These visible, adjustable values are screening criteria rather than universal
+measurement-error thresholds. This makes cross-dataset integration more
+transparent while retaining the source-level context needed for scientific
+interpretation.
+
 A key contribution is the integration of the regionally curated Kodama et al.
 (2024) collection, which provides a consistent analytical baseline for
 exploratory comparison across its sampled locations and periods.
@@ -129,6 +150,7 @@ The platform provides the following capabilities:
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
 - Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
 - Integration of global datasets (~50,000 records), cited regional reference data, and the Kodama et al. (2024) core collection
+- Provenance-aware overlap screening with explicit criteria, strong/review candidate classes, downloadable audit evidence, and reversible display sensitivity screens
 - User data upload for direct comparison with reference datasets  
 - Export of publication-quality figures  
 

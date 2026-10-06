@@ -1,7 +1,7 @@
 # 同梱資産・データ来歴一覧
 
 **状態:** 2026-09-25に出典根拠を監査し、2026-09-30に同梱workbookの
-スナップショット、2026-10-03に派生資産の記録、2026-10-05にデータセット間重複の初期スクリーニングを記録した公開準備用一覧。
+スナップショット、2026-10-03に派生資産の記録、2026-10-05にデータセット間重複の初期スクリーニング、2026-10-06にCoralHydro2k短縮referenceの補完を記録した公開準備用一覧。
 ここでは同梱物と不足している根拠を明確にする。「公開されている」ことを、研究ソフトウェアの再配布許可の根拠とは扱わない。
 
 | 資産・データ | 使用箇所 | 出典／派生記録 | 再配布状態 | 必要な次の確認 |
@@ -13,7 +13,7 @@
 | `dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | Japan Sea／Global loader | Kodama et al. (2024)。DOIと分析情報を`data_text/main_references.md`に、現行workbook fingerprintを下表に記録。 | 現行の学術利用packageへ含める。 | 正規出典、引用、利用可能な版・取得日、変換記録を維持する。 |
 | `dataset/11_AROUND_JAPAN_PUB_20260305.xlsx` | Around Japan／Global loader | Yamamoto、Sakamoto、Kodaira、Horikawaの地域統合。4つの出典labelと現行workbook fingerprintを検証済み。 | 現行の学術利用packageへ含める。 | 寄与する各出典の行／出典対応、引用、変換を維持する。 |
 | `dataset/71_GLOBA_NASA_20260226.xlsx` | Global loader | NASA GISS Global Seawater Oxygen-18 Database。`data_text/NASA_references.md`にv1.22、取得元URL、引用、アクセス日2026-03-01を記録済み。元データ対workbookの25,514行照合と、プロジェクト側の`Transect = Nasa_database`規約も記録済み。 | 現行の学術利用としての配布を承認済み。出典を維持し、プロジェクト所有データとは表現しない。 | 既存の版・アクセス記録、引用、変換記録を維持する。明示的な制限、権利者からの要請、具体的な査読上の懸念がある場合だけ見直す。 |
-| `dataset/71_GLOBAL_Atwood_et_al_2026.xlsx` | Global loader | PAGES CoralHydro2k Seawater δ18O Database。`data_text/CoralHydro2_references.md`にstudy URL、DOI、引用、アクセス日2026-03-16を記録済み。元データ対workbookの18,598行照合、引用の保持、短縮reference label、`Transect`スキーマ対応も記録済み。 | 現行の学術利用としての配布を承認済み。出典を維持し、プロジェクト所有データとは表現しない。 | 既存のDOI・アクセス記録、引用、変換記録を維持する。明示的な制限、権利者からの要請、具体的な査読上の懸念がある場合だけ見直す。 |
+| `dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | Global loader | PAGES CoralHydro2k Seawater δ18O Database。`data_text/CoralHydro2_references.md`にstudy URL、DOI、引用、アクセス日2026-03-16を記録済み。元データ対workbookの18,598行照合、引用の保持、`Transect`スキーマ対応、保持されていた`Dataset citation`からプロジェクト側の短縮`reference`を3,258行補完した2026-10-06の記録もある。 | 現行の学術利用としての配布を承認済み。出典を維持し、プロジェクト所有データとは表現しない。 | 次の公開同期では、このv02 snapshotのpackage checksum表とrelease記録を更新する。 |
 | `dataset/72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | Global loader | 現在はSakamoto et al. (2022)の35行を含むプロジェクト統合。出典引用と現行workbook fingerprintを検証済み。 | 現行の学術利用packageへ含める。 | 報告由来の記録について、出典対応、引用、変換を維持する。 |
 | 退避済み`d18O_upload_data_tmp_seawater.xlsx` | アプリでは未使用。 | コード、テスト、公開クローンから参照されない旧作業用workbook。 | アプリおよび将来のpackage dataには含めない。 | アプリ外の上位ワークスペースのアーカイブ（`過去のパーツ/`）へ保管し、再利用を提案する場合だけ別途レビューする。 |
 | `data/`メディア・`data_text/`文書 | Home、アプリ内文書 | `d18O_all.mp4`はGMT作成と表示するHome animationである。`sites_20230515.gif`と`year_20230517.gif`はアプリ／文書で使うプロジェクト地図visualizationである。3件はpackage化する。今回の確認では、別ライセンス記録が必要な第三者メディアは確認されなかった。`data_text/*.md`も同梱する。`data/`にあった未使用legacy spreadsheetは、2026-10-03にアプリケーションおよび公開release tree外のローカル履歴archiveへ移動した。 | プロジェクト文書／メディアは同梱可能。履歴spreadsheetは公開releaseから除外する。 | 今後プロジェクト作成物でないメディアを追加する場合は、作成者・出典・再利用条件を記録する。archive済みspreadsheetを戻す場合は別途reviewする。 |
@@ -28,7 +28,7 @@
 | 日本周辺統合 × NASA GISS | 上記確認用閾値と同じ | 上記厳しい閾値と同じ | 厳しい閾値で139組、419行中131行の日本周辺記録を含む。日本側は主に`Yamamoto et al. (2001)` / `PI=KAWAI`であり、NASA側にはYamamoto et al. (2001)および(2002)のラベルがある。 |
 | 日本周辺統合 × PAGES CoralHydro2k | 上記確認用閾値と同じ | 上記厳しい閾値と同じ | この初期スクリーニングでは、いずれの閾値でも候補対なし。 |
 
-将来、解析時の除外機能を有効にする前に、行レベルの監査一覧（出典行ID、座標、変数差、reference metadata）を公開し、可能な場合は元出典の試料ID・観測航海IDを確認して、一対一かつ確認済みの候補対を定める。機能は任意とし、統合データセットの統計・図版作成で選択された重複表現だけを抑制する。元の出典記録と必要な引用は、引き続き利用可能なまま変更しない。
+現在のアプリは、行レベルの監査根拠（出典行ID、座標、変数差、reference metadata）を出力し、すべての元出典記録と必要な引用を変更せず利用可能なまま保持する。共通フィルターの表示スクリーンは任意であり、既定では全行を保持する。推奨モードは、丸め幅との整合が取れたStrong候補のうち、決定論的に一対一対応した候補だけを表示から外す。残す側はメタデータの充実度で選び、同点の場合は文書化した一定の優先順を使う。より広いStrong候補モードは感度確認だけを目的とし、重複確定の結果ではない。
 
 ### v1.3.5設計に向けた時間条件付き候補確認
 
@@ -41,9 +41,9 @@
 
 日本周辺--NASAの55組は、`Yamamoto et al. (2001)` / `PI=KAWAI`に対応する1996年9月の鉛直プロファイルである。日本側とNASA側の座標は丸めのため最大約11 km異なるが、深度プロファイルの並びと塩分・δ18Oは記録精度の範囲で一致する。非常に強い候補群だが、出典単位の対応を記録するまでは監査上の候補として扱う。
 
-深度許容幅を広げると、単一の鉛直プロファイル観測から複数の候補対が生じる。したがって≤10 m・≤50 mの列は確認・マーク表示用であり、抑制する行数として解釈してはならない。予定するUIでは「除外しない」を既定とし、確認済みの一対一候補だけを抑制可能にする。
+深度許容幅を広げると、単一の鉛直プロファイル観測から複数の候補対が生じる。したがって≤10 m・≤50 mの列は確認・マーク表示用であり、抑制する行数として解釈してはならない。現在のUIは「全データ表示」を既定とし、広いStrong候補モードは感度確認用、推奨モードは決定論的な一対一・丸め整合候補だけに限定する。
 
-## 同梱workbookの検証済みスナップショット（2026-09-30）
+## 同梱workbookの検証済みスナップショット（2026-09-30、履歴上の基準）
 
 読取り専用の確認により、次の5ファイルが正規作業フォルダと安定版`seawater_map` cloneの両方にあり、
 SHA-256が一致することを確認した。これらは現在の`dataset/*.xlsx` package-data規則で選択される全ファイルである。
@@ -53,13 +53,11 @@ SHA-256が一致することを確認した。これらは現在の`dataset/*.xl
 |---|---|---:|---:|---|
 | `01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx` | `Kodam_et_al_2024` | 2,222 | 22 | `8184016fe53fb3b537b5ca60061b2e3d798f69b63534ffea6d6a11d9904d2962` |
 | `11_AROUND_JAPAN_PUB_20260305.xlsx` | `for_streamlit_YSKH_20260227` | 419 | 22 | `ac49cf552e88caff1d294bbcbff978b8ea72faa31c7fc1f698456ea978663dd0` |
-| `71_GLOBAL_Atwood_et_al_2026.xlsx` | `CoralHydro2k_SW_1_0_0_20260303` | 18,598 | 58 | `27aa53ac15867d571a5efd94aa63403bf60718d6bc6881ef2c8e7a92960b6a15` |
+| `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` | `CoralHydro2k_SW_1_0_0_20260303` | 18,598 | 58 | `50c7cbc27140edabfac42fa8004725228054931671035285073354b829939514` |
 | `71_GLOBA_NASA_20260226.xlsx` | `NASA_20260227` | 25,514 | 22 | `13cccbffa3948a2570fd7c6faa342a888d1e14d3bb076f48d520564a25c85840` |
 | `72_GLOBAL_RECENT_REPORTS_20260302.xlsx` | `20260303` | 35 | 23 | `d8027747739247601bfbc9ae8ffc2c9b9036edfaaa83b7f84972e28b9f84a565` |
 
-追跡する`local_data/user_data.xlsx`公開sampleも、両方の場所で0行・22列のtemplateであることを確認した。
-上記workbookを変更するreleaseでは、このスナップショット、出典単位の来歴記録、release checksum記録を
-併せて更新する。
+追跡する`local_data/user_data.xlsx`公開sampleも、両方の場所で0行・22列のtemplateであることを確認した。CoralHydro2kの行は、正規作業フォルダにおけるv02 workbookと2026-10-06時点のchecksumを記録する。まだ公開cloneへ同期していない。上記workbookを変更するreleaseでは、このスナップショット、出典単位の来歴記録、release checksum記録を併せて更新する。
 
 ## 派生資産の検証済みスナップショット（2026-10-03）
 
