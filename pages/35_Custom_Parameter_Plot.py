@@ -185,21 +185,21 @@ def main():
     st.caption("Flexible 2D plots such as dD x d18O coloured by depth.")
     st.button("Reload")
 
-    data_source_japan_sea = envgeo_utils.data_source_JAPAN_SEA
+    data_source_envgeo = envgeo_utils.data_source_ENVGEO
     data_source_around_japan = envgeo_utils.data_source_AROUND_JAPAN
     data_source_global = envgeo_utils.data_source_GLOBAL
 
     ref_data = st.radio(
         "Data source (see Home > About):",
-        (data_source_japan_sea, data_source_around_japan, data_source_global),
+        (data_source_envgeo, data_source_around_japan, data_source_global),
         horizontal=True,
     )
 
     # -----------------------------------------------------------------------------
     # Attribution / 出典表示
     # -----------------------------------------------------------------------------
-    if ref_data == data_source_japan_sea:
-        st.write(envgeo_utils.refs_JAPAN_SEA)
+    if ref_data == data_source_envgeo:
+        st.write(envgeo_utils.refs_ENVGEO)
     elif ref_data == data_source_around_japan:
         st.write(envgeo_utils.refs_AROUND_JAPAN)
     elif ref_data == data_source_global:
@@ -265,7 +265,7 @@ def main():
             df_original, uploaded_df
         ),
         ref_data,
-        data_source_japan_sea,
+        data_source_envgeo,
         data_source_around_japan,
         uploaded_df=uploaded_df,
         uploaded_filter_key="custom_plot",

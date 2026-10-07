@@ -328,13 +328,13 @@ Core functionality can be accessed programmatically:
 ```python
 import envgeo_utils
 
-df = envgeo_utils.load_isotope_data("with [Global data sets]")
+df = envgeo_utils.load_isotope_data(envgeo_utils.data_source_GLOBAL)
 
 df_filtered = envgeo_utils.sidebar_filter_and_display(
     df,
-    ref_data="with [Global data sets]",
-    data_source_JAPAN_SEA="Kodama et al. (2024) [ECS - Japan Sea]",
-    data_source_AROUND_JAPAN="with [Around Japan]"
+    ref_data=envgeo_utils.data_source_GLOBAL,
+    data_source_ENVGEO=envgeo_utils.data_source_ENVGEO,
+    data_source_AROUND_JAPAN=envgeo_utils.data_source_AROUND_JAPAN
 )
 ```
 
@@ -432,7 +432,7 @@ Core functionality is implemented as reusable Python functions in `envgeo_utils.
 
 ## Usage
 
-1. Select a dataset (Japan Sea / Around Japan / Global)  
+1. Select a dataset (EnvGeo / EnvGeo + Around Japan / EnvGeo + Global)
 2. Apply filters (location, depth, time, parameters)  
 3. Explore:  
    - Maps  
@@ -532,7 +532,8 @@ https://envgeo-seawater-pre.streamlit.app
 
 Before EnvGeo-Seawater had an archival software DOI, it was used in the
 author's and collaborators' workflows to select, explore, and visualize
-subsets of the Kodama et al. (2024) regional seawater isotope dataset. The
+subsets of the EnvGeo Dataset [ECS–Japan Sea], whose primary reference is
+Kodama et al. (2024). The
 resulting publications cited the underlying dataset paper rather than this
 software. They are therefore examples of workflow use, not direct software
 citations.

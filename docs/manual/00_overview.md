@@ -8,8 +8,9 @@ and hydrographic datasets.
 It supports maps, temperature-salinity diagrams, salinity--d18O relationships,
 depth profiles, and 2D/3D/4D visualizations.
 
-The current collection includes the multi-year Kodama et al. (2024) core
-dataset, cited regional datasets, and global reference datasets including NASA
+The current collection includes the **EnvGeo Dataset [ECS–Japan Sea]** core
+collection (primary reference: Kodama et al. (2024)), cited regional datasets,
+and global reference datasets including NASA
 GISS and PAGES CoralHydro2k. It contains approximately 50,000 records. Cite
 the original sources shown in **Data Sources** and **Filtered dataset** when
 using results.

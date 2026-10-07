@@ -50,7 +50,7 @@ def _make_envgeo_utils_stub():
     eu.QUALITY_ORIGINAL_VALUE_COLUMN = "_QualityOriginalValue"
     eu.USER_EXCEL_DATA_LABEL = "User Excel data"
     eu.UPLOADED_DATA_LABEL = "Uploaded"
-    eu.data_source_JAPAN_SEA = "Japan Sea"
+    eu.data_source_ENVGEO = "EnvGeo [ECS–Japan Sea]"
     eu.data_source_AROUND_JAPAN = "Around Japan"
     eu.data_source_GLOBAL = "Global"
     eu.MAP_MODE_OPTIONS = ["Standard"]

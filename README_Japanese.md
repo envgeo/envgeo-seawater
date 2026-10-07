@@ -252,13 +252,13 @@ page 03（2D+ Visualizer）・page 04（3D/4D Visualizer）・page 05（Quick Vi
 ```python
 import envgeo_utils
 
-df = envgeo_utils.load_isotope_data("with [Global data sets]")
+df = envgeo_utils.load_isotope_data(envgeo_utils.data_source_GLOBAL)
 
 df_filtered = envgeo_utils.sidebar_filter_and_display(
     df,
-    ref_data="with [Global data sets]",
-    data_source_JAPAN_SEA="Kodama et al. (2024) [ECS - Japan Sea]",
-    data_source_AROUND_JAPAN="with [Around Japan]"
+    ref_data=envgeo_utils.data_source_GLOBAL,
+    data_source_ENVGEO=envgeo_utils.data_source_ENVGEO,
+    data_source_AROUND_JAPAN=envgeo_utils.data_source_AROUND_JAPAN
 )
 ```
 
@@ -347,7 +347,7 @@ pytest
 
 ## 使い方
 
-1. データセットを選択する（Japan Sea / Around Japan / Global）
+1. データセットを選択する（EnvGeo / EnvGeo + Around Japan / EnvGeo + Global）
 2. 位置、水深、時期、パラメータなどでフィルタする
 3. 図を確認する
    - 地図
@@ -432,7 +432,7 @@ https://envgeo-seawater-pre.streamlit.app
 ## これまでの研究ワークフローでの利用
 
 EnvGeo-SeawaterがソフトウェアとしてのアーカイブDOIを取得する前から、著者および共同研究者の
-ワークフローにおいて、Kodama et al. (2024) の地域海水同位体データセットの一部を選択・探索・
+ワークフローにおいて、EnvGeo Dataset [ECS–Japan Sea]（主要出典：Kodama et al. (2024)）の一部を選択・探索・
 可視化するために利用されてきました。これらの研究成果では本ソフトウェアではなく元データセットの
 論文が引用されています。したがって、これらは直接のソフトウェア引用ではなく、研究ワークフローでの
 利用例です。

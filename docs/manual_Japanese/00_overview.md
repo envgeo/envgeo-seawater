@@ -6,7 +6,7 @@ EnvGeo-Seawaterは、海水の安定同位体・水文データを探索する�
 
 地図、水温–塩分図、塩分–δ¹⁸O関係図、深度プロファイル、2D/3D/4D可視化に対応しています。
 
-現在のコレクションには、複数年のKodama et al. (2024)中核データ、日本周辺の引用付きデータ、NASA GISSとPAGES CoralHydro2kを含む全球参照データセットが収録され、約50,000件の記録を探索できます。結果を利用する際は、**Data Sources**と**Filtered dataset**に示される元データの出典を引用してください。
+現在のコレクションには、**EnvGeo Dataset [ECS–Japan Sea]**中核コレクション（主要出典：Kodama et al. (2024)）、日本周辺の引用付きデータ、NASA GISSとPAGES CoralHydro2kを含む全球参照データセットが収録され、約50,000件の記録を探索できます。結果を利用する際は、**Data Sources**と**Filtered dataset**に示される元データの出典を引用してください。
 
 ## 想定ユーザー
 

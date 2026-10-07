@@ -24,8 +24,9 @@ EnvGeo-Seawater is a web-based interactive visualization platform for exploring 
 The platform integrates approximately 50,000 seawater isotope records from
 major global datasets, including the NASA GISS database [@schmidt1999] and the
 CoralHydro2k seawater isotope database [@atwood2026], together with cited
-regional reference data and the internally consistent Kodama et al. (2024)
-Japan-region core collection [@kodama2024].
+regional reference data and the internally consistent **EnvGeo Dataset
+[ECS–Japan Sea]** core collection (primary reference: Kodama et al. 2024)
+[@kodama2024].
 
 EnvGeo-Seawater enables simultaneous exploration of spatial distributions,
 cross-variable relationships, and vertical structures through an integrated
@@ -67,8 +68,9 @@ measurement-error thresholds. This makes cross-dataset integration more
 transparent while retaining the source-level context needed for scientific
 interpretation.
 
-A key contribution is the integration of the regionally curated Kodama et al.
-(2024) collection, which provides a consistent analytical baseline for
+A key contribution is the integration of the regionally curated EnvGeo Dataset
+[ECS–Japan Sea] collection, currently represented by Kodama et al. (2024),
+which provides a consistent analytical baseline for
 exploratory comparison across its sampled locations and periods.
 
 ## State of the field
@@ -149,7 +151,7 @@ The platform provides the following capabilities:
 - Temperature–salinity (T–S) diagrams with approximate $\sigma_0$ reference contours
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
 - Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
-- Integration of global datasets (~50,000 records), cited regional reference data, and the Kodama et al. (2024) core collection
+- Integration of global datasets (~50,000 records), cited regional reference data, and the EnvGeo Dataset [ECS–Japan Sea] core collection (primary reference: Kodama et al. 2024)
 - Provenance-aware overlap screening with explicit criteria, strong/review candidate classes, downloadable audit evidence, and reversible display sensitivity screens
 - User data upload for direct comparison with reference datasets  
 - Export of publication-quality figures  

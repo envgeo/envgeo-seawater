@@ -343,7 +343,7 @@ def main() -> None:
             """
 ### Start exploring
 
-- **Core dataset:** explore the multi-year Kodama et al. (2024) seawater-isotope dataset centred on the East China Sea and Japan Sea.
+- **EnvGeo Dataset:** explore the EnvGeo [ECS–Japan Sea] core collection. Its primary reference is Kodama et al. (2024).
 - **Reference datasets:** compare it with cited regional and global datasets, including NASA GISS and PAGES CoralHydro2k.
 - **Visualisation:** use the sidebar to open maps, 3D/4D views, T--S diagrams, depth profiles, and other specialist tools.
 - **Browser uploads:** use **User Data Check Quick Visualizer** to inspect and plot an uploaded CSV/XLSX file for the current browser session. Upload overlays are also available on the salinity--d18O, mapping, T--S, custom-parameter, depth-profile, and vertical-section pages; 2Dplus and 3D 4D do not currently accept browser uploads.

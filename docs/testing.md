@@ -54,7 +54,7 @@ This file currently checks:
 - Quality-flag rules and compact quality criteria text.
 - Safe figure filename generation.
 - Shared map-region presets and Data filtering area-preset bounds.
-- Dataset loading for Japan Sea, Around Japan, and Global data choices.
+- Dataset loading for EnvGeo, EnvGeo + Around Japan, and EnvGeo + Global data choices.
 - Required dataset columns and numeric column conversion.
 - Numeric conversion after removing invisible spreadsheet whitespace, including
   the pandas PyArrow string backend.

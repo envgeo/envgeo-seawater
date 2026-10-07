@@ -1,7 +1,7 @@
 EnvGeo-Seawater is an interactive application for exploring seawater isotope
-and hydrographic data. Its current core dataset is the multi-year Kodama et al.
-(2024) collection from the East China Sea and Japan Sea, comprising more than
-2,000 samples. Maps, 3D/4D views, relationship plots, and depth profiles can
+and hydrographic data. Its current core collection is the **EnvGeo Dataset
+[ECS–Japan Sea]**, comprising more than 2,000 samples. Its primary reference
+is Kodama et al. (2024). Maps, 3D/4D views, relationship plots, and depth profiles can
 be used to explore salinity, temperature, d18O, dD, sampling period, and
 location.
 
@@ -14,8 +14,8 @@ comparison tool; users should cite the original dataset sources shown in
 Including the global reference data, the current collection contains
 approximately 50,000 records.
 
-The current Japan-region core dataset was analysed under consistent conditions,
-which supports comparison across locations and sampling periods. Further
+The current EnvGeo Dataset was analysed under consistent conditions, which
+supports comparison across locations and sampling periods. Further
 laboratory datasets may be added only after their publication and provenance
 records are available.
 

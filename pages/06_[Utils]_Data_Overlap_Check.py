@@ -29,6 +29,7 @@ st.set_page_config(page_title="Data overlap check | EnvGeo-Seawater", layout="ce
 
 # Bundled-source catalogue / 同梱データセットの監査用カタログ
 SOURCE_FILES = {
+    "EnvGeo Dataset [ECS–Japan Sea]": "dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx",
     "Around Japan": "dataset/11_AROUND_JAPAN_PUB_20260305.xlsx",
     "NASA GISS global": "dataset/71_GLOBA_NASA_20260226.xlsx",
     "CoralHydro2k global": "dataset/71_GLOBAL_Atwood_et_al_2026_v02.xlsx",
@@ -37,6 +38,11 @@ SOURCE_PAIRS = {
     "NASA GISS global × CoralHydro2k global": ("NASA GISS global", "CoralHydro2k global"),
     "Around Japan × NASA GISS global": ("Around Japan", "NASA GISS global"),
     "Around Japan × CoralHydro2k global": ("Around Japan", "CoralHydro2k global"),
+    # The three EnvGeo core checks are available for completeness, after the three
+    # core integrated-dataset comparisons in the selector.
+    "EnvGeo Dataset [ECS–Japan Sea] × Around Japan": ("EnvGeo Dataset [ECS–Japan Sea]", "Around Japan"),
+    "EnvGeo Dataset [ECS–Japan Sea] × NASA GISS global": ("EnvGeo Dataset [ECS–Japan Sea]", "NASA GISS global"),
+    "EnvGeo Dataset [ECS–Japan Sea] × CoralHydro2k global": ("EnvGeo Dataset [ECS–Japan Sea]", "CoralHydro2k global"),
 }
 UPLOADED_SOURCE_LABEL = "Uploaded data"
 
@@ -367,6 +373,24 @@ def render_audit_guide() -> None:
     english_tab, japanese_tab = st.tabs(["English", "日本語"])
     with english_tab:
         st.caption("Cross-dataset overlap candidate check (audit)")
+        st.markdown(
+            "**This tool identifies possible duplicate records only.** It does not alter source "
+            "workbooks, does not confirm duplicates, and does not remove records from analyses."
+        )
+        st.markdown(
+            "Use this page to create an auditable candidate list before reviewing source "
+            "provenance, cruises, stations, and measurement metadata."
+        )
+        st.markdown(
+            "A session-only uploaded dataset can also be screened against a selected bundled "
+            "EnvGeo dataset for possible overlapping records. To compare it, use "
+            "**Uploaded data overlay** in the sidebar and provide the required columns."
+        )
+        st.markdown(
+            "On analytical pages, **Data filtering → Duplicate-candidate display** lets you choose "
+            "whether candidate records are shown or hidden. This is a reversible display setting; "
+            "source records remain unchanged."
+        )
         with st.expander("How to read the audit table", expanded=False):
             st.markdown(
                 "**Important:** This is an audit table of possible overlaps. No row is confirmed "
@@ -384,6 +408,24 @@ def render_audit_guide() -> None:
 
     with japanese_tab:
         st.caption("データセット間の重複候補チェック（監査用）")
+        st.markdown(
+            "**このツールは重複データ候補を抽出するだけです。** 元のworkbookを変更せず、"
+            "重複を確定せず、解析から記録を除外しません。"
+        )
+        st.markdown(
+            "元データの出典、航海、観測点、測定メタデータを確認する前の、"
+            "監査可能な候補一覧を作成するために使います。"
+        )
+        st.markdown(
+            "ブラウザの現在のセッションでアップロードしたユーザーデータについても、"
+            "選択したEnvGeo同梱データセットとの重複候補を確認できます。比較するには、"
+            "サイドバーの**Uploaded data overlay**を使用し、必要な列を指定してください。"
+        )
+        st.markdown(
+            "各探索ページでは、**Data filtering → Duplicate-candidate display**で、"
+            "候補データを表示するか非表示にするかを選べます。これは可逆的な表示設定であり、"
+            "元データは変更しません。"
+        )
         with st.expander("監査表の読み方", expanded=False):
             st.markdown("**重要：** この表は重複候補を示す監査用の一覧です。どの候補も、この表だけで重複・誤り・除外対象とは決まりません。")
             st.markdown("**左／右：** データセット対のプルダウンに表示された順番です。`Right_minus_Left` は常に「右側 − 左側」を表します。")
@@ -420,23 +462,10 @@ uploaded_df = envgeo_user_data.render_column_controls(
 criteria = build_criteria_controls()
 current_upload_signature = upload_screen_signature(uploaded_df)
 st.title("Data overlap check")
-st.warning(
-    "This tool identifies candidates only. It does not alter source workbooks, "
-    "does not confirm duplicates, and does not remove records from analyses."
-)
-st.write(
-    "Use this page to create an auditable candidate list before reviewing source "
-    "provenance, cruises, stations, and measurement metadata."
-)
 render_audit_guide()
 
 pair_options = dict(SOURCE_PAIRS)
-if uploaded_df.empty:
-    st.info(
-        "To compare a session-only uploaded table with a bundled reference dataset, "
-        "use **Uploaded data overlay** in the sidebar and provide the required columns."
-    )
-else:
+if not uploaded_df.empty:
     for reference_source in SOURCE_FILES:
         pair_options[f"Uploaded data × {reference_source}"] = (
             UPLOADED_SOURCE_LABEL,

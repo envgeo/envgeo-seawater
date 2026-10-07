@@ -1,4 +1,4 @@
-EnvGeo-Seawaterは、海水の安定同位体と水文データを対話的に探索するWebアプリです。現在の中核データセットは、東シナ海から日本海にかけて複数年にわたり採取された、2,000点以上のKodama et al. (2024)のデータです。塩分、水温、δ¹⁸O、δD、採取時期、位置を、地図、3D/4D表示、関係図、深度プロファイルで確認できます。
+EnvGeo-Seawaterは、海水の安定同位体と水文データを対話的に探索するWebアプリです。現在の中核は、2,000点以上からなる**EnvGeo Dataset [ECS–Japan Sea]**です。主要出典はKodama et al. (2024)です。塩分、水温、δ¹⁸O、δD、採取時期、位置を、地図、3D/4D表示、関係図、深度プロファイルで確認できます。
 
 NASA GISS Global Seawater Oxygen Isotope DatabaseとPAGES CoralHydro2kを含む全球参照データセットを収録しており、約50,000件のデータをインタラクティブに検索できます。
 
@@ -6,7 +6,7 @@ NASA GISS Global Seawater Oxygen Isotope DatabaseとPAGES CoralHydro2kを含む�
 
 ## 主な機能
 
-- **中核データセット：** 東シナ海から日本海を中心とする、複数年のKodama et al. (2024)海水同位体データを探索できます。
+- **EnvGeo Dataset：** 統一した分析条件で整備した中核データセットを探索できます。現時点の主要出典はKodama et al. (2024)です。
 - **比較用データセット：** 日本周辺の引用付きデータに加え、NASA GISSおよびPAGES CoralHydro2kを含む全球参照データセットと比較できます。
 - **可視化：** サイドバーから、地図、2D/3D/4D表示、T--S図、深度プロファイルなどのページを開けます。
 - **ブラウザからのアップロード：** **User Data Check Quick Visualizer**では、CSV/XLSXファイルを現在のブラウザセッション内で確認・可視化できます。salinity--d18O、mapping、T--S、custom-parameter、depth-profile、vertical-sectionの各ページでも、アップロードしたデータを重ね描きできます。2Dplusと3D/4Dでは、現時点でブラウザからのアップロードには対応していません。

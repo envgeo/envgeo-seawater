@@ -568,10 +568,26 @@ def main():
     # Optional comparison data / 比較用の参照データは必要な場合だけ選択する。
     ref_data = st.radio(
         "Comparison data source (optional):",
-        (NO_COMPARISON_DATA, envgeo_utils.data_source_JAPAN_SEA, envgeo_utils.data_source_AROUND_JAPAN, envgeo_utils.data_source_GLOBAL),
+        (NO_COMPARISON_DATA, envgeo_utils.data_source_ENVGEO, envgeo_utils.data_source_AROUND_JAPAN, envgeo_utils.data_source_GLOBAL),
         horizontal=True,
         key="quick_visualizer_data_source",
     )
+
+    # -------------------------------------------------------------------------
+    # Selected-source details / 選択した参照データの出典情報
+    # Keep the Quick Visualizer consistent with the analytical pages: the
+    # compact selector name identifies the collection, while this line retains
+    # the primary citation and the scope of the selected comparison data.
+    # Quick Visualizerでも他の解析ページと同じ出典説明を表示し、短い選択名と
+    # 原典引用・収録範囲を分けて示す。
+    # -------------------------------------------------------------------------
+    if ref_data == envgeo_utils.data_source_ENVGEO:
+        st.write(envgeo_utils.refs_ENVGEO)
+    elif ref_data == envgeo_utils.data_source_AROUND_JAPAN:
+        st.write(envgeo_utils.refs_AROUND_JAPAN)
+    elif ref_data == envgeo_utils.data_source_GLOBAL:
+        st.write(envgeo_utils.refs_GLOBAL)
+
     reference_df = (
         pd.DataFrame()
         if ref_data == NO_COMPARISON_DATA
@@ -606,7 +622,7 @@ def main():
         # The filter helper needs one reference profile for default ranges.
         # Upload-only mode uses the global profile but does not load its rows.
         envgeo_utils.data_source_GLOBAL if ref_data == NO_COMPARISON_DATA else ref_data,
-        envgeo_utils.data_source_JAPAN_SEA,
+        envgeo_utils.data_source_ENVGEO,
         envgeo_utils.data_source_AROUND_JAPAN,
     )
     filtered_df = filter_result[0]
@@ -678,7 +694,7 @@ def main():
             horizontal=True,
             help="Pacific-centred mode places the dateline at the map edge for continuous Pacific views.",
         )
-        reference_source = st.selectbox("Reference context in geographic 3D view", ["None", envgeo_utils.data_source_JAPAN_SEA, envgeo_utils.data_source_AROUND_JAPAN, envgeo_utils.data_source_GLOBAL], help="Optional light-gray context points. They are not merged with uploaded data.")
+        reference_source = st.selectbox("Reference context in geographic 3D view", ["None", envgeo_utils.data_source_ENVGEO, envgeo_utils.data_source_AROUND_JAPAN, envgeo_utils.data_source_GLOBAL], help="Optional light-gray context points. They are not merged with uploaded data.")
 
     # Keep interactive figures responsive / インタラクティブ図の応答性を保つため表示行を制限する。
     displayed_df, sampled = sample_rows(filtered_df, int(maximum_rows))

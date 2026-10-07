@@ -316,40 +316,17 @@ def main():
     st.button('Reload')
     
     
-    # データソース選択
-    # st.write("data source:", (data_source_JAPAN_SEA))
-    st.write(':blue[data source:]  Kodama et al. (2024) [ECS - Japan Sea] ')
-    # ref_data = st.radio("data source (see home>about):", (data_source_JAPAN_SEA, "Kodama et al. (2024) with other reports", data_source_GLOBAL), horizontal=True, args=[1, 0])
-    # ref_data = st.radio("data source (see home>about):", (data_source_JAPAN_SEA, "Kodama et al. (2024) with other reports"), horizontal=True, args=[1, 0])
+    # データソース表示（アーカイブ画面ではEnvGeo中核を固定使用）
+    st.write(envgeo_utils.refs_ENVGEO)
 
     
     # データソースの変数、envgeo_utilsから読み出す
-    data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
+    data_source_ENVGEO = envgeo_utils.data_source_ENVGEO
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
     
 
-    # データソース選択
-    # ref_data = st.radio("data source (see home>about):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN), horizontal=True, args=[1, 0])
-
-
-
-    ref_data = data_source_JAPAN_SEA
-
-    # # 注意書き
-    # if ref_data == data_source_JAPAN_SEA:
-    #     st.write(':blue[data source:]  Kodama et al. (2024)')
-        
-    # elif ref_data == "Kodama et al. (2024) with other reports":
-    #     # st.text('including data from previous reports')
-    #     st.write(':blue[data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).')
-
-        
-    # else:
-    #     # st.text('including data from previous reports')
-
-    #     st.write(':blue[data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023)')
-    #     st.write(':blue[with:] NASA_database (Jan.23, 2025)]https://data.giss.nasa.gov/cgi-bin/o18data/geto18.cgi')
+    ref_data = data_source_ENVGEO
 
     # メインのDF,これは改変しない
     df_original = load_isotope_data_cached(ref_data)

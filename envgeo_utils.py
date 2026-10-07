@@ -387,13 +387,13 @@ def build_figure_filename(prefix, subtitle=None, extension="png"):
 # Data-source selector labels / データソース選択ラベル
 # -------------------------------------------------------------------
 
-data_source_JAPAN_SEA    = "Kodama et al. (2024) [ECS - Japan Sea]"
-data_source_AROUND_JAPAN = "with [Around Japan]"
-data_source_GLOBAL       = "with [Global data sets]"
+data_source_ENVGEO       = "EnvGeo [ECS–Japan Sea]"
+data_source_AROUND_JAPAN = "EnvGeo + Around Japan"
+data_source_GLOBAL       = "EnvGeo + Global"
 
 
 DATA_SOURCES = [
-    data_source_JAPAN_SEA,
+    data_source_ENVGEO,
     data_source_AROUND_JAPAN,
     data_source_GLOBAL,
 ]
@@ -403,27 +403,34 @@ DATA_SOURCES = [
 # =============================================================================
 
 # -------------------------------------------------------------------
-# Japan Sea / 日本海
+# EnvGeo core dataset / EnvGeo中核データセット
 # -------------------------------------------------------------------
-# Planned EnvGeo Data expansion: update the public label only after additional
-# source-cited datasets are released and their provenance is recorded.
-# EnvGeo Dataへの拡張は、追加データ公開と来歴記録の後に表示ラベルを更新する。
-refs_JAPAN_SEA= ':blue[Data source:]  Kodama et al. (2024)'
+# The selector uses the short EnvGeo label.  The primary publication remains
+# visible separately so that the dataset identity never replaces its citation.
+# 選択肢は短いEnvGeo表記にし、原典引用は別途明示して保持する。
+refs_ENVGEO = (
+    ':blue[EnvGeo Dataset:] Seawater isotope measurements analyzed under standardized analytical procedures '
+    'by T. Ishimura (EnvGeo Laboratory). Planned expansion: the Pacific coast of Japan and the broader northwestern Pacific. '
+    ':blue[Primary reference:] Kodama et al. (2024).'
+)
 
 # -------------------------------------------------------------------
-# EnvGeo Data + Around Japan / EnvGeo Dataと日本周辺比較データ
+# EnvGeo Dataset + Around Japan / EnvGeo Datasetと日本周辺比較データ
 # -------------------------------------------------------------------
-# EnvGeo Data currently contains Kodama et al. (2024); additional laboratory
-# datasets will be added only after publication and provenance recording.
-# 現時点のEnvGeo DataはKodama et al. (2024)であり、研究室データの追加は
-# 公表と来歴記録の後に行う。Around Japanは比較用の外部地域データである。
-refs_AROUND_JAPAN = ':blue[Data source:]Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).'
+# The current EnvGeo core is represented by the cited Kodama et al. (2024)
+# collection. Additional laboratory datasets will be added only after
+# publication and provenance recording. Around Japan contains external
+# regional reference data for comparison.
+# 現在のEnvGeo中核は引用を伴うKodama et al. (2024)コレクションであり、
+# 研究室データの追加は公表と来歴記録の後に行う。Around Japanは比較用の
+# 外部地域参照データである。
+refs_AROUND_JAPAN = ':blue[Includes:] EnvGeo Dataset [ECS–Japan Sea] and cited regional reference datasets. :blue[References:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).'
 
 # -------------------------------------------------------------------
 # Global data / 全球データ
 # -------------------------------------------------------------------
 # NASA GISS + CoralHydro2k + recent regional reports
-refs_GLOBAL = ':blue[Data source:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).\
+refs_GLOBAL = ':blue[Includes:] EnvGeo Dataset [ECS–Japan Sea], cited regional references, NASA GISS, and CoralHydro2k. :blue[References:] Kodama et al. (2024), Yamamoto et al. (2001), Sakamoto et al. (2019), Kodaira et al. (2016), Horikawa et al. (2023).\
                 Sakamoto et al. (2022).\
                 :blue[Integrated with:] NASA GISS Global Seawater d18O Database (Jan 23, 2025)\
                 :blue[and] CoralHydro2k d18O Database (Atwood et al., 2026; v1.0.0)'
@@ -1807,7 +1814,7 @@ def load_isotope_data(ref_data, sheet_num=0):
     Load isotope datasets based on the selected reference source.
     Results are cached to ensure near-instantaneous retrieval on subsequent calls.
     Args:
-        ref_data (str): Identifier for the data source (e.g., Japan Sea, Global).
+        ref_data (str): Identifier for the data source (e.g., EnvGeo, EnvGeo + Global).
         sheet_num (int): Index of the Excel sheet to load. Defaults to 0.
     Returns:
         pd.DataFrame: Loaded dataset.
@@ -1819,7 +1826,7 @@ def load_isotope_data(ref_data, sheet_num=0):
     # Bundled workbook paths / 同梱workbookのパス
     # -------------------------------------------------------------------
     
-    # ECS-Japan Sea
+    # EnvGeo core dataset (ECS–Japan Sea) / EnvGeo中核データセット
     file_01 = envgeo_assets.asset_path('dataset/01_ECS_JAPAN_SEA_Kodam_et_al_2024.xlsx')
     # around Japan
     file_02 = envgeo_assets.asset_path('dataset/11_AROUND_JAPAN_PUB_20260305.xlsx')
@@ -1843,7 +1850,7 @@ def load_isotope_data(ref_data, sheet_num=0):
     # 元行を保持し、画面用のDataset分類とは分ける。
     df1 = pd.read_excel(file_01)
     df1['Dataset'] = 'Around Japan'
-    df1[OVERLAP_SOURCE_COLUMN] = 'ECS-Japan Sea (Kodama et al. 2024)'
+    df1[OVERLAP_SOURCE_COLUMN] = 'EnvGeo Dataset [ECS–Japan Sea]'
     df1[OVERLAP_SOURCE_ROW_COLUMN] = df1.index
     
     df2 = pd.read_excel(file_02)
@@ -1888,7 +1895,7 @@ def load_isotope_data(ref_data, sheet_num=0):
 
     # Browser uploads remain session-only. The optional local user table is an
     # always-loaded dataset, matching the former local-workbook workflow.
-    if ref_data == data_source_JAPAN_SEA:
+    if ref_data == data_source_ENVGEO:
         frames = [df1]
 
     elif ref_data == data_source_AROUND_JAPAN:
@@ -2960,7 +2967,7 @@ def filter_uploaded_data_for_sidebar(
 def sidebar_filter_and_display(
     df1,
     ref_data,
-    data_source_JAPAN_SEA,
+    data_source_ENVGEO,
     data_source_AROUND_JAPAN,
     uploaded_df=None,
     uploaded_filter_key=None,
@@ -2974,7 +2981,7 @@ def sidebar_filter_and_display(
     Args:
         df1 (pd.DataFrame): The original dataset.
         ref_data (str): Current active data source identifier.
-        data_source_JAPAN_SEA: Constant for Japan Sea dataset.
+        data_source_ENVGEO: Selector label for the EnvGeo core dataset.
         data_source_AROUND_JAPAN: Constant for Around Japan dataset.
         uploaded_df: Optional separately managed uploaded rows for an overlay.
         uploaded_filter_key: Page-specific key for the uploaded overlay state.
@@ -3135,9 +3142,9 @@ def sidebar_filter_and_display(
     
   
         # -------------------------------------------------------------------
-        # Survey-area map for Kodama et al. (2024) / Kodama et al.（2024）の調査海域地図
+        # Survey-area map for the EnvGeo core dataset / EnvGeo中核データの調査海域地図
         # -------------------------------------------------------------------
-        with st.expander("Area map: Kodama et al.(2024)", expanded=False):
+        with st.expander("Area map: EnvGeo Dataset [ECS–Japan Sea]", expanded=False):
             st.write('Cruise tracks and study area (2015–2021)')
             st.caption('Click top right to expand.')
             st.image(str(envgeo_assets.asset_path("data/sites_20230515.gif")))

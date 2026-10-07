@@ -1147,19 +1147,19 @@ def main():
 
     st.button("Reload")
 
-    data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
+    data_source_ENVGEO = envgeo_utils.data_source_ENVGEO
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
 
     ref_data = st.radio(
         "Data source (see Home > About):",
-        (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL),
+        (data_source_ENVGEO, data_source_AROUND_JAPAN, data_source_GLOBAL),
         horizontal=True,
         key="integrated_data_source",
     )
 
-    if ref_data == data_source_JAPAN_SEA:
-        st.write(envgeo_utils.refs_JAPAN_SEA)
+    if ref_data == data_source_ENVGEO:
+        st.write(envgeo_utils.refs_ENVGEO)
     elif ref_data == data_source_AROUND_JAPAN:
         st.write(envgeo_utils.refs_AROUND_JAPAN)
     elif ref_data == data_source_GLOBAL:
@@ -1192,7 +1192,7 @@ def main():
     ) = envgeo_utils.sidebar_filter_and_display(
         df,
         ref_data,
-        data_source_JAPAN_SEA,
+        data_source_ENVGEO,
         data_source_AROUND_JAPAN,
     )
 

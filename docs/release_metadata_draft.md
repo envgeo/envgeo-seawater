@@ -30,8 +30,8 @@ been tagged and archived.
 EnvGeo-Seawater is an interactive Python and Streamlit platform for exploring
 seawater isotope and hydrographic data. It integrates approximately 50,000
 cited records, including NASA GISS and PAGES CoralHydro2k reference datasets,
-with regional reference data and the Kodama et al. (2024) Japan-region core
-collection. The application supports mapping, 2D–4D visualization,
+with regional reference data and the EnvGeo Dataset [ECS–Japan Sea] core
+collection (primary reference: Kodama et al. 2024). The application supports mapping, 2D–4D visualization,
 salinity–isotope relationships, T–S diagrams, depth profiles, vertical
 sections, and session-only comparison with user-supplied data.
 

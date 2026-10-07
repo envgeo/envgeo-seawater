@@ -1664,7 +1664,7 @@ def main():
     filter_result = envgeo_utils.sidebar_filter_and_display(
         filter_source_df,
         ref_data_source,
-        envgeo_utils.data_source_JAPAN_SEA,
+        envgeo_utils.data_source_ENVGEO,
         envgeo_utils.data_source_AROUND_JAPAN,
         uploaded_df=uploaded_df,
         uploaded_filter_key="vertical_section",
@@ -1764,7 +1764,7 @@ def main():
                 "X-axis for section",
                 ["Longitude_degE", "Latitude_degN", "Distance_km"],
             )
-        if ref_data_source == envgeo_utils.data_source_JAPAN_SEA:
+        if ref_data_source == envgeo_utils.data_source_ENVGEO:
             corridor_default = 30.0
         elif ref_data_source == envgeo_utils.data_source_AROUND_JAPAN:
             corridor_default = 100.0

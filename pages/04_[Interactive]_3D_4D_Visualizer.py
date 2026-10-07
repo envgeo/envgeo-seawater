@@ -76,16 +76,16 @@ def main():
     # -------------------------------------------------------------------------
     # Data-source selection / データソース選択
     # -------------------------------------------------------------------------
-    data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
+    data_source_ENVGEO = envgeo_utils.data_source_ENVGEO
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
     
 
-    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
+    ref_data = st.radio("Data source (see Home > About)", (data_source_ENVGEO, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
     # Citation display / 引用表示
-    if ref_data == data_source_JAPAN_SEA:
-        st.write(envgeo_utils.refs_JAPAN_SEA)
+    if ref_data == data_source_ENVGEO:
+        st.write(envgeo_utils.refs_ENVGEO)
         
     elif ref_data == data_source_AROUND_JAPAN:
         st.write(envgeo_utils.refs_AROUND_JAPAN)
@@ -120,7 +120,7 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_ENVGEO, data_source_AROUND_JAPAN)
 
     # -------------------------------------------------------------------------
     # Coordinate helpers / 座標補助処理
@@ -223,7 +223,7 @@ def main():
 
         # Allow Fig3-Fig6 map views to use explicit lon/lat windows from the sidebar.
         # Fig3-Fig6 の地図表示範囲を、サイドバーから緯度経度で直接調整できるようにする。
-        if ref_data == data_source_JAPAN_SEA:
+        if ref_data == data_source_ENVGEO:
             map_lon_default = (120, 145)
             map_lat_default = (20, 45)
             lon_slider_min, lon_slider_max = (0, 360) if lon_center_3d == 180 else (-180, 180)
@@ -1184,7 +1184,7 @@ def main():
     c_lbl = ["Temperature(C)", "d18O", "d18O", "Temperature(C)", "Salinity", "d-excess"]
 
     # Dataset-specific default color ranges / データセット別の初期色範囲
-    if ref_data == data_source_JAPAN_SEA:
+    if ref_data == data_source_ENVGEO:
         default_ranges = {
             "Temperature_degC": (5.0, 28.0),
             "d18O": (-1.5, 1.0),

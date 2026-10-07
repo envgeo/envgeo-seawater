@@ -219,10 +219,10 @@ def test_bering_sea_longitude_mask_uses_or_condition_across_conventions(
     )
 
 
-# Verifies that the Japan Sea dataset can be loaded successfully and is not empty.
+# Verifies that the EnvGeo core dataset can be loaded successfully and is not empty.
 # 日本海データセットが正常に読み込まれ、空でないことを確認する。
-def test_load_isotope_data_japan_sea_not_empty():
-    df = envgeo_utils.load_isotope_data(envgeo_utils.data_source_JAPAN_SEA)
+def test_load_isotope_data_envgeo_not_empty():
+    df = envgeo_utils.load_isotope_data(envgeo_utils.data_source_ENVGEO)
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
 
@@ -862,7 +862,7 @@ def test_plot_bundled_coastline_uses_csv_without_cartopy_downloader(monkeypatch)
 # Verifies that the public dataset choices remain available for app pages.
 # アプリページで使う公開データセット選択肢が維持されていることを確認する。
 def test_data_sources_include_expected_public_choices():
-    assert envgeo_utils.data_source_JAPAN_SEA in envgeo_utils.DATA_SOURCES
+    assert envgeo_utils.data_source_ENVGEO in envgeo_utils.DATA_SOURCES
     assert envgeo_utils.data_source_AROUND_JAPAN in envgeo_utils.DATA_SOURCES
     assert envgeo_utils.data_source_GLOBAL in envgeo_utils.DATA_SOURCES
 

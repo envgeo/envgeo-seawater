@@ -28,7 +28,7 @@ tag日、clean buildしたwheelのchecksum、Zenodoのversion DOIは、review済
 
 EnvGeo-Seawaterは、海水安定同位体と水文データを探索するためのPython／Streamlitによる
 インタラクティブなplatformである。NASA GISSおよびPAGES CoralHydro2kの比較用dataset、地域参照data、
-Kodama et al. (2024)の日本周辺core collectionを含む、約50,000件の引用付きrecordを統合する。地図、
+EnvGeo Dataset [ECS–Japan Sea]中核コレクション（主要出典：Kodama et al. (2024)）を含む、約50,000件の引用付きrecordを統合する。地図、
 2D–4D可視化、塩分–同位体関係、T–S diagram、深度profile、鉛直section、利用者dataとのsession限定比較を
 提供する。
 

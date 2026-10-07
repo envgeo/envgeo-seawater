@@ -738,7 +738,7 @@ def _base_row():
 
 
 def _run_page_uploaded_only(page_name, data, timeout=60):
-    """Run a page with uploaded data only (Kodama reference data excluded)."""
+    """Run a page with uploaded data only (EnvGeo reference data excluded)."""
     app = _run_page(page_name, data)
     try:
         next(

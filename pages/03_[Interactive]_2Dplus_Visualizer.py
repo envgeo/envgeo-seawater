@@ -248,18 +248,18 @@ def main():
  
 
     # Shared data-source labels / 共通データソース表示名
-    data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
+    data_source_ENVGEO = envgeo_utils.data_source_ENVGEO
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
     
 
     # Reference-data selection / 参照データ選択
-    ref_data = st.radio("Data source (see Home > About)", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
+    ref_data = st.radio("Data source (see Home > About)", (data_source_ENVGEO, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
     # Citation display / 引用表示
     
-    if ref_data == data_source_JAPAN_SEA:
-        st.write(envgeo_utils.refs_JAPAN_SEA)
+    if ref_data == data_source_ENVGEO:
+        st.write(envgeo_utils.refs_ENVGEO)
         
     elif ref_data == data_source_AROUND_JAPAN:
         st.write(envgeo_utils.refs_AROUND_JAPAN)
@@ -298,7 +298,7 @@ def main():
      sld_d18O_min, sld_d18O_max,
      sld_temp_min, sld_temp_max,
      selected_cruise,
-     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN)
+     submitted) = envgeo_utils.sidebar_filter_and_display(df1, ref_data, data_source_ENVGEO, data_source_AROUND_JAPAN)
 
     # -------------------------------------------------------------------------
     # Plotly coordinate aliases / Plotly用の位置列alias

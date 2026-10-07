@@ -206,17 +206,17 @@ def main():
     # =============================================================================
     # Data-source selection / データソースの選択
     # =============================================================================
-    data_source_JAPAN_SEA = envgeo_utils.data_source_JAPAN_SEA
+    data_source_ENVGEO = envgeo_utils.data_source_ENVGEO
     data_source_AROUND_JAPAN = envgeo_utils.data_source_AROUND_JAPAN
     data_source_GLOBAL = envgeo_utils.data_source_GLOBAL
 
-    ref_data = st.radio("Data source (see Home > About):", (data_source_JAPAN_SEA, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
+    ref_data = st.radio("Data source (see Home > About):", (data_source_ENVGEO, data_source_AROUND_JAPAN, data_source_GLOBAL), horizontal=True)
 
     # -----------------------------------------------------------------------------
     # Attribution / 出典表示
     # -----------------------------------------------------------------------------
-    if ref_data == data_source_JAPAN_SEA:
-        st.write(envgeo_utils.refs_JAPAN_SEA)
+    if ref_data == data_source_ENVGEO:
+        st.write(envgeo_utils.refs_ENVGEO)
         
     elif ref_data == data_source_AROUND_JAPAN:
         st.write(envgeo_utils.refs_AROUND_JAPAN)
@@ -279,7 +279,7 @@ def main():
          envgeo_utils.combine_reference_and_uploaded_for_filtering(
              df1, uploaded_df
          ),
-         ref_data, data_source_JAPAN_SEA, data_source_AROUND_JAPAN,
+         ref_data, data_source_ENVGEO, data_source_AROUND_JAPAN,
          uploaded_df=uploaded_df, uploaded_filter_key="isotope_mapping",
          uploaded_dataset_label=envgeo_utils.UPLOADED_DATA_LABEL,
      )
@@ -375,7 +375,7 @@ def main():
         lon_slider_max = 180 if lon_center == 0 else 360
         
         # --- 図のスケール設定 (表示は整数、内部計算は微小オフセットあり) ---
-        if ref_data == data_source_JAPAN_SEA:
+        if ref_data == data_source_ENVGEO:
             # 地図の描画範囲（日本海）
             map_lon_default = (120, 145)
             map_lat_default = (20, 45)

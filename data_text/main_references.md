@@ -1,6 +1,6 @@
 ## :red[Core Dataset]
 
-### Dataset 01 — Kodama et al. (2024)
+### EnvGeo Dataset [ECS–Japan Sea] — primary reference
 
 Kodama, T., Kitajima, S., Takahashi, M., and Ishimura, T. (2024). Spatiotemporal variations of seawater d18O and dD in the Western North Pacific marginal seas near Japan. *Geochemical Journal*.
 
