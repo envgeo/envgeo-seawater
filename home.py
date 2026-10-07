@@ -212,11 +212,12 @@ def render_update_history() -> None:
     """Render the concise public update history. / 簡潔な公開更新履歴を表示する。"""
     st.markdown(
         """
-### Unreleased — v1.3.5 development updates (2026-10-06)
+### Unreleased — v1.3.5 development updates (2026-10-07)
 
 - Added the read-only **Data Overlap Check** utility for auditing possible repeated observations across bundled datasets or one session-only uploaded table. Strong and Review candidate tables are exportable; no source workbook or observation is changed.
 - Added optional, reversible duplicate-candidate display modes and a shared **Reference / Citation** filter. The default continues to display all records, and uploads without a reference field remain supported.
 - Grouped User Data Check & Quick Visualizer and Data Overlap Check under **[Utils]** in the sidebar. Updated bilingual manuals, provenance notes, and citation guidance for analyses, figures, publications, and presentations.
+- The v1.3.5 overlap workflow is limited to candidate screening, source-row inspection, audit exports, and reversible sensitivity displays. It does not require candidate-by-candidate decisions, create a persistent duplicate manifest, or permanently exclude records.
 
 ### Version 1.3.4 (2026-10-03)
 

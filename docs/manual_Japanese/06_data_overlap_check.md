@@ -71,8 +71,7 @@ Around Japan、NASA GISS global、CoralHydro2k globalのそれぞれとの比較
 
 **Inspect one Provisional one-to-one candidate pair**では、暫定的一対一候補の二つの元行を左右に並べて確認できます。判断前に必ず元データを確認してください。
 
-**Record a provisional-candidate decision**では、`Pending`、`Confirmed duplicate`、`Keep both`と、根拠または次の確認事項を記録できます。判断はブラウザの現在のセッション内だけに保持されるため、独立したreview-decision CSVをダウンロードして保存してください。このCSVは元workbookから分離され、将来の確認済み重複manifestの出発点になります。
-`Confirmed duplicate`と判断した場合は、任意の**Display action after confirmation**で、左右のどちらを表示に残すかも記録できます。
+**Record a provisional-candidate decision**は通常の候補確認では必須ではありません。`Pending`、`Confirmed duplicate`、`Keep both`と、根拠または次の確認事項を記録できます。判断はブラウザの現在のセッション内だけに保持されるため、必要な場合だけ独立したreview-decision CSVをダウンロードして保存してください。この操作は元workbookを変更せず、恒常的なmanifestを作成せず、可逆的な表示スクリーンの動作も変更しません。
 
 監査表には、出典名、元行ID、引用のfallback、絶対差と符号付き差、厳しい閾値の超過フラグ、丸め幅を含めます。`Right_minus_Left`列は常に「画面で選んだ右側のデータセット − 左側のデータセット」です。
 
@@ -85,4 +84,4 @@ Around Japan、NASA GISS global、CoralHydro2k globalのそれぞれとの比較
 
 ## 制約と今後の利用
 
-小数桁の確認は取り込み後の数値に基づく監査用推定であり、分析誤差モデルではありません。重複と確認された判断は、元workbookとは別に管理します。任意の表示スクリーンは可逆的な感度確認用であり、既定ではすべての観測を保持します。
+小数桁の確認は取り込み後の数値に基づく監査用推定であり、分析誤差モデルではありません。任意の表示スクリーンは可逆的な感度確認用であり、既定ではすべての観測を保持します。恒常的な判断記録や除外は現行ワークフローの対象外であり、必要になった場合に別途、原典を確認した手順として検討します。

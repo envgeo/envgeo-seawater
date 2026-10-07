@@ -1606,9 +1606,10 @@ def screen_dataset_pair_for_overlaps(left_df, right_df, left_source, right_sourc
 def annotate_overlap_candidates(df, audit_table, source_label):
     """Return a copy of ``df`` annotated from an overlap audit table.
 
-    This is an explanatory flag only.  It never drops, changes or de-duplicates
-    measurements; a later review and display-control step will decide whether
-    confirmed pairs are hidden for a particular analysis.
+    This is an explanatory flag only. It never drops, changes, or de-duplicates
+    measurements. Optional display modes can use the candidate information for
+    reversible sensitivity checks, but they do not confirm or permanently hide
+    any record.
     """
     annotated = df.copy()
     annotated[OVERLAP_FLAG_COLUMN] = ""

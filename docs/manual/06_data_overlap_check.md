@@ -116,14 +116,12 @@ immediately.
 Use **Inspect one Provisional one-to-one candidate pair** to view the two
 original rows side by side before making a decision.
 
-Use **Record a provisional-candidate decision** to record **Pending**,
-**Confirmed duplicate**, or **Keep both**, together with the source evidence
-or next check. For a confirmed duplicate, the optional **Display action after
-confirmation** records which source row would remain visible. Decisions remain
-only in the current browser session until you download the separate
-review-decision CSV. This file is intentionally separate from all source
-workbooks and is the starting point for a later reviewed confirmed-duplicate
-manifest.
+**Record a provisional-candidate decision** is optional and is not required
+for ordinary screening. It can record **Pending**, **Confirmed duplicate**, or
+**Keep both**, together with source evidence or a next check. Any decision
+remains only in the current browser session until the separate review-decision
+CSV is downloaded. It does not alter a workbook, create a persistent manifest,
+or control the reversible display screens.
 
 The audit includes source names, source-row IDs, citation fallbacks, absolute
 and signed differences, strict-threshold flags, and rounding allowances. The
@@ -146,7 +144,7 @@ session and are never written by the app.
 ## Limits and planned use
 
 The decimal-precision check is an audit estimate based on imported numeric
-values; it is not a measurement-uncertainty model. Confirmed duplicate
-decisions are stored separately from the original workbooks. The optional
-display screens are reversible sensitivity tools; the default retains all
-observations.
+values; it is not a measurement-uncertainty model. The optional display
+screens are reversible sensitivity tools; the default retains all observations.
+Persistent decisions or permanent exclusions are outside the current workflow
+and would require a separate, source-reviewed process if they become needed.

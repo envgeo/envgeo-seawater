@@ -2,6 +2,19 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — v1.3.5 overlap-audit scope alignment (2026-10-07)
+
+- Confirmed the release scope of the overlap workflow: it provides read-only
+  Strong/Review candidate screening, source-row inspection, audit exports, and
+  reversible display sensitivity screens. It does not modify source workbooks
+  or require users to record a decision for every candidate.
+- Recorded limited visual checks of bundled-data candidates in a non-public
+  working note. These checks support the usefulness of the audit screen but do
+  not create a confirmed-duplicate manifest or permanent exclusion rule.
+- Aligned the manual wording with this boundary. Persistent review decisions
+  and permanent exclusions remain outside the v1.3.5 workflow and will be
+  considered only if a scientific use case requires them.
+
 ## Unreleased — Overlap-audit refinement and user documentation (2026-10-06)
 
 - Grouped the two supporting pages in the Streamlit sidebar as **[Utils]**:
@@ -54,13 +67,13 @@ Detailed development log for recent EnvGeo-Seawater updates.
   139 strict Around Japan--NASA candidate pairs involving 131 rows principally
   labelled `Yamamoto et al. (2001)` / `PI=KAWAI`.
 - Clarified that candidate-pair counts are not confirmed unique duplicate
-  observations and that v1.3.4 removes no source records. A future release
-  will publish an audit table and provide optional exclusion only for
-  review-confirmed overlaps in combined-dataset statistics and figures.
-- Added a time-aware candidate table for the v1.3.5 design: matching valid
-  year/month, distance ≤15 km, salinity and δ18O differences ≤0.1, and depth
-  tolerances from 1 to 50 m. The table explicitly distinguishes candidate
-  pairs from distinct source rows and from future one-to-one suppressions.
+  observations and that v1.3.4 removes no source records. This preliminary
+  screen was superseded by the later public audit page and its documented
+  Strong/Review criteria.
+- The early prototype used a distance-based candidate table. Before the public
+  audit page was adopted, it was replaced by separately inspectable latitude
+  and longitude differences, matching valid year/month, and explicit depth,
+  salinity, and δ18O thresholds.
 
 ## Unreleased — Installation documentation update (2026-10-04)
 
