@@ -31,10 +31,12 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-On Apple Silicon macOS, this standard pip installation has been checked with
-Python 3.10--3.13. Python 3.13 may build NumPy and PyProj from source and can
-therefore take several minutes. If installation fails while installing PyProj
-or Cartopy, use the Conda fallback in the
+**Python 3.12 is recommended**. Python 3.13 is conditionally supported on all
+platforms: a ready-made wheel for the pinned NumPy or PyProj version is not
+always available, so pip may build it from source. That build can take several
+minutes and needs a native build toolchain. This is not specific to M1 Macs or
+to Cartopy. On macOS, install Apple's Command Line Tools before retrying
+Python 3.13; otherwise, use the Python 3.12 Conda fallback in the
 [stable README](https://github.com/envgeo/seawater_map/blob/main/README.md).
 Python 3.14 is not supported by the fixed dependencies in v1.3.4.
 

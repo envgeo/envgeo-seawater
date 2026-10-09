@@ -7,10 +7,10 @@
 #   Streamlit 1.63で、どちらもPlotly 5.24を使用する。
 # - A fresh test-site installation resolves to Streamlit 1.63.
 # - 新規のテストサイト導入ではStreamlit 1.63が解決される。
-# - Apple Silicon macOS: standard pip installation is checked on Python 3.10--3.13.
-#   Use the README Conda fallback only if pyproj/cartopy installation fails.
-# - Apple Silicon macOSでは、標準pip導入をPython 3.10--3.13で確認済み。
-#   pyproj/cartopyの導入に失敗した場合だけREADMEのConda fallbackを用いる。
+# - Python 3.12 is recommended. Python 3.13 is conditionally supported on all
+#   platforms because NumPy/PyProj may need a native source build.
+# - Python 3.12を推奨する。Python 3.13はNumPy/PyProjのネイティブなソースビルドが
+#   必要になる場合があるため、すべてのプラットフォームで条件付きサポートとする。
 # ==============================================================================
 
 # --- Core framework / 基盤フレームワーク ---
@@ -31,10 +31,10 @@ streamlit-folium==0.26.1
 cmocean==4.0.3
 
 # --- Geospatial and oceanography / 地理空間・海洋学 ---
-# Pin pyproj to the release used for the stable package. On Python 3.13 it may
-# be built from source; if that or Cartopy fails, use the README Conda fallback.
-# pyprojは安定パッケージで使用した版に固定する。Python 3.13ではソースから
-# ビルドされる場合がある。これまたはCartopyで失敗した場合はREADMEのConda fallbackを用いる。
+# Pin pyproj to the release used for the stable package. Python 3.13 can require
+# a source build; see the README for its conditional-support requirements.
+# pyprojは安定パッケージで使用した版に固定する。Python 3.13ではソースビルドが
+# 必要になる場合があるため、条件付きサポートの要件はREADMEを参照する。
 pyproj==3.6.1
 gsw==3.6.20
 cartopy==0.25.0

@@ -5,7 +5,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [日本語版 README](https://github.com/envgeo/envgeo-seawater/blob/main/README_Japanese.md)
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
-[![Python](https://img.shields.io/badge/python-3.10--3.13%20tested-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.12%20CI-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
@@ -17,11 +17,11 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 
 ## Overview
 
-EnvGeo-Seawater has been used for exploratory analysis of seawater isotope datasets in marine geochemistry research.
+EnvGeo-Seawater is a Streamlit-based interactive web application for exploring, visualizing, and comparing seawater isotope and hydrographic data for marine geochemistry research.
 
-EnvGeo-Seawater is a web-based interactive visualization platform for marine geochemical and hydrographic datasets, including stable water isotopes (δ¹⁸O, δD), salinity, temperature, and depth.
+It supports marine geochemical and hydrographic datasets, including stable water isotopes (δ¹⁸O, δD), salinity, temperature, and depth.
 
-It integrates curated regional datasets (e.g., around Japan) and major global datasets (~50,000 records), enabling consistent cross-comparison under unified analytical conditions.
+The platform combines the EnvGeo Dataset, whose measurements around Japan were analyzed under standardized procedures, with regional and global reference datasets, including NASA GISS and PAGES CoralHydro2k. Approximately 50,000 cited records can be filtered, compared, and visualized under common selection conditions.
 
 The platform is designed to support both **exploratory data analysis** and **reproducible research workflows** in marine geochemistry and oceanography.
 
@@ -34,18 +34,21 @@ The platform is designed to support both **exploratory data analysis** and **rep
 - 📈 Temperature–Salinity (T–S) diagrams with approximate σ0 reference contours
 - 📉 Regression analysis (e.g., salinity–δ¹⁸O relationships)  
 - 🧭 3D / 4D visualization of spatial–temporal structures  
+- 🗂️ Cross-dataset comparison of the EnvGeo Dataset with regional and global reference collections
+- 📚 Dataset-name and Reference / Citation filtering for provenance-aware selection
 - 📂 Session-only browser uploads and optional persistent local `User Excel data` for comparison with reference datasets
 - 🧾 Transparent data handling (filtered / excluded samples clearly reported)  
-- 🔎 Provenance-aware overlap screening plus reversible duplicate-candidate display modes for sensitivity checks
+- 🔎 Duplicate-candidate review and filtering between bundled reference datasets or uploaded data
 - 🖼️ Export of publication-quality figures  
 
 ---
 
 ## Main Pages
 
-The Streamlit app uses `home.py` for the about, data-source, manual,
-update-log, and Japanese information tabs. The `pages/` directory contains the
-main visualization tools, along with selected beta and local-development pages:
+The following is the page inventory for the development source. The Streamlit
+app uses `home.py` for the about, data-source, manual, update-log, and Japanese
+information tabs. The `pages/` directory contains the main visualization tools,
+along with selected beta and local-development pages:
 
 - `pages/03_[Interactive]_2Dplus_Visualizer.py`
   Interactive 2D/2.5D plots for isotope-hydrographic relationships and selected sample locations.
@@ -75,7 +78,8 @@ main visualization tools, along with selected beta and local-development pages:
   Flexible custom 2D parameter plots with selectable X axis, Y axis, color, and marker size.
 
 - `pages/53_Vertical_Section_Visualizer.py`
-  Vertical Section Visualizer beta. This experimental page is used to refine section-line selection, interpolation, bathymetry handling, and vertical-section plotting.
+  Vertical Section Visualizer for section-line selection, interpolation,
+  bathymetry handling, and vertical-section plotting.
 
 - `pages/80_Correlation_Overview.py`
 Archive display of the original hand-written exploratory workflow used during development. It is retained as a development record; no new features are planned.
@@ -85,6 +89,12 @@ Archive display of the original hand-written exploratory workflow used during de
 
 - `pages/99_Environment_Check.py`
   Local-development wrapper for the environment checker. It is useful for local diagnostics but is not intended for the public Streamlit deployment sidebar.
+
+### Public pages in the stable release
+
+Stable v1.3.4 includes Pages 03, 04, 05, 31, 32, 34, 35, 37, 53, and 80.
+Pages 90, 91, and 99 are for development or local diagnostics and are excluded
+from the stable distribution package and public Streamlit sidebar.
 
 The former standalone about page was merged into `home.py`.
 
@@ -187,57 +197,26 @@ Unpublished or restricted datasets are **not included**.
 
 ### Cross-dataset overlap screening
 
-NASA GISS and PAGES CoralHydro2k are independently curated compilations and
-can include observations inherited from the same original source. The **Data
-overlap check** page provides a read-only, provenance-aware screen for these
-and other bundled dataset pairs, as well as one session-only uploaded table
-against a selected bundled reference dataset. It requires matching valid
-sampling year and month, then evaluates latitude, longitude, depth, salinity,
-and δ18O against user-visible thresholds. Latitude and longitude are assessed
-separately so that the matching rationale remains inspectable.
+Integrated datasets, including NASA GISS and PAGES CoralHydro2k, can contain
+records derived from the same original observation. **Data Overlap Check**
+supports candidate review and filtering between bundled reference datasets, or
+between one session-only uploaded table and a selected bundled reference
+dataset. Candidates are reported as **Strong** or **Review**; they do not
+confirm a duplicate, and source workbooks are never modified.
 
-Results are reported as disjoint **Strong** and **Review** candidate classes.
-Strong candidates meet all strict thresholds: the current provisional defaults
-are ≤0.1° latitude, ≤0.1° longitude, ≤5 m depth, ≤0.1 salinity, and ≤0.1‰
-δ18O difference. Review candidates meet broader provisional defaults (≤0.2°,
-≤0.2°, ≤10 m, ≤0.2, and ≤0.2‰, respectively) but differ on one or more
-strict fields; their audit output identifies whether the difference is in
-coordinates/depth, salinity, δ18O, or multiple fields. These are adjustable
-screening criteria, not universal measurement-error thresholds. A candidate is
-not a confirmed duplicate: rounding, transcription, revised source versions,
-analytical normalization, or genuinely nearby samples can produce similar
-records.
-
-The screen never changes source workbooks or removes records. It produces
-downloadable audit tables and side-by-side source-row inspection to support
-source-level confirmation. The common data-filter sidebar retains all rows by
-default, but offers two optional and reversible bundled-data display screens:
-the recommended **one-to-one rounding-compatible** subset, and a broader
-**Strong** screen for sensitivity checks. The recommended mode calculates only
-after it is selected, hides one row per deterministic one-to-one candidate
-pair, and retains the row with more populated provenance/analytical metadata
-(with a documented tie-breaker). The broader Strong mode can include
-one-to-many candidates and must not be interpreted as confirmed
-de-duplication. Uploaded user data are not automatically suppressed;
-comparisons between two independently uploaded tables are not currently
-provided.
-
-This source-preserving workflow—explicit criteria, candidate classes,
-inspectable evidence, retained provenance, and reversible display
-sensitivity checks—addresses a common quality-assurance problem when global
-reference datasets are combined. It is intended as a reusable foundation for
-transparent multi-dataset integration rather than a claim that every candidate
-is a duplicate.
+See the [Data Overlap Check manual](docs/manual/06_data_overlap_check.md) for
+the matching criteria, candidate classes, audit table, and filtering workflow.
 
 ---
 
 ## Installation & Requirements
 
-Published-package installation and launcher checks have been completed on
-Apple Silicon macOS with **Python 3.10--3.13**. The release baseline remains
-**Python 3.10.15 / Streamlit 1.42** and **Python 3.12.14 / Streamlit 1.63**,
-with Plotly 5.24. See `docs/streamlit_migration.md` for the tested environment
-matrix and remaining interactive checks.
+Continuous integration validates the final wheel on **Python 3.10 and 3.12**.
+The release baselines are **Python 3.10.15 / Streamlit 1.42** and **Python
+3.12.14 / Streamlit 1.63**, with Plotly 5.24. **Python 3.12 is recommended for
+local installation.** Python 3.13 is conditionally supported on every platform
+because some dependencies may require a local native build. See
+`docs/streamlit_migration.md` for the test record and environment matrix.
 
 ### Install the published package
 
@@ -249,12 +228,24 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-### 💡 macOS (Apple Silicon): standard installation and fallback
+### 💡 Python 3.13 and macOS setup
 
-Use the standard pip command above first. It has been verified on Apple Silicon
-macOS with Python 3.10--3.13. With Python 3.13, NumPy and PyProj may be built
-from source, so installation can take several minutes and requires a working
-native build toolchain.
+Use the standard pip command above first; **Python 3.12 is recommended**.
+Python normally installs ready-made package files (wheels), which do not need a
+compiler. For Python 3.13, however, a compatible wheel for the pinned NumPy or
+PyProj version is not always available. Pip then tries to build that package
+from source. This can take several minutes and requires a working native build
+toolchain, so a standard `pip install` is not guaranteed to work on every
+computer. This condition is not specific to an M1 Mac or to Cartopy.
+
+If you intentionally use Python 3.13 on macOS, install Apple's Command Line
+Tools first and then retry the standard command:
+
+```bash
+xcode-select --install
+python -m pip install --upgrade pip
+python -m pip install envgeo-seawater
+```
 
 If installation specifically fails while installing `pyproj` or `cartopy`, use
 the following Conda fallback (Python 3.12 is recommended for this route):
@@ -342,13 +333,36 @@ df_filtered = envgeo_utils.sidebar_filter_and_display(
 
 ## Testing
 
-Basic functionality can be verified using pytest:
+Run tests from the project root. After installing the development dependencies,
+run the complete suite:
 
 ```bash
-pytest
+python -m pip install -r requirements-dev.txt
+python -m pytest -q test
 ```
 
-The current test suite and its limitations are described in `docs/testing.md`.
+For a quick development check, run the shared-utility and repository-health
+tests:
+
+```bash
+python -m pytest -q test/test_envgeo_utils.py test/test_repository_health.py
+```
+
+The suite covers data loading, numeric conversion and quality information,
+shared filtering, user-data handling, gap rows for depth profiles, map and
+plotting helpers, public page structure, and documentation links. See
+[`docs/testing.md`](docs/testing.md) for the complete test inventory and known
+limitations.
+
+GitHub Actions CI runs the full suite on Linux with Python 3.10 and 3.12 for
+pushes, pull requests, and manual dispatch. It also builds a wheel and installs
+it into a clean virtual environment outside the checkout, verifying imports,
+packaged pages, the diagnostic tool, and exclusion of development-only pages.
+
+Browser interaction, visual figure comparison, online-map behaviour, complete
+scientific interpretation of every page, and performance are not yet fully
+automated. Release preparation therefore also includes manual smoke tests in
+Streamlit Community Cloud and local environments.
 
 ## Additional Documentation
 

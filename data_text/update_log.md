@@ -75,6 +75,18 @@ Detailed development log for recent EnvGeo-Seawater updates.
   and longitude differences, matching valid year/month, and explicit depth,
   salinity, and δ18O thresholds.
 
+## Unreleased — Python 3.13 conditional-support clarification (2026-10-10)
+
+- Recorded a Python 3.13 installation failure on an Apple Silicon M1 MacBook
+  Air: the pinned `numpy==1.26.4` fell back to a source build, but no native C
+  compiler was available. This is distinct from the successful MacStudio
+  installation record and is not a Cartopy failure.
+- Revised the English and Japanese README files, overview manuals, migration
+  record, runtime-dependency comments, and paper draft. CI remains Python
+  3.10 and 3.12; Python 3.12 is the recommended local-installation environment;
+  Python 3.13 is conditionally supported with Apple's Command Line Tools or an
+  equivalent native build toolchain; Python 3.14 remains unsupported.
+
 ## Unreleased — Installation documentation update (2026-10-04)
 
 - Added a bilingual **Cite** tab next to About in Home. It provides the fixed

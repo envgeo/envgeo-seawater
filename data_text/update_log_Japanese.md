@@ -23,6 +23,11 @@
 - 出典を保持した編集版workbookを`71_GLOBAL_Atwood_et_al_2026_v02.xlsx`として版管理し、アプリのasset path、重複確認catalogue、英日来歴文書、現行checksum記録を更新した。公開cloneへの同期およびrelease package化は次回更新時に行う。
 - 共通サイドバーに、**Area / Transect**の上で使う**Reference / Citation**フィルターを追加した。同梱する海水データはすべて出典referenceを持つ。ブラウザのUploaded dataでreference列がない場合は、表示専用の`No reference recorded`を補い、共通フィルターでも従来どおり利用できるようにした。
 
+## 未リリース — Python 3.13の条件付きサポート明確化（2026-10-10）
+
+- Apple Silicon M1 MacBook AirでのPython 3.13導入失敗を記録した。固定した`numpy==1.26.4`がソースビルドへ移行したが、ネイティブCコンパイラが見つからなかった。この結果はMacStudioでの導入成功記録とは別であり、Cartopyの失敗ではない。
+- 英日README、overview manual、移行記録、実行時依存関係コメント、論文原稿を改訂した。CIは引き続きPython 3.10と3.12で実行し、ローカル導入にはPython 3.12を推奨する。Python 3.13はAppleのCommand Line Toolsまたは同等のネイティブビルド環境を前提とする条件付きサポート、Python 3.14は引き続き未対応とする。
+
 ## 未リリース — データセット間重複候補の初期確認（2026-10-05）
 
 - 同梱のNASA GISS、PAGES CoralHydro2k、日本周辺統合について、読取り専用の初期スクリーニングを記録した。確認用の閾値ではNASA--Coralに4,068組（より厳しい閾値では2,463組）、日本周辺--NASAには厳しい閾値で139組の候補対があり、日本周辺側131行は主に`Yamamoto et al. (2001)` / `PI=KAWAI`とラベル付けされている。

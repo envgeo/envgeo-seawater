@@ -22,6 +22,16 @@ source. This succeeded both with pip 26.2.1 and with pip 24.3.1 using
 `--no-cache-dir`, but may take several minutes and depends on a working native
 build environment.
 
+On 2026-10-10, a Python 3.13 installation failed on an Apple Silicon M1
+MacBook Air before NumPy could be built because no native C compiler was
+available. This is an observed example, not an M1-specific failure: any
+platform can encounter the same outcome when pip cannot obtain a compatible
+wheel and no native build toolchain is available. Accordingly, Python 3.13 is
+**conditionally supported**, not a generally guaranteed `pip install` path.
+Python 3.12 remains the recommended local-installation environment; Python
+3.13 users need Apple's Command Line Tools on macOS, or an equivalent native
+build toolchain on another platform.
+
 Python 3.9 is intentionally rejected by `Requires-Python >=3.10`. Python 3.14
 is not supported by the fixed v1.3.4 dependencies: the observed installation
 attempt stopped while building SciPy. These are package-installation and

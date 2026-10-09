@@ -161,8 +161,10 @@ The platform provides the following capabilities:
 The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
 
 The bundled application data and assets occupy less than 30 MB. Local execution
-requires installation of the declared Python dependencies; wheel builds and
-isolated installs are verified in continuous integration. The v1.3.4 release
+requires installation of the declared Python dependencies. The package declares
+Python >=3.10; wheel builds and isolated installs are verified in continuous
+integration on Python 3.10 and 3.12, with Python 3.12 recommended for local
+installation. The v1.3.4 release
 artifact is prepared for package-index distribution: once published, users can
 install it with `pip install envgeo-seawater` and start the local application
 with `envgeo-seawater`.
