@@ -31,9 +31,23 @@ following work before creating a public tag.
 Do not begin MapLibre migration, cross-application core extraction, or broad
 refactoring as part of the 1.3.4 release.
 
+## Planned map-projection enhancement (v1.3.6 or later)
+
+Add a **Map projection** selector to the static Cartopy outputs on the Mapping
+page. Keep the current longitude--latitude Plate Carrée view as the default,
+then assess a small, scientifically useful set: Mercator, Robinson for global
+figures, Lambert Conformal for the Japan--northwest Pacific region, and North
+Polar Stereographic for high-latitude views.
+
+This is separate from the interactive Plotly web map and its background-tile
+style selector. For each projection, verify geographic extent, central
+longitude, grid labels, coastlines, scatter points, contours, colour bars, and
+downloaded figures with regional and global selections. Do not include this
+work in v1.3.5; implement it as a contained, tested visualization enhancement.
+
 ## Future development roadmap (after v1.3.4)
 
-Updated: 2026-10-03
+Updated: 2026-10-10
 
 Work in this order to avoid repeating page-level changes.
 

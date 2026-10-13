@@ -40,6 +40,14 @@ Python 3.13; otherwise, use the Python 3.12 Conda fallback in the
 [stable README](https://github.com/envgeo/seawater_map/blob/main/README.md).
 Python 3.14 is not supported by the fixed dependencies in v1.3.4.
 
+## Local Use And Online Services
+
+After local installation, bundled-data loading, filtering, analysis, and figure
+generation run without relying on a hosted EnvGeo-Seawater web service. This is
+useful when a stable local workflow is needed. Online basemap tiles and external
+documentation or source links still require a network connection; without one,
+use the offline map option where available.
+
 ## Basic Workflow
 
 1. Choose a page from the sidebar. For a one-time file, open **User Data Check

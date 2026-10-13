@@ -68,6 +68,12 @@ measurement-error thresholds. This makes cross-dataset integration more
 transparent while retaining the source-level context needed for scientific
 interpretation.
 
+The locally installable application also supports a reproducible workflow that
+does not depend on the continued availability of a hosted web service:
+bundled-data loading, filtering, analysis, and figure generation can be run
+locally after installation. Online basemap tiles and external source links
+remain network-dependent features and are not represented as offline data.
+
 A key contribution is the integration of the regionally curated EnvGeo Dataset
 [ECS–Japan Sea] collection, currently represented by Kodama et al. (2024),
 which provides a consistent analytical baseline for
@@ -79,9 +85,11 @@ Oceanographic and geochemical datasets, particularly those including seawater st
 
 Existing oceanographic visualization tools, such as Ocean Data View (ODV)
 [@schlitzer2002], provide powerful capabilities for analyzing hydrographic
-data. EnvGeo-Seawater instead provides a preconfigured web interface for
-seawater-isotope and hydrographic exploration across its bundled sources and
-for session-only comparison with user-supplied data.
+data. EnvGeo-Seawater complements rather than replaces such general-purpose
+tools: it provides a preconfigured seawater-isotope workflow across its
+bundled sources and session-only user-supplied data, while retaining
+source-specific provenance and citations, supporting overlap-candidate audit,
+and providing figure-oriented interactive exploration.
 
 As a result, there is a gap in the availability of lightweight, accessible tools that enable integrated visualization and analysis of seawater isotope and hydrographic data across multiple datasets.
 

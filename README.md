@@ -41,6 +41,19 @@ The platform is designed to support both **exploratory data analysis** and **rep
 - 🔎 Duplicate-candidate review and filtering between bundled reference datasets or uploaded data
 - 🖼️ Export of publication-quality figures  
 
+## Why EnvGeo-Seawater?
+
+EnvGeo-Seawater complements general-purpose oceanographic visualization tools
+with a seawater-isotope workflow that keeps heterogeneous datasets and their
+provenance together. Users can compare the EnvGeo Dataset with regional and
+global reference collections, filter by dataset and citation, inspect potential
+cross-dataset overlaps, and generate figures without silently altering the
+source workbooks.
+
+After local installation, bundled-data loading, filtering, analysis, and figure
+generation do not depend on a hosted web service. Online basemap tiles and
+external links remain dependent on network availability.
+
 ---
 
 ## Main Pages

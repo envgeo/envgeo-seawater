@@ -2,6 +2,18 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — Workflow positioning and local-use clarification (2026-10-10)
+
+- Clarified the project positioning in the bilingual README, overview manuals,
+  and paper draft. EnvGeo-Seawater complements general-purpose oceanographic
+  visualization by focusing on seawater-isotope datasets, source provenance,
+  citation-aware filtering, overlap-candidate screening, and figure generation
+  across EnvGeo, regional, global, and session-only uploaded data.
+- Documented the boundary of local use: after installation, bundled-data
+  loading, filtering, analysis, and figure generation do not rely on a hosted
+  EnvGeo-Seawater service. Online basemap tiles and external links remain
+  network-dependent.
+
 ## Unreleased — v1.3.5 overlap-audit scope alignment (2026-10-07)
 
 - Confirmed the release scope of the overlap workflow: it provides read-only
