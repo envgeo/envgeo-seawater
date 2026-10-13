@@ -22,9 +22,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
   geometry objects are not retained in process cache, and Matplotlib figures
   are closed after their displayed and downloadable images are prepared.
 - Static Cartopy figures are passed to Streamlit as PNG bytes rather than live
-  figures. Near-global land masks and coastlines use a lighter display-only
-  representation, avoiding repeated high-resolution projection work while
-  sidebar settings are being adjusted.
+  figures. Near-global coastlines use a lighter display-only representation,
+  avoiding repeated high-resolution projection work while sidebar settings are
+  being adjusted. The bundled 50 m land mask remains geometrically unchanged:
+  simplifying it can create Cartopy/Shapely projection errors.
 - Documented projection-specific interpretation and safe display boundaries.
   Mercator is limited to ±84.5° latitude, while Robinson and Azimuthal
   Equidistant use unlabelled graticules to avoid unreliable edge labels.

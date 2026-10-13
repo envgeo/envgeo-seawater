@@ -430,31 +430,6 @@ def _load_ne50m_land_geometries():
         return []
 
 
-def land_geometries_for_static_map(extent):
-    """Return bundled land geometry at a safe detail level for the map extent.
-
-    Global Cartopy maps do not benefit visually from every 50 m coastline vertex,
-    but repeatedly projecting all of them can exceed the memory available to a
-    Streamlit Community Cloud process. Simplification is used only for a nearly
-    global view and only for the displayed land mask; the bundled source files
-    and regional maps retain their original geometry.
-
-    全球図では50 m海岸線の全頂点を投影しても視覚的な利点は小さい一方、繰返し描画時に
-    Streamlit Community Cloudのメモリ上限に達し得る。ここではほぼ全球の表示時だけ、
-    表示用陸域マスクを簡略化する。元ファイルや地域図のgeometryは変更しない。
-    """
-    geometries = _load_ne50m_land_geometries()
-    if not is_near_global_map_extent(extent):
-        return geometries
-
-    simplified = []
-    for geometry in geometries:
-        reduced = geometry.simplify(0.08, preserve_topology=True)
-        if not reduced.is_empty:
-            simplified.append(reduced)
-    return simplified
-
-
 def static_map_coastline_resolution(extent):
     """Choose a coastline resolution suited to the displayed static-map extent.
 
@@ -994,7 +969,7 @@ def main():
         # Draw land mask from bundled NE 50m shapefile (no network access).
         # Drawing order: contours (zorder=1) → land mask (zorder=2) →
         # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
-        _ne_geoms_sc = land_geometries_for_static_map(static_map_extent)
+        _ne_geoms_sc = _load_ne50m_land_geometries()
         if _ne_geoms_sc:
             ax.add_geometries(
                 _ne_geoms_sc,
@@ -1229,7 +1204,7 @@ def main():
         # Draw land mask from bundled NE 50m shapefile (no network access).
         # Drawing order: contours (zorder=1) → land mask (zorder=2) →
         # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
-        _ne_geoms_cn = land_geometries_for_static_map(static_map_extent)
+        _ne_geoms_cn = _load_ne50m_land_geometries()
         if _ne_geoms_cn:
             ax2.add_geometries(
                 _ne_geoms_cn,

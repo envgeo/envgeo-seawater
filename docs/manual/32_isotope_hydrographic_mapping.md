@@ -43,10 +43,10 @@ The projection selector applies only to the downloadable Cartopy **Scatter Map**
 and **Contour Map**. It does not change the interactive sampling-location map
 or its web-map background style.
 
-For near-global views, the displayed land mask and coastline use a lighter
-rendering representation only; the bundled Natural Earth source files and the
-selected observations are not changed. Static figures are sent as PNG bytes and
-their Matplotlib canvases are released promptly to limit Cloud memory use.
+For near-global views, the displayed coastline uses a lighter representation
+only; the bundled Natural Earth land mask and the selected observations are not
+changed. Static figures are sent as PNG bytes and their Matplotlib canvases are
+released promptly to limit Cloud memory use.
 
 - **Plate Carrée (longitude–latitude)** is the default and keeps the familiar
   longitude–latitude layout.

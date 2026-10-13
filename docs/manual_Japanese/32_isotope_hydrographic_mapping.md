@@ -35,7 +35,7 @@
 
 投影法の選択は、ダウンロード可能なCartopyの**Scatter Map**と**Contour Map**だけに適用されます。インタラクティブなSampling Location Mapと、そのWeb地図背景のMap styleは変更しません。
 
-ほぼ全球の地図では、表示用の陸域マスクと海岸線だけを軽量化します。同梱Natural Earth元ファイルと選択した観測値は変更しません。静的図はPNG bytesとして渡し、Matplotlib canvasを速やかに解放してCloudでのメモリ負荷を抑えます。
+ほぼ全球の地図では、表示用の海岸線だけを軽量化します。同梱Natural Earth陸域マスクと選択した観測値は変更しません。静的図はPNG bytesとして渡し、Matplotlib canvasを速やかに解放してCloudでのメモリ負荷を抑えます。
 
 - **Plate Carrée (longitude–latitude)**：既定の経緯度表示です。
 - **Mercator**：低〜中緯度の海域に適します。極は表示できないため、静的地図の緯度範囲は±84.5°に制限されます。

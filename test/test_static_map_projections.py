@@ -39,7 +39,6 @@ def test_mapping_page_exposes_the_static_projection_choices():
 
     assert "def _read_ne50m_land_geometries" in page_text
     assert "close_reader()" in page_text
-    assert "def land_geometries_for_static_map" in page_text
     assert "def static_map_coastline_resolution" in page_text
     assert "st.image(png_scatter)" in page_text
     assert "st.image(png_contour)" in page_text
