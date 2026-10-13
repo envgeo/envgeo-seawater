@@ -47,6 +47,132 @@ MAP_PARAMETER_PLOTLY_LABELS = {
     "Temperature_degC": "Temperature (degC)",
 }
 
+# =============================================================================
+# Static map projections / 静的地図の投影法
+# =============================================================================
+STATIC_MAP_PROJECTION_OPTIONS = (
+    "Plate Carrée (longitude–latitude)",
+    "Mercator",
+    "Robinson",
+    "Azimuthal Equidistant",
+    "Orthographic (map centre)",
+    "Orthographic (South Polar)",
+    "Orthographic (North Polar)",
+)
+
+STATIC_MAP_PROJECTION_DISPLAY_NAMES = {
+    "Plate Carrée (longitude–latitude)": "Plate Carrée (longitude–latitude) / 正距円筒図法（経緯度）",
+    "Mercator": "Mercator / メルカトル図法",
+    "Robinson": "Robinson / ロビンソン図法",
+    "Azimuthal Equidistant": "Azimuthal Equidistant / 正距方位図法",
+    "Orthographic (map centre)": "Orthographic (map centre) / 正射図法（地図中心）",
+    "Orthographic (South Polar)": "Orthographic (South Polar) / 正射図法（南極中心）",
+    "Orthographic (North Polar)": "Orthographic (North Polar) / 正射図法（北極中心）",
+}
+
+
+def build_static_map_projection(projection_label, central_longitude, central_latitude):
+    """Return the Cartopy projection selected for static Mapping figures.
+
+    Input coordinates always remain longitude/latitude in Plate Carrée. The
+    selected projection affects only the static Scatter Map and Contour Map,
+    not the interactive Plotly sampling-location map.
+
+    静的Scatter／Contour地図に使うCartopy投影を返す。入力座標は常に
+    Plate Carréeの経緯度として扱い、インタラクティブな採水地点地図には影響しない。
+    """
+    if projection_label == "Plate Carrée (longitude–latitude)":
+        return ccrs.PlateCarree(central_longitude=central_longitude)
+    if projection_label == "Mercator":
+        return ccrs.Mercator(central_longitude=central_longitude)
+    if projection_label == "Robinson":
+        return ccrs.Robinson(central_longitude=central_longitude)
+    if projection_label == "Azimuthal Equidistant":
+        return ccrs.AzimuthalEquidistant(
+            central_longitude=central_longitude,
+            central_latitude=central_latitude,
+        )
+    if projection_label in {
+        "Orthographic (map centre)",
+        "Orthographic (South Polar)",
+        "Orthographic (North Polar)",
+    }:
+        return ccrs.Orthographic(
+            central_longitude=central_longitude,
+            central_latitude=central_latitude,
+        )
+    raise ValueError(f"Unknown static map projection: {projection_label}")
+
+
+def static_projection_center(extent, projection_label):
+    """Return a suitable map centre for the selected static projection.
+
+    Full-longitude polar presets are centred on their respective pole for an
+    Azimuthal Equidistant view. Named orthographic polar views are always
+    centred on their selected pole, while ``Orthographic (map centre)`` uses
+    the midpoint of the displayed extent. This retains the requested regional
+    latitude band rather than accidentally treating a Southern or Arctic Ocean
+    view as a global map merely because it spans all longitudes.
+
+    正距方位図法では、全経度を含む極域プリセットを対応する極に中心合わせする。
+    南北極中心の正射図法は、選択した極を常に中心にする。一方、地図中心の
+    正射図法は表示範囲の中点を中心にする。南極海・北極海を、経度幅だけを理由に
+    全球表示として扱わない。
+    """
+    lon_min, lon_max, lat_min, lat_max = (float(value) for value in extent)
+    central_longitude = (lon_min + lon_max) / 2
+    central_latitude = (lat_min + lat_max) / 2
+    if projection_label == "Orthographic (South Polar)":
+        central_latitude = -90.0
+    elif projection_label == "Orthographic (North Polar)":
+        central_latitude = 90.0
+    elif projection_label == "Azimuthal Equidistant":
+        if lat_max <= -45.0:
+            central_latitude = -90.0
+        elif lat_min >= 45.0:
+            central_latitude = 90.0
+    return central_longitude, central_latitude
+
+
+def safe_static_projection_extent(extent, projection_label):
+    """Return a drawable extent and whether a Mercator latitude clamp was applied.
+
+    Mercator cannot represent the poles. Its displayed latitude is therefore
+    restricted to ±84.5°; choose Azimuthal Equidistant for a polar-centred view.
+
+    Mercatorでは極を描画できないため、表示緯度を±84.5°へ制限する。
+    極域中心の表示には正距方位図法を使う。
+    """
+    lon_min, lon_max, lat_min, lat_max = (float(value) for value in extent)
+    if projection_label != "Mercator":
+        return (lon_min, lon_max, lat_min, lat_max), False
+
+    limit = 84.5
+    clamped_lat_min = max(-limit, lat_min)
+    clamped_lat_max = min(limit, lat_max)
+    was_clamped = (clamped_lat_min != lat_min) or (clamped_lat_max != lat_max)
+    if clamped_lat_min >= clamped_lat_max:
+        clamped_lat_min, clamped_lat_max = -limit, limit
+        was_clamped = True
+    return (lon_min, lon_max, clamped_lat_min, clamped_lat_max), was_clamped
+
+
+def add_static_map_gridlines(ax, projection_label):
+    """Add graticules, with labels only where Cartopy can place them reliably.
+
+    Robinson, azimuthal, and orthographic projections have curved boundaries,
+    so unlabeled graticules avoid misleading or overlapping edge labels.
+
+    Robinson、方位図法、正射図法は境界が曲線のため、重なりや誤解を招く端部ラベルは
+    表示せず、グリッド線だけを描く。
+    """
+    draw_labels = projection_label in {
+        "Plate Carrée (longitude–latitude)",
+        "Mercator",
+    }
+    return ax.gridlines(draw_labels=draw_labels, zorder=4)
+
+
 def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_domain_max):
     """
     Return a Cartopy-safe map extent.
@@ -79,16 +205,104 @@ def safe_cartopy_extent(lon_min, lon_max, lat_min, lat_max, lon_domain_min, lon_
 
     return lon_min, lon_max, lat_min, lat_max
 
-def set_cartopy_extent_safely(ax, extent):
+def is_near_global_map_extent(extent):
+    """Return whether a displayed extent represents the bundled global domain.
+
+    The bundled global data span approximately 168° in latitude (−78° to 90°),
+    rather than a mathematically complete 180°. This is nevertheless a global
+    selection. The threshold remains far wider than the Arctic and Southern
+    Ocean presets, which retain their regional extent.
+
+    同梱データの全球範囲は約168度（−78〜90度）で、数学的な180度ではないが、
+    全球選択として扱う。北極海・南極海の地域プリセットより十分に広い閾値にする。
+    """
+    lon_min, lon_max, lat_min, lat_max = (float(value) for value in extent)
+    return (lon_max - lon_min) >= 359.0 and (lat_max - lat_min) >= 160.0
+
+
+def uses_global_circular_extent(extent, projection_label):
+    """Return whether a curved projection should use Cartopy's global globe."""
+    is_circular_projection = projection_label in {
+        "Azimuthal Equidistant",
+        "Orthographic (map centre)",
+        "Orthographic (South Polar)",
+        "Orthographic (North Polar)",
+    }
+    return is_near_global_map_extent(extent) and is_circular_projection
+
+
+def periodic_contour_interpolation_points(longitudes, latitudes, values, is_global):
+    """Return contour inputs with periodic longitude copies for global maps.
+
+    ``scipy.interpolate.griddata`` does not recognise that −180° and +180°
+    are adjacent. Copies at ±360° avoid an artificial date-line gap in the
+    exploratory global contours; neither the source dataframe nor its values
+    are changed. Regional inputs remain untouched.
+
+    ``griddata``は−180°と+180°が隣接することを認識しない。全球の探索的
+    コンターでは±360°のコピーを補間にのみ加え、日付変更線の人工的な切れ目を
+    避ける。元データとその値は変更せず、地域表示の入力はそのまま扱う。
+    """
+    lon = np.asarray(longitudes, dtype=float)
+    lat = np.asarray(latitudes, dtype=float)
+    value = np.asarray(values, dtype=float)
+    if not is_global:
+        return lon, lat, value
+    return (
+        np.concatenate((lon - 360.0, lon, lon + 360.0)),
+        np.concatenate((lat, lat, lat)),
+        np.concatenate((value, value, value)),
+    )
+
+
+def resolve_static_map_type_for_extent(extent, requested_map_type, projection_label):
+    """Return the safe static-map type for the selected geographic extent.
+
+    Global exploratory contours are available for the cylindrical Plate Carrée
+    and Mercator projections, with periodic handling at the date line. The
+    curved Robinson boundary and globe-style azimuthal or orthographic views
+    can break or obscure a global rectangular contour mesh, so they show
+    observed samples instead; regional contours remain available.
+
+    全球の探索的コンターは円筒図法であるPlate CarréeとMercatorで利用でき、日付変更線を
+    周期境界として扱う。曲線境界のRobinson、円形の正距方位図法・正射図法では、全球の
+    矩形補間格子が描画破綻または隠れた領域を生むため、観測点を表示する。地域的なコンター
+    はすべての投影法で利用できる。
+    """
+    globe_style_projections = {
+        "Robinson",
+        "Azimuthal Equidistant",
+        "Orthographic (map centre)",
+        "Orthographic (South Polar)",
+        "Orthographic (North Polar)",
+    }
+    if (
+        requested_map_type == "Contour Map"
+        and is_near_global_map_extent(extent)
+        and projection_label in globe_style_projections
+    ):
+        return "Scatter Map"
+    return requested_map_type
+
+
+def set_cartopy_extent_safely(ax, extent, projection_label=None):
     """
     Apply a map extent without crashing on Cartopy projection seam issues.
 
     Streamlit Cloud can raise ``ValueError: Axis limits cannot be NaN or Inf``
     for nearly global PlateCarree extents. If that happens, fall back to a
-    global view so the figure still renders.
+    global view so the figure still renders. Near-global azimuthal and
+    orthographic maps use Cartopy's global circular view: applying a
+    360-degree rectangular extent can collapse the drawing. Full-longitude
+    polar regions are still regional views.
 
-    投影境界の問題で失敗した場合は、全球表示にフォールバックします。
+    投影境界の問題で失敗した場合は、全球表示にフォールバックする。方位図法・正射図法の
+    全球表示も、360度の矩形範囲で描画が崩れるため、円形の全球表示にする。ただし、
+    全経度を含む極域は地域表示として扱う。
     """
+    if uses_global_circular_extent(extent, projection_label):
+        ax.set_global()
+        return True
     try:
         ax.set_extent(extent, crs=ccrs.PlateCarree())
         return True
@@ -160,8 +374,31 @@ _NE50M_LAND_DIR = envgeo_assets.asset_path(
 _NE50M_LAND_SHP = _NE50M_LAND_DIR / "ne_50m_land.shp"
 _NE50M_LAND_REQUIRED_EXTS = (".shp", ".shx", ".dbf")
 
+
+@st.cache_resource(show_spinner=False)
+def _read_ne50m_land_geometries():
+    """Read and retain bundled land geometries once per Streamlit process.
+
+    The shapefile reader holds several operating-system file descriptors. The
+    geometries are immutable for this application, so caching them prevents a
+    new reader being opened on every widget rerun. The reader is explicitly
+    closed after its geometries have been materialised.
+
+    shapefile readerは複数のOSファイル記述子を使う。地形ジオメトリはこの
+    アプリでは不変なので、ウィジェット操作ごとにreaderを開かないよう
+    キャッシュする。ジオメトリを読み切った後、readerを明示的に閉じる。
+    """
+    reader = shapereader.Reader(str(_NE50M_LAND_SHP))
+    try:
+        return tuple(reader.geometries())
+    finally:
+        close_reader = getattr(reader, "close", None)
+        if callable(close_reader):
+            close_reader()
+
+
 def _load_ne50m_land_geometries():
-    """Return a list of Shapely geometries from the bundled NE 50m land shapefile.
+    """Return cached Shapely geometries from the bundled NE 50m land shapefile.
 
     Returns an empty list (with a Streamlit warning) if any required component
     is missing.  Never fetches from the network.
@@ -184,8 +421,7 @@ def _load_ne50m_land_geometries():
         )
         return []
     try:
-        reader = shapereader.Reader(str(_NE50M_LAND_SHP))
-        return list(reader.geometries())
+        return _read_ne50m_land_geometries()
     except Exception as exc:
         st.warning(
             f"Land mask (Natural Earth 50m) could not be loaded: {exc}. "
@@ -344,6 +580,21 @@ def main():
         )
         
         lon_center = 0 if "Atlantic" in center_option else 180
+
+        static_map_projection_label = st.selectbox(
+            "Map projection / 投影法",
+            STATIC_MAP_PROJECTION_OPTIONS,
+            index=0,
+            format_func=STATIC_MAP_PROJECTION_DISPLAY_NAMES.get,
+            help=(
+                "Applies only to the downloadable Cartopy Scatter Map and Contour Map. "
+                "The interactive sampling-location map keeps its web-map style. "
+                "Mercator is limited to ±84.5°. Use Azimuthal Equidistant for "
+                "regional distance-and-direction views, or Orthographic for a globe-style "
+                "view. Global exploratory contours are available with Plate Carrée or "
+                "Mercator; Robinson and globe-style projections show observations."
+            ),
+        )
 
         colormap_options = envgeo_utils.get_plotly_colormap_options(selected_parameter)
         selected_colormap_label = st.selectbox(
@@ -644,11 +895,47 @@ def main():
         lon_slider_min,
         lon_slider_max,
     )
+    static_map_extent, mercator_extent_was_clamped = safe_static_projection_extent(
+        (map_lon_min, map_lon_max, map_lat_min, map_lat_max),
+        static_map_projection_label,
+    )
+    map_lon_min, map_lon_max, map_lat_min, map_lat_max = static_map_extent
+    effective_map_type = resolve_static_map_type_for_extent(
+        static_map_extent, map_type, static_map_projection_label
+    )
+    if effective_map_type != map_type:
+        st.warning(
+            "Global Contour Maps are available only with Plate Carrée or Mercator. "
+            "Robinson's curved boundary and globe-style projections can break or obscure "
+            "a global rectangular contour mesh. Observed samples are shown as a Scatter "
+            "Map instead. Choose Plate Carrée or Mercator for a global exploratory contour."
+        )
+    projection_centre_lon, projection_centre_lat = static_projection_center(
+        static_map_extent, static_map_projection_label
+    )
+    static_projection = build_static_map_projection(
+        static_map_projection_label,
+        central_longitude=projection_centre_lon,
+        central_latitude=projection_centre_lat,
+    )
+    if mercator_extent_was_clamped:
+        st.info(
+            "Mercator maps are limited to ±84.5°; the static map extent was adjusted. "
+            "Choose Azimuthal Equidistant for a polar-centred view."
+        )
+    global_circular_view = uses_global_circular_extent(
+        static_map_extent, static_map_projection_label
+    )
+    if global_circular_view:
+        st.info(
+            f"Global {static_map_projection_label} uses Cartopy's circular globe view. "
+            "Use a regional extent for a closer view."
+        )
     
     # =============================================================================
     # Scatter or contour map / 散布図またはコンター地図
     # =============================================================================
-    if map_type == "Scatter Map":
+    if effective_map_type == "Scatter Map":
         # -------------------------------------------------------------------------
         # Scatter map / 散布図
         # -------------------------------------------------------------------------
@@ -656,12 +943,13 @@ def main():
         
         ax = fig.add_subplot(
             1, 1, 1,
-            projection=ccrs.PlateCarree(central_longitude=lon_center)
+            projection=static_projection,
         )
         
         set_cartopy_extent_safely(
             ax,
             [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
+            static_map_projection_label,
         )
         
         # Draw land mask from bundled NE 50m shapefile (no network access).
@@ -683,7 +971,7 @@ def main():
             color="0.35",
             linewidth=0.6,
         )
-        ax.gridlines(draw_labels=True, zorder=4)
+        add_static_map_gridlines(ax, static_map_projection_label)
         
         # Plot points in the longitude frame used by the selected map extent.
         # 選択した表示範囲と同じ経度系に変換して観測点を描画する。
@@ -831,11 +1119,19 @@ def main():
         X, Y = np.meshgrid(grid_lon, grid_lat)
         
         # Interpolation / 補間
+        # Global rectangular projections use periodic longitude copies only here.
+        # 全球の矩形投影では、補間時だけ経度の周期コピーを用いる。
+        interp_lon, interp_lat, interp_values = periodic_contour_interpolation_points(
+            lon_for_interp,
+            lat_vals,
+            val,
+            is_near_global_map_extent(static_map_extent),
+        )
         Z = None
         if len(contour_df) >= 3:
             try:
                 Z = griddata(
-                    (lon_for_interp, lat_vals), val, (X, Y), method="linear"
+                    (interp_lon, interp_lat), interp_values, (X, Y), method="linear"
                 )
             except Exception:
                 # Collinear or duplicate locations are valid uploads but are
@@ -844,7 +1140,7 @@ def main():
         if Z is None or not np.isfinite(Z).any():
             try:
                 Z = griddata(
-                    (lon_for_interp, lat_vals), val, (X, Y), method="nearest"
+                    (interp_lon, interp_lat), interp_values, (X, Y), method="nearest"
                 )
             except Exception:
                 st.warning(
@@ -857,12 +1153,13 @@ def main():
         fig_contour = plt.figure(figsize=(12, 8), facecolor="white", dpi=150)
         ax2 = fig_contour.add_subplot(
             1, 1, 1,
-            projection=ccrs.PlateCarree(central_longitude=lon_center)
+            projection=static_projection,
         )
         
         set_cartopy_extent_safely(
             ax2,
             [map_lon_min, map_lon_max, map_lat_min, map_lat_max],
+            static_map_projection_label,
         )
         
         levels = np.linspace(parameter_min, parameter_max, 51)
@@ -896,7 +1193,7 @@ def main():
             color="0.35",
             linewidth=0.6,
         )
-        ax2.gridlines(draw_labels=True, zorder=4)
+        add_static_map_gridlines(ax2, static_map_projection_label)
         
         lon_wrapped = normalize_lon_to_center(lon_original, lon_center)
         ax2.scatter(

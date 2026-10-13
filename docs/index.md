@@ -58,9 +58,10 @@ The following figures illustrate the range of supported exploratory views.
 
 ### Global isotope distribution
 
-This contour map shows global seawater δ18O using the integrated reference
-datasets (approximately 50,000 records). Contour interpolation is intended to
-help explore broad oceanographic patterns and basin-scale variability.
+This example illustrates global seawater δ18O coverage in the integrated
+reference datasets (approximately 50,000 records). Contour interpolation is
+available in Plate Carrée and Mercator. Robinson and globe-style projections
+show observed samples for global selections.
 
 ![Global isotope distribution contour map](assets/images/contour_map.png)
 

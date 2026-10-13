@@ -30,6 +30,7 @@ The platform is designed to support both **exploratory data analysis** and **rep
 ## Key Features
 
 - 🌍 Interactive map visualization with adaptive zoom  
+- 🗺️ Static Cartopy maps with selectable Plate Carrée, Mercator, Robinson, Azimuthal Equidistant, and map-centred or North/South Polar Orthographic projections
 - 📊 Depth profiles with gap-aware plotting  
 - 📈 Temperature–Salinity (T–S) diagrams with approximate σ0 reference contours
 - 📉 Regression analysis (e.g., salinity–δ¹⁸O relationships)  
@@ -217,7 +218,7 @@ between one session-only uploaded table and a selected bundled reference
 dataset. Candidates are reported as **Strong** or **Review**; they do not
 confirm a duplicate, and source workbooks are never modified.
 
-See the [Data Overlap Check manual](docs/manual/06_data_overlap_check.md) for
+See the [Data Overlap Check manual](https://github.com/envgeo/seawater_map/blob/main/docs/manual/06_data_overlap_check.md) for
 the matching criteria, candidate classes, audit table, and filtering workflow.
 
 ---
@@ -364,7 +365,7 @@ python -m pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 The suite covers data loading, numeric conversion and quality information,
 shared filtering, user-data handling, gap rows for depth profiles, map and
 plotting helpers, public page structure, and documentation links. See
-[`docs/testing.md`](docs/testing.md) for the complete test inventory and known
+[`docs/testing.md`](https://github.com/envgeo/seawater_map/blob/main/docs/testing.md) for the complete test inventory and known
 limitations.
 
 GitHub Actions CI runs the full suite on Linux with Python 3.10 and 3.12 for
@@ -599,7 +600,8 @@ EnvGeo-Seawater enables multi-scale exploration of seawater isotope and hydrogra
 ### Global Isotope Distribution (Contour Map)
 
 Spatial distribution of seawater δ18O at the global scale, based on integrated datasets (approximately 50,000 records).  
-Contour interpolation highlights large-scale oceanographic patterns and basin-scale variability.
+Global exploratory contours are available in Plate Carrée and Mercator;
+Robinson and globe-style projections show observed samples for global views.
 
 ![Global map](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/contour_map.png)
 

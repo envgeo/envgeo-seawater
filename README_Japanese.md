@@ -28,6 +28,7 @@ EnvGeo-Seawater は、海洋地球化学研究のために海水同位体・水�
 ## 主な機能
 
 - ズーム範囲を調整できるインタラクティブ地図表示
+- Plate Carrée、Mercator、Robinson、正距方位図法、地図中心・南北極中心のOrthographicを選べる静的Cartopy地図
 - 欠損や観測グループの切れ目を考慮した深度プロファイル
 - 近似的な σ0 参照格子付きの Temperature-Salinity（T-S）図
 - 塩分-δ18O 関係などの回帰解析
@@ -185,7 +186,7 @@ EnvGeo Dataset の主な特徴は次の通りです。
 
 NASA GISSとPAGES CoralHydro2kを含む統合データセットでは、同じ原観測に由来する記録が含まれる可能性があります。**Data Overlap Check** では、同梱参照データセット間、またはセッション内のアップロードデータと選択した同梱参照データセットとの重複候補を確認・フィルタリングできます。候補は **Strong** と **Review** に分けて表示されますが、重複を確定するものではなく、元のworkbookは変更されません。
 
-判定基準、候補区分、監査表、フィルタリングの詳しい使い方は、[Data Overlap Check マニュアル](docs/manual_Japanese/06_data_overlap_check.md)を参照してください。
+判定基準、候補区分、監査表、フィルタリングの詳しい使い方は、[Data Overlap Check マニュアル](https://github.com/envgeo/seawater_map/blob/main/docs/manual_Japanese/06_data_overlap_check.md)を参照してください。
 
 ---
 
@@ -298,7 +299,7 @@ python -m pytest -q test
 python -m pytest -q test/test_envgeo_utils.py test/test_repository_health.py
 ```
 
-テストでは、データ読み込み、数値変換と品質情報、共通フィルタ、ユーザーデータ処理、深度プロファイル用の gap row、地図・作図補助、公開ページ構成、文書リンクなどを確認します。詳細な対象と限界は [`docs/testing_Japanese.md`](docs/testing_Japanese.md) を参照してください。
+テストでは、データ読み込み、数値変換と品質情報、共通フィルタ、ユーザーデータ処理、深度プロファイル用の gap row、地図・作図補助、公開ページ構成、文書リンクなどを確認します。詳細な対象と限界は [`docs/testing_Japanese.md`](https://github.com/envgeo/seawater_map/blob/main/docs/testing_Japanese.md) を参照してください。
 
 GitHub Actions の CI は push、pull request、手動起動時に Linux 上の Python 3.10 と 3.12 で全テストを実行します。さらに wheel を作成し、checkout 外の新しい仮想環境へ導入して、配布物の import、同梱ページ、診断ツール、開発専用ページが wheel に含まれないことを確認します。
 
@@ -494,7 +495,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 ### 全球 δ18O 分布
 
-統合データセットに基づく全球スケールの海水 δ18O 分布です。コンター補間により、海盆規模の大きな分布パターンを確認できます。
+統合データセットに基づく全球スケールの海水 δ18O 分布です。全球の探索的Contour MapはPlate CarréeとMercatorで利用でき、Robinson・地球を眺める正距方位図法・正射図法では観測点を表示します。
 
 ![Global map](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/contour_map.png)
 

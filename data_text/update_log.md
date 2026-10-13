@@ -2,6 +2,25 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — Static map-projection choices (2026-10-13)
+
+- Added a projection selector to the static Cartopy Scatter Map and Contour
+  Map on the Mapping page. The available choices are Plate Carrée (the default),
+  Mercator, Robinson, Azimuthal Equidistant, and map-centred or South/North
+  Polar Orthographic; the interactive sampling-location map and its web-map
+  style are unchanged.
+- Added map-centred and South-/North-Polar Orthographic views for globe-style
+  basin and polar figures, corresponding to the oblique and polar display types
+  available in ODV.
+- Global exploratory contours are available in Plate Carrée and Mercator, with
+  periodic longitude copies used only during interpolation to avoid a date-line
+  gap. Robinson's curved boundary and globe-style Azimuthal Equidistant and
+  Orthographic global views show observed samples because they cannot reliably
+  render one continuous contour field; source data remain unchanged.
+- Documented projection-specific interpretation and safe display boundaries.
+  Mercator is limited to ±84.5° latitude, while Robinson and Azimuthal
+  Equidistant use unlabelled graticules to avoid unreliable edge labels.
+
 ## Unreleased — Workflow positioning and local-use clarification (2026-10-10)
 
 - Clarified the project positioning in the bilingual README, overview manuals,
