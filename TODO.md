@@ -31,19 +31,19 @@ following work before creating a public tag.
 Do not begin MapLibre migration, cross-application core extraction, or broad
 refactoring as part of the 1.3.4 release.
 
-## Planned map-projection enhancement (v1.3.6 or later)
+## Static map-projection choices (deferred after Cloud stability review)
 
-Add a **Map projection** selector to the static Cartopy outputs on the Mapping
-page. Keep the current longitude--latitude Plate Carrée view as the default,
-then assess a small, scientifically useful set: Mercator, Robinson for global
-figures, Lambert Conformal for the Japan--northwest Pacific region, and North
-Polar Stereographic for high-latitude views.
+Do not add a static Cartopy **Map projection** selector to the public Mapping
+page at present. The experimental v1.3.5 implementation worked locally but
+made Streamlit Community Cloud unstable during repeated global rendering. The
+established longitude--latitude Plate Carrée workflow remains the public
+baseline.
 
-This is separate from the interactive Plotly web map and its background-tile
-style selector. For each projection, verify geographic extent, central
-longitude, grid labels, coastlines, scatter points, contours, colour bars, and
-downloaded figures with regional and global selections. Do not include this
-work in v1.3.5; implement it as a contained, tested visualization enhancement.
+Reconsider projection choices only after a separately testable Cloud-safe
+design is available. It must include reproducible resource testing for global
+Scatter and Contour maps, repeated projection/extent changes, correct land
+masking and coastline rendering, downloaded PNG output, and local as well as
+Community Cloud verification. Keep it separate from the v1.3.5 release scope.
 
 ## Future development roadmap (after v1.3.4)
 

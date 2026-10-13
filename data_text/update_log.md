@@ -2,33 +2,13 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## Unreleased — Static map-projection choices (2026-10-13)
+## Unreleased — Defer static map-projection selector (2026-10-13)
 
-- Added a projection selector to the static Cartopy Scatter Map and Contour
-  Map on the Mapping page. The available choices are Plate Carrée (the default),
-  Mercator, Robinson, Azimuthal Equidistant, and map-centred or South/North
-  Polar Orthographic; the interactive sampling-location map and its web-map
-  style are unchanged.
-- Added map-centred and South-/North-Polar Orthographic views for globe-style
-  basin and polar figures, corresponding to the oblique and polar display types
-  available in ODV.
-- Global exploratory contours are available in Plate Carrée and Mercator, with
-  periodic longitude copies used only during interpolation to avoid a date-line
-  gap. Robinson's curved boundary and globe-style Azimuthal Equidistant and
-  Orthographic global views show observed samples because they cannot reliably
-  render one continuous contour field; source data remain unchanged.
-- Reduced static-map memory pressure for Streamlit Community Cloud. Bundled
-  Natural Earth readers are explicitly closed after use, high-resolution
-  geometry objects are not retained in process cache, and Matplotlib figures
-  are closed after their displayed and downloadable images are prepared.
-- Static Cartopy figures are passed to Streamlit as PNG bytes rather than live
-  figures. Near-global coastlines use a lighter display-only representation,
-  avoiding repeated high-resolution projection work while sidebar settings are
-  being adjusted. The bundled 50 m land mask remains geometrically unchanged:
-  simplifying it can create Cartopy/Shapely projection errors.
-- Documented projection-specific interpretation and safe display boundaries.
-  Mercator is limited to ±84.5° latitude, while Robinson and Azimuthal
-  Equidistant use unlabelled graticules to avoid unreliable edge labels.
+- Withdrew the experimental static Cartopy projection selector from the Mapping
+  page after Streamlit Community Cloud became unstable during repeated global
+  rendering. The established Plate Carrée Mapping workflow remains unchanged.
+  Projection choices will be reconsidered after a separate Cloud-safe design
+  and reproducible resource testing are available.
 
 ## Unreleased — Workflow positioning and local-use clarification (2026-10-10)
 

@@ -2,14 +2,9 @@
 
 新しい項目を上に追加します。`未リリース` 内でも更新日ごとにまとめます。今後のリリースノートを整理しやすくするため、`追加`、`変更`、`改善`、`修正`、`削除`、`準備` などの分類を使います。
 
-## 未リリース — 静的地図の投影法選択（2026-10-13）
+## 未リリース — 静的地図の投影法選択を保留（2026-10-13）
 
-- Mappingページの静的Cartopy Scatter Map／Contour Mapに投影法選択を追加した。Plate Carrée（既定）、Mercator、Robinson、Azimuthal Equidistant、地図中心・南北極中心のOrthographicを選べる。インタラクティブなSampling Location Mapと、そのWeb地図背景のMap styleは変更していない。
-- ODVで利用できる斜軸・極中心表示と同種の、地球を眺めるような地図中心・南極中心・北極中心のOrthographic図を追加した。
-- 全球の探索的Contour MapをPlate CarréeとMercatorで利用できるようにし、補間時だけ経度の周期コピーを使って日付変更線の切れ目を避ける。曲線境界のRobinson、正距方位図法・正射図法の全球表示は、一つの連続面を適切に描画できないため観測点を表示する。元データは変更していない。
-- Streamlit Community Cloudでの静的地図のメモリ負荷を軽減した。同梱Natural Earth readerは使用後に明示的に閉じ、高解像度geometryをprocess cacheに常駐させず、Matplotlib Figureは表示・ダウンロード用画像を準備した後に閉じる。
-- 静的Cartopy図はStreamlitへlive FigureではなくPNG bytesとして渡す。ほぼ全球の海岸線は表示時だけ軽量化し、サイドバー設定を連続して変更するときの高解像度投影処理の負荷を抑える。50 m陸域マスクは幾何形状を変えずに使う。これを簡略化するとCartopy／Shapelyの投影エラーを起こし得るためである。
-- 投影法ごとの解釈と安全な表示範囲を文書化した。Mercatorの緯度範囲は±84.5°に制限し、Robinsonと正距方位図法では信頼できない端部ラベルを避けるため、ラベルなしのグリッド線を使う。
+- 全球表示を繰り返した際にStreamlit Community Cloudが不安定になったため、Mappingページの試験的な静的Cartopy投影法選択を撤回した。確立済みのPlate CarréeによるMappingワークフローは変更していない。Cloudで安全な設計と再現可能な資源検証が整った時点で、投影法選択を改めて検討する。
 
 ## 未リリース — ワークフローの位置づけとローカル利用範囲の明確化（2026-10-10）
 

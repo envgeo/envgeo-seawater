@@ -10,7 +10,7 @@
 2. 必要に応じて**Uploaded data overlay**からセッション限定データをアップロードします。アップロード地点を地図に表示するには、経度・緯度の列割当が必要です。
 3. 地図に表示するパラメーターと、**Scatter Map**または**Contour Map**を選びます。
 4. 条件を変更した後に**Apply settings**を選びます。
-5. サイドバーで地図中心、静的地図の投影法、表示範囲、カラーマップ、色範囲、カラーバーを調整します。
+5. サイドバーで地図中心、表示範囲、カラーマップ、色範囲、カラーバーを調整します。
 6. 静的なパラメーター地図と、インタラクティブな採水地点地図を確認します。
 7. ページに操作がある場合は、ScatterまたはContourのPNGをダウンロードします。
 
@@ -24,25 +24,11 @@
 - **Mapped parameter**
 - **Map type**
 - **Map center**
-- **Map projection / 投影法**
 - **Colormap**
 - **Map longitude / latitude range**
 - **Colorbar range**
 - **Colorbar thickness / length / font size**
 - **Map controls / Map style**
-
-## 静的地図の投影法
-
-投影法の選択は、ダウンロード可能なCartopyの**Scatter Map**と**Contour Map**だけに適用されます。インタラクティブなSampling Location Mapと、そのWeb地図背景のMap styleは変更しません。
-
-ほぼ全球の地図では、表示用の海岸線だけを軽量化します。同梱Natural Earth陸域マスクと選択した観測値は変更しません。静的図はPNG bytesとして渡し、Matplotlib canvasを速やかに解放してCloudでのメモリ負荷を抑えます。
-
-- **Plate Carrée (longitude–latitude)**：既定の経緯度表示です。
-- **Mercator**：低〜中緯度の海域に適します。極は表示できないため、静的地図の緯度範囲は±84.5°に制限されます。
-- **Robinson**：全球分布を示す図版に適します。境界が曲線のため、グリッド線は表示しますが端部ラベルは表示しません。
-- **Azimuthal Equidistant**：中心を決めた地域図や極域図に適します。地図中心からの距離・方位を保ちますが、地図全体の面積・形状を保つ図法ではありません。距離・方位を詳しく読む場合は、地域的な表示範囲にしてください。全経度を含む北極海・南極海プリセットでは、選択した緯度帯を保ったまま、それぞれの極を中心に表示します。全球の**Scatter Map**は円形の全球図で表示します。全球の探索的Contour MapはPlate CarréeとMercatorで利用できます。曲線境界のRobinson、正距方位図法・正射図法の全球表示では、一つの連続面を適切に描画できないため、観測点を表示します。
-- **Orthographic (map centre)**：地図表示範囲の中点を中心に、地球を遠方から眺めたように表示する正射図法です。ODVの斜軸Orthographicと同じ種類で、大西洋・太平洋など海盆を中心にした概観図に向きます。
-- **Orthographic (South Polar)**／**Orthographic (North Polar)**：選んだ極を中心に、地球を遠方から眺めたように表示する正射図法です。ODVの極中心Orthographicと同じ種類の表示で、地理的な文脈を示す図に向きます。ただし、中心から離れた場所で距離・方位・面積・形状を保つ図法ではありません。
 
 ## 出力
 
@@ -57,6 +43,5 @@
 
 - Contour Mapは探索的な視覚化であり、独立に検証された連続場ではありません。描画された観測点、データ密度、選択された補間方法とあわせて解釈してください。
 - Map display settings は Data filtering とは別の表示範囲設定です。
-- 投影法は静的図の見え方だけを変え、選択された観測値や補間へ入力する経緯度は変更しません。
 - 静的なScatter／Contour地図は同梱の海岸線・陸地データを使うため、実行時にNatural Earthデータをダウンロードしません。インタラクティブな採水地点地図では、外部タイルを使わない場合に**Coastline (offline)**を選びます。
 - ブラウザからのアップロードは現在のStreamlitセッション内だけで扱い、参照データや常時読み込みの**User Excel data**を変更しません。

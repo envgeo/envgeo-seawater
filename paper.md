@@ -110,13 +110,6 @@ interactive interface remains the primary analysis route.
 
 The interactive web interface is implemented using Streamlit, which provides an accessible platform for exploratory analysis. The application supports multiple visualization types, including map-based exploration, temperature–salinity diagrams, depth profiles, and regression analyses.
 
-Downloadable static maps use selectable Cartopy projections. Exploratory global
-contours are limited to the cylindrical Plate Carrée and Mercator projections,
-with periodic longitude handling at the date line. Robinson and globe-style
-views retain global observation scatter because their curved boundary or hidden
-hemisphere cannot reliably render one continuous rectangular contour mesh;
-regional contour views remain available for all supported projections.
-
 A figure-supported, page-by-page user guide is available in English and
 Japanese at <https://envgeo.github.io/seawater_map/>.
 
