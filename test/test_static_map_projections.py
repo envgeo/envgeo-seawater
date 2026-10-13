@@ -37,7 +37,8 @@ def test_mapping_page_exposes_the_static_projection_choices():
     ):
         assert japanese_label in page_text
 
-    assert "@st.cache_resource(show_spinner=False)" in page_text
+    assert "_cache_land_geometries = getattr(" in page_text
+    assert "@_cache_land_geometries(show_spinner=False)" in page_text
     assert "def _read_ne50m_land_geometries" in page_text
     assert "close_reader()" in page_text
 

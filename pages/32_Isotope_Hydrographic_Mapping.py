@@ -375,7 +375,17 @@ _NE50M_LAND_SHP = _NE50M_LAND_DIR / "ne_50m_land.shp"
 _NE50M_LAND_REQUIRED_EXTS = (".shp", ".shx", ".dbf")
 
 
-@st.cache_resource(show_spinner=False)
+# Minimal test stubs do not need Streamlit's process cache.  In the running
+# application, this resolves to ``st.cache_resource`` and retains the immutable
+# geometries across widget reruns.
+# 最小のテスト用st stubではStreamlitのprocess cacheを必要としない。実行時は
+# ``st.cache_resource``を使い、不変のgeometryをウィジェット再実行後も保持する。
+_cache_land_geometries = getattr(
+    st, "cache_resource", lambda *args, **kwargs: lambda function: function
+)
+
+
+@_cache_land_geometries(show_spinner=False)
 def _read_ne50m_land_geometries():
     """Read and retain bundled land geometries once per Streamlit process.
 
@@ -421,7 +431,11 @@ def _load_ne50m_land_geometries():
         )
         return []
     try:
-        return _read_ne50m_land_geometries()
+        # Keep the long-standing public helper return type stable for callers
+        # and tests; the cached immutable tuple remains internal.
+        # 既存の呼出し元・テストとの互換性のため、公開helperはlistを返す。
+        # cache内部では不変のtupleを保持する。
+        return list(_read_ne50m_land_geometries())
     except Exception as exc:
         st.warning(
             f"Land mask (Natural Earth 50m) could not be loaded: {exc}. "
