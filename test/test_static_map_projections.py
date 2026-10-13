@@ -40,7 +40,7 @@ def test_mapping_page_exposes_the_static_projection_choices():
     assert "def _read_ne50m_land_geometries" in page_text
     assert "close_reader()" in page_text
     assert "def land_geometries_for_static_map" in page_text
-    assert "Render static map / 静的地図を描画" in page_text
+    assert "def static_map_coastline_resolution" in page_text
     assert "st.image(png_scatter)" in page_text
     assert "st.image(png_contour)" in page_text
     assert "plt.close(fig)" in page_text
@@ -99,6 +99,18 @@ def test_non_mercator_extent_is_unchanged(mapping_module):
 
     assert extent == (120.0, 155.0, 20.0, 50.0)
     assert was_clamped is False
+
+
+def test_global_static_map_uses_lightweight_coastline(mapping_module):
+    assert mapping_module.static_map_coastline_resolution(
+        (-180.0, 180.0, -78.0, 90.0)
+    ) == "110m"
+
+
+def test_regional_static_map_keeps_detailed_coastline(mapping_module):
+    assert mapping_module.static_map_coastline_resolution(
+        (120.0, 155.0, 20.0, 50.0)
+    ) == "50m"
 
 
 class _AxesStub:

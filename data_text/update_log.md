@@ -21,10 +21,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
   Natural Earth readers are explicitly closed after use, high-resolution
   geometry objects are not retained in process cache, and Matplotlib figures
   are closed after their displayed and downloadable images are prepared.
-- Static Cartopy figures are now created only when **Render static map** is
-  selected. They are passed to Streamlit as PNG bytes rather than live figures;
-  near-global land masks are simplified for display only. This avoids repeated
-  high-resolution projection work while sidebar settings are being adjusted.
+- Static Cartopy figures are passed to Streamlit as PNG bytes rather than live
+  figures. Near-global land masks and coastlines use a lighter display-only
+  representation, avoiding repeated high-resolution projection work while
+  sidebar settings are being adjusted.
 - Documented projection-specific interpretation and safe display boundaries.
   Mercator is limited to ±84.5° latitude, while Robinson and Azimuthal
   Equidistant use unlabelled graticules to avoid unreliable edge labels.

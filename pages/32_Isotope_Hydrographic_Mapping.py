@@ -455,6 +455,19 @@ def land_geometries_for_static_map(extent):
     return simplified
 
 
+def static_map_coastline_resolution(extent):
+    """Choose a coastline resolution suited to the displayed static-map extent.
+
+    The 110 m bundled coastline is sufficient at global scale and avoids
+    repeatedly transforming tens of thousands of 50 m vertices. Regional maps
+    retain the more detailed bundled 50 m coastline.
+
+    全球表示では110 mの同梱海岸線で十分なため、50 mの多数の頂点を繰り返し投影しない。
+    地域図では従来どおり詳細な50 m海岸線を使う。
+    """
+    return "110m" if is_near_global_map_extent(extent) else "50m"
+
+
 def main():
     # =============================================================================
     # Page header / ページ見出し
@@ -958,30 +971,10 @@ def main():
             "Use a regional extent for a closer view."
         )
 
-    # Static Cartopy rendering is deliberately explicit. Sidebar widgets rerun a
-    # Streamlit page immediately; rendering a high-resolution global figure on
-    # every projection or slider change can briefly retain multiple figures and
-    # exceed Community Cloud's memory limit.
-    # 静的Cartopy図の描画は明示操作にする。サイドバー操作のたびに高解像度の全球図を
-    # 作ると、複数Figureが一時的に重なってCommunity Cloudのメモリ上限に達し得るため。
-    render_static_map = st.button(
-        "Render static map / 静的地図を描画",
-        type="primary",
-        help=(
-            "Adjust map settings freely, then render the static Cartopy figure. "
-            "The interactive sampling-location map below updates normally."
-        ),
-    )
-    if not render_static_map:
-        st.caption(
-            "Adjust the map settings, then click **Render static map** to create "
-            "the downloadable Cartopy figure."
-        )
-    
     # =============================================================================
     # Scatter or contour map / 散布図またはコンター地図
     # =============================================================================
-    if render_static_map and effective_map_type == "Scatter Map":
+    if effective_map_type == "Scatter Map":
         # -------------------------------------------------------------------------
         # Scatter map / 散布図
         # -------------------------------------------------------------------------
@@ -1016,6 +1009,7 @@ def main():
             zorder=3,
             color="0.35",
             linewidth=0.6,
+            resolution=static_map_coastline_resolution(static_map_extent),
         )
         add_static_map_gridlines(ax, static_map_projection_label)
         
@@ -1138,7 +1132,7 @@ def main():
         # Matplotlib canvasを解放する。
         plt.close(fig)
     
-    elif render_static_map:
+    else:
         # -------------------------------------------------------------------------
         # Contour map / コンター地図
         # -------------------------------------------------------------------------
@@ -1250,6 +1244,7 @@ def main():
             zorder=3,
             color="0.35",
             linewidth=0.6,
+            resolution=static_map_coastline_resolution(static_map_extent),
         )
         add_static_map_gridlines(ax2, static_map_projection_label)
         
