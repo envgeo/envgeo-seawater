@@ -7,6 +7,7 @@
 - Mappingページの静的Cartopy Scatter Map／Contour Mapに投影法選択を追加した。Plate Carrée（既定）、Mercator、Robinson、Azimuthal Equidistant、地図中心・南北極中心のOrthographicを選べる。インタラクティブなSampling Location Mapと、そのWeb地図背景のMap styleは変更していない。
 - ODVで利用できる斜軸・極中心表示と同種の、地球を眺めるような地図中心・南極中心・北極中心のOrthographic図を追加した。
 - 全球の探索的Contour MapをPlate CarréeとMercatorで利用できるようにし、補間時だけ経度の周期コピーを使って日付変更線の切れ目を避ける。曲線境界のRobinson、正距方位図法・正射図法の全球表示は、一つの連続面を適切に描画できないため観測点を表示する。元データは変更していない。
+- Streamlit Community Cloudでの静的地図のメモリ負荷を軽減した。同梱Natural Earth readerは使用後に明示的に閉じ、高解像度geometryをprocess cacheに常駐させず、Matplotlib Figureは表示・ダウンロード用画像を準備した後に閉じる。
 - 投影法ごとの解釈と安全な表示範囲を文書化した。Mercatorの緯度範囲は±84.5°に制限し、Robinsonと正距方位図法では信頼できない端部ラベルを避けるため、ラベルなしのグリッド線を使う。
 
 ## 未リリース — ワークフローの位置づけとローカル利用範囲の明確化（2026-10-10）

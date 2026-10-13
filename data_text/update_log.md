@@ -17,6 +17,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
   gap. Robinson's curved boundary and globe-style Azimuthal Equidistant and
   Orthographic global views show observed samples because they cannot reliably
   render one continuous contour field; source data remain unchanged.
+- Reduced static-map memory pressure for Streamlit Community Cloud. Bundled
+  Natural Earth readers are explicitly closed after use, high-resolution
+  geometry objects are not retained in process cache, and Matplotlib figures
+  are closed after their displayed and downloadable images are prepared.
 - Documented projection-specific interpretation and safe display boundaries.
   Mercator is limited to ±84.5° latitude, while Robinson and Azimuthal
   Equidistant use unlabelled graticules to avoid unreliable edge labels.

@@ -375,28 +375,18 @@ _NE50M_LAND_SHP = _NE50M_LAND_DIR / "ne_50m_land.shp"
 _NE50M_LAND_REQUIRED_EXTS = (".shp", ".shx", ".dbf")
 
 
-# Minimal test stubs do not need Streamlit's process cache.  In the running
-# application, this resolves to ``st.cache_resource`` and retains the immutable
-# geometries across widget reruns.
-# 最小のテスト用st stubではStreamlitのprocess cacheを必要としない。実行時は
-# ``st.cache_resource``を使い、不変のgeometryをウィジェット再実行後も保持する。
-_cache_land_geometries = getattr(
-    st, "cache_resource", lambda *args, **kwargs: lambda function: function
-)
-
-
-@_cache_land_geometries(show_spinner=False)
 def _read_ne50m_land_geometries():
-    """Read and retain bundled land geometries once per Streamlit process.
+    """Read bundled land geometries and close the shapefile reader promptly.
 
     The shapefile reader holds several operating-system file descriptors. The
-    geometries are immutable for this application, so caching them prevents a
-    new reader being opened on every widget rerun. The reader is explicitly
-    closed after its geometries have been materialised.
+    reader is explicitly closed after its geometries have been materialised.
+    Do not retain these high-resolution Shapely objects in Streamlit's process
+    cache: Community Cloud memory is limited, while the figures themselves are
+    closed after rendering.
 
-    shapefile readerは複数のOSファイル記述子を使う。地形ジオメトリはこの
-    アプリでは不変なので、ウィジェット操作ごとにreaderを開かないよう
-    キャッシュする。ジオメトリを読み切った後、readerを明示的に閉じる。
+    shapefile readerは複数のOSファイル記述子を使う。ジオメトリを読み切った後に
+    readerを明示的に閉じる。Community Cloudのメモリは限られるため、高解像度の
+    Shapely geometryをprocess cacheに常駐させず、描画後のFigureも閉じる。
     """
     reader = shapereader.Reader(str(_NE50M_LAND_SHP))
     try:
@@ -408,7 +398,7 @@ def _read_ne50m_land_geometries():
 
 
 def _load_ne50m_land_geometries():
-    """Return cached Shapely geometries from the bundled NE 50m land shapefile.
+    """Return Shapely geometries from the bundled NE 50m land shapefile.
 
     Returns an empty list (with a Streamlit warning) if any required component
     is missing.  Never fetches from the network.
@@ -431,10 +421,6 @@ def _load_ne50m_land_geometries():
         )
         return []
     try:
-        # Keep the long-standing public helper return type stable for callers
-        # and tests; the cached immutable tuple remains internal.
-        # 既存の呼出し元・テストとの互換性のため、公開helperはlistを返す。
-        # cache内部では不変のtupleを保持する。
         return list(_read_ne50m_land_geometries())
     except Exception as exc:
         st.warning(
@@ -1093,6 +1079,11 @@ def main():
             ),
             "image/png"
         )
+        # Release the high-resolution Matplotlib canvas after Streamlit has
+        # received the rendered image and download bytes.
+        # Streamlitへ描画済みの画像とダウンロード用bytesを渡した後、高解像度の
+        # Matplotlib canvasを解放する。
+        plt.close(fig)
     
     else:
         # -------------------------------------------------------------------------
@@ -1311,6 +1302,9 @@ def main():
             ),
             "image/png"
         )
+        # Release the high-resolution contour canvas after rendering.
+        # 描画後に高解像度のコンターcanvasを解放する。
+        plt.close(fig_contour)
 
     
     # =============================================================================
