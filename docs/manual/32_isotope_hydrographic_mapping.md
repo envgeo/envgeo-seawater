@@ -14,8 +14,11 @@ salinity, and temperature.
 4. Select **Apply settings** after changing filters.
 5. Adjust map center, static-map projection, display extent, colormap, color range, and colorbar
    settings in the sidebar.
-6. Review the static parameter map and the interactive sampling-location map.
-7. Download the scatter or contour PNG where provided.
+6. Select **Render static map** to create the downloadable Cartopy figure.
+   This explicit step prevents repeated high-resolution global rendering while
+   you adjust controls; the interactive sampling-location map still updates normally.
+7. Review the static parameter map and the interactive sampling-location map.
+8. Download the scatter or contour PNG where provided.
 
 ## Map Types
 
@@ -42,6 +45,12 @@ salinity, and temperature.
 The projection selector applies only to the downloadable Cartopy **Scatter Map**
 and **Contour Map**. It does not change the interactive sampling-location map
 or its web-map background style.
+
+Static Cartopy maps are rendered only after selecting **Render static map**.
+This avoids allocating several high-resolution global figures during rapid
+sidebar changes, which is particularly important on Streamlit Community Cloud.
+For near-global views, the displayed land mask is simplified only for rendering;
+the bundled Natural Earth source files and the selected observations are not changed.
 
 - **Plate Carrée (longitude–latitude)** is the default and keeps the familiar
   longitude–latitude layout.

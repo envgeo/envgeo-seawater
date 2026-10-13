@@ -429,6 +429,32 @@ def _load_ne50m_land_geometries():
         )
         return []
 
+
+def land_geometries_for_static_map(extent):
+    """Return bundled land geometry at a safe detail level for the map extent.
+
+    Global Cartopy maps do not benefit visually from every 50 m coastline vertex,
+    but repeatedly projecting all of them can exceed the memory available to a
+    Streamlit Community Cloud process. Simplification is used only for a nearly
+    global view and only for the displayed land mask; the bundled source files
+    and regional maps retain their original geometry.
+
+    全球図では50 m海岸線の全頂点を投影しても視覚的な利点は小さい一方、繰返し描画時に
+    Streamlit Community Cloudのメモリ上限に達し得る。ここではほぼ全球の表示時だけ、
+    表示用陸域マスクを簡略化する。元ファイルや地域図のgeometryは変更しない。
+    """
+    geometries = _load_ne50m_land_geometries()
+    if not is_near_global_map_extent(extent):
+        return geometries
+
+    simplified = []
+    for geometry in geometries:
+        reduced = geometry.simplify(0.08, preserve_topology=True)
+        if not reduced.is_empty:
+            simplified.append(reduced)
+    return simplified
+
+
 def main():
     # =============================================================================
     # Page header / ページ見出し
@@ -931,11 +957,31 @@ def main():
             f"Global {static_map_projection_label} uses Cartopy's circular globe view. "
             "Use a regional extent for a closer view."
         )
+
+    # Static Cartopy rendering is deliberately explicit. Sidebar widgets rerun a
+    # Streamlit page immediately; rendering a high-resolution global figure on
+    # every projection or slider change can briefly retain multiple figures and
+    # exceed Community Cloud's memory limit.
+    # 静的Cartopy図の描画は明示操作にする。サイドバー操作のたびに高解像度の全球図を
+    # 作ると、複数Figureが一時的に重なってCommunity Cloudのメモリ上限に達し得るため。
+    render_static_map = st.button(
+        "Render static map / 静的地図を描画",
+        type="primary",
+        help=(
+            "Adjust map settings freely, then render the static Cartopy figure. "
+            "The interactive sampling-location map below updates normally."
+        ),
+    )
+    if not render_static_map:
+        st.caption(
+            "Adjust the map settings, then click **Render static map** to create "
+            "the downloadable Cartopy figure."
+        )
     
     # =============================================================================
     # Scatter or contour map / 散布図またはコンター地図
     # =============================================================================
-    if effective_map_type == "Scatter Map":
+    if render_static_map and effective_map_type == "Scatter Map":
         # -------------------------------------------------------------------------
         # Scatter map / 散布図
         # -------------------------------------------------------------------------
@@ -955,7 +1001,7 @@ def main():
         # Draw land mask from bundled NE 50m shapefile (no network access).
         # Drawing order: contours (zorder=1) → land mask (zorder=2) →
         # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
-        _ne_geoms_sc = _load_ne50m_land_geometries()
+        _ne_geoms_sc = land_geometries_for_static_map(static_map_extent)
         if _ne_geoms_sc:
             ax.add_geometries(
                 _ne_geoms_sc,
@@ -1065,14 +1111,21 @@ def main():
         
         # PNG保存（Scatter）
         img_scatter = io.BytesIO()
-        fig.savefig(img_scatter, format="png", dpi=300, bbox_inches="tight")
+        fig.savefig(img_scatter, format="png", dpi=200, bbox_inches="tight")
         img_scatter.seek(0)
+        png_scatter = img_scatter.getvalue()
+        img_scatter.close()
 
-        st.pyplot(fig)
+        # Send PNG bytes, rather than a live Matplotlib figure, to Streamlit.
+        # This prevents a rendered Cartopy canvas from being retained across a
+        # subsequent sidebar rerun.
+        # Matplotlib FigureではなくPNG bytesを渡し、次のサイドバー再実行まで
+        # Cartopy canvasが残ることを防ぐ。
+        st.image(png_scatter)
         
         st.download_button(
             "Download Scatter Map",
-            img_scatter,
+            png_scatter,
             envgeo_utils.build_figure_filename(
                 f"Fig_{safe_parameter_name}_scatter",
                 f"{sub_title}_center{lon_center}"
@@ -1085,7 +1138,7 @@ def main():
         # Matplotlib canvasを解放する。
         plt.close(fig)
     
-    else:
+    elif render_static_map:
         # -------------------------------------------------------------------------
         # Contour map / コンター地図
         # -------------------------------------------------------------------------
@@ -1182,7 +1235,7 @@ def main():
         # Draw land mask from bundled NE 50m shapefile (no network access).
         # Drawing order: contours (zorder=1) → land mask (zorder=2) →
         # coastlines (zorder=3) → gridlines (zorder=4) → data points (zorder≥5).
-        _ne_geoms_cn = _load_ne50m_land_geometries()
+        _ne_geoms_cn = land_geometries_for_static_map(static_map_extent)
         if _ne_geoms_cn:
             ax2.add_geometries(
                 _ne_geoms_cn,
@@ -1288,14 +1341,16 @@ def main():
                 )
 
         img_contour = io.BytesIO()
-        fig_contour.savefig(img_contour, format="png", dpi=300, bbox_inches="tight")
+        fig_contour.savefig(img_contour, format="png", dpi=200, bbox_inches="tight")
         img_contour.seek(0)
+        png_contour = img_contour.getvalue()
+        img_contour.close()
 
-        st.pyplot(fig_contour)
+        st.image(png_contour)
         
         st.download_button(
             "Download Contour Map",
-            img_contour,
+            png_contour,
             envgeo_utils.build_figure_filename(
                 f"Fig_{safe_parameter_name}_contour",
                 f"{sub_title}_center{lon_center}"
