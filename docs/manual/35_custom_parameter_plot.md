@@ -38,6 +38,10 @@ parameters. It can combine filtered reference data with an optional browser uplo
 - Custom 2D scatter plot
 - Optional colour bar and size scaling
 - Optional least-squares regression line
+- **Sampling Location Map** below the plot, showing the rows actually plotted
+  when valid longitude and latitude are available. The map can use the same
+  colour parameter and colour range as the scatter plot; uploaded rows remain
+  distinguishable in the foreground.
 - Downloadable PNG figure
 - Expandable filtered and uploaded plotted-data tables
 
@@ -48,6 +52,8 @@ parameters. It can combine filtered reference data with an optional browser uplo
 - A plotted row requires valid numeric values for the selected X and Y parameters.
   If point size is scaled by a parameter, that value must also be valid. Excluded-row
   counts are reported below the controls.
+- The Sampling Location Map excludes plotted rows without valid geographic
+  coordinates. It is a location overview, not an interpolated distribution map.
 - The regression line is a visual summary only. It has no automatic treatment of
   data-source differences, uncertainty, autocorrelation, or scientific outliers.
 - Browser uploads exist only for the current browser session. They do not modify

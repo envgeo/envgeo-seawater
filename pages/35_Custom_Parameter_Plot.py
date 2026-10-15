@@ -11,11 +11,14 @@ Last reviewed: 2026-09-30
 """
 
 import io
+import math
 
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 import envgeo_user_data
@@ -754,6 +757,225 @@ def main():
         fn,
         "image/png",
     )
+
+    # =============================================================================
+    # Sampling-location map / 採取地点の地図
+    # =============================================================================
+    # Use the same rows as the custom scatter plot so the map is a spatial view
+    # of the displayed relationship, rather than a second, differently filtered
+    # dataset. / 散布図で実際に描画した行だけを使い、別条件の地図にしない。
+    st.divider()
+    st.subheader("Sampling Location Map")
+    st.caption(
+        "Locations of the rows shown in the Custom Parameter Plot; rows without "
+        "valid longitude and latitude are omitted."
+    )
+
+    with st.popover(
+        "Map controls", **envgeo_utils.stretch_width_kwargs(st.popover)
+    ):
+        map_mode = st.radio(
+            "Map style",
+            envgeo_utils.MAP_MODE_OPTIONS,
+            index=envgeo_utils.MAP_MODE_DEFAULT_INDEX,
+            horizontal=True,
+            key="custom_plot_map_style_auto",
+            help=getattr(
+                envgeo_utils,
+                "MAP_STYLE_HELP_TEXT",
+                "Choose the background map style for the sampling-location map.",
+            ),
+        )
+    st.caption(f"Map style: {map_mode}")
+
+    # -------------------------------------------------------------------------
+    # Coordinate preparation / 座標の準備
+    # -------------------------------------------------------------------------
+    def valid_map_rows(dataframe):
+        """Return rows with usable geographic coordinates for the location map.
+
+        位置図に使用できる緯度・経度を持つ行だけを返します。
+        """
+        required = {"Longitude_degE", "Latitude_degN"}
+        if dataframe.empty or not required.issubset(dataframe.columns):
+            return pd.DataFrame(columns=dataframe.columns)
+        result = dataframe.copy()
+        result["Longitude_degE"] = pd.to_numeric(
+            result["Longitude_degE"], errors="coerce"
+        )
+        result["Latitude_degN"] = pd.to_numeric(
+            result["Latitude_degN"], errors="coerce"
+        )
+        return result.dropna(subset=["Longitude_degE", "Latitude_degN"]).loc[
+            lambda data: data["Latitude_degN"].between(-90, 90)
+        ].copy()
+
+    reference_map_df = valid_map_rows(df_plot)
+    uploaded_map_df = valid_map_rows(uploaded_plot)
+    if reference_map_df.empty and uploaded_map_df.empty:
+        st.info(
+            "No valid longitude and latitude values are available for the rows "
+            "shown in the Custom Parameter Plot."
+        )
+    else:
+        # ---------------------------------------------------------------------
+        # Map color and automatic extent / 地図の色分けと表示範囲
+        # ---------------------------------------------------------------------
+        map_color_column = None
+        map_colorscale = None
+        map_color_range = None
+        if (
+            color_by != "Single color"
+            and color_by in reference_map_df.columns
+            and pd.to_numeric(reference_map_df[color_by], errors="coerce").notna().any()
+        ):
+            map_color_column = color_by
+            reference_map_df[color_by] = pd.to_numeric(
+                reference_map_df[color_by], errors="coerce"
+            )
+            map_colorscale = envgeo_utils.get_plotly_colormap(
+                color_by, colormap_label
+            )
+            if color_range is not None and color_range[0] < color_range[1]:
+                map_color_range = color_range
+
+        map_extent_sources = []
+        if not reference_map_df.empty:
+            map_extent_sources.append(
+                reference_map_df[["Longitude_degE", "Latitude_degN"]]
+            )
+        if not uploaded_map_df.empty:
+            map_extent_sources.append(
+                uploaded_map_df[["Longitude_degE", "Latitude_degN"]]
+            )
+        map_extent_df = pd.concat(map_extent_sources, ignore_index=True)
+        lat_min, lat_max = (
+            map_extent_df["Latitude_degN"].min(),
+            map_extent_df["Latitude_degN"].max(),
+        )
+        lon_min, lon_max = (
+            map_extent_df["Longitude_degE"].min(),
+            map_extent_df["Longitude_degE"].max(),
+        )
+        center_lat = (lat_min + lat_max) / 2
+        center_lon = (lon_min + lon_max) / 2
+        lat_span = max(lat_max - lat_min, 0.1)
+        lon_span = max(lon_max - lon_min, 0.1)
+        zoom_lon = math.log2((1200 * 360) / (lon_span * 256))
+        zoom_lat = math.log2((700 * 180) / (lat_span * 256))
+        auto_zoom = max(1.0, min(15.0, min(zoom_lon, zoom_lat) - 2.0))
+        if lon_span > 100:
+            center_lat, center_lon, auto_zoom = 36.0, 138.0, 1.5
+
+        hover_columns = [
+            "Latitude_degN",
+            "Longitude_degE",
+            "d18O",
+            "dD",
+            "d-excess",
+            "Salinity",
+            "Temperature_degC",
+            "Year",
+            "Month",
+            "Day",
+            "Cruise",
+            "Station",
+            "Depth_m",
+            "reference",
+        ]
+        hover_data = {
+            column: True
+            for column in hover_columns
+            if column in reference_map_df.columns
+        }
+
+        # ---------------------------------------------------------------------
+        # Plotly location map / Plotly採取地点地図
+        # ---------------------------------------------------------------------
+        if reference_map_df.empty:
+            fig_map = go.Figure()
+        elif map_color_column is None:
+            fig_map = px.scatter_mapbox(
+                reference_map_df,
+                lat="Latitude_degN",
+                lon="Longitude_degE",
+                hover_data=hover_data,
+                color_discrete_sequence=["#1f77b4"],
+                opacity=0.6,
+                height=500,
+            )
+        else:
+            fig_map = px.scatter_mapbox(
+                reference_map_df,
+                lat="Latitude_degN",
+                lon="Longitude_degE",
+                color=map_color_column,
+                color_continuous_scale=map_colorscale,
+                range_color=map_color_range,
+                hover_data=hover_data,
+                opacity=0.6,
+                height=500,
+            )
+
+        # Apply the selected background style. / 選択した背景スタイルを適用する。
+        fig_map = envgeo_utils.apply_map_style(fig_map, map_mode)
+
+        # Uploaded overlay / アップロードデータの重ね表示
+        fig_map, uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+            fig_map,
+            uploaded_map_df,
+            uploaded_style,
+            color_column=map_color_column,
+            colorscale=map_colorscale,
+            color_range=map_color_range,
+            show_nodata=True,
+        )
+        if not uploaded_plot.empty:
+            if uploaded_map_count:
+                st.caption(
+                    f":blue[Uploaded locations: {uploaded_map_count:,} / "
+                    f"{len(uploaded_plot):,} plotted on the sampling location map.]"
+                )
+            else:
+                st.caption(
+                    ":gray[Uploaded plotted rows are not shown on the sampling "
+                    "location map because valid longitude and latitude columns are unavailable.]"
+                )
+
+        map_layout = dict(
+            mapbox=dict(
+                center=dict(lat=center_lat, lon=center_lon),
+                zoom=auto_zoom,
+                domain=dict(x=[0.0, 1.0], y=[0.0, 1.0]),
+            ),
+            margin=dict(l=0, r=0, t=0, b=0, autoexpand=False),
+            autosize=True,
+            legend=dict(
+                x=0.01,
+                y=0.01,
+                xanchor="left",
+                yanchor="bottom",
+                bgcolor="rgba(255,255,255,0.85)",
+                bordercolor="rgba(150,150,150,0.5)",
+                borderwidth=1,
+            ),
+        )
+        if map_color_column is not None:
+            map_layout["coloraxis_colorbar"] = dict(
+                title=PARAMETER_LABELS.get(map_color_column, map_color_column),
+                x=0.98,
+                xanchor="right",
+                bgcolor="rgba(255,255,255,0.75)",
+                bordercolor="rgba(150,150,150,0.5)",
+                borderwidth=1,
+            )
+        fig_map.update_layout(**map_layout)
+        st.plotly_chart(
+            fig_map,
+            key=f"custom_plot_location_map::{ref_data}::{x_axis}::{y_axis}",
+            config={"scrollZoom": True, "displayModeBar": True},
+            **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
+        )
 
     with st.expander("Filtered dataset (CSV)", expanded=False):
         table_columns = [

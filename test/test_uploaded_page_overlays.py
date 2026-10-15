@@ -420,6 +420,36 @@ def test_custom_plot_supports_uploaded_only_numeric_axes():
     )
 
 
+def test_custom_plot_shows_locations_for_plotted_uploaded_rows():
+    """Custom plot location map should accept selected uploaded coordinates.
+
+    Custom Parameter Plotの地点地図が、選択済みアップロード行の座標を受け付けることを確認する。
+    """
+    app = _run_page(
+        "35_Custom_Parameter_Plot.py",
+        {
+            "Longitude_degE": [135.0, 136.0],
+            "Latitude_degN": [35.0, 36.0],
+            "Experimental_X": [1.0, 2.0],
+            "Experimental_Y": [10.0, 20.0],
+        },
+    )
+    next(item for item in app.sidebar.multiselect if item.label == "Choose datasets").set_value(
+        ["Uploaded data"]
+    )
+    next(item for item in app.selectbox if item.label == "X axis").set_value(
+        "Experimental_X"
+    )
+    next(item for item in app.selectbox if item.label == "Y axis").set_value(
+        "Experimental_Y"
+    )
+    app.run(timeout=60)
+
+    assert not app.exception
+    assert any(item.value == "Sampling Location Map" for item in app.subheader)
+    assert any("Uploaded locations: 2 / 2" in value for value in _visible_text(app))
+
+
 def test_custom_plot_regression_accepts_uploaded_only_selected_rows():
     app = _run_page(
         "35_Custom_Parameter_Plot.py",

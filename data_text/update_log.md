@@ -2,6 +2,14 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased — Custom Parameter Plot location map (2026-10-15)
+
+- Added a Sampling Location Map below Custom Parameter Plot. It maps the same
+  valid-coordinate reference and session-uploaded rows displayed in the custom
+  scatter plot, optionally sharing its selected colour parameter and range.
+  The map is a location overview only; it does not interpolate values or alter
+  source data.
+
 ## Unreleased — Defer static map-projection selector (2026-10-13)
 
 - Withdrew the experimental static Cartopy projection selector from the Mapping
