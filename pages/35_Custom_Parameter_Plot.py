@@ -18,6 +18,7 @@ from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 import envgeo_user_data
@@ -954,9 +955,7 @@ def main():
             "Depth_m",
             "reference",
         ]
-        map_base_df = (
-            reference_map_df if not reference_map_df.empty else uploaded_map_df
-        )
+        map_base_df = reference_map_df
         hover_data = {
             column: True
             for column in hover_columns
@@ -966,7 +965,12 @@ def main():
         # ---------------------------------------------------------------------
         # Plotly location map / Plotly採取地点地図
         # ---------------------------------------------------------------------
-        if map_color_column is None:
+        if map_base_df.empty:
+            # Keep uploaded-only rows out of the base layer. They are added
+            # once below with the dedicated upload marker style.
+            # アップロードのみの場合は、下で専用スタイルにより一度だけ追加する。
+            fig_map = go.Figure()
+        elif map_color_column is None:
             fig_map = px.scatter_mapbox(
                 map_base_df,
                 lat="Latitude_degN",
@@ -1001,6 +1005,12 @@ def main():
             colorscale=map_colorscale,
             color_range=map_color_range,
             show_nodata=True,
+            show_colorbar=(
+                reference_map_df.empty and map_color_column is not None
+            ),
+            colorbar_title=PARAMETER_LABELS.get(
+                map_color_column, map_color_column
+            ) if map_color_column is not None else None,
         )
         if not uploaded_df.empty:
             if uploaded_map_count:
@@ -1032,7 +1042,7 @@ def main():
                 borderwidth=1,
             ),
         )
-        if map_color_column is not None:
+        if map_color_column is not None and not reference_map_df.empty:
             map_layout["coloraxis_colorbar"] = dict(
                 title=PARAMETER_LABELS.get(map_color_column, map_color_column),
                 x=0.98,

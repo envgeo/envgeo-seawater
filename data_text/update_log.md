@@ -4,6 +4,10 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased — Custom Parameter Plot location map (2026-10-15)
 
+- Fixed the upload-only Sampling Location Map so each uploaded row is drawn
+  once with the configured foreground style. When the uploaded overlay shares
+  the selected colour parameter, it owns the colourbar if no reference trace
+  is present.
 - Added a Sampling Location Map below Custom Parameter Plot. It maps the
   currently filtered reference and session-uploaded rows with valid coordinates,
   optionally sharing its selected colour parameter and range.

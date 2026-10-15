@@ -394,6 +394,8 @@ def add_uploaded_map_overlay(
     colorscale=None,
     color_range=None,
     show_nodata=True,
+    show_colorbar=False,
+    colorbar_title=None,
 ):
     """Add uploaded locations as frontmost outlined Scattermapbox traces.
 
@@ -483,7 +485,15 @@ def add_uploaded_map_overlay(
                     "colorscale": colorscale,
                     "cmin": color_range[0],
                     "cmax": color_range[1],
-                    "showscale": False,
+                    # A reference trace normally owns the colorbar. When the
+                    # map contains uploaded rows only, this foreground trace
+                    # becomes its sole visible owner. / 通常は参照traceが
+                    # カラーバーを表示するが、アップロードのみの地図ではこの
+                    # 前景traceが唯一の表示担当となる。
+                    "showscale": bool(show_colorbar),
+                    "colorbar": {"title": colorbar_title}
+                    if show_colorbar and colorbar_title
+                    else None,
                     "opacity": style["alpha"],
                 },
                 text=[

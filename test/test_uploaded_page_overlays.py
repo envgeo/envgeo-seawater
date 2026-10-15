@@ -531,6 +531,17 @@ def test_custom_plot_shows_locations_for_plotted_uploaded_rows():
     # 地点地図はX/Y描画行だけでなく、共通フィルター後の座標有効行を示す。
     assert any("Uploaded locations: 3 / 3" in value for value in _visible_text(app))
     map_spec = json.loads(app.get("plotly_chart")[-1].proto.spec)
+    trace_names = [trace.get("name") for trace in map_spec["data"]]
+    assert trace_names.count("Uploaded data") == 1
+    assert trace_names.count("Uploaded data outline") == 1
+    # The coastline overlay is expected; no selected upload row may be drawn
+    # again as a reference/base-data trace.
+    # 海岸線traceは許容するが、アップロード行を参照・ベースtraceとして
+    # 重ねて描画してはならない。
+    data_trace_names = [
+        name for name in trace_names if name != "_coastline_overlay"
+    ]
+    assert all(name and name.startswith("Uploaded data") for name in data_trace_names)
     assert any("colorscale" in trace.get("marker", {}) for trace in map_spec["data"])
 
 
