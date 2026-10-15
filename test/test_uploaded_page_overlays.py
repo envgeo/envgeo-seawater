@@ -10,6 +10,7 @@ Last updated: 2026-09-22
 from pathlib import Path
 import sys
 import importlib.util
+import json
 
 import pandas as pd
 import pytest
@@ -420,6 +421,77 @@ def test_custom_plot_supports_uploaded_only_numeric_axes():
     )
 
 
+def test_custom_plot_keeps_compatible_axis_after_dataset_selection():
+    """Custom Plot should retain an axis that remains available after filtering.
+
+    Custom Parameter Plotは、Dataset選択後も利用可能な軸を保持する。
+    """
+    app = _run_page(
+        "35_Custom_Parameter_Plot.py",
+        {
+            "d18O": [0.1, 0.2],
+            "dD": [1.0, 2.0],
+            "Salinity": [34.5, 35.0],
+        },
+    )
+    next(item for item in app.sidebar.selectbox if item.label == "X axis").set_value(
+        "Salinity"
+    )
+    app.run(timeout=60)
+    next(
+        item for item in app.sidebar.multiselect if item.label == "Choose datasets"
+    ).set_value(["Uploaded data"])
+    app.run(timeout=60)
+
+    assert not app.exception
+    assert next(
+        item for item in app.sidebar.selectbox if item.label == "X axis"
+    ).value == "Salinity"
+
+
+def test_custom_plot_keeps_uploaded_rows_separate_when_file_has_dataset_column():
+    """An uploaded Dataset column must not make its rows look bundled.
+
+    アップロード表にDataset列があっても、Custom Plotで前景アップロード系列として扱う。
+    """
+    app = _run_page(
+        "35_Custom_Parameter_Plot.py",
+        {
+            "Dataset": ["Around Japan", "Around Japan"],
+            "d18O": [0.1, 0.2],
+            "dD": [1.0, 2.0],
+        },
+    )
+    next(
+        item for item in app.sidebar.multiselect if item.label == "Choose datasets"
+    ).set_value(["Uploaded data"])
+    app.run(timeout=60)
+
+    assert not app.exception
+    assert any(
+        "Uploaded overlay: 2 / 2 plotted" in value for value in _visible_text(app)
+    )
+
+
+def test_custom_plot_reports_missing_uploaded_axis_values():
+    """Custom Plot should identify the unavailable selected upload axis.
+
+    Custom Parameter Plotは、アップロード表で不足する選択軸を明示する。
+    """
+    app = _run_page(
+        "35_Custom_Parameter_Plot.py",
+        {"d18O": [0.1, 0.2], "dD": [None, None]},
+    )
+
+    assert not app.exception
+    assert any(
+        "Selected values available in uploaded data" in value
+        and "δ18O (‰): 2/2" in value
+        and "δD (‰): 0/2" in value
+        for value in _visible_text(app)
+    )
+
+
 def test_custom_plot_shows_locations_for_plotted_uploaded_rows():
     """Custom plot location map should accept selected uploaded coordinates.
 
@@ -428,15 +500,16 @@ def test_custom_plot_shows_locations_for_plotted_uploaded_rows():
     app = _run_page(
         "35_Custom_Parameter_Plot.py",
         {
-            "Longitude_degE": [135.0, 136.0],
-            "Latitude_degN": [35.0, 36.0],
-            "Experimental_X": [1.0, 2.0],
-            "Experimental_Y": [10.0, 20.0],
+            "Longitude_degE": [135.0, 136.0, 137.0],
+            "Latitude_degN": [35.0, 36.0, 37.0],
+            "Experimental_X": [1.0, 2.0, 3.0],
+            "Experimental_Y": [10.0, 20.0, "missing"],
         },
     )
     next(item for item in app.sidebar.multiselect if item.label == "Choose datasets").set_value(
         ["Uploaded data"]
     )
+    app.run(timeout=60)
     next(item for item in app.selectbox if item.label == "X axis").set_value(
         "Experimental_X"
     )
@@ -444,10 +517,18 @@ def test_custom_plot_shows_locations_for_plotted_uploaded_rows():
         "Experimental_Y"
     )
     app.run(timeout=60)
+    next(item for item in app.selectbox if item.label == "Color by").set_value(
+        "Experimental_X"
+    )
+    app.run(timeout=60)
 
     assert not app.exception
     assert any(item.value == "Sampling Location Map" for item in app.subheader)
-    assert any("Uploaded locations: 2 / 2" in value for value in _visible_text(app))
+    # The location map uses common-filtered rows, not only rows valid for X/Y.
+    # 地点地図はX/Y描画行だけでなく、共通フィルター後の座標有効行を示す。
+    assert any("Uploaded locations: 3 / 3" in value for value in _visible_text(app))
+    map_spec = json.loads(app.get("plotly_chart")[-1].proto.spec)
+    assert any("colorscale" in trace.get("marker", {}) for trace in map_spec["data"])
 
 
 def test_custom_plot_regression_accepts_uploaded_only_selected_rows():

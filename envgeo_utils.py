@@ -457,6 +457,7 @@ STANDARD_UPLOAD_COLUMNS = [
 ]
 
 UPLOADED_DATA_LABEL = "Uploaded data"
+UPLOADED_SOURCE_DATASET_COLUMN = "Uploaded source Dataset"
 USER_EXCEL_DATA_LABEL = "User Excel data"
 UPLOAD_NUMERIC_COLUMNS = [
     "Longitude_degE",
@@ -1129,8 +1130,23 @@ def prepare_uploaded_data(df, dataset_label=UPLOADED_DATA_LABEL):
     prepared = standardize_uploaded_column_names(df)
     rename_map = prepared.attrs.get("standardized_column_renames", {}).copy()
 
-    if "Dataset" not in prepared.columns:
-        prepared["Dataset"] = dataset_label
+    # ``Dataset`` is the common sidebar's UI category, not a provenance field.
+    # Always tag browser uploads consistently so they remain selectable and can
+    # be separated from bundled rows after common filtering. Preserve a supplied
+    # source value in its own column rather than silently discarding it.
+    # ``Dataset``は共通サイドバーのUI分類であり、来歴欄ではない。ブラウザからの
+    # アップロードには常に同じ分類を付け、共通フィルター後にも選択・分離できるようにする。
+    # 元表にDataset値があれば、消さずに別列へ保持する。
+    if "Dataset" in prepared.columns:
+        source_dataset = prepared["Dataset"].copy()
+        has_distinct_source_dataset = (
+            source_dataset.notna()
+            & source_dataset.astype(str).str.strip().ne("")
+            & source_dataset.astype(str).str.strip().ne(dataset_label)
+        )
+        if has_distinct_source_dataset.any():
+            prepared[UPLOADED_SOURCE_DATASET_COLUMN] = source_dataset
+    prepared["Dataset"] = dataset_label
 
     # Replace '**' placeholders with NaN (same convention as main data loading)
     # プレースホルダ '**' をNaNへ置換する（メインデータの読み込みと同じ処理）

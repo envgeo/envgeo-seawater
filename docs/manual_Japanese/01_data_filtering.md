@@ -17,6 +17,8 @@
 
 ブラウザからのアップロードは、**User Data Check & Quick Visualizer**、salinity--d18O、mapping、T--S、custom-parameter、depth-profile、vertical-sectionの各ページで使えます。これらのページでは、アップロードした行がデータセット選択欄に**Uploaded data**として表示されます。これだけを選べばアップロードデータだけを描画でき、参照データと同時に選べば同じフィルターを両方へ適用します。対応する重ね描きでは、アップロード点を前面に表示します。
 
+アップロード表にすでに`Dataset`列がある場合、その値は**Uploaded source Dataset**として保持します。一方、共通の選択欄では常に**Uploaded data**として扱うため、同梱データと誤認せず、独立した前景系列として選択・表示できます。
+
 2Dplusと3D/4Dでは、現時点でブラウザからのアップロードには対応していません。描画や計算上の制約は、各ページの説明を確認してください。
 
 ## 常時読み込みのUser Excel data

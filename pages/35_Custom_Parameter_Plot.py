@@ -18,7 +18,6 @@ from matplotlib.ticker import FormatStrFormatter
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 import envgeo_user_data
@@ -88,6 +87,38 @@ def numeric_parameter_options(*dataframes):
     return known + experimental
 
 
+def persistent_parameter_selectbox(label, options, default, state_key, help_text):
+    """Render a parameter selector that survives compatible data filtering.
+
+    Keep a user's previous choice while it remains available after the common
+    Dataset filter changes.  Fall back only when that parameter is no longer a
+    valid numeric option. / 共通Datasetフィルターの変更後も選択可能な限り
+    ユーザー指定を保持し、候補外になった場合だけ既定値へ戻す。
+    """
+    # Streamlit may discard a widget's own state when an upstream form changes
+    # its option list. Keep a second, page-owned value so a compatible choice
+    # can be restored on the next run. / 上流フォームで候補リストが変わる際に
+    # Streamlit自身のwidget状態が破棄されることがあるため、ページ側でも保持する。
+    saved_key = f"{state_key}::saved"
+    saved_value = st.session_state.get(saved_key, st.session_state.get(state_key))
+    selected_value = saved_value if saved_value in options else default
+    st.session_state[state_key] = selected_value
+
+    def save_selection():
+        """Store the user choice before Streamlit reruns the page."""
+        st.session_state[saved_key] = st.session_state[state_key]
+
+    selected_value = st.selectbox(
+        label,
+        options,
+        key=state_key,
+        help=help_text,
+        on_change=save_selection,
+    )
+    st.session_state[saved_key] = selected_value
+    return selected_value
+
+
 def combined_numeric_values(column, *dataframes):
     """Return valid numeric values for one column across available datasets.
 
@@ -109,6 +140,11 @@ def prepare_plot_rows(df, required_columns):
 
     選択したすべての列が有効な数値である行だけを描画用に返します。
     """
+    # Users may intentionally select the same parameter for two roles while
+    # exploring options. Deduplicate before Pandas column selection so that a
+    # repeated axis name never creates duplicate dataframe columns.
+    # 同じ項目を複数の役割に選ぶ場合もあるため、Pandasの列選択前に重複を除く。
+    required_columns = list(dict.fromkeys(required_columns))
     if df is None or df.empty or not set(required_columns).issubset(df.columns):
         return pd.DataFrame(columns=required_columns)
     result = df.copy()
@@ -293,34 +329,38 @@ def main():
         st.subheader(getattr(envgeo_utils, "CUSTOM_PLOT_SETTINGS_LABEL", "Custom plot settings"))
         st.caption(envgeo_utils.AUTO_APPLY_NOTE)
 
-        x_axis = st.selectbox(
+        x_axis = persistent_parameter_selectbox(
             "X axis",
             options,
-            index=options.index("d18O") if "d18O" in options else 0,
-            help="Choose the numeric parameter for the horizontal axis.",
+            "d18O" if "d18O" in options else options[0],
+            "custom_plot_x_axis",
+            "Choose the numeric parameter for the horizontal axis.",
         )
         y_default = "dD" if "dD" in options else options[min(1, len(options) - 1)]
-        y_axis = st.selectbox(
+        y_axis = persistent_parameter_selectbox(
             "Y axis",
             options,
-            index=options.index(y_default),
-            help="Choose the numeric parameter for the vertical axis.",
+            y_default,
+            "custom_plot_y_axis",
+            "Choose the numeric parameter for the vertical axis.",
         )
 
         color_options = ["Single color"] + options
-        color_by = st.selectbox(
+        color_by = persistent_parameter_selectbox(
             "Color by",
             color_options,
-            index=color_options.index("Depth_m") if "Depth_m" in color_options else 0,
-            help="Use a fixed blue color, or color points by another numeric parameter.",
+            "Depth_m" if "Depth_m" in color_options else "Single color",
+            "custom_plot_color_by",
+            "Use a fixed blue color, or color points by another numeric parameter.",
         )
 
         size_options = ["Fixed size"] + options
-        size_by = st.selectbox(
+        size_by = persistent_parameter_selectbox(
             "Size by",
             size_options,
-            index=0,
-            help="Use fixed marker size, or scale marker size by another numeric parameter.",
+            "Fixed size",
+            "custom_plot_size_by",
+            "Use fixed marker size, or scale marker size by another numeric parameter.",
         )
 
         marker_size = st.number_input(
@@ -480,6 +520,27 @@ def main():
             f"plotted ({uploaded_excluded_count:,} excluded due to missing or invalid "
             "selected parameter values).]"
         )
+        # Report selected axis/size availability separately for browser uploads.
+        # This makes an intentional parameter mismatch distinguishable from an
+        # overlay-rendering problem. / アップロード表の選択軸・サイズ列の有効件数を
+        # 個別に示し、列値の不足と重ね描画の不具合を区別できるようにする。
+        uploaded_availability = []
+        for column in dict.fromkeys(uploaded_required_columns):
+            valid_count = (
+                int(pd.to_numeric(uploaded_df[column], errors="coerce").notna().sum())
+                if column in uploaded_df.columns
+                else 0
+            )
+            uploaded_availability.append(
+                f"{PARAMETER_LABELS.get(column, column)}: "
+                f"{valid_count:,}/{len(uploaded_df):,}"
+            )
+        if uploaded_excluded_count > 0:
+            st.caption(
+                ":gray[Selected values available in uploaded data — "
+                + "; ".join(uploaded_availability)
+                + ".]"
+            )
         uploaded_quality_df = envgeo_utils.get_quality_rows(uploaded_df)
         with st.expander("Uploaded data quality check", expanded=False):
             envgeo_utils.render_quality_flag_criteria_note()
@@ -761,14 +822,16 @@ def main():
     # =============================================================================
     # Sampling-location map / 採取地点の地図
     # =============================================================================
-    # Use the same rows as the custom scatter plot so the map is a spatial view
-    # of the displayed relationship, rather than a second, differently filtered
-    # dataset. / 散布図で実際に描画した行だけを使い、別条件の地図にしない。
+    # Use the currently filtered rows, independently of the X/Y/size requirements
+    # of the custom scatter plot. This keeps uploaded locations visible when their
+    # coordinates are valid but a selected plotting value is missing.
+    # 散布図のX/Y/サイズ条件とは独立して、共通フィルター後の行を使う。これにより、
+    # 座標は有効でも選択した描画値が欠損するアップロード行を地点地図から落とさない。
     st.divider()
     st.subheader("Sampling Location Map")
     st.caption(
-        "Locations of the rows shown in the Custom Parameter Plot; rows without "
-        "valid longitude and latitude are omitted."
+        "Locations of the currently filtered rows; rows without valid longitude "
+        "and latitude are omitted."
     )
 
     with st.popover(
@@ -810,12 +873,12 @@ def main():
             lambda data: data["Latitude_degN"].between(-90, 90)
         ].copy()
 
-    reference_map_df = valid_map_rows(df_plot)
-    uploaded_map_df = valid_map_rows(uploaded_plot)
+    reference_map_df = valid_map_rows(df_filtered)
+    uploaded_map_df = valid_map_rows(uploaded_df)
     if reference_map_df.empty and uploaded_map_df.empty:
         st.info(
-            "No valid longitude and latitude values are available for the rows "
-            "shown in the Custom Parameter Plot."
+            "No valid longitude and latitude values are available for the "
+            "currently filtered rows."
         )
     else:
         # ---------------------------------------------------------------------
@@ -824,15 +887,23 @@ def main():
         map_color_column = None
         map_colorscale = None
         map_color_range = None
+        map_color_sources = [
+            dataframe
+            for dataframe in (reference_map_df, uploaded_map_df)
+            if not dataframe.empty
+        ]
+        map_color_df = pd.concat(map_color_sources, ignore_index=True)
         if (
             color_by != "Single color"
-            and color_by in reference_map_df.columns
-            and pd.to_numeric(reference_map_df[color_by], errors="coerce").notna().any()
+            and color_by in map_color_df.columns
+            and pd.to_numeric(map_color_df[color_by], errors="coerce").notna().any()
         ):
             map_color_column = color_by
-            reference_map_df[color_by] = pd.to_numeric(
-                reference_map_df[color_by], errors="coerce"
-            )
+            for dataframe in (reference_map_df, uploaded_map_df):
+                if color_by in dataframe.columns:
+                    dataframe[color_by] = pd.to_numeric(
+                        dataframe[color_by], errors="coerce"
+                    )
             map_colorscale = envgeo_utils.get_plotly_colormap(
                 color_by, colormap_label
             )
@@ -883,20 +954,21 @@ def main():
             "Depth_m",
             "reference",
         ]
+        map_base_df = (
+            reference_map_df if not reference_map_df.empty else uploaded_map_df
+        )
         hover_data = {
             column: True
             for column in hover_columns
-            if column in reference_map_df.columns
+            if column in map_base_df.columns
         }
 
         # ---------------------------------------------------------------------
         # Plotly location map / Plotly採取地点地図
         # ---------------------------------------------------------------------
-        if reference_map_df.empty:
-            fig_map = go.Figure()
-        elif map_color_column is None:
+        if map_color_column is None:
             fig_map = px.scatter_mapbox(
-                reference_map_df,
+                map_base_df,
                 lat="Latitude_degN",
                 lon="Longitude_degE",
                 hover_data=hover_data,
@@ -906,7 +978,7 @@ def main():
             )
         else:
             fig_map = px.scatter_mapbox(
-                reference_map_df,
+                map_base_df,
                 lat="Latitude_degN",
                 lon="Longitude_degE",
                 color=map_color_column,
@@ -930,16 +1002,16 @@ def main():
             color_range=map_color_range,
             show_nodata=True,
         )
-        if not uploaded_plot.empty:
+        if not uploaded_df.empty:
             if uploaded_map_count:
                 st.caption(
                     f":blue[Uploaded locations: {uploaded_map_count:,} / "
-                    f"{len(uploaded_plot):,} plotted on the sampling location map.]"
+                    f"{len(uploaded_df):,} plotted on the sampling location map.]"
                 )
             else:
                 st.caption(
-                    ":gray[Uploaded plotted rows are not shown on the sampling "
-                    "location map because valid longitude and latitude columns are unavailable.]"
+                    ":gray[Uploaded rows are not shown on the sampling location "
+                    "map because valid longitude and latitude columns are unavailable.]"
                 )
 
         map_layout = dict(

@@ -4,11 +4,22 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased — Custom Parameter Plot location map (2026-10-15)
 
-- Added a Sampling Location Map below Custom Parameter Plot. It maps the same
-  valid-coordinate reference and session-uploaded rows displayed in the custom
-  scatter plot, optionally sharing its selected colour parameter and range.
+- Added a Sampling Location Map below Custom Parameter Plot. It maps the
+  currently filtered reference and session-uploaded rows with valid coordinates,
+  optionally sharing its selected colour parameter and range.
   The map is a location overview only; it does not interpolate values or alter
   source data.
+- Fixed browser uploads whose source table already contains a `Dataset` column.
+  They are now always categorised as `Uploaded data` for shared filtering and
+  foreground rendering; the original values are retained as `Uploaded source
+  Dataset`. This prevents uploads from being mistaken for bundled records.
+- Improved Custom Parameter Plot upload feedback and control persistence.
+  The page now reports valid uploaded-row counts for the selected X/Y (and
+  size, when used) parameters, making a missing measurement column distinct
+  from a rendering problem. Compatible X/Y, colour, and size selections remain
+  unchanged when `Select sub-dataset` is applied; a control falls back only
+  when its parameter is no longer available. Duplicate selected parameter
+  names are also handled safely in exported display tables.
 
 ## Unreleased — Defer static map-projection selector (2026-10-13)
 

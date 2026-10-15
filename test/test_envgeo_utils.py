@@ -524,6 +524,27 @@ def test_prepare_uploaded_data_applies_numeric_quality_and_d_excess():
     assert "Salinity outside valid range" in out.loc[1, envgeo_utils.QUALITY_FLAG_COLUMN]
 
 
+def test_prepare_uploaded_data_preserves_source_dataset_but_uses_upload_category():
+    """Browser uploads must remain selectable even when their file has Dataset.
+
+    元表のDataset値を残しつつ、画面上ではUploaded dataとして一貫して選択できることを確認する。
+    """
+    out = envgeo_utils.prepare_uploaded_data(
+        pd.DataFrame(
+            {
+                "Dataset": ["Around Japan", "Field campaign B"],
+                "d18O": [0.1, 0.2],
+            }
+        )
+    )
+
+    assert out["Dataset"].tolist() == ["Uploaded data", "Uploaded data"]
+    assert out[envgeo_utils.UPLOADED_SOURCE_DATASET_COLUMN].tolist() == [
+        "Around Japan",
+        "Field campaign B",
+    ]
+
+
 def test_spreadsheet_numeric_values_accept_invisible_unicode_spaces():
     values = pd.Series(["34.620\u00a0", " 141.103 ", "\u22120.30", None])
 

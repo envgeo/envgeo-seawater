@@ -22,6 +22,11 @@ data** in the dataset selector. Select it alone to plot only uploaded rows, or
 select it with reference datasets to apply the same filters to both. Uploaded
 markers are drawn in the foreground where overlays are supported.
 
+If an uploaded table already contains a `Dataset` column, its values are
+preserved as **Uploaded source Dataset**. The shared selector still uses
+**Uploaded data**, so browser-uploaded rows remain a distinct, selectable
+foreground series rather than being mistaken for bundled records.
+
 The 2Dplus and 3D/4D pages do not currently provide browser uploads. See the
 page-specific manual for any plotting or calculation limitation.
 
