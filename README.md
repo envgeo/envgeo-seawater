@@ -9,7 +9,7 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
-**Current stable release:** 1.3.4 (2026-10-03)
+**Current stable release:** 1.3.5 (2026-10-16)
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -105,7 +105,7 @@ Archive display of the original hand-written exploratory workflow used during de
 
 ### Public pages in the stable release
 
-Stable v1.3.4 includes Pages 03, 04, 05, 31, 32, 34, 35, 37, 53, and 80.
+Stable v1.3.5 includes Pages 03, 04, 05, 31, 32, 34, 35, 37, 53, and 80.
 Pages 90, 91, and 99 are for development or local diagnostics and are excluded
 from the stable distribution package and public Streamlit sidebar.
 
@@ -276,7 +276,7 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-Python 3.14 is not supported by the fixed dependencies in v1.3.4.
+Python 3.14 is not supported by the fixed dependencies in v1.3.5.
 
 ---
 
@@ -573,7 +573,7 @@ The data model can accommodate additional datasets after their sources,
 provenance, and redistribution status have been recorded. Reusable
 visualization, asset-resolution, and distribution components may support future
 related EnvGeo applications. These are future directions, not functions or
-datasets included in the stable v1.3.4 release.
+datasets included in the stable v1.3.5 release.
 
 ---
 
@@ -581,11 +581,13 @@ datasets included in the stable v1.3.4 release.
 
 Ishimura, T. (2026).
 
-*EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.4). Zenodo.
-https://doi.org/10.5281/zenodo.23117784
+*EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.5). Zenodo.
+https://doi.org/10.5281/zenodo.23117783
 
 The DOI badge above resolves to the all-versions concept DOI
-(`10.5281/zenodo.23117783`). Cite the version DOI above for work using v1.3.4.
+(`10.5281/zenodo.23117783`). The fixed v1.3.5 Zenodo DOI will be added
+after the matching archive is published; until then, cite this concept DOI
+together with Version 1.3.5.
 Please also cite the original providers of every dataset used in an analysis.
 
 ---

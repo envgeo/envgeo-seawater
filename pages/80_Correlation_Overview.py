@@ -12,7 +12,7 @@ Last updated: 2026-09-22
 
 
 # --- バージョン管理の設定 ---
-version = "1.3.4"  # 2026-09-28
+version = "1.3.5"  # 2026-10-16
 fig_title = "envgeo-seawater-database"  # 2026/02/12
     
 

@@ -12,18 +12,18 @@ been tagged and archived.
 | Field | Draft value |
 |---|---|
 | Title | EnvGeo-Seawater: An Interactive Platform for Exploring Seawater Isotope and Hydrographic Data |
-| Release label | EnvGeo-Seawater v1.3.4 |
-| Version | 1.3.4 |
+| Release label | EnvGeo-Seawater v1.3.5 |
+| Version | 1.3.5 |
 | Author | Toyoho Ishimura |
 | ORCID | <https://orcid.org/0000-0001-9708-3743> |
 | Affiliation | Graduate School of Human and Environmental Studies, Kyoto University, Japan |
 | License | MIT |
 | Source repository | <https://github.com/envgeo/seawater_map> |
-| Release date | 2026-10-03 |
-| Release commit | `948b384455480f06b7a9b6b0a7a3e53af7135e35` |
-| Version DOI | <https://doi.org/10.5281/zenodo.23117784> |
+| Release date | 2026-10-16 |
+| Release commit | To be recorded from the final stable commit |
+| Version DOI | To be assigned after Zenodo archives `v1.3.5` |
 | Concept DOI (all versions) | <https://doi.org/10.5281/zenodo.23117783> |
-| Zenodo record | <https://zenodo.org/records/23117784> |
+| Zenodo record | To be assigned after archival |
 
 ## Short description
 
@@ -50,7 +50,7 @@ GitHub Release, and Zenodo archive.
 ## Finalization steps
 
 1. Create the final commit and confirm its GitHub Actions CI result.
-2. Tag that exact stable commit as `v1.3.4`.
+2. Tag that exact stable commit as `v1.3.5`.
 3. Build the wheel from a clean checkout of the tag and record its SHA-256.
 4. Create the GitHub Release from the tag, using the title and description
    above.

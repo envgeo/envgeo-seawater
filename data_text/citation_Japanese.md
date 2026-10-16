@@ -5,12 +5,12 @@
 成果で使用したソフトウェアの版を、次のように引用してください。
 
 > Ishimura, T. (2026). *EnvGeo-Seawater: An Interactive Platform for
-> Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.4).
-> Zenodo. https://doi.org/10.5281/zenodo.23117784
+> Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.5).
+> Zenodo. https://doi.org/10.5281/zenodo.23117783
 
-上記は固定されたv1.3.4版のDOIです。全版共通のconcept DOIは
-[10.5281/zenodo.23117783](https://doi.org/10.5281/zenodo.23117783)です。
-使用した版が分かる場合は、必ず版ごとのDOIを引用してください。
+上記は全版共通のconcept DOIです。固定版v1.3.5のZenodo DOIは、対応するarchiveの
+公開後に追記します。それまではVersion 1.3.5と併せてこのconcept DOIを引用してください。
+使用した版が分かる場合は、版ごとのDOIを引用してください。
 
 ## 原典データを引用する
 

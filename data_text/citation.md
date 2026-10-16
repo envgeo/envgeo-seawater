@@ -5,12 +5,13 @@
 Please cite the specific software version used in your work:
 
 > Ishimura, T. (2026). *EnvGeo-Seawater: An Interactive Platform for
-> Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.4).
-> Zenodo. https://doi.org/10.5281/zenodo.23117784
+> Exploring Seawater Isotope and Hydrographic Data* (Version 1.3.5).
+> Zenodo. https://doi.org/10.5281/zenodo.23117783
 
-The DOI above identifies the fixed v1.3.4 release. The all-versions concept
-DOI is [10.5281/zenodo.23117783](https://doi.org/10.5281/zenodo.23117783).
-Use the version DOI whenever the version used in an analysis is known.
+The DOI above is the all-versions concept DOI. The fixed v1.3.5 Zenodo DOI
+will be added after the matching archive is published. Until then, cite this
+concept DOI together with Version 1.3.5; use the version DOI whenever it is
+available and the version used in an analysis is known.
 
 ## Cite the original data sources
 

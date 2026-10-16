@@ -27,7 +27,7 @@ import envgeo_utils
 # =============================================================================
 # Page constants and internal metadata / ページ定数と内部メタデータ
 # =============================================================================
-version = "1.3.4"
+version = "1.3.5"
 NO_COLOR = "No color"
 NO_COMPARISON_DATA = "None"
 PLOTLY_MARKERS = {"D": "diamond", "o": "circle", "s": "square", "^": "triangle-up", "*": "star", "X": "x"}
