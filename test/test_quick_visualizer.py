@@ -48,6 +48,10 @@ def _make_envgeo_utils_stub():
     eu = types.ModuleType("envgeo_utils")
     eu.QUALITY_FLAG_COLUMN = "_QualityFlag"
     eu.QUALITY_ORIGINAL_VALUE_COLUMN = "_QualityOriginalValue"
+    # Keep this stub aligned with the shared internal metadata used by page 05.
+    # Page 05で参照する共通の内部メタデータ定数をスタブにも用意する。
+    eu.OVERLAP_SOURCE_COLUMN = "_EnvGeo_Overlap_Source"
+    eu.OVERLAP_SOURCE_ROW_COLUMN = "_EnvGeo_Overlap_Source_Row"
     eu.USER_EXCEL_DATA_LABEL = "User Excel data"
     eu.UPLOADED_DATA_LABEL = "Uploaded"
     eu.data_source_ENVGEO = "EnvGeo [ECS–Japan Sea]"
