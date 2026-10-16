@@ -32,6 +32,9 @@ import envgeo_utils
 # Page configuration and embedded-workflow registry / ページ設定と埋込みワークフロー一覧
 # =============================================================================
 version = "1.3.4"
+# Development-clone capability marker used by the focused regression test.
+# 開発Gitクローンで地図操作を有効化したことを示す、限定回帰テスト用の印。
+INTEGRATED_BETA_MAP_CONTROLS_ENABLED = True
 
 BASE_DIR = Path(__file__).resolve().parent
 
