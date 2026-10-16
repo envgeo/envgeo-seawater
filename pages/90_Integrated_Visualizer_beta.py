@@ -722,9 +722,12 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
                 )
             )
 
+    # Keep the Mapbox navigation controls available in the shared-filter tab.
+    # 共有フィルタータブでも、Mapboxのズーム・移動・リセット操作を有効にする。
     st.plotly_chart(
         fig,
         key="integrated_map",
+        config={"scrollZoom": True, "displayModeBar": True},
         **envgeo_utils.stretch_width_kwargs(st.plotly_chart),
     )
 

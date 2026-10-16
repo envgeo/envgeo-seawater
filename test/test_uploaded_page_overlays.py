@@ -232,6 +232,21 @@ def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
     assert 'config={"scrollZoom": True, "displayModeBar": True}' in page_text
 
 
+def test_integrated_beta_map_enables_mouse_wheel_zoom():
+    """Shared-filter beta map should retain Plotly navigation controls.
+
+    共通フィルターbetaの地図でも、ホイールズームとツールバー操作を有効にする。
+    """
+    page_text = (ROOT / "pages" / "90_Integrated_Visualizer_beta.py").read_text(
+        encoding="utf-8"
+    )
+
+    map_block = page_text.split("def render_map", 1)[1].split(
+        "def render_ts_diagram", 1
+    )[0]
+    assert 'config={"scrollZoom": True, "displayModeBar": True}' in map_block
+
+
 def test_quick_visualizer_marker_style_precedes_data_filtering():
     page_text = (
         ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"

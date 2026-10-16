@@ -4,6 +4,8 @@
 
 ## 未リリース — Custom Parameter Plotの採取地点地図（2026-10-15）
 
+- 開発版専用のIntegrated Visualizer betaにある共通フィルター地図で、マウスホイール
+  ズームとPlotlyの操作ツールバーを復旧した。安定版リリースの対象には含めない。
 - Uploaded dataのみを選んだSampling Location Mapで、同じ行をベースと前景に
   二重描画していた点を修正した。アップロード行が選択中の色分けを共有する場合、
   参照traceがない地図ではアップロード前景traceがカラーバーを表示する。
