@@ -232,6 +232,26 @@ def test_quick_visualizer_2d_map_enables_mouse_wheel_zoom():
     assert 'config={"scrollZoom": True, "displayModeBar": True}' in page_text
 
 
+def test_quick_visualizer_hides_internal_overlap_provenance_columns():
+    """Quick Visualizer must not expose overlap identifiers as numeric axes.
+
+    Quick Visualizerの数値軸候補に、内部の重複監査来歴列を出さない。
+    """
+    page_path = ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"
+    spec = importlib.util.spec_from_file_location("test_quick_visualizer", page_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    frame = pd.DataFrame(
+        {
+            "d18O": [0.1, 0.2],
+            "dD": [1.0, 2.0],
+            envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN: [0, 1],
+        }
+    )
+    assert envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN not in module.numeric_columns(frame)
+
+
 def test_integrated_beta_map_enables_mouse_wheel_zoom():
     """Shared-filter beta map should retain Plotly navigation controls.
 
@@ -465,6 +485,23 @@ def test_custom_plot_keeps_compatible_axis_after_dataset_selection():
     assert next(
         item for item in app.sidebar.selectbox if item.label == "X axis"
     ).value == "Salinity"
+
+
+def test_custom_plot_hides_internal_overlap_provenance_columns_from_axes():
+    """Custom Plot must not offer internal overlap row identifiers as axes.
+
+    Custom Parameter Plotの軸候補には、内部用の重複監査来歴列を出さない。
+    """
+    app = _run_page(
+        "35_Custom_Parameter_Plot.py",
+        {"d18O": [0.1, 0.2], "dD": [1.0, 2.0]},
+    )
+
+    x_axis = next(
+        item for item in app.sidebar.selectbox if item.label == "X axis"
+    )
+    assert envgeo_utils.OVERLAP_SOURCE_COLUMN not in x_axis.options
+    assert envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN not in x_axis.options
 
 
 def test_custom_plot_keeps_uploaded_rows_separate_when_file_has_dataset_column():

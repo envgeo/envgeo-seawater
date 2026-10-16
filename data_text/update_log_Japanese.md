@@ -4,6 +4,9 @@
 
 ## 未リリース — Custom Parameter Plotの採取地点地図（2026-10-15）
 
+- Custom Parameter PlotとUser Data Check & Quick Visualizerの軸候補、プレビュー表、
+  利用者向けダウンロードから、内部用の重複監査来歴列を除外した。これらの列は
+  可逆的な重複候補表示スクリーンでのみ利用する。
 - 開発版専用のIntegrated Visualizer betaにある共通フィルター地図で、マウスホイール
   ズームとPlotlyの操作ツールバーを復旧した。安定版リリースの対象には含めない。
 - Uploaded dataのみを選んだSampling Location Mapで、同じ行をベースと前景に

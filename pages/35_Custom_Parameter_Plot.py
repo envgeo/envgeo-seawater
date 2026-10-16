@@ -71,12 +71,18 @@ def numeric_parameter_options(*dataframes):
     excluded = {
         envgeo_utils.QUALITY_FLAG_COLUMN,
         envgeo_utils.QUALITY_ORIGINAL_VALUE_COLUMN,
+        envgeo_utils.OVERLAP_SOURCE_COLUMN,
+        envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN,
     }
     available = {}
     for df in dataframes:
         if df is None or df.empty:
             continue
         for column in df.columns:
+            # Internal provenance keys are required for reversible overlap
+            # screening, but they are not scientific plotting parameters.
+            # 重複候補の可逆的な表示除外に必要な内部来歴キーは、科学的な
+            # 描画パラメーターとしては提示しない。
             if column in excluded:
                 continue
             values = pd.to_numeric(df[column], errors="coerce")

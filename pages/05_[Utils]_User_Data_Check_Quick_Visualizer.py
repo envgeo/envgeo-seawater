@@ -37,7 +37,16 @@ MAX_HOVER_VALUE_LENGTH = 120
 # Internal origin column — never shown to users in filters, preview, or download.
 # 内部出所列 — フィルター・プレビュー・ダウンロードには表示しない。
 _ORIGIN_COL = "_EnvGeoDataOrigin"
-_INTERNAL_COLS = {_ORIGIN_COL}
+# Include the common reversible-overlap provenance keys as well. These fields
+# identify internal source rows; they must not become scientific axes, preview
+# columns, or downloaded user-facing fields.
+# 共通の可逆的重複候補用来歴キーも含める。これらは内部の元行識別子であり、
+# 科学的な軸、プレビュー列、利用者向けダウンロード列には出さない。
+_INTERNAL_COLS = {
+    _ORIGIN_COL,
+    envgeo_utils.OVERLAP_SOURCE_COLUMN,
+    envgeo_utils.OVERLAP_SOURCE_ROW_COLUMN,
+}
 
 
 # =============================================================================
