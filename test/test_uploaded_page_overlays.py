@@ -395,10 +395,12 @@ def test_integrated_views_skip_upload_overlays_when_required_columns_are_absent(
         "90_Integrated_Visualizer_beta.py",
         {"NovelParameter": [1.0, 2.0], "SampleID": ["A", "B"]},
     )
-    workflow_selector = next(
-        item for item in app.radio if item.label == "Workflow mode"
+    legacy_toggle = next(
+        item
+        for item in app.sidebar.checkbox
+        if item.label == "Enable legacy Shared-filter beta"
     )
-    workflow_selector.set_value("Shared-filter beta")
+    legacy_toggle.set_value(True)
     app.run(timeout=60)
 
     assert not app.exception

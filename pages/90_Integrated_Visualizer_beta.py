@@ -1163,20 +1163,41 @@ def main():
     # =============================================================================
     st.header(f"Integrated Visualizer beta ({version})")
     st.caption(f"Shared app version: {envgeo_utils.APP_VERSION_LABEL}")
-
-    workflow_mode = st.radio(
-        "Workflow mode",
-        ["Full existing page", "Shared-filter beta"],
-        horizontal=True,
-        key="integrated_workflow_mode",
+    st.caption(
+        "Development workspace: reuse session-only uploaded data while testing "
+        "existing visualization pages."
     )
 
     uploaded_df = render_upload_panel()
 
-    if workflow_mode == "Full existing page":
+    # The page remains a permanent development workspace. Its previous
+    # Shared-filter beta duplicates the public User Data Check & Quick
+    # Visualizer, so keep it only as an opt-in compatibility check while the
+    # legacy implementation is retired in small, reversible steps.
+    # このページは恒久的な開発ワークスペースとして残す。一方、旧Shared-filter
+    # betaは公開のUser Data Check & Quick Visualizerと役割が重なるため、旧実装を
+    # 小さく可逆的に整理する間は、互換性確認用の明示的な選択時だけ表示する。
+    with st.sidebar.expander("Legacy shared-filter workflow", expanded=False):
+        st.caption(
+            "For development compatibility checks only. Use User Data Check & "
+            "Quick Visualizer for upload validation, combined filtering, and "
+            "quick 2D--4D exploration."
+        )
+        show_legacy_shared_filter = st.checkbox(
+            "Enable legacy Shared-filter beta",
+            value=False,
+            key="integrated_enable_legacy_shared_filter",
+        )
+
+    if not show_legacy_shared_filter:
         render_full_existing_page(uploaded_df)
         return
 
+    st.info(
+        "Legacy Shared-filter beta is enabled for development compatibility "
+        "checks. For normal uploaded-data review, use User Data Check & Quick "
+        "Visualizer."
+    )
     uploaded_style = render_uploaded_marker_style_controls()
 
     st.button("Reload")

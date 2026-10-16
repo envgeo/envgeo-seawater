@@ -32,9 +32,9 @@ local section calculation. Pages 03 and 04 remain outside the upload rollout.
 
 Individual visualization pages remain first-class EnvGeo-Seawater workflows.
 Uploaded-data validation and comparison are provided by the public User Data
-Check & Quick Visualizer. Integrated Visualizer remains a transitional beta
-test bed and is retained as a development archive rather than a normal public
-workflow.
+Check & Quick Visualizer. Integrated Visualizer remains a permanent
+development workspace rather than a normal public workflow. Its default role
+is to retain session-only uploads while testing existing-page workflows.
 
 Upload support will use one shared implementation. Common upload processing and
 UI should move out of page files into a focused core module, provisionally
@@ -88,7 +88,7 @@ This mixed ownership is a migration state, not the final architecture.
 | Shared Streamlit upload UI | Upload, template download, detected-column report, manual correction, quality summary, clear action, and common marker-style model |
 | User Data Validator | Column review and correction, quality reporting, exclusion reasons, reference-data comparison, and simple diagnostic plots |
 | Individual page | Required columns for that figure, exclusion summary, plot-specific conversion, and final overlay rendering |
-| Integrated Visualizer | Temporary migration test bed; hidden development archive after migration |
+| Integrated Visualizer | Permanent development workspace for existing-page workflow and shared-session upload checks; not a normal public workflow |
 
 Marker settings should use one backend-neutral model: size multiplier, fixed
 color or shared-colorbar mode, shape name, opacity, outline color, and outline
@@ -110,10 +110,9 @@ to backend-specific marker arguments.
 4. Quality rules and derived values are implemented in the shared core, not in
    the Validator page. Individual pages and the Validator therefore report the
    same result for the same uploaded data.
-5. Integrated Visualizer keeps its uploader while any supported individual
-   page still depends on it. The Integrated uploader is removed only after all
-   target pages have verified native upload and overlay support and the
-   independent Validator provides equivalent Shared-filter quality checks.
+5. Integrated Visualizer retains its session uploader as a development handoff
+   and compatibility tool. Its duplicate validation and quick-plot interface
+   is not a public workflow.
 
 Uploaded data remains available only within the current Streamlit session and
 is not written to local or server storage.
@@ -152,16 +151,17 @@ Move to the independent User Data Validator:
 - Reference-data comparison using simple diagnostic plots.
 - Session handoff to individual visualization pages.
 
-Retire or hide with Integrated Visualizer after migration:
+Retire from the default Integrated interface after migration:
 
 - Integrated-specific upload preparation code.
 - Temporary monkey-patching of `load_isotope_data`.
-- Full existing page embedding as a compatibility mechanism.
 - Duplicated T-S, salinity-d18O, and other validation plots after Validator
   equivalents are verified.
 
-Integrated Visualizer source may remain as a development archive, but it should
-not be presented as the normal public workflow after migration.
+Integrated Visualizer remains a development workspace, but it must not be
+presented as the normal public workflow after migration. The duplicate
+Shared-filter beta is opt-in for compatibility checks and can be deleted once
+those checks are no longer required.
 
 ## Historical migration sequence
 
@@ -170,7 +170,9 @@ not be presented as the normal public workflow after migration.
 3. Extract Shared-filter beta into an independent User Data Validator page.
 4. Apply the shared component to Salinity-d18O Relationship, Mapping, Depth Profile, Custom Parameter Plot, Interactive 2D/3D/4D pages, and Vertical Section. Pages 31, 32, 34, 35, and 37 are complete; Vertical Section (page 53) was completed on 2026-09-22. Interactive pages 03 and 04 remain pending.
 5. Remove each workflow from Integrated's temporary loader-replacement path after its native overlay is verified.
-6. Hide Integrated Visualizer from the normal public page list after Validator and individual-page migration are complete.
+6. Retain Integrated Visualizer as a development-only page after Validator and
+   individual-page migration are complete; remove the opt-in Shared-filter
+   implementation when it no longer provides regression value.
 
 Each migration step requires focused pytest coverage and an AppTest or visual
 check before moving to the next page.
@@ -180,8 +182,8 @@ check before moving to the next page.
 - Limit one work unit to either one shared component or one individual page.
 - Do not remove the current Integrated implementation until its replacement has
   passed tests and a screen-level check.
-- Keep Shared-filter beta until User Data Validator provides equivalent
-  validation and comparison coverage.
+- Keep Shared-filter beta only behind its explicit legacy compatibility toggle
+  until no remaining regression check requires it.
 - Keep each Full existing page path until that individual page has a verified
   native upload overlay.
 - End every migration step with a usable application so development can pause

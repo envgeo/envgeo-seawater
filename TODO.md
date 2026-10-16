@@ -345,6 +345,38 @@ distinct from future datasets while establishing a clear long-term data model.
   intended to support rigorous cross-dataset comparison, without claiming that
   unpublished collections are already available.
 
+### Near-term Around Japan candidates: Wakita and Kubota data
+
+Date added: 2026-10-16
+
+During the next dataset expansion, integrate the following published data into
+the `Around Japan` comparison collection. Treat both as cited external
+comparison datasets, not as members of the core `EnvGeo Dataset` collection.
+
+- **Wakita (ship-based observations in the Tsugaru Strait):** use the 1,611 rows
+  with d18O and d18O quality flag 0 (Accepted). The observations span
+  2013-05-23 to 2024-02-23. `Depth_m` has been calculated from pressure and
+  latitude with TEOS-10, `-gsw.z_from_p(Pressure_dbar, Latitude_degN)`, and spans
+  0 to 499.322 m. Salinity uses bottle values where available and SBE values for
+  the remaining 22 rows. Candidate workbook:
+  `../outputs/wakita_tsugaru_upload/Wakita_Tsugaru_EnvGeo_user_upload_d18O.xlsx`.
+- **Kubota et al. (2022):** use the 64 Table 1 sites with d18O. The observations
+  span 2021-08-20 to 2021-09-16, with reported sampling depths of 0 to 10 m.
+  Exclude Sites 20 and 62 because the paper marks the samples as lost. DOI:
+  `10.2343/geochemj.GJ22021`. Table 1 gives d18O = -0.1‰ for Site 41, whereas the
+  Results text summarizes the maximum as -0.2‰; record that the individual table
+  value takes precedence. Candidate workbook:
+  `../outputs/kubota_2022_upload/Kubota_etal_2022_EnvGeo_user_upload_d18O.xlsx`.
+- Before bundling, verify each dataset's licence, redistribution terms,
+  recommended citation, version, and update date, and record them in Source
+  details and machine-readable provenance.
+- Add pytest coverage for expected row counts, required columns, missing d18O,
+  coordinate and depth ranges, duplicates, quality flags, and the assigned
+  `Dataset` display label.
+- Update the Home page, README, manual, Source details, and English/Japanese
+  dataset-selector labels together, keeping `Around Japan` distinct from the
+  core EnvGeo collection.
+
 ### Future data-source configuration and loading
 
 When the dataset collection is next expanded or a bundled workbook name changes,
@@ -476,10 +508,12 @@ Current status:
   plotting on the individual visualization pages.
 - Complete the shared loader and schema workflow before adding separate upload
   implementations to every page.
-- Keep individual visualization pages as first-class public workflows. Move
-  validation and reference-data comparison to an independent User Data
-  Validator. Keep Integrated Visualizer during migration, then retain it only
-  as a hidden development archive. See `docs/integrated_visualizer_strategy.md`.
+- Keep individual visualization pages as first-class public workflows. The
+  public User Data Check & Quick Visualizer owns validation and reference-data
+  comparison. Retain Integrated Visualizer as a permanent development
+  workspace for existing-page and shared-session checks; keep its duplicate
+  Shared-filter beta only as an opt-in legacy compatibility path. See
+  `docs/integrated_visualizer_strategy.md`.
 
 Planned direction:
 - Move the common upload workflow into a focused module such as
@@ -493,8 +527,9 @@ Planned direction:
   calculation, quality flags, source labels, and session-only memory handling.
 - Use consistent overlay controls for marker size, color or shared colorbar,
   symbol, outline, opacity, and foreground order.
-- Extract Shared-filter beta into an independent User Data Validator and keep
-  the existing Integrated workflow until equivalent checks are verified.
+- Keep Shared-filter beta behind its opt-in legacy compatibility control while
+  it still has regression value; remove it when those checks are covered by
+  User Data Check & Quick Visualizer and the individual pages.
 - Make one shared-component or one-page change at a time; keep the application
   usable and tested at the end of every migration step.
 - Roll out and test the shared workflow in stages:

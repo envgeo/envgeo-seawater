@@ -180,6 +180,30 @@ JOSS向けの注意:
   統一手順のデータ群が厳密な相互比較を支えることを目標として説明し、未公表の
   データセットが既に利用可能であるかのようには記載しない。
 
+### Around Japanへの近日追加候補: Wakita・Kubotaデータ
+
+追加日: 2026-10-16
+
+次回のデータセット拡張で、以下の公開データを`Around Japan`比較データへ統合する。
+いずれも`EnvGeo Dataset`本体ではなく、元出典を明示した外部比較データとして扱う。
+
+- **Wakita（津軽海峡の船舶観測）:** d18Oがあり、品質フラグ0（Accepted）の1,611行を候補とする。
+  観測期間は2013-05-23〜2024-02-23。`Depth_m`は圧力と緯度からTEOS-10
+  `-gsw.z_from_p(Pressure_dbar, Latitude_degN)`で算出済み（0〜499.322 m）。塩分はボトル値を
+  優先し、欠測22行のみSBE値を使用する。候補workbookは
+  `../outputs/wakita_tsugaru_upload/Wakita_Tsugaru_EnvGeo_user_upload_d18O.xlsx`。
+- **Kubota et al. (2022):** Table 1のうちd18Oがある64地点を候補とする。観測期間は
+  2021-08-20〜2021-09-16、水深は論文記載値の0〜10 m。Site 20と62は`Sample lost`のため除外する。
+  DOIは`10.2343/geochemj.GJ22021`。Table 1のSite 41はd18O = -0.1‰だが、Results本文は
+  上限を-0.2‰と要約しているため、個別値を優先したことを来歴へ残す。候補workbookは
+  `../outputs/kubota_2022_upload/Kubota_etal_2022_EnvGeo_user_upload_d18O.xlsx`。
+- 同梱前に、各データセットのライセンス、再配布条件、推奨引用、版・更新日を確認し、
+  Source detailsと機械可読な来歴へ記録する。
+- 統合時に、期待行数、必須列、d18O欠測、座標範囲、水深範囲、重複、品質フラグ、
+  `Dataset`表示ラベルを検証するpytestを追加する。
+- Home、README、Manual、Source details、データ選択UIの日英表記を同時に更新し、
+  `Around Japan`とEnvGeo中核コレクションを混同しない表示にする。
+
 ### 今後のデータソース設定と読込
 
 次にデータセット群を拡張する時、または同梱workbook名を変更する時は、科学的内容を
@@ -269,7 +293,7 @@ Critical項目は、依存関係を考慮して次の順番で進める。
 - `90_Integrated_Visualizer_beta.py` の既存実装を、ユーザーデータアップロード機能の主な試験場所として維持する。
 - 長期方針として、各個別可視化ページでユーザーデータのアップロードと重ね描きに対応する。
 - ページごとに別実装を追加する前に、共通の読み込み・列対応処理を完成させる。
-- 個別可視化ページを正式な公開ワークフローとして残す。データ検証と既存データとの比較は独立したUser Data Validatorへ移す。Integrated Visualizerは移行中は残し、完了後は非公開の開発アーカイブとする。詳細は `docs/integrated_visualizer_strategy_Japanese.md` を参照。
+- 個別可視化ページを正式な公開ワークフローとして残す。データ検証と既存データとの比較は公開ページUser Data Check & Quick Visualizerが担当する。Integrated Visualizerは既存ページと共有セッションを確認する恒久的な開発ワークスペースとして残し、重複するShared-filter betaは明示的に有効にするlegacy互換経路だけとする。詳細は `docs/integrated_visualizer_strategy_Japanese.md` を参照。
 
 今後の方向性:
 
@@ -277,7 +301,7 @@ Critical項目は、依存関係を考慮して次の順番で進める。
 - ユーザーデータのアップロードを海水専用機能ではなく、EnvGeoのコア機能として扱う。この基盤は独立した確認後に、将来ほかの地球科学可視化へ利用できる可能性がある。
 - 共通処理には、CSV/XLSXの読み込み、列名の自動認識、手動列修正、必須列の確認、d-excess計算、品質フラグ、データソースラベル、セッション内メモリだけでのデータ管理を含める。
 - マーカーサイズ、単色または共通カラーバー、形、枠、透明度、最前面表示を、共通の重ね描き設定として扱う。
-- Shared-filter betaを独立したUser Data Validatorへ移し、同等の検証が確認できるまで現行Integratedを残す。
+- Shared-filter betaは、User Data Check & Quick Visualizerと個別ページで必要な回帰確認を網羅できるまで、明示的なlegacy互換性トグルの後ろに残す。不要になった時点で削除する。
 - 1回の作業は共通部品1つまたは個別ページ1つに限定し、段階ごとに利用可能・テスト済みの状態を保つ。
 - 共通処理を次の順で段階的に展開・確認する。
   - Temperature-Salinity Diagram

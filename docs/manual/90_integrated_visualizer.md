@@ -6,36 +6,29 @@
 
 ## What This Page Does
 
-This beta page records tests of integrated workflows that combine existing
-visualization pages, shared filtering, upload comparison, and quick visual checks.
+This beta page is a permanent development workspace for testing existing
+visualization pages with the same session-only uploaded data. It is not a
+stable-release workflow.
 
 ## Basic Workflow
 
-1. Choose workflow mode.
-2. Select or upload data if needed.
-3. Apply shared filters.
-4. Explore maps, T-S diagrams, salinity-d18O views, custom plots, summaries, and quality flags.
-5. Download summaries or quality-flag tables where available.
+1. Upload data if needed; it remains available for the current Streamlit session.
+2. Choose an existing page workflow.
+3. Test that page with its own filters, figure controls, and uploaded-data overlay.
+4. Use **User Data Check & Quick Visualizer** for combined filtering, quality
+   review, and quick 2D--4D exploration.
 
 ## Main Controls
 
-- Workflow mode
 - Full existing page workflows
-- Shared-filter beta workflow
 - Uploaded data overlay controls
-- Marker style controls
-- Map controls
-- Quality Flags tab
+- Legacy Shared-filter beta enablement (compatibility checks only)
 
 ## Outputs
 
-- Integrated map
-- T-S diagram
-- Salinity-d18O plot
-- Custom 2D/3D quick views
-- Uploaded-data overlays
-- Reference and uploaded-data quality summaries
-- Downloadable CSV summaries
+- Existing-page workflows using the same uploaded session data
+- Page-specific uploaded-data overlays and scientific figure controls
+- Legacy diagnostic plots only when the compatibility workflow is explicitly enabled
 
 ## Notes And Limitations
 
@@ -46,6 +39,9 @@ visualization pages, shared filtering, upload comparison, and quick visual check
   **User Data Check & Quick Visualizer** now provides the upload-first
   validation, reference comparison, and simple diagnostic role formerly
   planned as an independent User Data Validator.
-- Full existing page compatibility mode is transitional and will be retired after supported pages have native upload overlays.
-- Integrated Visualizer will remain available during migration and may then be kept as a hidden development archive.
+- Integrated Visualizer remains a permanent development workspace, rather than a
+  normal public workflow or a stable-release feature.
+- The duplicate Shared-filter beta is hidden behind an explicit development
+  compatibility toggle and will be removed after it is no longer needed for
+  regression checks. It must not receive new user-facing features.
 - See the [Integrated Visualizer strategy](../integrated_visualizer_strategy.md) for the accepted architecture and migration plan.

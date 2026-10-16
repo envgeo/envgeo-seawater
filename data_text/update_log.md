@@ -4,6 +4,12 @@ Detailed development log for recent EnvGeo-Seawater updates.
 
 ## Unreleased — Custom Parameter Plot location map (2026-10-15)
 
+- Repositioned the development-only Integrated Visualizer beta as a permanent
+  development workspace for testing existing-page workflows with session-only
+  uploads. Its duplicate Shared-filter beta is now an opt-in legacy
+  compatibility check; the public User Data Check & Quick Visualizer remains
+  the normal route for upload validation, combined filtering, and quick
+  2D--4D exploration.
 - Removed internal overlap-provenance identifiers from Custom Parameter Plot
   and User Data Check & Quick Visualizer axes, preview tables, and
   user-facing downloads. They remain available only to the reversible

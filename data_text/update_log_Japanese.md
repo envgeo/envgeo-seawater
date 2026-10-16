@@ -4,6 +4,11 @@
 
 ## 未リリース — Custom Parameter Plotの採取地点地図（2026-10-15）
 
+- 開発版専用のIntegrated Visualizer betaを、セッション限定アップロードを保持して
+  既存ページのワークフローを試す恒久的な開発ワークスペースとして位置付け直した。
+  機能が重なるShared-filter betaは、互換性確認時だけ明示的に有効にする旧機能へ移した。
+  アップロードの検証、参照データとの共通フィルター、簡易2D--4D探索は、公開ページ
+  User Data Check & Quick Visualizerを通常の入口とする。
 - Custom Parameter PlotとUser Data Check & Quick Visualizerの軸候補、プレビュー表、
   利用者向けダウンロードから、内部用の重複監査来歴列を除外した。これらの列は
   可逆的な重複候補表示スクリーンでのみ利用する。

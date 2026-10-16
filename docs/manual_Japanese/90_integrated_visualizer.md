@@ -5,35 +5,27 @@
 
 ## このページでできること
 
-既存可視化ページ、共通フィルタ、ユーザーデータ比較、簡易チェックを統合する試験を記録した beta ページです。
+同じセッション内で読み込んだアップロードデータを使い、既存可視化ページの動作を
+確認するための恒久的な開発ワークスペースです。安定版でサポートするワークフローではありません。
 
 ## 基本操作
 
-1. Workflow mode を選ぶ。
-2. 必要に応じてデータをアップロードする。
-3. 共通フィルタを適用する。
-4. 地図、T-S図、塩分-d18O図、Custom plot、Summary、Quality Flags を確認する。
-5. 必要に応じて概要CSVや品質フラグ表をダウンロードする。
+1. 必要に応じてデータをアップロードする。データは現在のStreamlitセッション中だけ保持される。
+2. 既存ページのワークフローを選ぶ。
+3. そのページ固有のフィルター、図の設定、アップロード重ね描きを確認する。
+4. 共通フィルター、品質確認、簡易2D--4D探索には **User Data Check & Quick Visualizer** を使う。
 
 ## 主な設定
 
-- Workflow mode
 - Full existing page workflows
-- Shared-filter beta workflow
 - Uploaded data overlay controls
-- Marker style controls
-- Map controls
-- Quality Flags tab
+- Legacy Shared-filter betaの有効化（互換性確認時のみ）
 
 ## 出力
 
-- 統合マップ
-- T-S図
-- 塩分-d18O図
-- Custom 2D/3D quick views
-- アップロードデータ重ね描き
-- 参照データ・アップロードデータの品質概要
-- ダウンロード可能なCSV概要
+- 同じアップロードセッションを使う既存ページのワークフロー
+- ページ固有のアップロード重ね描きと科学的な図の設定
+- 互換性ワークフローを明示的に有効にした時だけの旧診断図
 
 ## 注意点
 
@@ -41,6 +33,6 @@
 - アップロードデータは Streamlit セッション中のメモリ上のみで扱う方針です。
 - 一部のワークフローは、互換性のため既存ページファイルを呼び出します。
 - 個別可視化ページは正式な主要ワークフローとして残します。以前に独立User Data Validatorへ移す予定だったアップロード起点の検証、既存データとの比較、簡易診断は、公開ページ **User Data Check & Quick Visualizer** が担当します。
-- Full existing page互換モードは移行中の一時機能であり、対象ページのアップロード重ね描画完了後に廃止します。
-- Integrated Visualizerは移行中は利用可能な状態を保ち、移行完了後は非公開の開発アーカイブとして残すことができます。
+- Integrated Visualizerは、通常の公開ワークフローや安定版機能ではなく、恒久的な開発ワークスペースとして残します。
+- 機能が重複するShared-filter betaは、明示的な開発用互換性トグルの後ろへ退避しました。回帰確認に不要になった時点で削除し、新しい利用者向け機能は追加しません。
 - 決定済みの設計と移行手順は [Integrated Visualizer運用・移行方針](../integrated_visualizer_strategy_Japanese.md) を参照してください。
