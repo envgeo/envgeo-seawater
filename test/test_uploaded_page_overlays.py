@@ -268,6 +268,24 @@ def test_integrated_beta_map_enables_mouse_wheel_zoom():
     assert 'config={"scrollZoom": True, "displayModeBar": True}' in map_block
 
 
+def test_integrated_beta_map_uses_explicit_uploaded_colorscale():
+    """Keep valid uploaded values from falling back to black on the beta map.
+
+    共通フィルターbeta地図で、有効なアップロード値がMapbox色軸継承によって
+    黒くフォールバックしないよう、共通rendererで明示的に色尺度を適用する。
+    """
+    integrated_page = ROOT / "pages" / "90_Integrated_Visualizer_beta.py"
+    if not integrated_page.is_file():
+        pytest.skip("Integrated Visualizer beta is not included in this repository.")
+    page_text = integrated_page.read_text(encoding="utf-8")
+    map_block = page_text.split("def render_map", 1)[1].split(
+        "def render_ts_diagram", 1
+    )[0]
+
+    assert "envgeo_user_data.add_uploaded_map_overlay(" in map_block
+    assert 'coloraxis="coloraxis"' not in map_block
+
+
 def test_quick_visualizer_marker_style_precedes_data_filtering():
     page_text = (
         ROOT / "pages" / "05_[Utils]_User_Data_Check_Quick_Visualizer.py"

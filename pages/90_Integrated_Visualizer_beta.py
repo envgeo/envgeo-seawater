@@ -461,11 +461,12 @@ def _can_use_current_colorbar(uploaded_style, uploaded_df, color_column):
 
     アップロードデータの点を、現在の数値カラーバーに接続できるか確認します。
     """
-    return (
-        uploaded_style.get("color_mode") == "Use current colorbar when possible"
-        and color_column in uploaded_df.columns
-        and pd.api.types.is_numeric_dtype(uploaded_df[color_column])
-    )
+    if (
+        uploaded_style.get("color_mode") != "Use current colorbar when possible"
+        or color_column not in uploaded_df.columns
+    ):
+        return False
+    return pd.to_numeric(uploaded_df[color_column], errors="coerce").notna().any()
 
 
 def _apply_shared_coloraxis_range(fig, reference_df, uploaded_df, color_column):
@@ -486,6 +487,36 @@ def _apply_shared_coloraxis_range(fig, reference_df, uploaded_df, color_column):
         return
 
     fig.update_coloraxes(cmin=float(values.min()), cmax=float(values.max()))
+
+
+def _shared_map_color_range(reference_df, uploaded_df, color_column):
+    """Return a non-degenerate numeric range shared by reference and uploads.
+
+    Plotly Mapbox traces do not reliably inherit a layout ``coloraxis`` in all
+    supported Plotly versions. The uploaded foreground trace therefore gets
+    its colourscale and range explicitly. A single-valued selection receives
+    a small range so it remains visible.
+
+    Plotly Mapbox traceは対応するPlotlyの組合せによってlayoutの
+    ``coloraxis``を確実に継承しない。そのためアップロード前景traceには
+    色尺度と範囲を明示的に渡す。値が一つだけの場合も見えるよう、少し幅を持たせる。
+    """
+    values = pd.concat(
+        [
+            _numeric_series(reference_df, color_column),
+            _numeric_series(uploaded_df, color_column),
+        ],
+        ignore_index=True,
+    ).dropna()
+    if values.empty:
+        return None
+
+    lower = float(values.min())
+    upper = float(values.max())
+    if lower == upper:
+        padding = max(abs(lower) * 0.01, 0.5)
+        return lower - padding, upper + padding
+    return lower, upper
 
 
 def _numeric_first_color_options(df, candidates):
@@ -680,49 +711,46 @@ def render_map(df, uploaded_df=None, uploaded_style=None):
             use_colorbar = _can_use_current_colorbar(
                 uploaded_style, uploaded_clean, color_column
             )
+            color_range = None
             if use_colorbar:
-                _apply_shared_coloraxis_range(fig, clean, uploaded_clean, color_column)
-            display_lat = uploaded_clean["Latitude_degN"] + uploaded_style["map_offset"]
-            display_lon = uploaded_clean["Longitude_degE"] + uploaded_style["map_offset"]
-            fig.add_trace(
-                go.Scattermapbox(
-                    lat=display_lat,
-                    lon=display_lon,
-                    mode="markers",
-                    name="Uploaded data outline",
-                    below="",
-                    marker=dict(
-                        size=uploaded_style["outline_map_size"],
-                        color="black",
-                        opacity=min(1.0, uploaded_style["opacity"] + 0.05),
-                    ),
-                    text=uploaded_clean.get("Station"),
-                    hoverinfo="skip",
-                    showlegend=False,
+                color_range = _shared_map_color_range(
+                    clean, uploaded_clean, color_column
                 )
-            )
-            fig.add_trace(
-                go.Scattermapbox(
-                    lat=display_lat,
-                    lon=display_lon,
-                    mode="markers",
-                    name="Uploaded data",
-                    below="",
-                    marker=dict(
-                        size=uploaded_style["map_size"],
-                        color=uploaded_clean[color_column] if use_colorbar else uploaded_style["color"],
-                        coloraxis="coloraxis" if use_colorbar else None,
-                        symbol=uploaded_style["symbol"],
-                        opacity=uploaded_style["opacity"],
-                    ),
-                    text=uploaded_clean.get("Station"),
-                    hovertemplate=(
-                        "Uploaded data<br>"
-                        "Lon=%{lon}<br>Lat=%{lat}<br>"
-                        "<extra></extra>"
-                    ),
-                    showlegend=True,
-                )
+                if color_range is not None:
+                    fig.update_coloraxes(cmin=color_range[0], cmax=color_range[1])
+
+            # Reuse the maintained upload-map renderer instead of relying on
+            # Scattermapbox ``coloraxis`` inheritance, which can render valid
+            # uploaded values black in some Plotly/Mapbox combinations.
+            # Scattermapboxの``coloraxis``継承では、Plotly/Mapboxの組合せに
+            # よって有効なアップロード値まで黒く描かれることがある。保守中の
+            # 共通アップロード地図rendererを使い、色尺度を前景traceへ明示する。
+            display_uploaded = uploaded_clean.copy()
+            display_uploaded["Latitude_degN"] += uploaded_style["map_offset"]
+            display_uploaded["Longitude_degE"] += uploaded_style["map_offset"]
+            overlay_style = {
+                "color_mode": uploaded_style["color_mode"],
+                "color": uploaded_style["color"],
+                "marker": uploaded_style["symbol"],
+                # The shared renderer derives a displayed map size from this
+                # value, so square the existing pixel-style control.
+                "size": uploaded_style["map_size"] ** 2,
+                "alpha": uploaded_style["opacity"],
+                "outline_color": "black",
+                "outline_width": uploaded_style["outline_width"],
+            }
+            fig, _uploaded_map_count = envgeo_user_data.add_uploaded_map_overlay(
+                fig,
+                display_uploaded,
+                overlay_style,
+                color_column=color_column if use_colorbar else None,
+                colorscale=(
+                    envgeo_utils.get_plotly_colormap(color_column, colormap_label)
+                    if use_colorbar and color_range is not None
+                    else None
+                ),
+                color_range=color_range,
+                show_nodata=True,
             )
 
     # Keep the Mapbox navigation controls available in the shared-filter tab.

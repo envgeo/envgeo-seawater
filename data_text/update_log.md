@@ -11,6 +11,11 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Restored mouse-wheel zoom and the Plotly navigation toolbar for the
   development-only Integrated Visualizer beta shared-filter map. This change
   is limited to the development page and is not part of the stable release.
+- Fixed the development-only Integrated Visualizer beta shared-filter map so
+  valid uploaded values receive the selected colourscale explicitly rather
+  than relying on a Plotly Mapbox colour-axis inheritance that could render
+  them black. Rows genuinely lacking the selected colour value keep the
+  configured fixed marker colour.
 - Fixed the upload-only Sampling Location Map so each uploaded row is drawn
   once with the configured foreground style. When the uploaded overlay shares
   the selected colour parameter, it owns the colourbar if no reference trace
