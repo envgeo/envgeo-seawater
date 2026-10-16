@@ -143,7 +143,12 @@ def test_integrated_beta_page_includes_upload_overlay_workflow():
     assert "Map marker offset" in page_text
     assert "Moves only the displayed uploaded markers" in page_text
     assert "Uploaded data outline" in page_text
-    assert 'below=""' in page_text
+    # The Map tab delegates its outlined foreground points to the maintained
+    # common renderer. It must not require the retired local Scattermapbox
+    # layering argument, which was replaced to avoid black color fallbacks.
+    # Mapタブの前景マーカーは共通rendererへ委譲する。黒色フォールバックを
+    # 避けるため廃止したローカルScattermapboxのlayering引数は要求しない。
+    assert "envgeo_user_data.add_uploaded_map_overlay(" in page_text
     assert "Fixed marker color" in page_text
     assert "_merge_reference_and_uploaded" in page_text
     assert "load_isotope_data_with_upload" in page_text
