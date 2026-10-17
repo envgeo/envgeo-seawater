@@ -153,6 +153,7 @@ The platform provides the following capabilities:
 - Depth profile visualization with gap-aware plotting for discrete sampling data  
 - Temperature–salinity (T–S) diagrams with approximate $\sigma_0$ reference contours
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
+- Consistent calculation and visualization of d-excess from paired $\delta^{18}$O and $\delta$D measurements, where available, across spatial, profile, and multi-dimensional views
 - Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
 - Integration of global datasets (~50,000 records), cited regional reference data, and the EnvGeo Dataset [ECS–Japan Sea] core collection (primary reference: Kodama et al. 2024)
 - Provenance-aware dataset and citation selection, transparent quality/exclusion reporting, and overlap screening with explicit criteria, strong/review candidate classes, downloadable audit evidence, and reversible display sensitivity screens
