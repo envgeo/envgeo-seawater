@@ -79,7 +79,7 @@ A key contribution is the integration of the regionally curated EnvGeo Dataset
 which provides a consistent analytical baseline for
 exploratory comparison across its sampled locations and periods.
 
-## State of the field
+# State of the field
 
 Oceanographic and geochemical datasets, particularly those including seawater stable isotopes (e.g., $\delta^{18}$O, $\delta$D), are increasingly available through global and regional databases such as the NASA GISS seawater isotope database and CoralHydro2k. However, these datasets are often distributed across heterogeneous formats and lack integrated tools for interactive exploration.
 
@@ -94,7 +94,7 @@ exploration. This specialization supports comparison of isotope and
 hydrographic variables across heterogeneous, cited seawater datasets without
 first assembling a workflow from general-purpose components.
 
-## Software design
+# Software design
 
 EnvGeo-Seawater is organized as a modular Python application with shared
 modules for asset resolution, data loading, filtering, and visualization, plus
@@ -121,7 +121,7 @@ values for individual observations. The Vertical Section Visualizer can use a
 project-derived, downsampled GEBCO 2025 Grid for bathymetric context
 [@gebco2025].
 
-## Research impact
+# Research impact
 
 Before the software received an archival DOI, EnvGeo-Seawater was used in the
 author's and collaborators' research workflows to select, explore, and
@@ -137,7 +137,7 @@ in four scientific conference presentations in Japan. For example, a 2024
 presentation introducing visualisation of seawater stable-isotope data around
 Japan and the online interactive database is publicly archived [@ishimura2024conference].
 
-## Future directions
+# Future directions
 
 The data model is designed to accommodate additional datasets after their
 sources, provenance, and redistribution status have been recorded. Reusable
@@ -195,7 +195,7 @@ isotope–hydrographic relationships. Detecting outliers, coordinate errors, mis
 values, or unexpected profiles while still at sea can inform remeasurement,
 additional sampling, and adjustments to the remaining observation plan.
 
-## AI Usage Disclosure
+# AI Usage Disclosure
 
 Development of this software, from version 1.3 onward, has made substantial use of AI
 coding assistants for code review, implementation drafting, refactoring, test design and
@@ -210,11 +210,11 @@ and takes full responsibility for the accuracy, originality, licensing, and ethi
 legal compliance of the software and this manuscript. AI tools are not authors or
 co-developers of this work.
 
-## Conflict of Interest
+# Conflict of Interest
 
 The author declares no conflicts of interest.
 
-## Acknowledgements
+# Acknowledgements
 
 This work was supported in part by JSPS KAKENHI Grant Number JP24H00523;
 the funder had no role in the software design, implementation, validation,
