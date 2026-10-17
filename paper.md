@@ -39,7 +39,9 @@ datasets.
 
 Seawater isotope measurements (e.g., $\delta^{18}$O, $\delta$D, and d-excess) are widely used in oceanography and paleoclimate research to investigate ocean circulation, freshwater fluxes, and climate processes. However, despite the availability of large public datasets, integrated and interactive analysis across multiple variables and datasets remains limited.
 
-Existing platforms primarily focus on data archiving and access, providing limited support for exploratory visualization and cross-dataset comparison. As a result, researchers typically rely on custom scripts and fragmented workflows to analyze relationships among isotopic and hydrographic variables.
+Although public datasets provide essential archival access, researchers often
+still assemble custom and fragmented workflows to explore relationships among
+isotopic and hydrographic variables across separately curated sources.
 
 EnvGeo-Seawater addresses this gap by providing a unified, interactive
 environment that integrates heterogeneous global datasets, cited regional
@@ -60,11 +62,9 @@ filter sidebar retains all records by default and offers reversible,
 opt-in sensitivity screens: a deterministic one-to-one subset whose recorded
 differences are compatible with inferred rounding precision, and a broader
 Strong-candidate screen that is explicitly not a confirmed de-duplication
-result. Current provisional Strong defaults are ≤0.1° for latitude and
-longitude, ≤5 m for depth, ≤0.1 for salinity, and ≤0.1‰ for $\delta^{18}$O;
-the broader Review defaults are ≤0.2°, ≤10 m, ≤0.2, and ≤0.2‰, respectively.
-These visible, adjustable values are screening criteria rather than universal
-measurement-error thresholds. This makes cross-dataset integration more
+result. The default thresholds are user-visible and adjustable; they are
+screening criteria rather than universal measurement-error thresholds. This
+makes cross-dataset integration more
 transparent while retaining the source-level context needed for scientific
 interpretation.
 
@@ -99,8 +99,8 @@ first assembling a workflow from general-purpose components.
 EnvGeo-Seawater is organized as a modular Python application with shared
 modules for asset resolution, data loading, filtering, and visualization, plus
 Streamlit page scripts for the interactive interface. These modules are
-reused within the application; the project does not currently claim a separate
-stable public API for programmatic analysis.
+reused within the application, while the interactive interface is the primary
+analysis route.
 
 The design supports the addition of new, source-documented datasets and future
 maintenance without changing the existing page-oriented workflow. Installed
@@ -162,7 +162,7 @@ The platform provides the following capabilities:
 
 # Implementation
 
-The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
+The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib [@hunter2007] for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
 
 The bundled data and visual assets occupy approximately 30 MB when unpacked.
 Local execution requires installation of the declared Python dependencies. The
