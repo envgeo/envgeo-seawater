@@ -201,11 +201,9 @@ additional sampling, and adjustments to the remaining observation plan.
 Development of this software, from version 1.3 onward, has made substantial use of AI
 coding assistants for code review, implementation drafting, refactoring, test design and
 authoring, bug investigation, and documentation. The tools used were OpenAI Codex and
-Anthropic Claude Code. The principal models were GPT-5.6 Terra through OpenAI Codex
-and Claude Sonnet 4.6 through Anthropic Claude Code. Other model variants were used
-occasionally during development, but their session-specific versions were not
-systematically retained. Portions of language editing in earlier drafts of this manuscript
-were also assisted by ChatGPT (OpenAI; model versions not systematically retained).
+Anthropic Claude Code (principal models: GPT-5.6 Terra and Claude Sonnet 4.6,
+respectively). Portions of language editing in earlier drafts of this manuscript were also
+assisted by ChatGPT (OpenAI).
 
 All AI-assisted output was reviewed, edited, and verified by the corresponding author
 before being adopted into the codebase, tests, documentation, or this manuscript. The
