@@ -10,6 +10,10 @@
 
 ## 現在の文書
 
+- `ROADMAP.md` / `ROADMAP_Japanese.md`（安定版repositoryのみ）
+  `seawater_map`で公開する簡潔な英日ロードマップ。詳細な
+  `TODO.md` / `TODO_Japanese.md`の計画記録は開発用repositoryだけに保持し、安定版には意図して含めない。
+
 - `version_update_checklist.md` / `version_update_checklist_Japanese.md`
   版メタデータ、データ来歴、文書、clone同期、検証、GitHub Release、Zenodo DOI更新を確認する再利用用チェックリスト。
 

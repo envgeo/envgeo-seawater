@@ -12,6 +12,11 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 
 ## Current Documents
 
+- `ROADMAP.md` / `ROADMAP_Japanese.md` (stable repository only)
+  Concise bilingual public roadmap for `seawater_map`. Detailed
+  `TODO.md` / `TODO_Japanese.md` planning records are kept only in development
+  repositories and are intentionally excluded from the stable release.
+
 - `version_update_checklist.md` / `version_update_checklist_Japanese.md`
   Reusable checklist for version metadata, data provenance, documentation,
   clone synchronization, validation, GitHub Release, and Zenodo DOI updates.
