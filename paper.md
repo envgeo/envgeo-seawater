@@ -13,7 +13,7 @@ authors:
 affiliations:
   - name: Graduate School of Human and Environmental Studies, Kyoto University, Japan
     index: 1
-date: 26 September 2026
+date: 17 October 2026
 bibliography: paper.bib
 ---
 
@@ -148,7 +148,7 @@ The data model is designed to accommodate additional datasets after their
 sources, provenance, and redistribution status have been recorded. Reusable
 visualization, asset-resolution, and distribution components may also support
 future related EnvGeo applications. These are future directions and are not
-part of the v1.3.4 public release scope.
+part of the v1.3.5 stable release scope.
 
 # Capabilities
 
@@ -172,17 +172,18 @@ The bundled application data and assets occupy less than 30 MB. Local execution
 requires installation of the declared Python dependencies. The package declares
 Python >=3.10; wheel builds and isolated installs are verified in continuous
 integration on Python 3.10 and 3.12, with Python 3.12 recommended for local
-installation. The v1.3.4 release
-artifact is prepared for package-index distribution: once published, users can
-install it with `pip install envgeo-seawater` and start the local application
+installation. The v1.3.5 release is published on PyPI: users can install it
+with `pip install envgeo-seawater` and start the local application
 with `envgeo-seawater`.
 
 # Availability
 
 The stable public source repository is
 https://github.com/envgeo/seawater_map. Version 1.3.5 was released on 17 October
-2026 and archived in Zenodo at https://doi.org/10.5281/zenodo.23428743. The
-all-versions concept DOI is https://doi.org/10.5281/zenodo.23117783.
+2026 (GitHub Release: https://github.com/envgeo/seawater_map/releases/tag/v1.3.5)
+and is distributed through PyPI at https://pypi.org/project/envgeo-seawater/1.3.5/.
+The version-specific archival record is https://doi.org/10.5281/zenodo.23428743;
+the all-versions concept DOI is https://doi.org/10.5281/zenodo.23117783.
 
 # Example Use Case
 
