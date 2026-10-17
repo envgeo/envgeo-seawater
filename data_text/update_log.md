@@ -2,7 +2,13 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## Unreleased — Custom Parameter Plot location map (2026-10-15)
+## v1.3.5 release candidate (2026-10-16)
+
+The entries below define the reviewed v1.3.5 candidate. CI and the wheel build
+have passed. GitHub Release publication and the version-specific Zenodo DOI are
+still pending; the archived v1.3.4 release remains the current public record.
+
+### Custom Parameter Plot location map (2026-10-15)
 
 - Repositioned the development-only Integrated Visualizer beta as a permanent
   development workspace for testing existing-page workflows with session-only
@@ -43,7 +49,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   when its parameter is no longer available. Duplicate selected parameter
   names are also handled safely in exported display tables.
 
-## Unreleased — Defer static map-projection selector (2026-10-13)
+### Defer static map-projection selector (2026-10-13)
 
 - Withdrew the experimental static Cartopy projection selector from the Mapping
   page after Streamlit Community Cloud became unstable during repeated global
@@ -51,7 +57,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   Projection choices will be reconsidered after a separate Cloud-safe design
   and reproducible resource testing are available.
 
-## Unreleased — Workflow positioning and local-use clarification (2026-10-10)
+### Workflow positioning and local-use clarification (2026-10-10)
 
 - Clarified the project positioning in the bilingual README, overview manuals,
   and paper draft. EnvGeo-Seawater complements general-purpose oceanographic
@@ -63,7 +69,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   EnvGeo-Seawater service. Online basemap tiles and external links remain
   network-dependent.
 
-## Unreleased — v1.3.5 overlap-audit scope alignment (2026-10-07)
+### Overlap-audit scope alignment (2026-10-07)
 
 - Confirmed the release scope of the overlap workflow: it provides read-only
   Strong/Review candidate screening, source-row inspection, audit exports, and
@@ -76,7 +82,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   and permanent exclusions remain outside the v1.3.5 workflow and will be
   considered only if a scientific use case requires them.
 
-## Unreleased — Overlap-audit refinement and user documentation (2026-10-06)
+### Overlap-audit refinement and user documentation (2026-10-06)
 
 - Grouped the two supporting pages in the Streamlit sidebar as **[Utils]**:
   User Data Check & Quick Visualizer and Data Overlap Check. Their page titles
@@ -102,7 +108,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Recorded a post-stabilization plan to split the growing shared utility
   module by responsibility without changing public application behavior.
 
-## Unreleased — CoralHydro2k citation-helper update (2026-10-06)
+### CoralHydro2k citation-helper update (2026-10-06)
 
 - Completed the project-added compact `reference` field for all 18,598
   CoralHydro2k records. The 3,258 previously blank labels were filled only
@@ -112,15 +118,15 @@ Detailed development log for recent EnvGeo-Seawater updates.
 - Versioned the edited source-preserving workbook as
   `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` and updated the application asset
   path, overlap-check catalogue, bilingual provenance records, and current
-  checksum record. Public-clone synchronization and release packaging remain
-  pending.
+  checksum record. The v02 workbook is synchronized with the current
+  development, test2, and stable release-candidate repositories.
 - Added the shared **Reference / Citation** sidebar filter above **Area /
   Transect**. All bundled seawater rows have a source-reference label.
   Browser-uploaded rows without an optional reference field receive the
   display-only fallback label `No reference recorded`, so they remain usable
   with the shared filter.
 
-## Unreleased — Cross-dataset overlap screening (2026-10-05)
+### Cross-dataset overlap screening (2026-10-05)
 
 - Recorded a read-only initial overlap screen for the bundled NASA GISS,
   PAGES CoralHydro2k, and Around Japan collections. It found 4,068 NASA--Coral
@@ -136,7 +142,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   and longitude differences, matching valid year/month, and explicit depth,
   salinity, and δ18O thresholds.
 
-## Unreleased — Python 3.13 conditional-support clarification (2026-10-10)
+### Python 3.13 conditional-support clarification (2026-10-10)
 
 - Recorded a Python 3.13 installation failure on an Apple Silicon M1 MacBook
   Air: the pinned `numpy==1.26.4` fell back to a source build, but no native C
@@ -148,7 +154,7 @@ Detailed development log for recent EnvGeo-Seawater updates.
   Python 3.13 is conditionally supported with Apple's Command Line Tools or an
   equivalent native build toolchain; Python 3.14 remains unsupported.
 
-## Unreleased — Installation documentation update (2026-10-04)
+### Installation documentation update (2026-10-04)
 
 - Added a bilingual **Cite** tab next to About in Home. It provides the fixed
   v1.3.4 software citation and explains that each dataset used in an analysis,

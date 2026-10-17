@@ -9,6 +9,13 @@ JOSS向けsoftware recordは、この作業コピーにtagを付けるのでは�
 
 ## 1. ローカル環境
 
+### v1.3.5 リリース候補（2026-10-16）
+
+- [x] 公開ページ範囲、v1.3.5のメタデータ、英日README・manualの表現、来歴記録、release draftを確認した。
+- [x] review済み候補について、Python 3.10 / 3.12のCI、repository-health確認、wheel buildが通過した。
+- [ ] review済みの`seawater_map` commitから、tag `v1.3.5` でGitHub Releaseを作成する。
+- [ ] 対応するZenodo archiveを確認し、固定版DOIをcitationとpaperのファイルへ記録する。
+
 ### Release candidate 1.3.4（2026-09-28）
 
 - [x] 最終試験にPython 3.12／Streamlit 1.63／Plotly 5.24環境を使用した。

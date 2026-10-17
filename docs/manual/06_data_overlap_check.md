@@ -62,7 +62,7 @@ should report the criteria used for a scientific result.
 ## Current bundled-data screening snapshot
 
 The following reproducible snapshot was calculated on **2026-10-07** with the
-pre-v1.3.5 development code (currently labelled v1.3.4), the bundled `11_AROUND_JAPAN_PUB_20260305.xlsx`,
+the v1.3.5 release candidate, the bundled `11_AROUND_JAPAN_PUB_20260305.xlsx`,
 `71_GLOBA_NASA_20260226.xlsx`, and
 `71_GLOBAL_Atwood_et_al_2026_v02.xlsx` workbooks, and the provisional default
 criteria listed above.

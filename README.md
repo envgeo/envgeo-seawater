@@ -9,7 +9,9 @@ EnvGeo-Seawater is an interactive platform for exploring seawater isotope and hy
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
-**Current stable release:** 1.3.5 (2026-10-16)
+**Release candidate:** 1.3.5 (2026-10-16) — GitHub Release and the
+version-specific Zenodo DOI are pending. The latest archived stable release is
+1.3.4 (2026-10-03).
 
 **An interactive platform for exploring seawater isotope and hydrographic data.**
 
@@ -105,7 +107,8 @@ Archive display of the original hand-written exploratory workflow used during de
 
 ### Public pages in the stable release
 
-Stable v1.3.5 includes Pages 03, 04, 05, 31, 32, 34, 35, 37, 53, and 80.
+The v1.3.5 release candidate includes Pages 03, 04, 05, 31, 32, 34, 35, 37,
+53, and 80.
 Pages 90, 91, and 99 are for development or local diagnostics and are excluded
 from the stable distribution package and public Streamlit sidebar.
 
@@ -276,7 +279,8 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-Python 3.14 is not supported by the fixed dependencies in v1.3.5.
+Python 3.14 is not supported by the fixed dependencies in the v1.3.5 release
+candidate.
 
 ---
 

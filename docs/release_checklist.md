@@ -11,6 +11,17 @@ copy.
 
 ## 1. Local Environment
 
+### Release candidate 1.3.5 (2026-10-16)
+
+- [x] Public-page scope, v1.3.5 metadata, bilingual README/manual wording,
+  provenance records, and release drafts reviewed.
+- [x] Python 3.10 and 3.12 CI, repository-health checks, and wheel build
+  passed for the reviewed candidate.
+- [ ] Create the GitHub Release from the reviewed `seawater_map` commit with
+  tag `v1.3.5`.
+- [ ] Confirm the matching Zenodo archive and record its version-specific DOI
+  in the citation and paper files.
+
 ### Release candidate 1.3.4 (2026-09-28)
 
 - [x] Python 3.12 / Streamlit 1.63 / Plotly 5.24 environment used for the
