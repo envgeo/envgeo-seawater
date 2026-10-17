@@ -243,6 +243,19 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
+To update an existing installation to the newest release, run:
+
+```bash
+python -m pip install --upgrade envgeo-seawater
+```
+
+For reproducible research, pin the release used for an analysis (for example,
+the current release):
+
+```bash
+python -m pip install "envgeo-seawater==1.3.5"
+```
+
 ### 💡 Python 3.13 and macOS setup
 
 Use the standard pip command above first; **Python 3.12 is recommended**.

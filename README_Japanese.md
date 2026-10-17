@@ -203,6 +203,18 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
+既存の導入環境を最新版へ更新する場合は、次を実行します。
+
+```bash
+python -m pip install --upgrade envgeo-seawater
+```
+
+研究の再現性のため、解析に用いた版を固定する場合は、例えば現行版では次のように指定します。
+
+```bash
+python -m pip install "envgeo-seawater==1.3.5"
+```
+
 ### Python 3.13とmacOSの導入
 
 まず上記の標準pipコマンドを試してください。**Python 3.12を推奨**します。通常、pipはコンパイラを必要としない完成済みのパッケージファイル（wheel）を導入します。しかしPython 3.13では、固定しているNumPyまたはPyProjに対応するwheelが常に利用できるとは限りません。その場合、pipはソースからのビルドを試みます。これは数分かかることがあり、ネイティブのビルド環境を必要とします。そのため、Python 3.13はすべてのPCで標準の`pip install`だけによる導入を保証するものではありません。この条件はM1 Mac固有でも、Cartopy固有でもありません。
