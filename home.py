@@ -287,7 +287,9 @@ def main() -> None:
     st.write(":blue[Seawater d18O, dD, temperature, salinity, d-excess, and seasonal to interannual variations]")
     st.markdown(
         f"Version {envgeo_utils.APP_VERSION_LABEL} · "
-        "[DOI: 10.5281/zenodo.23117784](https://doi.org/10.5281/zenodo.23117784)"
+        "[Version DOI: 10.5281/zenodo.23428743](https://doi.org/10.5281/zenodo.23428743)"
+        " · "
+        "[All versions: 10.5281/zenodo.23117783](https://doi.org/10.5281/zenodo.23117783)"
     )
     render_tab_style()
     envgeo_utils.render_card_tab_style()

@@ -64,7 +64,7 @@ Releaseと対応するZenodo archiveは<https://doi.org/10.5281/zenodo.23428743>
 ### CoralHydro2k引用補助メタデータの更新（2026-10-06）
 
 - CoralHydro2kの全18,598行について、プロジェクト側の短縮`reference`を完成させた。空欄だった3,258行は、保持されていた`Dataset citation`だけを根拠に、7つの確認済み出典対応から補完した。観測値、完全な出典、来歴列は変更していない。
-- 出典を保持した編集版workbookを`71_GLOBAL_Atwood_et_al_2026_v02.xlsx`として版管理し、アプリのasset path、重複確認catalogue、英日来歴文書、現行checksum記録を更新した。v02 workbookは現行の開発、test2、安定版リリース候補repositoryへ同期済みである。
+- 出典を保持した編集版workbookを`71_GLOBAL_Atwood_et_al_2026_v02.xlsx`として版管理し、アプリのasset path、重複確認catalogue、英日来歴文書、現行checksum記録を更新した。v02 workbookは現行の開発、test2、安定版repositoryへ同期済みである。
 - 共通サイドバーに、**Area / Transect**の上で使う**Reference / Citation**フィルターを追加した。同梱する海水データはすべて出典referenceを持つ。ブラウザのUploaded dataでreference列がない場合は、表示専用の`No reference recorded`を補い、共通フィルターでも従来どおり利用できるようにした。
 
 ### Python 3.13の条件付きサポート明確化（2026-10-10）
