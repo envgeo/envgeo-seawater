@@ -150,6 +150,7 @@ part of the v1.3.5 stable release scope.
 The platform provides the following capabilities:
 
 - Interactive spatial mapping with adaptive zoom  
+- Shared interactive filtering by geographic extent, sampling year and month, depth, dataset, and citation
 - Depth profile visualization with gap-aware plotting for discrete sampling data  
 - Temperature–salinity (T–S) diagrams with approximate $\sigma_0$ reference contours
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
