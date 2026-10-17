@@ -43,14 +43,15 @@ Code" are the tool names already used consistently in-repo — e.g. the
 assistance from Codex") and `update_log.md`'s "Claude review" entries.
 These were treated as confirmed, not inferred.
 
-**Model/version specificity — what is confirmed vs. not:** the public
-repository does not consistently retain per-session model identifiers. This
-historical note therefore does not enumerate model versions or reproduce
-private development-session records. The public disclosure names tools and
-scope without guessing unrecorded details; any future paper revision must be
-based on author-confirmed records only.
+**Model/version specificity — what is confirmed vs. not:** author-controlled
+records confirm the principal models as GPT-5.6 Terra through OpenAI Codex and
+Claude Sonnet 4.6 through Anthropic Claude Code; these are disclosed in
+`paper.md`. The public repository does not consistently retain per-session
+identifiers for occasionally used model variants or for ChatGPT language
+editing. Those versions are therefore explicitly described as not
+systematically retained, rather than guessed.
 
-**Pre-JOSS-submission TODO:** before submitting/updating the JOSS paper,
+**Pre-JOSS-submission TODO:** before submitting or updating the JOSS paper,
 reconfirm the AI-use disclosure against author-controlled records and update
 `paper.md` only where a detail is confirmed. Do not backfill guessed version
 numbers into this or any other file.
