@@ -11,16 +11,16 @@ copy.
 
 ## 1. Local Environment
 
-### Release candidate 1.3.5 (2026-10-16)
+### Version 1.3.5 (2026-10-17)
 
 - [x] Public-page scope, v1.3.5 metadata, bilingual README/manual wording,
   provenance records, and release drafts reviewed.
 - [x] Python 3.10 and 3.12 CI, repository-health checks, and wheel build
   passed for the reviewed candidate.
-- [ ] Create the GitHub Release from the reviewed `seawater_map` commit with
-  tag `v1.3.5`.
-- [ ] Confirm the matching Zenodo archive and record its version-specific DOI
-  in the citation and paper files.
+- [x] Created the GitHub Release from reviewed `seawater_map` commit
+  `193346d012e9bbae5d2e8e5f283ac4b4d512eeda` with tag `v1.3.5`.
+- [x] Confirmed the matching Zenodo archive and recorded version DOI
+  <https://doi.org/10.5281/zenodo.23428743> in citation and paper files.
 
 ### Release candidate 1.3.4 (2026-09-28)
 

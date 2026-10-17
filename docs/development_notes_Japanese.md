@@ -4,7 +4,8 @@
 
 ## 現在の区切り
 
-- 1.3.5は現在のリリース候補であり、最終wheel確認はCI上のPython 3.10と3.12で通過している。
+- 1.3.5は現在の安定版であり、最終wheel確認はCI上のPython 3.10と3.12で通過している。固定版archiveは
+  <https://doi.org/10.5281/zenodo.23428743>である。
 - Plotly 5.24を検証済み描画基準として維持する。文書化した試験基準は、Python 3.10ではStreamlit 1.42、Python 3.12ではStreamlit 1.63である。
 - ページ05 **User Data Check & Quick Visualizer** は、公開するアップロード起点の品質確認・簡易可視化ページ。ページ90は開発履歴として残すが、安定版アプリ、公開ドキュメントサイト、JOSS投稿、Zenodo archiveから除外する。
 

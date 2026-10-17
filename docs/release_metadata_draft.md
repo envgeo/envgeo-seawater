@@ -2,10 +2,7 @@
 
 [日本語版](release_metadata_draft_Japanese.md)
 
-This is a transfer-ready draft for the final GitHub Release and Zenodo record.
-It is **not** a release record: the tag date, clean-build wheel checksum, and
-Zenodo version DOI must be filled only after the reviewed stable commit has
-been tagged and archived.
+This is a record of the final GitHub Release and Zenodo archive for v1.3.5.
 
 ## Core metadata
 
@@ -19,11 +16,11 @@ been tagged and archived.
 | Affiliation | Graduate School of Human and Environmental Studies, Kyoto University, Japan |
 | License | MIT |
 | Source repository | <https://github.com/envgeo/seawater_map> |
-| Release date | 2026-10-16 |
-| Release commit | To be recorded from the final stable commit |
-| Version DOI | To be assigned after Zenodo archives `v1.3.5` |
+| Release date | 2026-10-17 |
+| Release commit | `193346d012e9bbae5d2e8e5f283ac4b4d512eeda` |
+| Version DOI | <https://doi.org/10.5281/zenodo.23428743> |
 | Concept DOI (all versions) | <https://doi.org/10.5281/zenodo.23117783> |
-| Zenodo record | To be assigned after archival |
+| Zenodo record | <https://zenodo.org/records/23428743> |
 
 ## Short description
 

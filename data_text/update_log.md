@@ -2,11 +2,11 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
-## v1.3.5 release candidate (2026-10-16)
+## v1.3.5 (2026-10-17)
 
-The entries below define the reviewed v1.3.5 candidate. CI and the wheel build
-have passed. GitHub Release publication and the version-specific Zenodo DOI are
-still pending; the archived v1.3.4 release remains the current public record.
+The entries below define stable v1.3.5. CI and the wheel build passed; the
+GitHub Release and matching Zenodo archive are public at
+<https://doi.org/10.5281/zenodo.23428743>.
 
 ### Custom Parameter Plot location map (2026-10-15)
 

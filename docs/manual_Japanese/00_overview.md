@@ -23,7 +23,7 @@ python -m pip install envgeo-seawater
 envgeo-seawater
 ```
 
-**Python 3.12を推奨**します。Python 3.13は、どのプラットフォームでも条件付きサポートです。固定しているNumPyまたはPyProjに対応する完成済みパッケージ（wheel）が利用できない場合、pipはソースからビルドを試みます。このビルドには数分かかることがあり、ネイティブのビルド環境が必要です。この条件はM1 Mac固有でも、Cartopy固有でもありません。macOSでPython 3.13を使う場合は、AppleのCommand Line Toolsを導入してから再試行してください。導入に失敗した場合は、[安定版README](https://github.com/envgeo/seawater_map/blob/main/README_Japanese.md)にあるPython 3.12のConda fallbackを使ってください。Python 3.14はv1.3.5リリース候補で固定している依存関係では未対応です。
+**Python 3.12を推奨**します。Python 3.13は、どのプラットフォームでも条件付きサポートです。固定しているNumPyまたはPyProjに対応する完成済みパッケージ（wheel）が利用できない場合、pipはソースからビルドを試みます。このビルドには数分かかることがあり、ネイティブのビルド環境が必要です。この条件はM1 Mac固有でも、Cartopy固有でもありません。macOSでPython 3.13を使う場合は、AppleのCommand Line Toolsを導入してから再試行してください。導入に失敗した場合は、[安定版README](https://github.com/envgeo/seawater_map/blob/main/README_Japanese.md)にあるPython 3.12のConda fallbackを使ってください。Python 3.14はv1.3.5で固定している依存関係では未対応です。
 
 ## ローカル利用とオンライン機能
 

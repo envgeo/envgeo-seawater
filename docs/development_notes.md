@@ -6,8 +6,9 @@ use the release checklist, update logs, and current versioned documentation.
 
 ## Current Boundary
 
-- Version 1.3.5 is the current release candidate. Its final wheel checks pass
-  in CI on Python 3.10 and 3.12.
+- Version 1.3.5 is the current stable release. Its final wheel checks passed
+  in CI on Python 3.10 and 3.12; its version archive is
+  <https://doi.org/10.5281/zenodo.23428743>.
 - Plotly 5.24 remains the verified plotting baseline. The documented test
   baselines are Streamlit 1.42 on Python 3.10 and Streamlit 1.63 on Python 3.12.
 - Page 05, **User Data Check & Quick Visualizer**, is the public upload-first
