@@ -133,7 +133,9 @@ reconstruction [@kuroki2025], and early-life Japanese jack mackerel movement
 [@sakamoto2026]. The resulting publications cite the underlying Kodama et al.
 (2024) dataset paper rather than EnvGeo-Seawater; they are evidence of
 workflow use, not direct software citations. The platform has also been used
-in scientific conference presentations in Japan.
+in four scientific conference presentations in Japan. For example, a 2024
+presentation introducing visualisation of seawater stable-isotope data around
+Japan and the online interactive database is publicly archived [@ishimura2024conference].
 
 ## Future directions
 
@@ -153,8 +155,9 @@ The platform provides the following capabilities:
 - Cross-variable analysis (e.g., salinity–$\delta^{18}$O relationships with regression)  
 - Multi-dimensional visualization (3D/4D exploration of spatial–temporal structures)  
 - Integration of global datasets (~50,000 records), cited regional reference data, and the EnvGeo Dataset [ECS–Japan Sea] core collection (primary reference: Kodama et al. 2024)
-- Provenance-aware overlap screening with explicit criteria, strong/review candidate classes, downloadable audit evidence, and reversible display sensitivity screens
-- User data upload for direct comparison with reference datasets  
+- Provenance-aware dataset and citation selection, transparent quality/exclusion reporting, and overlap screening with explicit criteria, strong/review candidate classes, downloadable audit evidence, and reversible display sensitivity screens
+- Session-only user-data upload, quality checking, and direct comparison with reference datasets
+- Optional local-coastline map fallback for offline or degraded-network use
 - Export of publication-quality figures  
 
 # Implementation
@@ -180,7 +183,7 @@ the all-versions concept DOI is https://doi.org/10.5281/zenodo.23117783.
 
 # Example Use Case
 
-EnvGeo-Seawater supports exploratory analysis across spatial and temporal scales, including visualization of global $\delta^{18}$O distributions, salinity–isotope relationships, and vertical structures.
+EnvGeo-Seawater supports exploratory analysis in research and education settings across spatial and temporal scales, including visualization of global $\delta^{18}$O distributions, salinity–isotope relationships, and vertical structures.
 
 The platform also enables direct comparison between user-provided datasets and curated reference datasets within a unified analytical framework.
 
