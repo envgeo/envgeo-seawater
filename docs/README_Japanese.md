@@ -10,6 +10,9 @@
 
 ## 現在の文書
 
+- `version_update_checklist.md` / `version_update_checklist_Japanese.md`
+  版メタデータ、データ来歴、文書、clone同期、検証、GitHub Release、Zenodo DOI更新を確認する再利用用チェックリスト。
+
 - `release_checklist.md` / `release_checklist_Japanese.md`
   ローカル試験、Streamlit deployment、GitHub Release準備、Zenodo／DOI archiveの確認項目。
 

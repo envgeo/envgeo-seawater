@@ -4,7 +4,7 @@
 > but is not part of the separate stable-release repository, the public
 > documentation website, JOSS scope, or the Zenodo archive.
 
-## Current release position (v1.3.4)
+## Current release position (v1.3.5 release candidate)
 
 Page 05 is the public upload-first quality-review and quick-visualisation
 workflow. Supported specialist pages provide their own documented upload and
@@ -13,7 +13,7 @@ handoff between pages or a future `envgeo4d` package. Current public behaviour
 is described by the user manuals, `code_guide.md`, and `release_checklist.md`.
 
 Decision date: 2026-09-20  
-Last updated: 2026-09-22
+Last updated: 2026-10-16
 
 ## Historical implementation update
 

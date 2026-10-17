@@ -38,7 +38,8 @@ minutes and needs a native build toolchain. This is not specific to M1 Macs or
 to Cartopy. On macOS, install Apple's Command Line Tools before retrying
 Python 3.13; otherwise, use the Python 3.12 Conda fallback in the
 [stable README](https://github.com/envgeo/seawater_map/blob/main/README.md).
-Python 3.14 is not supported by the fixed dependencies in v1.3.4.
+Python 3.14 is not supported by the fixed dependencies in the v1.3.5 release
+candidate.
 
 ## Local Use And Online Services
 

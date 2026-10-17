@@ -5,11 +5,11 @@ title: EnvGeo-Seawater User Guide
 
 # EnvGeo-Seawater User Guide
 
-**Version 1.3.4** · Interactive seawater isotope and hydrographic data exploration
+**Version 1.3.5 release candidate** · Interactive seawater isotope and hydrographic data exploration
 
 [日本語で読む](index_Japanese.html) · [Source repository](https://github.com/envgeo/seawater_map)
 
-EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic data, including regional and global reference datasets, alongside their own uploaded observations. This guide documents the supported stable workflows.
+EnvGeo-Seawater helps users explore curated seawater isotope and hydrographic data, including regional and global reference datasets, alongside their own uploaded observations. This guide documents the reviewed v1.3.5 candidate workflows. GitHub Release publication and the version-specific Zenodo DOI remain pending.
 
 > The application is intended for interactive exploration and quality checking. For analysis, figures, publications, or presentations, cite both EnvGeo-Seawater and the original data providers used.
 
@@ -90,4 +90,4 @@ users examine the geographic context of a selected water-mass subset.
 
 ## Scope of this website
 
-This website covers the ten supported stable application pages. Historical development records and excluded experimental pages are not user workflows and are not presented as part of the stable interface.
+This website covers the ten application pages in the reviewed v1.3.5 release candidate. Historical development records and excluded experimental pages are not user workflows and are not presented as part of the stable interface.

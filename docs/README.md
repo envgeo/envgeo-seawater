@@ -12,6 +12,10 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 
 ## Current Documents
 
+- `version_update_checklist.md` / `version_update_checklist_Japanese.md`
+  Reusable checklist for version metadata, data provenance, documentation,
+  clone synchronization, validation, GitHub Release, and Zenodo DOI updates.
+
 - `release_checklist.md` / `release_checklist_Japanese.md`
   Checklist for local testing, Streamlit deployment, GitHub release preparation, and Zenodo/DOI archiving.
 
