@@ -169,7 +169,7 @@ Local execution requires installation of the declared Python dependencies. The
 package declares Python >=3.10; wheel builds and isolated installs are verified
 in continuous integration on Python 3.10 and 3.12, with Python 3.12
 recommended for local installation. The v1.3.5 release is published on PyPI:
-users can install it with `pip install envgeo-seawater` and start the local
+users can install it with `python -m pip install envgeo-seawater` and start the local
 application with `envgeo-seawater`.
 
 # Availability
