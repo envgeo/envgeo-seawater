@@ -212,7 +212,7 @@ python -m pip install --upgrade envgeo-seawater
 研究の再現性のため、解析に用いた版を固定する場合は、例えば現行版では次のように指定します。
 
 ```bash
-python -m pip install "envgeo-seawater==1.3.5"
+python -m pip install envgeo-seawater==1.3.5
 ```
 
 ### Python 3.13とmacOSの導入

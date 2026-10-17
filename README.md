@@ -253,7 +253,7 @@ For reproducible research, pin the release used for an analysis (for example,
 the current release):
 
 ```bash
-python -m pip install "envgeo-seawater==1.3.5"
+python -m pip install envgeo-seawater==1.3.5
 ```
 
 ### 💡 Python 3.13 and macOS setup
