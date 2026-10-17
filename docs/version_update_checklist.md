@@ -60,6 +60,10 @@ Zenodo version DOI from an older release.
   not publish them.
 - [ ] Preserve documented clone-specific differences, especially test-only
   assets and the stable repository's exclusion of development pages.
+- [ ] Keep detailed `TODO.md` / `TODO_Japanese.md` records in development
+  repositories only. For `seawater_map`, synchronize the concise bilingual
+  `ROADMAP.md` / `ROADMAP_Japanese.md` instead, and confirm detailed ToDo files
+  are not staged for the stable release.
 
 ## 6. Verify the candidate
 

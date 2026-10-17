@@ -181,6 +181,15 @@ pytest
 
 ## 12. Package indexでの公開（PyPI）
 
+### v1.3.5の公開記録（2026-10-17）
+
+- [x] review済みのv1.3.5 wheelとsource distributionをTestPyPIへ公開し、
+      project pageを確認した。
+- [x] 同じreview済みv1.3.5 distributionをPyPIの`envgeo-seawater`として公開し、
+      `pip show envgeo-seawater`でversion 1.3.5を確認した。
+
+### 将来のReleaseで再利用する確認項目
+
 - [ ] 想定した最終distribution artifactをbuildし、`twine check`を実行する。
 - [ ] TestPyPI project pageでREADMEの表示を確認する。PyPI upload前に、repository内では
       有効でもpackage index上では切れる相対link・画像参照を、必要に応じて永続的な
@@ -194,7 +203,7 @@ pytest
       Trusted Publishingまたは安全な手動uploadを使用し、PyPI tokenをcommitしない。
 - [ ] 新しいmacOS environmentで`pip install envgeo-seawater`と起動確認を再現する。
 - [ ] conda-forge recipe/feedstockは有用な後続改善とする。ただしPyPI経路を確認できれば、
-      v1.3.4とJOSS再投稿のblockerとはしない。
+      Releaseのblockerとはしない。
 
 ## 13. Zenodo／DOI準備
 
@@ -210,7 +219,10 @@ pytest
 
 ## 14. JOSSを見据えた次作業
 
-- [ ] 再投稿前に別途`docs/joss_checklist.md`を準備する。
+- [x] v1.3.5のJOSS原稿、文献表、固定版DOI、software citation、Release記録を準備した。
+      これらは`paper.md`、`paper.bib`、`CITATION.cff`、本checklistで管理する。
+- [ ] 再投稿前に、その時点のJOSS author guidanceを確認し、最終投稿確認を記録する。
+      別のchecklist fileは任意とする。
 - [ ] pytest coverageが形式だけでなく意味のあるものか確認する。
 - [ ] reviewerに十分な例と利用者文書があることを確認する。
 - [ ] clean environmentでinstallation instructionsを再現できることを確認する。

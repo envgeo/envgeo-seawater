@@ -8,6 +8,9 @@
 チェックリストです。これは内容・可読性の確認用であり、build、インストール、CI、Releaseの実行手順は
 `release_checklist.md`で管理します。
 
+**記録範囲:** これはv1.3.4の公開コンテンツ確認を記録した履歴資料です。この確認時点の根拠として保持し、
+現行v1.3.5のReleaseおよびJOSS投稿準備は`release_checklist.md`、`paper.md`、`CITATION.cff`を参照します。
+
 - `[x]` この確認で内容レビュー済み
 - `[ ]` この確認では未着手
 - 「安定版のみ」は`seawater_map`、「開発版のみ」は正規作業フォルダおよび／または
@@ -87,7 +90,7 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
 ## 3. テスト、ツール、パッケージ設定
 
 - [x] `test/conftest.py` と `test/README.md` / `test/README_Japanese.md` — importパスの理由、テスト・CIの範囲を現行化し、英日で確認済み。
-- [x] `test_basic.py`と`test_data_integrity.py` — 重複していたパス設定を`conftest.py`へ集約し、現行v1.3.4の版情報と公開データの完全性検査を確認済み（8 passed）。
+- [x] `test_basic.py`と`test_data_integrity.py` — 重複していたパス設定を`conftest.py`へ集約し、当時のv1.3.4の版情報と公開データの完全性検査を確認済み（8 passed）。
 - [x] `test_envgeo_assets.py`と`test_envgeo_user_data.py` — 重複していたパス設定を集約し、英日で役割を明確化した。資産パスの安全性とセッション内アップロードを確認済み（29 passed）。
 - [x] `test_envgeo_utils.py` — 重複したパス設定と未使用importを除去し、英日で対象範囲を明確化した。共通のデータ、地図、アップロード、海岸線、書出しの回帰テストを確認済み（55 passed）。
 - [x] `test_natural_earth_land.py`と`test_offline_map.py` — 同梱陸域資産、ダウンロードなしの縮退表示、オフライン地図の挙動を英日で明確化した。Cartopy未導入時はCartopy必須部分だけskipし、残りを確認済み（67 passed、10 skipped）。
@@ -113,7 +116,7 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
 
 - [x] `README.md` / `README_Japanese.md` — 安定版ページ範囲、約50,000件の引用付きデータ、
   ユーザーデータ境界、英日公開文言、簡潔なデータ・ソフトウェア・地理空間謝辞を確認済み。
-- [x] `TODO.md` / `TODO_Japanese.md` — 現在のv1.3.4 Release作業とRelease後の開発を分離し、
+- [x] `TODO.md` / `TODO_Japanese.md` — 当時のv1.3.4 Release作業とRelease後の開発を分離し、
   旧レビュー／JOSS記録を履歴として明示した。EnvGeo Data計画を保持し、古い版を現行とする表現を除去した。
 - [x] `local_data/README.md` / `local_data/README_Japanese.md` — データ行0件の
   公開sample、外部パス指定、セッション限定ブラウザアップロード、private dataを公開しない
@@ -122,7 +125,7 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
   `main_references.md`、`other_references.md`、`NASA_references.md`、
   `CoralHydro2_references.md` — Home本文、英日案内、引用付き出典表示、約50,000件の範囲、
   ユーザーデータ境界を確認済み。
-- [x] `data_text/update_log.md` / `update_log_Japanese.md` — 現行v1.3.4 Release
+- [x] `data_text/update_log.md` / `update_log_Japanese.md` — 当時のv1.3.4 Release
   candidateの簡潔な要約を追加し、過去の作業を履歴として明示した。英日対応も確認済み。
 
 ## 5. 利用者マニュアル
@@ -162,18 +165,18 @@ token・内部会話本文がないこと、共通項目では正規作業フォ
   残る確認境界を英日で確認済み。
 - [x] `external_dataset_workbook_notes*` — NASA GISSとCoralHydro2kについて、元データ対応記録、現行同梱workbook構造、引用、および非観測値変換の境界を英日で確認済み。
 - [x] `geospatial_assets*` — 現行wheelのasset範囲、Natural EarthとGEBCOの境界、正規／安定版assetの一致、派生海岸線CSVのsource version記録という残課題を英日で確認済み。
-- [x] `sprint3_distribution_design_and_acceptance*` — 現行1.3.4、Python 3.10／3.12 CI、開発版の12ページ範囲、手動QA境界、Release承認ではない状態を英日で確認済み。
+- [x] `sprint3_distribution_design_and_acceptance*` — 当時の1.3.4、Python 3.10／3.12 CI、開発版の12ページ範囲、手動QA境界、Release承認ではない状態を英日で確認済み。
 - [x] `distribution_foundation_audit_and_plan*` / `wheel_proof_report*` —
-  Sprint 2の監査・実証証跡、現行1.3.4検証との区別、英日リンクを確認済み。
-- [x] `offline_operation_log*` — v1.3.3の履歴実装メモを現行v1.3.4のrelease根拠から
+  Sprint 2の監査・実証証跡、当時の1.3.4検証との区別、英日リンクを確認済み。
+- [x] `offline_operation_log*` — v1.3.3の履歴実装メモを当時のv1.3.4のrelease根拠から
   区別し、オフライン縮退、HTML出力、タイル提供元の再確認境界を確認済み。
-- [x] `streamlit_migration*` — 履歴上の検証結果と将来の移行作業を、現行v1.3.4の
+- [x] `streamlit_migration*` — 履歴上の検証結果と将来の移行作業を、当時のv1.3.4の
   Python 3.10/3.12 release根拠から区別済み。
 - [x] `ts_density_contour_review_and_plan*` — v1.3.4の近似σ0透明化作業と、将来の
   SA–CT／TEOS-10開発を区別済み。
-- [x] `integrated_visualizer_strategy*` — Page 90移行履歴、現行v1.3.4の公開範囲、保留した
+- [x] `integrated_visualizer_strategy*` — Page 90移行履歴、当時のv1.3.4の公開範囲、保留した
   共通コア構想を明確に分離済み。
-- [x] `development_notes*`：履歴記録として残し、現行v1.3.4の公開状態、完了したパッケージ化、
+- [x] `development_notes*`：履歴記録として残し、当時のv1.3.4の公開状態、完了したパッケージ化、
   Page 90の除外、保留中の共有コア構想を明記済み。
 - [x] `paper.md`／`paper.bib` — 正本の原稿・文献表を安定版repositoryと同期し、v1.3.4 Release candidateの
   状態、repository URL、引用、AI開示、近似σ0の表現、DOIを未取得として明記する表現を確認済み。旧

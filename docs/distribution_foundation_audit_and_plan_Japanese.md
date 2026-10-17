@@ -7,7 +7,7 @@
 **Sprint 2A方針確定:** 2026-09-25
 
 **進捗:** Python 3.12でローカルSprint 2B〜2C実証に合格した。詳細は
-`wheel_proof_report_Japanese.md`を参照。この知見をもとにSprint 3の構成を実装した。現行1.3.4の配布・CI検証記録は[`sprint3_distribution_design_and_acceptance_Japanese.md`](sprint3_distribution_design_and_acceptance_Japanese.md)であり、正式Releaseの承認は別途行う。
+`wheel_proof_report_Japanese.md`を参照。この知見をもとにSprint 3の構成を実装した。1.3.4の配布・CI検証記録は[`sprint3_distribution_design_and_acceptance_Japanese.md`](sprint3_distribution_design_and_acceptance_Japanese.md)に残し、現行v1.3.5のRelease検証記録は[`release_checklist_Japanese.md`](release_checklist_Japanese.md)を参照する。正式Releaseの承認は別途行う。
 
 ## 結論
 

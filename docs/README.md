@@ -49,7 +49,7 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 
 - `sprint3_distribution_design_and_acceptance.md` /
   `sprint3_distribution_design_and_acceptance_Japanese.md`
-  Current distribution design and verification record for the 1.3.4
+  Historical distribution design and verification record for the 1.3.4
   development/pre-release repository; “Sprint 3” is explained in the document.
 
 - `distribution_foundation_audit_and_plan.md` /
@@ -61,7 +61,7 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 - `wheel_proof_report.md` / `wheel_proof_report_Japanese.md`
   Historical Sprint 2B–2C local wheel build/install evidence, acceptance
   results, limitations, and deferred production-package decisions. The current
-  1.3.4 verification record is `sprint3_distribution_design_and_acceptance*.md`.
+  v1.3.5 release verification record is `release_checklist*.md`.
 
 - `provenance_inventory.md` / `provenance_inventory_Japanese.md`
   Working bilingual inventory of bundled assets and data, their known source
@@ -86,7 +86,8 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
   the content source for the published static documentation website and may also
   be reused for laboratory-web guidance.
 
-## Planned Documents
+## JOSS Readiness
 
-- `joss_checklist.md`  
-  Checklist for future JOSS resubmission, including tests, documentation, examples, citation, license, and archival DOI.
+The current JOSS materials are `paper.md`, `paper.bib`, `CITATION.cff`, and
+`release_checklist*.md`. A separate JOSS checklist may be added later if it
+becomes useful, but is not required for the current submission-ready record.

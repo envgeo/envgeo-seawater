@@ -5,8 +5,8 @@
 ## Status
 
 This is a historical implementation record, updated to distinguish the
-offline-map work introduced during v1.3.3 development from the current v1.3.4
-release candidate. It is not the final release acceptance record; use
+offline-map work introduced during v1.3.3 development from the current v1.3.5
+stable release. It is not the final release acceptance record; use
 `release_checklist.md` and `testing.md` for current verification.
 
 ## Overview
@@ -14,7 +14,7 @@ release candidate. It is not the final release acceptance record; use
 This document records the design decisions and implementation details for the
 offline / degraded-network operation of the Plotly interactive maps in
 **EnvGeo-Seawater**. The original implementation notes were written for v1.3.3;
-the described map modes and local-coastline fallback remain part of v1.3.4.
+the described map modes and local-coastline fallback remain part of v1.3.5.
 
 ---
 

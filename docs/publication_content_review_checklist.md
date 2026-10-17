@@ -9,6 +9,10 @@ release, GitHub Release, Zenodo archive, or JOSS submission. It is a content
 and readability checklist; build, installation, CI, and release actions remain
 in `release_checklist.md`.
 
+**Record scope:** historical v1.3.4 public-content review. It is retained as
+evidence of that review pass; use `release_checklist.md`, `paper.md`, and
+`CITATION.cff` for the current v1.3.5 release and JOSS-ready state.
+
 - `[x]` content review completed for this file or group
 - `[ ]` not yet reviewed in this pass
 - “Stable only” means `seawater_map`; “development only” means the canonical
@@ -99,7 +103,7 @@ shared.
 ## 3. Tests, tools, and package configuration
 
 - [x] `test/conftest.py` and `test/README.md` / `test/README_Japanese.md` — reviewed; the import-path rationale and test/CI scope are current and bilingual.
-- [x] `test_basic.py` and `test_data_integrity.py` — reviewed; duplicated path setup was removed in favour of `conftest.py`, and current v1.3.4 metadata plus public-dataset integrity checks passed (8 passed).
+- [x] `test_basic.py` and `test_data_integrity.py` — reviewed; duplicated path setup was removed in favour of `conftest.py`, and then-current v1.3.4 metadata plus public-dataset integrity checks passed (8 passed).
 - [x] `test_envgeo_assets.py` and `test_envgeo_user_data.py` — reviewed; duplicated path setup was removed, bilingual scope comments were clarified, and asset-security plus session-only upload checks passed (29 passed).
 - [x] `test_envgeo_utils.py` — reviewed; duplicated path setup and unused imports were removed, scope is bilingual, and shared data, map, upload, coastline, and export regressions passed (55 passed).
 - [x] `test_natural_earth_land.py` and `test_offline_map.py` — reviewed; bundled land assets, no-download fallback, and offline-map behaviour are documented bilingually. Local Cartopy-dependent checks skip only when Cartopy is absent; all remaining checks passed (67 passed, 10 skipped).
@@ -130,7 +134,7 @@ shared.
 - [x] `README.md` / `README_Japanese.md` — stable-page scope, approximately
   50,000 cited records, user-data boundaries, bilingual public wording, and
   concise data/software/geospatial acknowledgements reviewed.
-- [x] `TODO.md` / `TODO_Japanese.md` — separated current v1.3.4 release work
+- [x] `TODO.md` / `TODO_Japanese.md` — separated then-current v1.3.4 release work
   from post-release development, marked older review/JOSS notes as historical,
   retained the EnvGeo Data plan, and removed obsolete current-version claims.
 - [x] `local_data/README.md` / `local_data/README_Japanese.md` — zero-row
@@ -141,7 +145,7 @@ shared.
   `CoralHydro2_references.md` — Home text, bilingual guidance, cited-source
   labels, approximately 50,000-record scope, and user-data boundaries reviewed.
 - [x] `data_text/update_log.md` / `update_log_Japanese.md` — added a concise
-  current v1.3.4 release-candidate summary, retained older work as explicitly
+  then-current v1.3.4 release-candidate summary, retained older work as explicitly
   historical preparation notes, and checked English/Japanese correspondence.
 
 ## 5. User manuals
@@ -194,22 +198,22 @@ shared.
 - [x] `geospatial_assets*` — current wheel asset scope, Natural Earth and
   GEBCO boundaries, canonical/stable asset identity, and the outstanding
   coastline-CSV source-version record reviewed in English and Japanese.
-- [x] `sprint3_distribution_design_and_acceptance*` — current 1.3.4,
+- [x] `sprint3_distribution_design_and_acceptance*` — then-current 1.3.4,
   Python 3.10/3.12 CI, 12-page development scope, manual-QA boundary, and
   Release-not-approval status reviewed in English and Japanese.
 - [x] `distribution_foundation_audit_and_plan*` / `wheel_proof_report*` —
   historical Sprint 2 audit and proof evidence, its distinction from current
-  1.3.4 verification, and English/Japanese links reviewed.
+  v1.3.4 verification, and English/Japanese links reviewed.
 - [x] `offline_operation_log*` — historical v1.3.3 implementation notes are
-  separated from the v1.3.4 release basis; offline fallback, HTML export, and
+  separated from the then-current v1.3.4 release basis; offline fallback, HTML export, and
   tile-provider recheck boundary reviewed.
 - [x] `streamlit_migration*` — historical results and future migration work
-  are separated from the current v1.3.4 Python 3.10/3.12 release basis.
+  are separated from the then-current v1.3.4 Python 3.10/3.12 release basis.
 - [x] `ts_density_contour_review_and_plan*` — v1.3.4 approximate-σ0
   transparency work is distinguished from future SA–CT/TEOS-10 development.
-- [x] `integrated_visualizer_strategy*` — Page 90 migration history, current
+- [x] `integrated_visualizer_strategy*` — Page 90 migration history, then-current
   v1.3.4 public scope, and deferred shared-core ideas are explicitly separated.
-- [x] `development_notes*`: retained as historical records; current v1.3.4
+- [x] `development_notes*`: retained as historical records; then-current v1.3.4
   release state, completed packaging, Page 90 exclusion, and deferred
   shared-core scope are explicit.
 - [x] `paper.md` / `paper.bib` — synchronized canonical manuscript pair with

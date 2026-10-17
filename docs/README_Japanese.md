@@ -42,7 +42,7 @@
 
 - `sprint3_distribution_design_and_acceptance.md` /
   `sprint3_distribution_design_and_acceptance_Japanese.md`
-  1.3.4開発／公開前repositoryの現行配布設計・検証記録。「Sprint 3」の意味は文書内で説明する。
+  1.3.4開発／公開前repositoryの履歴上の配布設計・検証記録。「Sprint 3」の意味は文書内で説明する。
 
 - `distribution_foundation_audit_and_plan.md` /
   `distribution_foundation_audit_and_plan_Japanese.md`
@@ -51,7 +51,7 @@
 
 - `wheel_proof_report.md` / `wheel_proof_report_Japanese.md`
   Sprint 2B–2Cのローカルwheel作成・インストール実証、受入結果、限界、保留した本番package判断の
-  履歴記録。現行1.3.4の検証記録は`sprint3_distribution_design_and_acceptance*.md`を参照する。
+  履歴記録。現行v1.3.5の検証記録は`release_checklist*.md`を参照する。
 
 - `provenance_inventory.md` / `provenance_inventory_Japanese.md`
   同梱asset・データ、その既知の出典記録、再配布状態、公開前の確認事項をまとめた英日一覧。
@@ -70,7 +70,8 @@
   安定版の公開ワークフローを対象とした、ページ別の英日ユーザーマニュアル。公開済みの静的
   ドキュメントサイトの内容正本であり、研究室Webサイトの案内にも再利用できます。
 
-## 今後作成する文書
+## JOSS投稿準備
 
-- `joss_checklist.md`
-  将来のJOSS再投稿に向けた、テスト、文書、例、引用、ライセンス、archive DOIの確認項目。
+現在のJOSS向け資料は`paper.md`、`paper.bib`、`CITATION.cff`、
+`release_checklist*.md`で管理します。別のJOSS checklistは、必要になった場合に追加できますが、
+現時点の投稿準備記録には必須ではありません。

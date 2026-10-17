@@ -2,13 +2,19 @@
 
 英語版: [TODO.md](TODO.md)
 
-このファイルは、開発履歴と今後のbacklogを記録するものです。一部の項目は1.3.4で完了しています。現在のRelease判断はRelease checklistと安定版公開ノートを参照します。内容が十分に固まった項目は、README、詳細ドキュメント、またはGitHub Issuesへ移すことができます。
+このファイルは、開発履歴と今後のbacklogを記録するものです。一部の項目は1.3.4と1.3.5で完了しています。現在のRelease判断はRelease checklistと安定版公開ノートを参照します。内容が十分に固まった項目は、README、詳細ドキュメント、またはGitHub Issuesへ移すことができます。
 
 原則として、英語版の `TODO.md` と同じ内容を保ちます。ファイル名、関数名、画面上のUIラベルは、コードとの対応を確認しやすいように英語表記を残します。
 
 プロジェクトの基本方針として、ユーザー向けUI、README、マニュアル、テスト説明、リリースノート、および主要な開発方針は、日本語・英語の両方で利用できる状態を維持します。
 
-## 現在のv1.3.4 Release作業
+## 安定版に公開する文書の境界
+
+詳細な`TODO.md` / `TODO_Japanese.md`の計画記録は、開発用repositoryだけに保持します。公開安定版の
+`seawater_map` repositoryには、簡潔な英日`ROADMAP.md` / `ROADMAP_Japanese.md`を公開し、詳細ToDoは
+安定版への同期対象から除外します。
+
+## 履歴上のv1.3.4 Release準備（完了）
 
 実行時の確認項目には`docs/release_checklist_Japanese.md`を使い、公開tagの前に次を完了する。
 
@@ -32,7 +38,7 @@ v1.3.4 Releaseの作業に、MapLibre移行、アプリ横断の共通コア分�
 
 投影法選択は、Cloudで安全な設計を別途検証できるようになってから再検討する。全球Scatter／Contour、投影法・表示範囲の連続切替、正しい陸域マスクと海岸線、PNGダウンロード、ローカルとCommunity Cloudの両方で、再現可能な資源確認を行うことを再導入の条件とする。v1.3.5のrelease scopeには含めない。
 
-## v1.3.4後の開発優先順位
+## v1.3.5後の開発優先順位
 
 更新日: 2026-10-10
 
@@ -253,8 +259,9 @@ JOSS向けの注意:
 
 全ファイルレビュー時の履歴上のJOSS・package指摘:
 
-CI、package metadata、`requirements-dev.txt`は整備済みである。残る原稿、引用、tag付きRelease、
-DOIの作業は、このファイル先頭の現在のRelease作業として扱う。
+CI、package metadata、`requirements-dev.txt`、v1.3.5のtag付きRelease、Zenodo DOI、
+PyPI公開は完了している。以下の項目は履歴上の監査指摘として残す。現在のJOSS投稿準備は、
+`paper.md`、`paper.bib`、`docs/release_checklist.md`を参照する。
 
 - 海水d18Oデータを利用したAono、Sakamoto、Kurokiの研究を含む、研究上の波及効果を示す引用を `paper.md` と `paper.bib` に追加する。
 - JOSS論文に、少なくとも1点の図またはスクリーンショットを追加する。

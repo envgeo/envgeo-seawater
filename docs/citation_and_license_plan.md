@@ -35,31 +35,29 @@ records and conditions for reassessment.
 
 ### Project and release
 
-- [x] Added `CITATION.cff` with author, title, repository URL, version, and
-      the documented 1.3.4 release-candidate date. It intentionally has no DOI
-      before archival publication; see `release_metadata_draft.md`.
-- [ ] Replace the candidate date with the final tag date and add the versioned
-      DOI after the Zenodo archive has been created.
-- [ ] Replace the provisional README citation with the versioned DOI citation.
-- [ ] Tag the release and preserve its dependency lock/requirements record.
+- [x] Updated `CITATION.cff` with the v1.3.5 release date, repository URL,
+      versioned DOI <https://doi.org/10.5281/zenodo.23428743>, and concept DOI
+      <https://doi.org/10.5281/zenodo.23117783>.
+- [x] Updated the README and manuscript with the v1.3.5 versioned DOI and
+      citation guidance.
+- [x] Tagged and released the reviewed stable commit as `v1.3.5`, preserving
+      the release requirements and CI evidence.
 - [x] Added the project `LICENSE` and `THIRD_PARTY_NOTICES.md` / Japanese
       counterpart. The notices distinguish the MIT code licence from bundled
       third-party data and geospatial asset records; source-specific records
       remain authoritative.
 
-### Package-index publication (before JOSS resubmission)
+### Package-index publication
 
-- [ ] Build the intended final artifact from the reviewed stable source and run
-      `twine check` on the distribution files.
-- [ ] Upload that artifact to TestPyPI, then install it in a new macOS test
-      environment. Install compiled geospatial prerequisites from conda-forge
-      where needed, then install EnvGeo-Seawater through `pip`.
-- [ ] After the TestPyPI check succeeds, publish the reviewed final artifact as
-      `envgeo-seawater` on PyPI. Use PyPI Trusted Publishing or a secure manual
-      upload process; never store an upload token in the repository.
-- [ ] Reproduce a `pip install envgeo-seawater` installation and launch in a
-      new macOS environment; record the result in the release record.
-- [ ] Treat a conda-forge recipe/feedstock as a separate post-v1.3.4
+- [x] Built the reviewed v1.3.5 wheel and source distribution and uploaded the
+      same artifacts to TestPyPI and PyPI as `envgeo-seawater`.
+- [x] Confirmed the TestPyPI and PyPI project pages and verified that
+      `pip show envgeo-seawater` reports version 1.3.5 after installation.
+- [ ] For a future release, repeat the build, `twine check`, TestPyPI upload,
+      clean-environment installation, PyPI upload, and launch verification.
+      Use Trusted Publishing or a secure manual upload process; never store an
+      upload token in the repository.
+- [ ] Treat a conda-forge recipe/feedstock as a separate post-v1.3.5
       improvement, not a blocker once the PyPI installation path works.
 
 ### Scientific data

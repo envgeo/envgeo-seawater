@@ -3,7 +3,7 @@
 Japanese version: [TODO_Japanese.md](TODO_Japanese.md)
 
 This file is a historical and forward-looking development backlog. Some items
-have been completed in 1.3.4; use the release checklist and stable publication
+have been completed in 1.3.4 and 1.3.5; use the release checklist and stable publication
 notes for current release decisions. Items here can be moved into README,
 documentation, or GitHub issues when they become stable enough.
 
@@ -11,7 +11,14 @@ As a general project policy, keep user-facing UI text, README files, manuals,
 testing guides, release notes, and major development policies available in both
 English and Japanese. Keep this file aligned with `TODO_Japanese.md`.
 
-## Current v1.3.4 release work
+## Stable-release documentation boundary
+
+Keep detailed `TODO.md` / `TODO_Japanese.md` planning records in development
+repositories only. The public stable `seawater_map` repository publishes the
+concise bilingual `ROADMAP.md` / `ROADMAP_Japanese.md` instead; do not copy
+detailed ToDo files into a stable-release synchronization.
+
+## Historical v1.3.4 release preparation (completed)
 
 Use `docs/release_checklist.md` as the operational checklist. Complete the
 following work before creating a public tag.
@@ -45,7 +52,7 @@ Scatter and Contour maps, repeated projection/extent changes, correct land
 masking and coastline rendering, downloaded PNG output, and local as well as
 Community Cloud verification. Keep it separate from the v1.3.5 release scope.
 
-## Future development roadmap (after v1.3.4)
+## Future development roadmap (after v1.3.5)
 
 Updated: 2026-10-10
 
@@ -451,9 +458,10 @@ Planned direction:
 
 Historical JOSS/package findings from the full-file review:
 
-CI, package metadata, and `requirements-dev.txt` are now in place. Treat the
-remaining manuscript, citation, tagged-release, and DOI work as the current
-release tasks listed at the top of this file.
+CI, package metadata, `requirements-dev.txt`, the v1.3.5 tagged release, the
+Zenodo DOI, and PyPI publication are complete. The items below are retained as
+historical audit findings; use `paper.md`, `paper.bib`, and
+`docs/release_checklist.md` for the current JOSS-ready record.
 - Add research-impact citations to `paper.md` and `paper.bib`, including Aono,
   Sakamoto, and Kuroki studies that used seawater d18O data.
 - Add at least one figure/screenshot to the JOSS paper.

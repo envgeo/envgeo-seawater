@@ -29,27 +29,24 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
 
 ### プロジェクトとリリース
 
-- [x] 著者、題名、repository URL、版、記録済みの1.3.4 Release candidate日を記した`CITATION.cff`を追加した。
-      archive公開前は意図してDOIを記さない。`release_metadata_draft_Japanese.md`を参照する。
-- [ ] 最終tag日へ更新し、Zenodo archive作成後に版付きDOIを追記する。
-- [ ] READMEの暫定引用を、版付きDOIの正式引用へ置き換える。
-- [ ] リリースタグを付け、対応する依存関係の記録を保存する。
+- [x] `CITATION.cff`をv1.3.5のRelease日、repository URL、固定版DOI
+      <https://doi.org/10.5281/zenodo.23428743>、concept DOI
+      <https://doi.org/10.5281/zenodo.23117783>へ更新した。
+- [x] READMEと原稿へ、v1.3.5の固定版DOIと引用案内を反映した。
+- [x] review済みの安定版commitを`v1.3.5`としてtag・Releaseし、requirementsとCI証跡を保存した。
 - [x] プロジェクトの `LICENSE` と`THIRD_PARTY_NOTICES.md`／日本語版を追加した。通知文書では、
       MITのcode licenseと同梱する第三者データ・地理空間資産の記録を区別し、出典ごとの記録を正本とする。
 
-### Package indexでの公開（JOSS再投稿前）
+### Package indexでの公開
 
-- [ ] review済みの安定版sourceから最終artifactをbuildし、distribution fileに対して
-      `twine check`を実行する。
-- [ ] そのartifactをTestPyPIへuploadし、新しいmacOS test environmentでinstallする。
-      必要なcompiled geospatial prerequisiteはconda-forgeから入れ、その後に`pip`で
-      EnvGeo-Seawaterをinstallする。
-- [ ] TestPyPI確認後、review済みの最終artifactをPyPIの`envgeo-seawater`として公開する。
-      PyPI Trusted Publishingまたは安全な手動uploadを使い、upload tokenをrepositoryへ
-      保存しない。
-- [ ] 新しいmacOS environmentで`pip install envgeo-seawater`を再現し、起動確認の結果を
-      release recordに記録する。
-- [ ] conda-forge recipe/feedstockはv1.3.4後の独立した改善作業とする。PyPIからの
+- [x] review済みのv1.3.5 wheelとsource distributionをbuildし、同一artifactを
+      `envgeo-seawater`としてTestPyPIとPyPIへ公開した。
+- [x] TestPyPIとPyPIのproject pageを確認し、install後の`pip show envgeo-seawater`で
+      version 1.3.5を確認した。
+- [ ] 将来のReleaseでは、build、`twine check`、TestPyPI upload、clean environmentでの
+      install、PyPI upload、起動確認を再実施する。PyPI Trusted Publishingまたは安全な
+      手動uploadを使い、upload tokenをrepositoryへ保存しない。
+- [ ] conda-forge recipe/feedstockはv1.3.5後の独立した改善作業とする。PyPIからの
       installationが動作すれば、現releaseおよびJOSS再投稿のblockerとはしない。
 
 ### 科学データ

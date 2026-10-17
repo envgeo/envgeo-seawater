@@ -41,6 +41,9 @@ review済みstable commit、GitHub Release、意図したarchive状態が揃う�
 - [ ] 正規作業フォルダから、共通コード・文書を`envgeo-seawater`、`test2`、`seawater_map`へ同期する。
 - [ ] 各cloneで`git status`を確認する。コピーしたファイルが追跡対象か確認し、GitHub Pagesを公開しないrepositoryへ入口ファイルを誤って追加しない。
 - [ ] テスト専用asset、安定版で除外する開発ページなど、文書化したclone固有差分を保持する。
+- [ ] 詳細な`TODO.md` / `TODO_Japanese.md`は開発用repositoryだけに保持する。
+  `seawater_map`では、代わりに簡潔な英日`ROADMAP.md` / `ROADMAP_Japanese.md`を同期し、
+  詳細ToDoが安定版releaseにstageされていないことを確認する。
 
 ## 6. 候補を検証する
 

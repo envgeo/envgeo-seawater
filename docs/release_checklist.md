@@ -204,6 +204,16 @@ pytest
 
 ## 12. Package-index publication (PyPI)
 
+### Version 1.3.5 publication record (2026-10-17)
+
+- [x] Published the reviewed v1.3.5 wheel and source distribution to TestPyPI
+      and confirmed the project page.
+- [x] Published the same reviewed v1.3.5 distributions to PyPI as
+      `envgeo-seawater` and confirmed `pip show envgeo-seawater` reports
+      version 1.3.5.
+
+### Reusable checks for a future release
+
 - [ ] Build and run `twine check` on the intended final distribution artifact.
 - [ ] Inspect the TestPyPI project page for README rendering. Before the PyPI
       upload, replace README links and image references that are relative to the
@@ -220,7 +230,7 @@ pytest
       upload; never commit a PyPI token.
 - [ ] Repeat the clean macOS `pip install envgeo-seawater` and launch check.
 - [ ] A conda-forge recipe/feedstock is a useful later improvement, but is not
-      a v1.3.4 blocker once the PyPI path is verified.
+      a release blocker once the PyPI path is verified.
 
 ## 13. Zenodo / DOI Preparation
 
@@ -238,7 +248,11 @@ pytest
 
 ## 14. JOSS-Oriented Follow-Up
 
-- [ ] Prepare a separate `docs/joss_checklist.md` before resubmission.
+- [x] Prepared the v1.3.5 JOSS manuscript, bibliography, versioned DOI,
+      software citation, and release record. These materials are maintained in
+      `paper.md`, `paper.bib`, `CITATION.cff`, and this checklist.
+- [ ] Before resubmission, review the current JOSS author guidance and record
+      the final submission check; a separate checklist file is optional.
 - [ ] Confirm pytest coverage is meaningful and not only superficial.
 - [ ] Confirm examples and user documentation are sufficient for reviewers.
 - [ ] Confirm installation instructions are reproducible on a clean environment.

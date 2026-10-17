@@ -12,9 +12,11 @@ implementation, directory moves, or dataset changes at the time.
 
 **Progress:** The local Sprint 2B–2C proof passed on Python 3.12; see
 `wheel_proof_report.md`. Its findings informed the implemented Sprint 3
-configuration. The current 1.3.4 distribution and CI verification record is
+configuration. The v1.3.4 distribution and CI verification record is
 [`sprint3_distribution_design_and_acceptance.md`](sprint3_distribution_design_and_acceptance.md);
-formal release approval remains separate.
+the current v1.3.5 release verification record is
+[`release_checklist.md`](release_checklist.md); formal release approval remains
+separate.
 
 ## Decision summary
 
