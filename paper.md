@@ -86,14 +86,13 @@ Oceanographic and geochemical datasets, particularly those including seawater st
 Existing oceanographic visualization tools, such as Ocean Data View (ODV)
 [@schlitzer2002], provide powerful capabilities for analyzing hydrographic
 data. EnvGeo-Seawater complements rather than replaces such general-purpose
-tools: it provides a preconfigured seawater-isotope workflow across its
-bundled sources and session-only user-supplied data, while retaining
-source-specific provenance and citations, supporting overlap-candidate audit,
-and providing figure-oriented interactive exploration.
-
-As a result, there is a gap in the availability of lightweight, accessible tools that enable integrated visualization and analysis of seawater isotope and hydrographic data across multiple datasets.
-
-In contrast, EnvGeo-Seawater is specifically designed to integrate isotope datasets with hydrographic variables in a unified, interactive framework.
+tools: it provides a lightweight, local, seawater-isotope-specific workflow
+across bundled cited sources and session-only user-supplied data, while
+retaining source-specific provenance and citations, supporting an
+overlap-candidate audit, and providing figure-oriented interactive
+exploration. This specialization supports comparison of isotope and
+hydrographic variables across heterogeneous, cited seawater datasets without
+first assembling a workflow from general-purpose components.
 
 ## Software design
 
@@ -124,13 +123,7 @@ project-derived, downsampled GEBCO 2025 Grid for bathymetric context
 
 ## Research impact
 
-EnvGeo-Seawater provides a unified platform for exploring seawater isotope and hydrographic datasets, enabling researchers to more efficiently investigate relationships between physical and geochemical parameters.
-
-By integrating multiple datasets into a single interface, the software reduces barriers to data access and comparison, supporting both regional and global analyses. The ability to upload and compare user datasets further enhances its utility for research and education.
-
-This tool is particularly relevant for studies of ocean circulation, water mass mixing, and paleoclimate reconstruction, where isotope data play a critical role. By improving accessibility and usability of these datasets, EnvGeo-Seawater has the potential to accelerate data-driven research in oceanography and geochemistry.
-
-Before EnvGeo-Seawater had an archival software DOI, it was used in the
+Before the software received an archival DOI, EnvGeo-Seawater was used in the
 author's and collaborators' research workflows to select, explore, and
 visualize subsets of the regional seawater isotope dataset reported by Kodama
 et al. (2024). These workflows supported isotope-based interpretation in
@@ -168,13 +161,13 @@ The platform provides the following capabilities:
 
 The software is implemented in Python using Streamlit [@streamlit] for the web interface, Plotly [@plotly] for interactive visualization, and Matplotlib for high-quality figure generation. The codebase is modular and designed to support extension to additional datasets and visualization methods.
 
-The bundled application data and assets occupy less than 30 MB. Local execution
-requires installation of the declared Python dependencies. The package declares
-Python >=3.10; wheel builds and isolated installs are verified in continuous
-integration on Python 3.10 and 3.12, with Python 3.12 recommended for local
-installation. The v1.3.5 release is published on PyPI: users can install it
-with `pip install envgeo-seawater` and start the local application
-with `envgeo-seawater`.
+The bundled data and visual assets occupy approximately 30 MB when unpacked.
+Local execution requires installation of the declared Python dependencies. The
+package declares Python >=3.10; wheel builds and isolated installs are verified
+in continuous integration on Python 3.10 and 3.12, with Python 3.12
+recommended for local installation. The v1.3.5 release is published on PyPI:
+users can install it with `pip install envgeo-seawater` and start the local
+application with `envgeo-seawater`.
 
 # Availability
 
@@ -217,5 +210,11 @@ co-developers of this work.
 ## Conflict of Interest
 
 The author declares no conflicts of interest.
+
+## Acknowledgements
+
+This work was supported in part by JSPS KAKENHI Grant Number JP24H00523;
+the funder had no role in the software design, implementation, validation,
+or decision to submit this manuscript.
 
 # References
