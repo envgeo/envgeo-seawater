@@ -4,7 +4,7 @@ EnvGeo-Seawater は、海水の安定同位体・水文データを探索する�
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://envgeo.h.kyoto-u.ac.jp/sw_jpn/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.12%20CI-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/envgeo-seawater/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/envgeo/seawater_map/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/626690773.svg)](https://doi.org/10.5281/zenodo.23117783)
 
 **最新安定版:** 1.3.5（2026-10-17）— GitHub ReleaseおよびZenodo archive:
@@ -173,9 +173,9 @@ EnvGeo Dataset の主な特徴は次の通りです。
 同梱データは公開出典の記録、またはプロジェクトが記録した学術利用方針に基づく派生workbookです。
 これは第三者データをプロジェクト所有とするものでも、出典ごとの記録を超える一般的な再配布ライセンスを
 主張するものでもありません。詳細は
-[`docs/dataset_redistribution_audit_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/dataset_redistribution_audit_Japanese.md)、
-[`docs/provenance_inventory_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/provenance_inventory_Japanese.md)、
-[`docs/THIRD_PARTY_NOTICES_Japanese.md`](https://github.com/envgeo/envgeo-seawater/blob/main/docs/THIRD_PARTY_NOTICES_Japanese.md)を参照してください。
+[`docs/dataset_redistribution_audit_Japanese.md`](https://github.com/envgeo/seawater_map/blob/main/docs/dataset_redistribution_audit_Japanese.md)、
+[`docs/provenance_inventory_Japanese.md`](https://github.com/envgeo/seawater_map/blob/main/docs/provenance_inventory_Japanese.md)、
+[`docs/THIRD_PARTY_NOTICES_Japanese.md`](https://github.com/envgeo/seawater_map/blob/main/docs/THIRD_PARTY_NOTICES_Japanese.md)を参照してください。
 
 - アプリで直接利用できる標準化済み形式で提供
 - 未公表データや制限付きデータは含めない方針
@@ -509,7 +509,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 統合データセットに基づく全球スケールの海水 δ18O 分布です。コンター補間により、海盆規模の大きな分布パターンを確認できます。
 
-![Global map](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/contour_map.png)
+![Global map](https://raw.githubusercontent.com/envgeo/seawater_map/main/images/contour_map.png)
 
 ---
 
@@ -517,7 +517,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 近似的な σ0 参照等値線（実用塩分 ≈ 絶対塩分；現場水温 ≈ 保存温度）を重ねた T-S 図です。水塊の識別や、同位体と水文構造の関係を調べるために利用できます。
 
-![TS diagram](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/ts_diagram.png)
+![TS diagram](https://raw.githubusercontent.com/envgeo/seawater_map/main/images/ts_diagram.png)
 
 ---
 
@@ -525,7 +525,7 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 経度、緯度、水深、δ18O などの変数を組み合わせた多次元可視化です。空間勾配と鉛直構造を同時に探索できます。
 
-![4D](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/4d_d18O.png)
+![4D](https://raw.githubusercontent.com/envgeo/seawater_map/main/images/4d_d18O.png)
 
 ---
 
@@ -533,8 +533,8 @@ EnvGeo-Seawater では、全球スケールの分布から詳細な対話的解�
 
 T-S 空間と地理的位置を連動させた可視化です。T-S図で選択したデータ群に対応する採水地点を地図上で確認できます。
 
-![](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_map.png)
-![Highlight the corresponding sampling locations on the map.](https://raw.githubusercontent.com/envgeo/envgeo-seawater/main/images/selection_ts.png)
+![](https://raw.githubusercontent.com/envgeo/seawater_map/main/images/selection_map.png)
+![Highlight the corresponding sampling locations on the map.](https://raw.githubusercontent.com/envgeo/seawater_map/main/images/selection_ts.png)
 
 ---
 

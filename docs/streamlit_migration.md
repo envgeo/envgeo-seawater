@@ -136,7 +136,7 @@ Start the compatibility environment with:
 
 ```bash
 conda activate envgeo_st163_py312_plotly5
-cd /path/to/envgeo_seawater_v130
+cd /path/to/seawater_map
 python -m streamlit run home.py --server.port 8504
 ```
 

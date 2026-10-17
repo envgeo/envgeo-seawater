@@ -20,7 +20,7 @@ In simple terms, each test is an automatic checklist item. For example:
 - Do public-facing README/update files avoid internal submission-status wording?
 - Does the stable public surface contain only its declared visualization pages?
 
-Run tests from the `envgeo_seawater_v130` directory:
+Run tests from the repository root directory:
 
 ```bash
 python -m pytest -q
