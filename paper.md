@@ -104,8 +104,7 @@ analysis route.
 
 The design supports the addition of new, source-documented datasets and future
 maintenance without changing the existing page-oriented workflow. Installed
-console commands start the application or its local diagnostic tool; the
-interactive interface remains the primary analysis route.
+console commands start the application or its local diagnostic tool.
 
 The interactive web interface is implemented using Streamlit, which provides an accessible platform for exploratory analysis. The application supports multiple visualization types, including map-based exploration, temperature–salinity diagrams, depth profiles, and regression analyses.
 
