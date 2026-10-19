@@ -44,9 +44,8 @@ UPLOAD_COORDINATE_NOTE = (
     "(e.g., 35°40′52″). Latitude: −90.000 to +90.000; Longitude: −180.000 to +180.000."
 )
 BROWSER_UPLOAD_NOTE = (
-    "Browser uploads are isolated to the current session and are not written "
-    "to persistent application storage. For confidential or unpublished data, "
-    "use the local/offline application. `User Excel data` is a separate "
+    "Browser uploads are used only in the current Streamlit session and are not "
+    "saved to local or server storage. `User Excel data` is a separate "
     "always-loaded local table.  \n"
     "See Home → Show README → User Data Integration for details."
 )
