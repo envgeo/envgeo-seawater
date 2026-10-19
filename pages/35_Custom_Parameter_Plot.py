@@ -35,7 +35,7 @@ fig_title = "envgeo-seawater-database"
 # Plot parameter definitions / 描画パラメーターの定義
 # =============================================================================
 PARAMETER_LABELS = {
-    "d18O": "δ18O (‰)",
+    "d18O": "δ¹⁸O (‰)",
     "dD": "δD (‰)",
     "d-excess": "d-excess (‰)",
     "Salinity": "Salinity",
@@ -799,11 +799,11 @@ def main():
         f"Y:{sld_year_min}-{sld_year_max}, M:{month_display}, "
         f"S:{sld_sal_min}-{sld_sal_max}, D:{sld_depth_min}-{sld_depth_max}m"
     )
-    title = f"{fig_title}\n{x_axis} x {y_axis}"
+    title = f"{fig_title}\n{x_label} x {y_label}"
     if color_by != "Single color":
-        title += f" colored by {color_by}"
+        title += f" colored by {PARAMETER_LABELS.get(color_by, color_by)}"
     if size_by != "Fixed size":
-        title += f", sized by {size_by}"
+        title += f", sized by {PARAMETER_LABELS.get(size_by, size_by)}"
     title += f"\n{subtitle}"
     fig.suptitle(title.replace("_", " "), fontsize=label_font_size + 4)
     fig.tight_layout()
