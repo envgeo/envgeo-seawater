@@ -45,8 +45,7 @@ UPLOAD_COORDINATE_NOTE = (
 )
 BROWSER_UPLOAD_NOTE = (
     "Browser uploads are used only in the current Streamlit session and are not "
-    "saved to local or server storage. `User Excel data` is a separate "
-    "always-loaded local table.  \n"
+    "saved to local or server storage.  \n"
     "See Home → Show README → User Data Integration for details."
 )
 
