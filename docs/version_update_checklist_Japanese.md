@@ -16,6 +16,8 @@ review済みstable commit、GitHub Release、意図したarchive状態が揃う�
 ## 2. 版メタデータと回帰テストを更新する
 
 - [ ] `pyproject.toml`を更新する。
+- [ ] ルートパッケージの`__init__.__version__`を更新し、`pyproject.toml`、
+  `envgeo_utils.APP_VERSION`、インストール済みパッケージのメタデータと一致することを確認する。
 - [ ] `envgeo_utils.APP_VERSION`と`APP_VERSION_DATE`を更新する。
 - [ ] 定義している公開ページの表示用`version`を更新する。
 - [ ] `test/test_basic.py`、`test/test_envgeo_utils.py`、その他の固定版テストを更新する。

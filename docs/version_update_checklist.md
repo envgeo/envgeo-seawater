@@ -21,6 +21,8 @@ Zenodo version DOI from an older release.
 ## 2. Update version metadata and regression tests
 
 - [ ] Update `pyproject.toml`.
+- [ ] Update the root package `__init__.__version__` and confirm it matches
+  `pyproject.toml`, `envgeo_utils.APP_VERSION`, and the installed-package metadata.
 - [ ] Update `envgeo_utils.APP_VERSION` and `APP_VERSION_DATE`.
 - [ ] Update each public page's displayed `version` value where it is defined.
 - [ ] Update version assertions in `test/test_basic.py`,
