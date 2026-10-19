@@ -562,7 +562,7 @@ def test_custom_plot_reports_missing_uploaded_axis_values():
     assert not app.exception
     assert any(
         "Selected values available in uploaded data" in value
-        and "δ18O (‰): 2/2" in value
+        and "δ¹⁸O (‰): 2/2" in value
         and "δD (‰): 0/2" in value
         for value in _visible_text(app)
     )
