@@ -1467,7 +1467,9 @@ def main():
     
     #描画
     ax_cmap = ax.scatter(df1["Longitude_degE"], df1["Latitude_degN"], c=df1['d18O'],cmap='jet', s=20, alpha=0.7, vmin=-1.5, vmax=1, transform=ccrs.PlateCarree(), label='selected')
-    plt.legend(fontsize = 15,loc='center right',bbox_to_anchor=(1, 0.22)) # 凡例の数字のフォントサイズを設定
+    handles, _ = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(fontsize=15, loc='center right', bbox_to_anchor=(1, 0.22))
    
     
 

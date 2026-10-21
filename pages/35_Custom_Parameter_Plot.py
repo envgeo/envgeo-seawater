@@ -791,7 +791,11 @@ def main():
     ax.tick_params(labelsize=tick_font_size, length=6)
     ax.grid(True, color="0.88", linewidth=0.6)
     if show_legend == "Yes":
-        ax.legend(fontsize=tick_font_size)
+        handles, _ = ax.get_legend_handles_labels()
+        if handles:
+            # A fixed position avoids the expensive ``loc="best"`` search for
+            # large plotted datasets.
+            ax.legend(fontsize=tick_font_size, loc="upper left")
 
     month_display = "All" if len(selected_months) == 12 else ", ".join(map(str, sorted(selected_months)))
     subtitle = (

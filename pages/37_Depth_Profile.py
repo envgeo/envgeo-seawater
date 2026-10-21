@@ -541,8 +541,6 @@ def main():
         else:
             pass
 
-        plt.legend(fontsize = 16) #
-
         ax.set_xlim(lim_min_X, lim_max_X) 
         ax.set_ylim(lim_min_Y, lim_max_Y) 
 
@@ -583,9 +581,6 @@ def main():
 
         ax.tick_params(length=ax_length)
 
-        plt.legend(fontsize = 20) # 凡例の数字のフォントサイズを設定
-        
-    
         
         #追加で強調プロットをする場合
         if X_Y_add == 1:
@@ -626,9 +621,6 @@ def main():
                 
 
     
-                plt.legend(fontsize=sld_font_size_min_S)
-
-                
         else:
             pass
 
@@ -717,6 +709,12 @@ def main():
                                 **marker_kwargs_up,
                             )
                             label_used = True
+
+        # Do not create an empty legend when neither the background nor an
+        # overlay has drawable profile data.
+        handles, _ = ax.get_legend_handles_labels()
+        if handles:
+            ax.legend(fontsize=sld_font_size_min_S)
     else:
         pass
     
