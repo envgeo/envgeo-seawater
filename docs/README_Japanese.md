@@ -20,6 +20,9 @@
 - `release_checklist.md` / `release_checklist_Japanese.md`
   ローカル試験、Streamlit deployment、GitHub Release準備、Zenodo／DOI archiveの確認項目。
 
+- `post_release_maintenance_log.md` / `post_release_maintenance_log_Japanese.md`
+  tag済みRelease後のJOSS以外の保守作業を、次回Release前に確認するための開発用記録。安定版public repositoryには意図して含めない。
+
 - `testing.md` / `testing_Japanese.md`
   現在のpytest suite、その範囲、限界、今後の拡充方針の公開向け説明。
 

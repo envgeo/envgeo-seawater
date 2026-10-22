@@ -24,6 +24,11 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 - `release_checklist.md` / `release_checklist_Japanese.md`
   Checklist for local testing, Streamlit deployment, GitHub release preparation, and Zenodo/DOI archiving.
 
+- `post_release_maintenance_log.md` / `post_release_maintenance_log_Japanese.md`
+  Development-only record of non-JOSS maintenance completed after a tagged
+  release, for review before the next release. It is intentionally excluded
+  from the stable public repository.
+
 - `testing.md` / `testing_Japanese.md`  
   Public-facing explanation of the current pytest suite, its scope, limitations, and planned expansion.
 

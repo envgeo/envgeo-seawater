@@ -188,7 +188,9 @@ def plot_xy_with_regression(
     ax.yaxis.set_major_formatter(y_formatter)
     ax.tick_params(length=tick_length)
     plt.title(figure_title, fontsize=20)
-    plt.legend(fontsize=20)
+    handles, _ = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(fontsize=20)
 
     base_count = base_df[selected_row].count().sum()
     selected_count = selected_df[selected_row].count().sum()
@@ -243,7 +245,9 @@ def plot_xy_with_regression(
             horizontalalignment="right",
             transform=ax.transAxes,
         )
-        plt.legend(fontsize=10)
+        handles, _ = ax.get_legend_handles_labels()
+        if handles:
+            ax.legend(fontsize=10)
         # print("回帰直線　add:", f"{y_col}={selected_coef[0]:.2f} * {x_col}+{selected_coef[1]:.2f}")
         # print("相関係数（ｒ）:", np.corrcoef(selected_xy[x_col], selected_xy[y_col]))
         # print("----------------")
@@ -846,7 +850,9 @@ def main():
             # print('---------------')
     
     
-            plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
+            handles, _ = ax.get_legend_handles_labels()
+            if handles:
+                ax.legend(fontsize=15)
     
     
             ax.set_xlim(lim_min_X, lim_max_X) 
@@ -866,7 +872,9 @@ def main():
             #             color = "red", arrowprops = dict())
     
         plt.title(fig_title_X_Y, fontsize=20) #
-        plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
+        handles, _ = ax.get_legend_handles_labels()
+        if handles:
+            ax.legend(fontsize=15)
         
     
         
@@ -1031,7 +1039,9 @@ def main():
                     # print('---------------')
     
         
-                    plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
+                    handles, _ = ax.get_legend_handles_labels()
+                    if handles:
+                        ax.legend(fontsize=15)
     
                     
                     
@@ -1053,7 +1063,9 @@ def main():
                         # 特定の列に特定の変数を持つ行と空白行を残す
                         df_fig_add = df_fig_add[(df_fig_add[selected_row2] == selected_value) | df_fig_add.isnull().all(axis=1)]
                         plt.plot(df_fig_add[X_data], df_fig_add[Y_data],c='red', marker=X_Y_M, lw=2, alpha=alpha_selected, label=selected_value)
-                        plt.legend(fontsize = 15) # 凡例の数字のフォントサイズを設定
+                        handles, _ = ax.get_legend_handles_labels()
+                        if handles:
+                            ax.legend(fontsize=15)
                         
                     else:()
                       
@@ -1125,7 +1137,9 @@ def main():
     
     
     ax.set_title('vertical sampling sites (below 30m)', fontsize=20) #Transectでソートした場合           
-    ax.legend(fontsize = 15,loc='lower right',bbox_to_anchor=(1, 0.13)) # 凡例の数字のフォントサイズを設定
+    handles, _ = ax.get_legend_handles_labels()
+    if handles:
+        ax.legend(fontsize=15, loc='lower right', bbox_to_anchor=(1, 0.13))
     
     # #列の要素を表示
     # d_select = df1['Transect'].value_counts().to_dict()

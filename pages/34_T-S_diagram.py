@@ -507,7 +507,9 @@ def main():
         if plot_all_data == "Yes":
             ax.scatter(Xa, Ya, s=X_Y_S,c=X_Y_C,marker=X_Y_M,lw=0.5, ec="black", alpha=alpha_all)
             if show_legend == "Yes":
-                plt.legend(fontsize=sld_font_size_tick)
+                handles, _ = ax.get_legend_handles_labels()
+                if handles:
+                    ax.legend(fontsize=sld_font_size_tick)
 
         plt.title(fig_title_X_Y)
 
@@ -543,7 +545,9 @@ def main():
                 label=sheet_names_add2,
             )
             if show_legend == "Yes":
-                plt.legend(fontsize=sld_font_size_tick)
+                handles, _ = ax.get_legend_handles_labels()
+                if handles:
+                    ax.legend(fontsize=sld_font_size_tick)
         else:
             color_values = pd.to_numeric(df_fig_add[ts_color_by], errors="coerce")
             color_valid = color_values.notna()
@@ -597,7 +601,9 @@ def main():
                 )
 
             if show_legend == "Yes":
-                plt.legend(fontsize=sld_font_size_tick)
+                handles, _ = ax.get_legend_handles_labels()
+                if handles:
+                    ax.legend(fontsize=sld_font_size_tick)
 
         # -------------------------------------------------------------------------
         # Approximate σ0 reference contours / 近似σ0参照等値線
@@ -715,7 +721,9 @@ def main():
                 )
 
             if show_legend == "Yes":
-                ax.legend(fontsize=sld_font_size_tick)
+                handles, _ = ax.get_legend_handles_labels()
+                if handles:
+                    ax.legend(fontsize=sld_font_size_tick)
 
         # -------------------------------------------------------------------------
         # Figure title and file name / 図題とファイル名
