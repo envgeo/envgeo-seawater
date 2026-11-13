@@ -42,4 +42,4 @@ zero-row public template. It is not a measurement dataset.
 
 Dependencies are installed separately from the Python package under their own
 licences. Method-critical software and data sources should be cited as
-described in the README, `paper.bib`, and the source-specific records.
+described in the README and the source-specific records.

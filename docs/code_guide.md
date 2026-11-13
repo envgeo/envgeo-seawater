@@ -34,7 +34,7 @@ For the distribution plan, see
 | `37_Depth_Profile.py` | Depth-profile visualisation. | Uses shared filtering and uploaded overlays. |
 | `53_Vertical_Section_Visualizer.py` | A–B vertical sections and optional derived GEBCO bathymetry. | Beta. Keep Manual A–B offline fallback and all scientific limitations explicit. |
 | `80_Correlation_Overview.py` | Preserved correlation/exploratory workflow. | Historical hand-written archive page; make only necessary bug, compatibility, safety, or distribution fixes. |
-| `90_Integrated_Visualizer_beta.py` | Development/pre-release integrated visualizer. | Outside the stable release and JOSS scope; do not expand it by default. |
+| `90_Integrated_Visualizer_beta.py` | Development/pre-release integrated visualizer. | Outside the stable-release scope; do not expand it by default. |
 | `91_EnvGeo_Earthquake.py` | Development/pre-release redirect to the specialised Earthquake application. | Do not start Earthquake packaging or move its scientific logic into Seawater before a separate audit. |
 | `99_Environment_Check.py` | Local developer diagnostic-page wrapper. | Exclude it from the stable clone, wheel, and public navigation. |
 
@@ -99,7 +99,7 @@ or distribution fixes.
 
 ## Before changing code
 
-1. Read the relevant manual, update log, and plan in `docs/` or `TODO.md`.
+1. Read the relevant manual, update log, and plan in `docs/`.
 2. Preserve `dataset/`, public/private data boundaries, and existing common
    filtering behaviour.
 3. Add or update focused tests, then run the appropriate pytest suite from the

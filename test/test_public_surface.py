@@ -24,10 +24,8 @@ def test_home_keeps_the_public_landing_identity_and_version_display():
 
 
 # These terms should stay out of public-facing README/app update text for now.
-# JOSS関連の話は内部メモに置き、公開向けREADMEやアプリ履歴には出さない方針を確認する。
+# 内部の開発用語は公開向けREADMEやアプリ履歴には出さない方針を確認する。
 PUBLIC_SUBMISSION_TERMS = [
-    "JOSS",
-    "joss",
     "submission",
     "resubmission",
     "re-submission",

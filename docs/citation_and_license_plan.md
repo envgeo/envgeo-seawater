@@ -5,7 +5,7 @@
 This is a release-readiness checklist and provenance record for
 EnvGeo-Seawater. It does not replace verification of source licences or legal
 advice. Complete the applicable items before a public GitHub release, Zenodo
-archive, Streamlit deployment, or JOSS submission.
+archive, or Streamlit deployment.
 
 ## Principles
 
@@ -105,7 +105,7 @@ records and conditions for reassessment.
       29(3), 9–13, doi:10.5670/oceanog.2016.66.
 - [ ] Acknowledge Streamlit and Plotly as core framework and interactive
       visualization software, with versions used for the release. Their
-      entries in `paper.bib` can be reused for papers.
+      citation details can be reused for papers.
 - [ ] Record Cartopy, Matplotlib, Folium, NumPy, pandas, SciPy,
       scikit-learn, openpyxl, and other runtime dependencies with versions and
       licences in third-party notices. Cite a package or method in scientific
@@ -127,6 +127,6 @@ records and conditions for reassessment.
   source-specific citation, provenance record, or future third-party notices.
 - `docs/geospatial_assets.md` already records the current GEBCO terms. Recheck
   that wording and the source citation at the tagged release.
-- `paper.bib` contains verified entries for Streamlit, Plotly, cmocean,
-  TEOS-10/GSW, and the GEBCO 2025 Grid. Recheck each citation at the tagged
-  release if the referenced software, data version, or manuscript scope changes.
+- Keep verified references for Streamlit, Plotly, cmocean, TEOS-10/GSW, and
+  the GEBCO 2025 Grid in the source-specific records. Recheck each citation at
+  the tagged release if the referenced software or data version changes.

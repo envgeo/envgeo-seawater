@@ -1,7 +1,7 @@
 # Post-release maintenance log
 
 This development-only log records maintenance work completed after the v1.3.5
-release. It excludes JOSS manuscript work. Entries here do not alter the
+release. Entries here do not alter the
 tagged v1.3.5 GitHub Release, Zenodo archive, or PyPI distribution; confirm
 them again and incorporate the applicable items into release notes for a
 future version.
@@ -25,9 +25,19 @@ future version.
   warnings and avoids the slow automatic legend-placement search for large
   Custom Plot datasets.
 
+## Future candidate: model-grid comparison
+
+- Evaluate an optional, provenance-preserving model-grid layer for comparing
+  isotope-enabled climate-model output with observations and new proxy data.
+  Keep model grids distinct from point observations; initially support
+  subsetted NetCDF-style raster/contour backgrounds, explicit experiment and
+  variable metadata, and documented spatial/temporal matching. Do not begin
+  implementation until its design and resource requirements have been
+  independently validated; consider this a major feature candidate.
+
 ## Recording rule
 
-For each non-JOSS change after a tagged release, add a concise entry here with
+For each change after a tagged release, add a concise entry here with
 its user-facing effect, affected pages or assets, validation status, and
 whether it should be considered for the next release. Do not copy detailed
 development planning into the stable public repository.

@@ -51,7 +51,6 @@ Zenodo version DOI from an older release.
   manuals, and the GitHub Pages entries `docs/index*.md`.
 - [ ] Update `release_metadata_draft*.md`, `release_checklist*.md`, and any
   current-status development note. Leave historical release evidence intact.
-- [ ] Update `paper.md` only once the version-specific Zenodo DOI is known.
 
 ## 5. Synchronize repositories deliberately
 
@@ -62,10 +61,9 @@ Zenodo version DOI from an older release.
   not publish them.
 - [ ] Preserve documented clone-specific differences, especially test-only
   assets and the stable repository's exclusion of development pages.
-- [ ] Keep detailed `TODO.md` / `TODO_Japanese.md` records in development
-  repositories only. For `seawater_map`, synchronize the concise bilingual
-  `ROADMAP.md` / `ROADMAP_Japanese.md` instead, and confirm detailed ToDo files
-  are not staged for the stable release.
+- [ ] For `seawater_map`, synchronize the concise bilingual `ROADMAP.md` /
+  `ROADMAP_Japanese.md` and confirm detailed planning records are not staged
+  for the stable release.
 
 ## 6. Verify the candidate
 
@@ -85,8 +83,8 @@ Zenodo version DOI from an older release.
 - [ ] Publish to PyPI only when that distribution is part of the release plan.
 - [ ] Wait for Zenodo to archive the tagged release and record the new
   version-specific DOI separately from the all-versions concept DOI.
-- [ ] Make a final DOI-only documentation update to `paper.md`, citations,
-  README, update history, and release metadata; rerun CI and confirm the
+- [ ] Make a final DOI-only documentation update to citations, README, update
+  history, and release metadata; rerun CI and confirm the
   deployed app and GitHub Pages.
 
 ## Completion record

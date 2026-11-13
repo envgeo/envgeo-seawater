@@ -34,4 +34,4 @@ EnvGeo-Seawaterのソースコードには、repositoryの[`LICENSE`](../LICENSE
 ## ソフトウェア依存関係
 
 依存関係はPython packageとは別に、それぞれのライセンスでinstallされます。手法上重要なsoftwareと
-データ出典は、README、`paper.bib`、出典ごとの記録に従って引用してください。
+データ出典は、READMEと出典ごとの記録に従って引用してください。

@@ -9,8 +9,8 @@ then multiple plot/table views switched by tabs.
 EnvGeo-Seawater 統合可視化ページの試作版です。
 共通フィルタで抽出した同じデータを、タブで複数の表示に切り替えます。
 
-Development-only page: excluded from the stable-release acceptance scope and JOSS.
-開発版専用ページであり、安定版の受入範囲およびJOSS対象からは除外します。
+Development-only page: excluded from the stable-release acceptance scope.
+開発版専用ページであり、安定版の受入範囲からは除外します。
 
 Maintainer: Toyoho Ishimura, Kyoto University
 Last reviewed: 2026-09-30

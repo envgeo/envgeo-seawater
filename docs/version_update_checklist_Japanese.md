@@ -36,16 +36,14 @@ review済みstable commit、GitHub Release、意図したarchive状態が揃う�
 - [ ] Homeの**Update History**と`data_text/update_log*.md`を更新する。
 - [ ] 埋め込みmanual（`data_text/manual*.md`）、ページ別manual、GitHub Pages入口`docs/index*.md`を更新する。
 - [ ] `release_metadata_draft*.md`、`release_checklist*.md`、現行状態を示す開発ノートを更新する。過去releaseの証跡は保持する。
-- [ ] `paper.md`は固定版Zenodo DOIが確定してから更新する。
 
 ## 5. repositoryを意図的に同期する
 
 - [ ] 正規作業フォルダから、共通コード・文書を`envgeo-seawater`、`test2`、`seawater_map`へ同期する。
 - [ ] 各cloneで`git status`を確認する。コピーしたファイルが追跡対象か確認し、GitHub Pagesを公開しないrepositoryへ入口ファイルを誤って追加しない。
 - [ ] テスト専用asset、安定版で除外する開発ページなど、文書化したclone固有差分を保持する。
-- [ ] 詳細な`TODO.md` / `TODO_Japanese.md`は開発用repositoryだけに保持する。
-  `seawater_map`では、代わりに簡潔な英日`ROADMAP.md` / `ROADMAP_Japanese.md`を同期し、
-  詳細ToDoが安定版releaseにstageされていないことを確認する。
+- [ ] `seawater_map`では、簡潔な英日`ROADMAP.md` / `ROADMAP_Japanese.md`を同期し、
+  詳細な計画記録が安定版releaseにstageされていないことを確認する。
 
 ## 6. 候補を検証する
 
@@ -60,7 +58,7 @@ review済みstable commit、GitHub Release、意図したarchive状態が揃う�
 - [ ] そのcommitからGitHub Releaseとtag（例：`v1.3.5`）を作成する。
 - [ ] PyPI公開は、その配布を今回のrelease計画に含める場合だけ行う。
 - [ ] Zenodoがtag付きreleaseをarchiveするのを待ち、全版共通concept DOIとは別に、新しい固定版DOIを記録する。
-- [ ] `paper.md`、引用文、README、更新履歴、release metadataへDOIだけの最終更新を行い、CI・デプロイ済みアプリ・GitHub Pagesを再確認する。
+- [ ] 引用文、README、更新履歴、release metadataへDOIだけの最終更新を行い、CI・デプロイ済みアプリ・GitHub Pagesを再確認する。
 
 ## 完了記録
 

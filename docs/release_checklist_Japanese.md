@@ -4,8 +4,8 @@
 
 テストサイトの公開、GitHub更新、Release作成、Zenodoでのversion archiveの前に、この確認項目を使います。
 
-この正規作業コピーのchecklistは、開発・公開前確認に用います。正式なGitHub Release、Zenodo archive、
-JOSS向けsoftware recordは、この作業コピーにtagを付けるのではなく、安定版`seawater_map` repositoryから作成します。
+この正規作業コピーのchecklistは、開発・公開前確認に用います。正式なGitHub ReleaseとZenodo archiveは、
+この作業コピーにtagを付けるのではなく、安定版`seawater_map` repositoryから作成します。
 
 ## 1. ローカル環境
 
@@ -217,12 +217,8 @@ pytest
 - [ ] archive作成後に、version DOIとconcept DOIをREADMEとcitation filesへ記録する。
       DOIを事前予約しない限り、このfollow-up document commitはimmutableなtag付きarchiveには含まれない。
 
-## 14. JOSSを見据えた次作業
+## 14. 公開後の次作業
 
-- [x] v1.3.5のJOSS原稿、文献表、固定版DOI、software citation、Release記録を準備した。
-      これらは`paper.md`、`paper.bib`、`CITATION.cff`、本checklistで管理する。
-- [ ] 再投稿前に、その時点のJOSS author guidanceを確認し、最終投稿確認を記録する。
-      別のchecklist fileは任意とする。
 - [ ] pytest coverageが形式だけでなく意味のあるものか確認する。
 - [ ] reviewerに十分な例と利用者文書があることを確認する。
 - [ ] clean environmentでinstallation instructionsを再現できることを確認する。

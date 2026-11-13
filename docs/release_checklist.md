@@ -5,7 +5,7 @@ Use this checklist before uploading a test site, updating GitHub, creating a rel
 [日本語版](release_checklist_Japanese.md)
 
 This canonical working-copy checklist supports development and pre-release
-checks. The formal GitHub Release, Zenodo archive, and JOSS-facing record must
+checks. The formal GitHub Release and Zenodo archive must
 be made from the stable `seawater_map` repository, not by tagging this working
 copy.
 
@@ -246,13 +246,8 @@ pytest
       after the archive is created. This follow-up documentation commit is not
       part of the immutable tagged archive unless a DOI was reserved in advance.
 
-## 14. JOSS-Oriented Follow-Up
+## 14. Post-release Follow-Up
 
-- [x] Prepared the v1.3.5 JOSS manuscript, bibliography, versioned DOI,
-      software citation, and release record. These materials are maintained in
-      `paper.md`, `paper.bib`, `CITATION.cff`, and this checklist.
-- [ ] Before resubmission, review the current JOSS author guidance and record
-      the final submission check; a separate checklist file is optional.
 - [ ] Confirm pytest coverage is meaningful and not only superficial.
 - [ ] Confirm examples and user documentation are sufficient for reviewers.
 - [ ] Confirm installation instructions are reproducible on a clean environment.

@@ -184,6 +184,6 @@ source/package checks.
 The proof version `1.3.3` is not a release decision. The planned formal release
 is `1.3.4`; it records a clean checkout, source revision, Python version,
 resolved dependencies, wheel SHA-256, test result, Git tag, GitHub Release,
-and Zenodo DOI. JOSS scope centres on stable Seawater workflows. Pages 90 and
+and Zenodo DOI. The stable scope centres on Seawater workflows. Pages 90 and
 91 remain in the development/pre-release repository for now, but are excluded
 from the planned stable `seawater_map` release scope.

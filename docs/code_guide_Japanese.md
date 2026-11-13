@@ -32,7 +32,7 @@ EnvGeo-Seawaterのソース構成を、開発者・レビュー担当者向け�
 | `37_Depth_Profile.py` | 深度プロファイル。 | 共通フィルターとアップロードオーバーレイを使う。 |
 | `53_Vertical_Section_Visualizer.py` | A–B鉛直断面と任意の派生GEBCO海底地形。 | beta。Manual A–Bのオフライン縮退と科学的制約を明示し続ける。 |
 | `80_Correlation_Overview.py` | 保持する相関／探索ワークフロー。 | 手書き開発期のアーカイブページ。必要なbug、互換性、安全性、配布上の修正だけを行う。 |
-| `90_Integrated_Visualizer_beta.py` | 開発／公開前版の統合Visualizer。 | 安定版・JOSSの範囲外とし、標準では機能を増やさない。 |
+| `90_Integrated_Visualizer_beta.py` | 開発／公開前版の統合Visualizer。 | 安定版の範囲外とし、標準では機能を増やさない。 |
 | `91_EnvGeo_Earthquake.py` | 専用Earthquakeアプリへの開発／公開前版リダイレクト。 | 別途監査するまでEarthquakeのpackage化を始めず、科学的ロジックをSeawaterへ移さない。 |
 | `99_Environment_Check.py` | ローカル開発用の診断ページラッパー。 | 安定版clone、wheel、公開ナビゲーションから除外する。 |
 
@@ -83,7 +83,7 @@ EnvGeo-Seawaterのソース構成を、開発者・レビュー担当者向け�
 
 ## コード変更前の確認
 
-1. 関連manual、更新ログ、`docs/`内の計画、`TODO.md`を読む。
+1. 関連manual、更新ログ、`docs/`内の計画を読む。
 2. `dataset/`、公開／非公開データ境界、既存の共通フィルターを守る。
 3. 焦点テストを追加または更新し、アプリルートから適切なpytestを実行する。
 4. 重要変更は英日更新ログへ記録する。Codexはcommit/pushを行わず、公開クローン同期はGitHub Desktopで確認する。

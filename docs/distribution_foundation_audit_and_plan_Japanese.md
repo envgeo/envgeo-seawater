@@ -121,7 +121,7 @@ Sprint 1では`envgeo_assets.py`を導入し、主要な同梱資産をCWDに依
 
 ## package安定後の公開作業
 
-正式package化の後に、対応OS試験、CI、`CITATION.cff`、第三者通知、タグ付きGitHub Release、Zenodo archive／DOI、JOSS準備を進める。ローカルwheel実証だけでは、これらの公開条件を満たしたことにはならない。
+正式package化の後に、対応OS試験、CI、`CITATION.cff`、第三者通知、タグ付きGitHub Release、Zenodo archive／DOIを整える。ローカルwheel実証だけでは、これらの公開条件を満たしたことにはならない。
 
 ## Sprint 2D 確定設計判断
 

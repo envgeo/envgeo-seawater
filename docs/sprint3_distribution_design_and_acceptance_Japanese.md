@@ -142,5 +142,5 @@ application errorは観察されなかった。error詳細を確認するため�
 
 実証版`1.3.3`は正式Release版ではない。予定する正式Releaseは`1.3.4`とし、clean checkout、
 source revision、Python版、解決済み依存関係記録、wheel SHA-256、テスト結果、Git tag、
-GitHub Release、Zenodo DOIを対応付ける。JOSSでは安定したSeawaterワークフローを中心にする。
+GitHub Release、Zenodo DOIを対応付ける。安定版ではSeawaterワークフローを中心にする。
 Page 90と91は当面開発／公開前repositoryに残すが、予定する安定版`seawater_map`の対象からは外す。

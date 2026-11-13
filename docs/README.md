@@ -13,9 +13,8 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
 ## Current Documents
 
 - `ROADMAP.md` / `ROADMAP_Japanese.md` (stable repository only)
-  Concise bilingual public roadmap for `seawater_map`. Detailed
-  `TODO.md` / `TODO_Japanese.md` planning records are kept only in development
-  repositories and are intentionally excluded from the stable release.
+  Concise bilingual public roadmap for `seawater_map`. Detailed planning
+  records are intentionally excluded from the stable release.
 
 - `version_update_checklist.md` / `version_update_checklist_Japanese.md`
   Reusable checklist for version metadata, data provenance, documentation,
@@ -25,7 +24,7 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
   Checklist for local testing, Streamlit deployment, GitHub release preparation, and Zenodo/DOI archiving.
 
 - `post_release_maintenance_log.md` / `post_release_maintenance_log_Japanese.md`
-  Development-only record of non-JOSS maintenance completed after a tagged
+  Development-only record of maintenance completed after a tagged
   release, for review before the next release. It is intentionally excluded
   from the stable public repository.
 
@@ -39,23 +38,13 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
   Accepted architecture and migration policy for individual pages, shared user-data upload, and Integrated Visualizer.
   The Page 90 workflow is development history and is outside the stable-release scope.
 
-- `development_notes.md` / `development_notes_Japanese.md`
-  Historical 1.3.3 development notes: offline-map design, user-data
-  architecture, bundled geospatial assets, deferred work, and safe cleanup
-  conditions. They are not the current release checklist.
-
 - `citation_and_license_plan.md` / `citation_and_license_plan_Japanese.md`
   Release-readiness checklist for project citation, third-party software,
-  data and map assets, attribution, redistribution terms, Zenodo, and JOSS.
+  data and map assets, attribution, redistribution terms, and Zenodo.
 
 - `code_guide.md` / `code_guide_Japanese.md`
   Concise bilingual map of the source modules, page responsibilities, resource
   directories, and code-documentation conventions.
-
-- `publication_content_review_checklist.md` /
-  `publication_content_review_checklist_Japanese.md`
-  File-by-file public-content review checklist for the canonical working copy,
-  stable-release scope, code, documents, data, assets, and exclusion checks.
 
 - `sprint3_distribution_design_and_acceptance.md` /
   `sprint3_distribution_design_and_acceptance_Japanese.md`
@@ -95,9 +84,3 @@ the source directory for the published [GitHub Pages website](https://envgeo.git
   Page-by-page bilingual user manuals for the stable public workflows. They are
   the content source for the published static documentation website and may also
   be reused for laboratory-web guidance.
-
-## JOSS Readiness
-
-The current JOSS materials are `paper.md`, `paper.bib`, `CITATION.cff`, and
-`release_checklist*.md`. A separate JOSS checklist may be added later if it
-becomes useful, but is not required for the current submission-ready record.

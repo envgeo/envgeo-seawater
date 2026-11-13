@@ -1,7 +1,7 @@
 # Integrated Visualizer 運用・移行方針
 
 > 開発履歴の記録です。Page 90はこの開発作業フォルダには残しますが、別管理の安定版repository、
-> 公開ドキュメントwebsite、JOSSの範囲、Zenodo archiveには含めません。
+> 公開ドキュメントwebsite、Zenodo archiveには含めません。
 
 ## 現行releaseでの位置付け（v1.3.5安定版）
 

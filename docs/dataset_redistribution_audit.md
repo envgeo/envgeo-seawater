@@ -140,8 +140,7 @@ machine- and human-readable record for each source:
    `dataset/*.xlsx` workbooks remain included, with source citations and
    provenance records retained per source.
 4. Record this mode in `pyproject.toml` package-data declarations,
-   README installation instructions, release notes, Zenodo metadata, and the
-   future JOSS archive.
+   README installation instructions, release notes, and Zenodo metadata.
 
 ## Primary sources checked
 

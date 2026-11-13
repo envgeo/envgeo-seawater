@@ -3,8 +3,8 @@
 ## Purpose
 
 `seawater_map` is the official stable-release repository for EnvGeo-Seawater.
-It is the source repository for the GitHub Release, Zenodo archive, and
-JOSS-facing software record. This note is a concise publication boundary; use
+It is the source repository for the GitHub Release and Zenodo archive. This
+note is a concise publication boundary; use
 the [release checklist](release_checklist.md) for the detailed checks.
 
 [日本語版](stable_release_publication_notes_Japanese.md)

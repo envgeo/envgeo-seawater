@@ -3,7 +3,7 @@
 [English version](citation_and_license_plan.md)
 
 これは EnvGeo-Seawater の公開準備チェックリストと来歴管理メモです。公開GitHub
-Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当項目を確認します。
+Release、Zenodoアーカイブ、Streamlit配布の前に、該当項目を確認します。
 個別のデータ提供元の利用条件確認や法的助言に代わるものではありません。
 
 ## 基本方針
@@ -47,7 +47,7 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
       install、PyPI upload、起動確認を再実施する。PyPI Trusted Publishingまたは安全な
       手動uploadを使い、upload tokenをrepositoryへ保存しない。
 - [ ] conda-forge recipe/feedstockはv1.3.5後の独立した改善作業とする。PyPIからの
-      installationが動作すれば、現releaseおよびJOSS再投稿のblockerとはしない。
+      installationが動作すれば、現releaseのblockerとはしない。
 
 ### 科学データ
 
@@ -84,7 +84,7 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
 - [ ] cmoceanを科学的な色設計として示す場合は、Thyng et al. (2016), *Oceanography*, 29(3),
       9–13, doi:10.5670/oceanog.2016.66 を引用する。
 - [ ] StreamlitとPlotlyは、リリースで用いた版とともに中核フレームワーク・対話可視化ソフトウェア
-      として謝辞に記載する。論文では `paper.bib` の項目を再利用できる。
+      として謝辞に記載する。各引用情報は論文でも再利用できる。
 - [ ] Cartopy、Matplotlib、Folium、NumPy、pandas、SciPy、scikit-learn、openpyxlなどは、
       第三者通知に版・ライセンスを記録する。報告するアルゴリズムや結果に本質的な場合は、
       論文でも該当ライブラリまたは手法を引用する。
@@ -101,5 +101,5 @@ Release、Zenodoアーカイブ、Streamlit配布、JOSS投稿の前に、該当
 - README英日版には、GEBCO、TEOS-10/GSW、cmocean、Streamlit、Plotly、Natural Earthの利用範囲を
   簡潔に記載した。この謝辞は、出典ごとの引用、来歴記録、将来の第三者通知に代わるものではない。
 - `docs/geospatial_assets.md` は現在のGEBCO利用条件を記録している。タグ付きリリース時に記述と出典引用を再確認する。
-- `paper.bib` にはStreamlit、Plotly、cmocean、TEOS-10/GSW、GEBCO 2025 Gridの検証済み項目がある。
-  参照するsoftware、データ版、原稿の範囲が変わる場合は、タグ付きリリース時に各引用を再確認する。
+- Streamlit、Plotly、cmocean、TEOS-10/GSW、GEBCO 2025 Gridの検証済み引用は出典ごとの記録に保持する。
+  参照するsoftwareまたはデータ版が変わる場合は、タグ付きリリース時に各引用を再確認する。

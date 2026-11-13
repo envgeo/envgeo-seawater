@@ -174,7 +174,7 @@ plate-boundary interpretation remain application-specific.
 
 Production packaging is followed—not preceded—by the platform test matrix,
 CI, `CITATION.cff`, third-party notices, tagged GitHub Release, Zenodo archive
-and DOI, and JOSS readiness review. The local wheel proof alone satisfies none
+and DOI. The local wheel proof alone satisfies none
 of those release gates.
 
 ## Sprint 2D confirmed decisions

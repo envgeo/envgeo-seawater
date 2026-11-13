@@ -2,7 +2,7 @@
 
 > Historical development record. Page 90 remains in this development workspace,
 > but is not part of the separate stable-release repository, the public
-> documentation website, JOSS scope, or the Zenodo archive.
+> documentation website, or the Zenodo archive.
 
 ## Current release position (v1.3.5 stable release)
 

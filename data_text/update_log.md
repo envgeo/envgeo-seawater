@@ -232,22 +232,6 @@ GitHub Release and matching Zenodo archive are public at
   remain attached to the collection; inclusion does not claim ownership of
   third-party records. No workbook data were changed for this decision.
 
-- Manuscript: removed the internal offline-development priority and the
-  unsupported collaborator-use claim from `paper.md`. Updated the Japan
-  conference record to four presentations and the manuscript date to
-  26 September 2026. The approximate 50,000-record and <30 MB descriptions
-  remain, as they reflect the current dataset and repository scale.
-
-- Manuscript: retained the detailed AI-usage disclosure in `paper.md` for
-  development from version 1.3 onward. Removed only the internal session-log,
-  model-version uncertainty, and internal TODO sentence.
-
-- Manuscript: established `paper.md` and `paper.bib` as the canonical
-  manuscript pair. Added the four verified research-impact records and their
-  citations to the canonical files. Removed the superseded `paper_revised.md`
-  and `paper_revised.bib` working pair to prevent ambiguity; the historical
-  draft remains available through Git history.
-
 - Cleanup: removed the unused `outputs/` directory, which contained only two
   discarded user-workbook draft exports and Finder metadata.
 

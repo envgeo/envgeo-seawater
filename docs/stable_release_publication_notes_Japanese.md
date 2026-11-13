@@ -2,8 +2,8 @@
 
 ## 目的
 
-`seawater_map`は、EnvGeo-Seawaterの正式な安定版repositoryです。GitHub Release、Zenodo archive、
-JOSS向けsoftware recordの正規sourceとして扱います。この文書は公開範囲を短く確認するための
+`seawater_map`は、EnvGeo-Seawaterの正式な安定版repositoryです。GitHub Release、Zenodo archiveの
+正規sourceとして扱います。この文書は公開範囲を短く確認するための
 メモです。詳細な確認には[Release checklist](release_checklist.md)を使います。
 
 [English version](stable_release_publication_notes.md)
