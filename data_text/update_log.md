@@ -2,6 +2,18 @@
 
 Detailed development log for recent EnvGeo-Seawater updates.
 
+## Unreleased (post-v1.3.5; 2026-11-19)
+
+### Lower-barrier feedback and contribution guidance
+
+- Rewrote the bilingual contribution guidance so that users can share a short
+  question, observation, usability concern, documentation improvement, or
+  workflow idea without writing code, knowing Git, preparing a complete
+  proposal, or opening a pull request.
+- Clarified the optional information that helps reproduce a problem and the
+  safeguards for unpublished, restricted, personal, or otherwise non-public
+  uploaded data.
+
 ## v1.3.5 (2026-10-17)
 
 The entries below define stable v1.3.5. CI and the wheel build passed; the

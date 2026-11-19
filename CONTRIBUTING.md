@@ -1,46 +1,58 @@
-# Contributing
+# Feedback and contributing
 
 [日本語版](CONTRIBUTING_Japanese.md)
 
-Bug reports, usability issues, feature requests, and proposals for new
-scientific or practical applications are welcome.
+Thank you for using EnvGeo-Seawater. Feedback is welcome at any level—from a
+short note about something that was unclear to an idea for a new workflow.
 
-This project is developed and maintained by a domain researcher. Advice and
-contributions on software design, testing, documentation, accessibility,
-packaging, deployment, and sustainable maintenance are especially welcome.
+You do **not** need to write code, know Git, prepare a complete proposal, or
+open a pull request to help improve this project. A GitHub issue is a useful
+place to share questions, suggestions, and observations from real use.
 
-Questions and early-stage ideas are also welcome. An issue does not need to
-include a complete implementation proposal.
+## Easy ways to help
 
-## Discussing changes
+Please feel free to open an issue for any of the following:
 
-For substantial changes, please open an issue first. This helps us discuss the
-purpose, expected workflow, and possible scientific implications before code is
-written.
+- Something that was confusing, inconvenient, slow, or difficult to find.
+- A page, plot, filter, or download that did not behave as expected.
+- A small improvement to wording, labels, manuals, or examples.
+- A feature or comparison workflow that would be useful for your research,
+  teaching, field work, or data preparation.
+- A question about whether a dataset, file format, or analysis workflow might
+  be suitable for the application.
 
-## Reporting an issue
+A brief message is enough. If you can, say which page you used and what you
+were trying to do. Screenshots, error messages, or a minimal public example can
+be helpful, but they are optional.
 
-Please include, where relevant:
+## Reporting a reproducible problem
+
+For a bug that can be reproduced, the following details help us investigate:
 
 - The page or tool you were using.
-- Steps to reproduce the problem.
-- Selected filters, settings, and input choices.
-- The error message and a screenshot, if available.
-- A small example file only when it can be shared publicly.
+- What you selected or entered, and what you expected to happen.
+- What happened instead.
+- An error message and screenshot, if available.
 
-Before posting, remove local absolute paths, access tokens, personal data, and
-unpublished or restricted material from text, screenshots, and example files.
+Please remove local absolute paths, access tokens, personal data, and
+unpublished, restricted, or copyright-sensitive material before posting.
+Browser-uploaded files should never be attached unless they can be shared
+publicly.
 
-## Data and scientific changes
+## Scientific and data suggestions
 
-Do not include unpublished, restricted, personal, or copyright-sensitive data.
+Suggestions about data sources, comparison workflows, quality flags, and
+scientific interpretation are particularly valuable. Please do not upload or
+post unpublished, restricted, personal, or redistribution-limited data. A
+description of the data source and the intended use is sufficient for an
+initial discussion.
 
-For a change that may affect calculations, quality checks, or scientific
-interpretation, describe the rationale, affected workflow, and expected impact.
+## Code contributions
 
-## Pull requests
+Code contributions are welcome but entirely optional. For a substantial change,
+please open an issue first so that the purpose, user workflow, scientific
+implications, and testing approach can be discussed before implementation.
 
-Keep changes focused and run the relevant tests before opening a pull request.
-Please keep user-facing UI text, README files, manuals, testing guides, and
-major development policies available in both English and Japanese where
-possible.
+If you open a pull request, keep it focused and run the relevant tests where
+practical. Please update affected user-facing text and documentation; English
+and Japanese updates are appreciated when applicable.
